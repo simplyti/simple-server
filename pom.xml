@@ -236,7 +236,6 @@
 		<module>core</module>
 		<module>clients</module>
 		<module>clients-http</module>
-		<module>auth-jwt</module>
 		<module>acceptance</module>
 	</modules>
 
