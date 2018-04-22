@@ -182,7 +182,7 @@
 									def implDir = new File(project.basedir, '../');
 									implDir.eachFileRecurse(groovy.io.FileType.FILES){
 									    if(it.name.equals('pom.xml')){
-									    	def file = new File(it.toString().replaceFirst(/pom.xml$/, "target/jacoco-it.exec"))
+									    	def file = new File(it.toString().replaceFirst(/pom.xml$/, "target/jacoco.exec"))
 									    	file.getParentFile().mkdirs();
 									        new AntBuilder().copy( file:jacocoExecFile, 
 	                           					tofile:file)
