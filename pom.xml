@@ -6,6 +6,31 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
+	<name>Simple server</name>
+	<description>Light and high performance non-blocking server</description>
+	<url>https://github.com/simplyti/simple-server</url>
+
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<scm>
+		<url>https://github.com/simplyti/simple-server</url>
+		<connection>scm:git:git://github.com/simplyti/simple-server.git</connection>
+		<developerConnection>scm:git:git@github.com:username/simple-server.git</developerConnection>
+	</scm>
+
+	<developers>
+		<developer>
+			<id>ptaboas</id>
+			<name>Pablo Taboas</name>
+			<email>p.taboas@simplyti.com</email>
+		</developer>
+	</developers>
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
@@ -88,8 +113,8 @@
 				</plugin>
 				<plugin>
 					<groupId>org.codehaus.gmaven</groupId>
-	  				<artifactId>groovy-maven-plugin</artifactId>
-	  				<version>${groovy-maven-plugin.version}</version>
+					<artifactId>groovy-maven-plugin</artifactId>
+					<version>${groovy-maven-plugin.version}</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>
@@ -238,5 +263,18 @@
 		<module>clients-http</module>
 		<module>acceptance</module>
 	</modules>
+
+	<distributionManagement>
+		<repository>
+			<id>ossrh</id>
+			<name>Nexus Release Repository</name>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+		</repository>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<name>Sonatype Nexus Snapshots</name>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
 
 </project>
