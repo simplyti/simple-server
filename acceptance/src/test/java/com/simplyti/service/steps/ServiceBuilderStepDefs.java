@@ -378,6 +378,7 @@ public class ServiceBuilderStepDefs {
 	
 	@Then("^I check that client has (\\d+) active connections$")
 	public void iCheckThatClientHasActiveConnections(int count) throws Exception {
+		Awaitility.await().until(client::activeConnections,equalTo(count));
 		assertThat( client.activeConnections(),equalTo(count));
 	}
 	
