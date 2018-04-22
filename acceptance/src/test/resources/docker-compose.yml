@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+
+  httpbin:
+    image: kennethreitz/httpbin
+    ports:
+    - "8081:8080"
+    
+  socks5:
+    image: wernight/dante
+    ports:
+    - "1080:1080"
+    
+  http:
+    image: minimum2scp/squid
+    ports:
+    - "3128:3128"

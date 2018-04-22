@@ -1,0 +1,250 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<artifactId>simple-server-acceptance</artifactId>
+
+	<parent>
+		<groupId>com.simplyti.cloud</groupId>
+		<artifactId>simple-server</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<executions>
+					<!-- Prepare jacoco agent for coverage metrics -->
+					<execution>
+						<id>prepare-integration-test-agent</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+						<configuration>
+							<destFile>${project.build.directory}/jacoco-it.exec</destFile>
+							<propertyName>failsafeArgLine</propertyName>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<configuration>
+					<argLine>${failsafeArgLine}</argLine>
+					<systemPropertyVariables>
+						<guice.injector-source>com.simplyti.service.injector.CustomInjectorSource</guice.injector-source>
+					</systemPropertyVariables>
+					<includes>
+						<include>**/CucumberITest.java</include>
+					</includes>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<configuration>
+					<skip>${skipIntegrationTests}</skip>
+				</configuration>
+				<executions>
+					<!-- Generate coverage report -->
+					<execution>
+						<id>generate-integration-test-report</id>
+						<phase>post-integration-test</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<taskdef name="report" classname="org.jacoco.ant.ReportTask"
+									classpathref="maven.plugin.classpath" />
+								<report>
+									<executiondata>
+										<file file="${project.build.directory}/jacoco-it.exec" />
+									</executiondata>
+
+									<structure name="Coverage Report">
+										<classfiles>
+											<dirset dir="${basedir}/..">
+												<include name="core/target/classes" />
+												<include name="clients/target/classes" />
+												<include name="clients-http/target/classes" />
+											</dirset>
+										</classfiles>
+										<sourcefiles encoding="UTF-8">
+											<dirset dir="${basedir}/..">
+												<include name="core/src/main/java" />
+												<include name="clients/src/main/java" />
+												<include name="clients-http/src/main/java" />
+											</dirset>
+										</sourcefiles>
+									</structure>
+									<html destdir="${project.build.directory}/coverage" />
+								</report>
+							</target>
+						</configuration>
+					</execution>
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>org.jacoco</groupId>
+						<artifactId>org.jacoco.ant</artifactId>
+						<version>${jacoco-maven-plugin.version}</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<configuration>
+					<executable>docker-compose</executable>
+					<workingDirectory>${project.build.directory}/test-classes</workingDirectory>
+				</configuration>
+				<executions>
+					<!-- Pull Docker compose images -->
+					<execution>
+						<id>docker-compose-pull</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<skip>${maven.test.skip}</skip>
+							<arguments>
+								<argument>pull</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					<!-- Start Docker compose -->
+					<execution>
+						<id>docker-compose-up</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<skip>${maven.test.skip}</skip>
+							<async>true</async>
+							<asyncDestroyOnShutdown>true</asyncDestroyOnShutdown>
+							<arguments>
+								<argument>up</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					<!-- Stop Docker compose -->
+					<execution>
+						<id>docker-compose-down</id>
+						<phase>post-integration-test</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<skip>${maven.test.skip}</skip>
+							<arguments>
+								<argument>down</argument>
+							</arguments>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.gmaven</groupId>
+  				<artifactId>groovy-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy-jacoco-it</id>
+						<phase>post-integration-test</phase>
+						<goals>
+							<goal>execute</goal>
+						</goals>
+						<configuration>
+							<source>
+								def jacocoExecFile = new File(project.build.directory, 'jacoco-it.exec');
+								if(jacocoExecFile.exists()){
+									def implDir = new File(project.basedir, '../');
+									implDir.eachFileRecurse(groovy.io.FileType.FILES){
+									    if(it.name.equals('pom.xml')){
+									    	def file = new File(it.toString().replaceFirst(/pom.xml$/, "target/jacoco-it.exec"))
+									    	file.getParentFile().mkdirs();
+									        new AntBuilder().copy( file:jacocoExecFile, 
+	                           					tofile:file)
+									    }
+									}
+								}	
+							</source>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<!-- Lombok -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+		</dependency>
+
+		<!-- SUT -->
+		<dependency>
+			<groupId>com.simplyti.cloud</groupId>
+			<artifactId>simple-server-core</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.simplyti.cloud</groupId>
+			<artifactId>simple-server-clients-http</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<!-- Integration Tests -->
+		<dependency>
+			<groupId>io.cucumber</groupId>
+			<artifactId>cucumber-junit</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.cucumber</groupId>
+			<artifactId>cucumber-guice</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.google.truth</groupId>
+			<artifactId>truth</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.jayway.awaitility</groupId>
+			<artifactId>awaitility</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+		</dependency>
+	</dependencies>
+
+</project>
