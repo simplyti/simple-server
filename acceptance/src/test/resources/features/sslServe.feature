@@ -32,5 +32,6 @@ Scenario: I specify secured port
 		| option	 			| value |
 		| withApi			| com.simplyti.service.APITest	|
 		| securedPort		| 4443	|
+	Then I check that "#serviceFuture" is success
 	When I send a "GET /hello" using ssl port 4443 getting "#response"
 	Then I check that "#response" is equals to "Hello!"
