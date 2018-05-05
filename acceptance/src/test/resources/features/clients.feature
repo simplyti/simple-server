@@ -38,3 +38,14 @@ Scenario: Request timeout
 	And I check that http response "#response" has body "Hey!"
 	When I post "/echo/delay?millis=500" with body "Hey!" and response time 200 getting response "#response"
 	Then I check that "#response" is failure
+	
+Scenario: Single thread client
+	Given a single thread event loop group "#eventLoopGroup"
+	When I create an http client "#client" with event loop group "#eventLoopGroup"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I get "/hello" using client "#client" in event loop "#eventLoopGroup" getting response "#response"
+	Then I check that "#response" is success
+	When I get "/hello" using client "#client" in event loop "#eventLoopGroup" getting response "#response"
+	Then I check that "#response" is success
+	And I check that http client "#client" has 1 iddle connection

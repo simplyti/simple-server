@@ -1,8 +1,11 @@
 package com.simplyti.service.api.builder.jaxrs;
 
+import com.simplyti.service.api.APIContext;
 import com.simplyti.service.api.ApiInvocationContext;
 
-public class JAXRSApiContext<O> {
+import io.netty.util.concurrent.Future;
+
+public class JAXRSApiContext<O> implements APIContext<O>{
 	
 	private final ApiInvocationContext<Object, O> ctx;
 	
@@ -10,12 +13,12 @@ public class JAXRSApiContext<O> {
 		this.ctx=ctx;
 	}
 	
-	public void send(O response) {
-		ctx.send(response);
+	public Future<Void> send(O response) {
+		return ctx.send(response);
 	}
 
-	public void failure(Throwable cause) {
-		ctx.failure(cause);
+	public Future<Void> failure(Throwable cause) {
+		return ctx.failure(cause);
 	}
 
 }

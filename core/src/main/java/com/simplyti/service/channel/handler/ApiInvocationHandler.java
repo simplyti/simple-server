@@ -10,6 +10,7 @@ import com.simplyti.service.api.ApiInvocation;
 import com.simplyti.service.api.DefaultApiInvocationContext;
 import com.simplyti.service.api.filter.FilterChain;
 import com.simplyti.service.api.filter.OperationInboundFilter;
+import com.simplyti.service.exception.ExceptionHandler;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -21,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 public class ApiInvocationHandler extends SimpleChannelInboundHandler<ApiInvocation<?>> {
 	
 	private final Set<OperationInboundFilter> filters;
+	private final ExceptionHandler exceptionHandler;
 	
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, ApiInvocation<?> msg) throws Exception {
@@ -56,7 +58,7 @@ public class ApiInvocationHandler extends SimpleChannelInboundHandler<ApiInvocat
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private <I,O> DefaultApiInvocationContext<I,O> context(ChannelHandlerContext ctx, ApiInvocation msg) {
-		return new DefaultApiInvocationContext<I,O>(ctx,msg);
+		return new DefaultApiInvocationContext<I,O>(ctx,msg,exceptionHandler);
 	}
 
 }

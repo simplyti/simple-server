@@ -25,6 +25,7 @@ import com.simplyti.service.channel.ClientChannelGroup;
 import com.simplyti.service.channel.DefaultServiceChannelInitializer;
 import com.simplyti.service.channel.ServiceChannelInitializer;
 import com.simplyti.service.channel.handler.FileServeHandler;
+import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.hook.ServerStartHook;
 import com.simplyti.service.hook.ServerStopHook;
 import com.simplyti.service.ssl.IoCKeyManagerFactory;
@@ -64,6 +65,8 @@ public class ServiceModule extends AbstractModule {
 		
 		bind(ServiceChannelInitializer.class).to(DefaultServiceChannelInitializer.class).in(Singleton.class);
 		bind(FileServeHandler.class).in(Singleton.class);
+		
+		bind(ExceptionHandler.class).in(Singleton.class);
 		
 		bind(ExecutorService.class).toProvider(ExecutorServiceProvider.class).in(Singleton.class);
 	

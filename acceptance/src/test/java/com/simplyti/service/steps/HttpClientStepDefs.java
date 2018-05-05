@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -23,6 +24,8 @@ import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.EventLoop;
+import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.util.CharsetUtil;
@@ -36,6 +39,9 @@ import static org.hamcrest.Matchers.hasSize;
 public class HttpClientStepDefs {
 	
 	private static final Endpoint LOCAL_ENDPOINT = HttpEndpoint.of("http://localhost:8080");
+	
+	@Inject
+	private EventLoopGroup eventLoopGroup;
 
 	@Inject
 	private Map<String,Object> scenarioData;
@@ -67,11 +73,45 @@ public class HttpClientStepDefs {
 		});
 	}
 	
+	@Given("^a single thread event loop group \"([^\"]*)\"$")
+	public void aSingleThreadEventLoopGroup(String key) throws Exception {
+		scenarioData.put(key, eventLoopGroup.next());
+	}
+	
+	@When("^I create an http client \"([^\"]*)\" with event loop group \"([^\"]*)\"$")
+	public void iCreateAnHttpClientWithEventLoopGroup(String key, String eventloopKey) throws Exception {
+		EventLoopGroup eventloop = (EventLoopGroup) scenarioData.get(eventloopKey);
+		scenarioData.put(key,HttpClient.builder()
+		.eventLoopGroup(eventloop)
+		.withCheckStatusCode()
+		.build());
+	}
+	
+	@When("^I get \"([^\"]*)\" using client \"([^\"]*)\" in event loop \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	public void iGetUsingClientInEventLoopGettingResponse(String path, String clientKey, String eventloopKey, String resultKey) throws Exception {
+		HttpClient client = (HttpClient) scenarioData.get(clientKey);
+		EventLoop eventloop = (EventLoop) scenarioData.get(eventloopKey);
+		AtomicBoolean done = new AtomicBoolean();
+		eventloop.execute(()->{
+			Future<FullHttpResponse> response = client.withEndpoin(LOCAL_ENDPOINT)
+					.get(path).fullResponse();
+			scenarioData.put(resultKey, response);
+			done.set(true);
+		});
+		Awaitility.await().until(done::get);
+	}
+	
 	@When("^I get \"([^\"]*)\" getting response \"([^\"]*)\"$")
 	public void iGetWithClientGettingResponse(String path, String resultKey) throws Exception {
 		Future<FullHttpResponse> response = sutClient.withEndpoin(LOCAL_ENDPOINT)
 			.get(path).fullResponse();
 		scenarioData.put(resultKey, response);
+	}
+	
+	@Then("^I check that http client \"([^\"]*)\" has (\\d+) iddle connection$")
+	public void iCheckThatHttpClientHasIddleConnection(String clientKey, int number) throws Exception {
+		HttpClient client = (HttpClient) scenarioData.get(clientKey);
+		assertThat(client.monitor().iddleConnections(),equalTo(number));
 	}
 	
 	@Then("^I check that http client has (\\d+) iddle connection$")
@@ -93,7 +133,17 @@ public class HttpClientStepDefs {
 	
 	@When("^I get \"([^\"]*)\" to port (\\d+) getting response \"([^\"]*)\"$")
 	public void iGetToPortGettingResponse(String path, int port, String resultKey) throws Exception {
-		Future<FullHttpResponse> response = sutClient.withEndpoin(new Endpoint(HttpEndpoint.HTTP_SCHEMA, new Address(LOCAL_ENDPOINT.address().host(), port)))
+		Future<FullHttpResponse> response = sutClient
+				.withEndpoin(new Endpoint(HttpEndpoint.HTTP_SCHEMA, new Address(LOCAL_ENDPOINT.address().host(), port)))
+				.get(path).fullResponse();
+		scenarioData.put(resultKey, response);
+	}
+	
+	@When("^I get \"([^\"]*)\" to port (\\d+) with basic auth \"([^\"]*)\" \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	public void iGetToPortWithBasicAuthGettingResponse(String path, int port, String user, String pass, String resultKey) throws Exception {
+		Future<FullHttpResponse> response = sutClient
+				.withEndpoin(new Endpoint(HttpEndpoint.HTTP_SCHEMA, new Address(LOCAL_ENDPOINT.address().host(), port)))
+				.withBasicAuth(user, pass)
 				.get(path).fullResponse();
 		scenarioData.put(resultKey, response);
 	}
@@ -119,6 +169,15 @@ public class HttpClientStepDefs {
 	
 	@Then("^I check that http response \"([^\"]*)\" has body \"([^\"]*)\"$")
 	public void iCheckThatHttpResponseHasBody(String key, String body) throws Exception {
+		@SuppressWarnings("unchecked")
+		Future<FullHttpResponse> future = (Future<FullHttpResponse>) scenarioData.get(key);
+		FullHttpResponse response = future.get();
+		assertThat(response.content().toString(CharsetUtil.UTF_8),equalTo(body));
+		response.release();
+	}
+	
+	@Then("^I check that http response \"([^\"]*)\" has body$")
+	public void iCheckThatHttpResponseHasBody2(String key, String body) throws Exception {
 		@SuppressWarnings("unchecked")
 		Future<FullHttpResponse> future = (Future<FullHttpResponse>) scenarioData.get(key);
 		FullHttpResponse response = future.get();

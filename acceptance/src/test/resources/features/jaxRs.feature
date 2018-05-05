@@ -54,6 +54,12 @@ Scenario: Method throw exception
 	When I send a "GET /jaxrs/throwexception" getting "#response"
 	And I check that "#response" has status code 500
 	
+Scenario: Failure service
+	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I send a "GET /jaxrs/failure?msg=Error!" getting "#response"
+	And I check that "#response" has status code 500
+	
 Scenario: Blocking method
 	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
 	Then I check that "#serviceFuture" is success

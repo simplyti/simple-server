@@ -10,6 +10,8 @@ public interface HttpRequestBuilder extends ClientRequestBuilder<HttpRequestBuil
 	
 	public HttpRequestBuilder withCheckStatusCode();
 	
+	public HttpRequestBuilder withBasicAuth(String user, String password);
+	
 	public FinishableHttpRequest get(String path);
 
 	public FinishableBodyHttpRequest post(String path);

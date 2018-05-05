@@ -9,13 +9,13 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.jsoniter.JsonIterator;
+import com.simplyti.service.exception.ExceptionHandler;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DefaultByteBufHolder;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.multipart.FileUpload;
 import io.netty.handler.codec.http.multipart.HttpPostMultipartRequestDecoder;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType;
@@ -27,6 +27,7 @@ import static io.vavr.control.Try.run;
 
 public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder implements ApiInvocationContext<I,O>, Supplier<I>{
 	
+	private final ExceptionHandler exceptionHandler;
 	private final ChannelHandlerContext ctx;
 	private final ApiInvocation<I> msg;
 	
@@ -35,8 +36,9 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 	
 	private boolean released = false ;
 	
-	public DefaultApiInvocationContext(ChannelHandlerContext ctx,ApiInvocation<I> msg) {
+	public DefaultApiInvocationContext(ChannelHandlerContext ctx,ApiInvocation<I> msg, ExceptionHandler exceptionHandler) {
 		super(msg.content());
+		this.exceptionHandler=exceptionHandler;
 		this.ctx=ctx;
 		this.msg=msg;
 		this.cachedRequestBody=Suppliers.memoize(this);
@@ -93,9 +95,9 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 		}
 	}
 
-	public void failure(Throwable error) {
+	public Future<Void> failure(Throwable error) {
 		tryRelease();
-		ctx.fireExceptionCaught(error);
+		return exceptionHandler.exceptionCaught(ctx,error);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -104,11 +106,8 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 		final I result;
 		if(msg.operation().requestType().getType().equals(ByteBuf.class)){
 			result =  (I) content();
-		} else if(!content().isReadable()){
-			result = null;
-			release();
-			released=true;
-		} else if(msg.operation().requestType().getType().equals(Void.class)){
+		} else if(!content().isReadable() || 
+				msg.operation().requestType().getType().equals(Void.class)){
 			result = null;
 			release();
 			released=true;
@@ -160,16 +159,6 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 	@Override
 	public HttpHeaders headers() {
 		return msg.headers();
-	}
-
-	@Override
-	public HttpRequest request() {
-		return msg.request();
-	}
-
-	@Override
-	public ChannelHandlerContext channelContext() {
-		return ctx;
 	}
 
 }

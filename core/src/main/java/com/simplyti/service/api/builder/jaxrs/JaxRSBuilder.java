@@ -17,6 +17,7 @@ import com.fasterxml.classmate.TypeResolver;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.jsoniter.spi.TypeLiteral;
+import com.simplyti.service.api.APIContext;
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.FinishableApiBuilder;
 
@@ -60,7 +61,7 @@ public class JaxRSBuilder<I,O> extends FinishableApiBuilder<I, O>{
 		Integer contexArgIndex = null;
 		for (int argIndex = 0; argIndex < parameterAnnotations.length; argIndex++) {
 			ResolvedType resolvedType = new TypeResolver().resolve(parametersTypes[argIndex]);
-			if (resolvedType.isInstanceOf(JAXRSApiContext.class)) {
+			if (resolvedType.isInstanceOf(APIContext.class)) {
 				contexArgIndex = argIndex;
 			} else if (processPathParam(parameterAnnotations[argIndex],resolvedType,argumentIndexToRestParam,argIndex)) {
 				continue;
