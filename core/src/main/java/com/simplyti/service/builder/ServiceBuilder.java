@@ -18,7 +18,7 @@ public interface ServiceBuilder {
 
 	public ServiceBuilder withModule(Class<? extends Module> module);
 	
-	public ServiceBuilder withModule(Module kube2ovnModule);
+	public ServiceBuilder withModule(Module module);
 
 	public ServiceBuilder fileServe(String path, String directory);
 
