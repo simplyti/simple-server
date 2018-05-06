@@ -1,11 +1,17 @@
 package com.simplyti.service.api.filter;
 
+import com.simplyti.service.api.ApiOperation;
+
+import io.netty.handler.codec.http.HttpHeaders;
+
 public interface FilterContext {
 
-	void done();
+	public void done();
 
-	String header(CharSequence name);
+	public HttpHeaders headers();
 
-	void fail(Throwable unauthorizedException);
+	public void fail(Throwable unauthorizedException);
+
+	public ApiOperation<?, ?> operation();
 
 }

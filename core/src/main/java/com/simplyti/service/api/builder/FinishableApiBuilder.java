@@ -16,6 +16,8 @@ public abstract class FinishableApiBuilder<I,O> {
 	protected final TypeLiteral<I> requestType;
 	protected final boolean multipart;
 	
+	private boolean requiresAuth;
+	
 	public FinishableApiBuilder(ApiBuilder builder, HttpMethod method, String uri, TypeLiteral<I> requestType, boolean multipart) {
 		this.builder=builder;
 		this.method=method;
@@ -24,9 +26,14 @@ public abstract class FinishableApiBuilder<I,O> {
 		this.multipart=multipart;
 	}
 	
+	public FinishableApiBuilder<I,O> withRequiresAuth() {
+		this.requiresAuth=true;
+		return this;
+	}
+	
 	public void then(Consumer<ApiInvocationContext<I,O>> consumer) {
 		PathPattern pathPattern = PathPattern.build(uri);
-		builder.add(new ApiOperation<I,O>(method, pathPattern.pattern(),pathPattern.pathParamNameToGroup(),consumer,requestType,pathPattern.literalCount(),multipart));
+		builder.add(new ApiOperation<I,O>(method, pathPattern.pattern(), requiresAuth, pathPattern.pathParamNameToGroup(),consumer,requestType,pathPattern.literalCount(),multipart));
 	}
 	
 

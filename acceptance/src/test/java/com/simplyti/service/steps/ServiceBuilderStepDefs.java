@@ -271,7 +271,7 @@ public class ServiceBuilderStepDefs {
 		scenarioData.put(resultKey, send(null,method,path,body,null));
 	}
 	
-	private Future<SimpleHttpResponse> send(HttpVersion version,String method, String path, String body, HttpHeaders headers) {
+	public Future<SimpleHttpResponse> send(HttpVersion version,String method, String path, String body, HttpHeaders headers) {
 		return send(version, method, path, 8080, false, null, body, headers);
 	}
 

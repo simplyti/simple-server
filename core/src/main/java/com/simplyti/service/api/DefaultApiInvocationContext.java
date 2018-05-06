@@ -16,6 +16,7 @@ import io.netty.buffer.DefaultByteBufHolder;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.multipart.FileUpload;
 import io.netty.handler.codec.http.multipart.HttpPostMultipartRequestDecoder;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType;
@@ -159,6 +160,16 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 	@Override
 	public HttpHeaders headers() {
 		return msg.headers();
+	}
+
+	@Override
+	public ChannelHandlerContext channelContext() {
+		return ctx;
+	}
+
+	@Override
+	public HttpRequest request() {
+		return msg.request();
 	}
 
 }

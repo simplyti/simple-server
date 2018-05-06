@@ -14,6 +14,7 @@ public class ApiOperation<I,O> {
 	
 	private final HttpMethod method;
 	private final Pattern pathTemplate;
+	private final boolean requiresAuth;
 	private final Map<String,Integer> pathParamNameToGroup;
 	private final Consumer<ApiInvocationContext<I,O>> handler;
 	private final TypeLiteral<I> requestType;
@@ -46,6 +47,10 @@ public class ApiOperation<I,O> {
 
 	public boolean isMultipart() {
 		return multipart;
+	}
+
+	public boolean requiresAuth() {
+		return requiresAuth;
 	}
 	
 }

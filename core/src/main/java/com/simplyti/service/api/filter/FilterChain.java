@@ -4,8 +4,10 @@ import java.util.Iterator;
 import java.util.Set;
 
 import com.simplyti.service.api.ApiInvocation;
+import com.simplyti.service.api.ApiOperation;
 
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
 
@@ -40,13 +42,18 @@ public class FilterChain implements FilterContext {
 	}
 
 	@Override
-	public String header(CharSequence name) {
-		return msg.headers().get(name);
+	public HttpHeaders headers() {
+		return msg.headers();
 	}
 
 	@Override
 	public void fail(Throwable cause) {
 		promise.setFailure(cause);
+	}
+
+	@Override
+	public ApiOperation<?, ?> operation() {
+		return msg.operation();
 	}
 
 }

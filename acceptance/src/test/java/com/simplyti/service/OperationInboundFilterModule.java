@@ -21,7 +21,7 @@ public class OperationInboundFilterModule  extends AbstractModule implements Ope
 
 	@Override
 	public void execute(FilterContext context) {
-		String authorization = context.header(HttpHeaderNames.AUTHORIZATION);
+		String authorization = context.headers().get(HttpHeaderNames.AUTHORIZATION);
 		if(authorization==null) {
 			context.fail(new UnauthorizedException());
 		}else {
