@@ -284,7 +284,7 @@ public class ServiceBuilderStepDefs {
 		}else if(httpMethod.equals(HttpMethod.DELETE)) {
 			return  client.delete(path);
 		}else {
-			throw new UnsupportedOperationException();
+			return client.method(new HttpMethod(method),path,body);
 		}
 	}
 

@@ -20,6 +20,7 @@ public class ApiOperation<I,O> {
 	private final TypeLiteral<I> requestType;
 	private final int literalChars;
 	private final boolean multipart;
+	private final int maxBodyLength;
 	
 	public HttpMethod method() {
 		return method;
@@ -53,4 +54,8 @@ public class ApiOperation<I,O> {
 		return requiresAuth;
 	}
 	
+	public int maxBodyLength() {
+		return maxBodyLength;
+	}
+
 }

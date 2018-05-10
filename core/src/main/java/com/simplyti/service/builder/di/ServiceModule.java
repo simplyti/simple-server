@@ -34,7 +34,7 @@ import com.simplyti.service.ssl.IoCSecurityProvider;
 import com.simplyti.service.ssl.sni.DefaultServerCertificateProvider;
 import com.simplyti.service.ssl.sni.SNIKeyManager;
 import com.simplyti.service.ssl.sni.ServerCertificateProvider;
-import com.simplyti.service.channel.handler.DefaultBackendHandler;
+import com.simplyti.service.channel.handler.DefaultBackendFullRequestHandler;
 
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
@@ -56,7 +56,7 @@ public class ServiceModule extends AbstractModule {
 		bind(Service.class).to(DefaultService.class).in(Singleton.class);
 		bind(ClientChannelGroup.class).in(Singleton.class);
 		
-		OptionalBinder.newOptionalBinder(binder(), DefaultBackendHandler.class);
+		OptionalBinder.newOptionalBinder(binder(), DefaultBackendFullRequestHandler.class);
 		
 		bind(EventLoopGroup.class).toProvider(EventLoopGroupProvider.class).in(Singleton.class);
 		bind(new TypeLiteral<Class<? extends ServerSocketChannel>>() {}).toProvider(SererChannelClassProvider.class).in(Singleton.class);
@@ -64,7 +64,11 @@ public class ServiceModule extends AbstractModule {
 		bind(ServerConfig.class).toInstance(config);
 		
 		bind(ServiceChannelInitializer.class).to(DefaultServiceChannelInitializer.class).in(Singleton.class);
-		bind(FileServeHandler.class).in(Singleton.class);
+		
+		OptionalBinder.newOptionalBinder(binder(), FileServeHandler.class);
+		if(config.fileServe()!=null) {
+			bind(FileServeHandler.class).in(Singleton.class);
+		}
 		
 		bind(ExceptionHandler.class).in(Singleton.class);
 		

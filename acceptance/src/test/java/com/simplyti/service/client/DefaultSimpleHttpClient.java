@@ -70,21 +70,26 @@ public class DefaultSimpleHttpClient implements SimpleHttpClient {
 
 	@Override
 	public Future<SimpleHttpResponse> post(String path, String body) {
-		ByteBuf content;
-		if(body!=null) {
-			 content = Unpooled.copiedBuffer(body, CharsetUtil.UTF_8);
-		}else {
-			content = Unpooled.EMPTY_BUFFER;
-		}
-		DefaultFullHttpRequest req = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, path,content);
-		req.headers().set(HttpHeaderNames.CONTENT_LENGTH,content.readableBytes());
-		return send(req);
+		return method(HttpMethod.POST,path,body);
 	}
 	
 	@Override
 	public Future<SimpleHttpResponse> delete(String path) {
 		DefaultFullHttpRequest req = new DefaultFullHttpRequest(MoreObjects.firstNonNull(HttpVersion.HTTP_1_1, HttpVersion.HTTP_1_1), HttpMethod.DELETE, path);
 		req.headers().set(HttpHeaderNames.CONTENT_LENGTH,0);
+		return send(req);
+	}
+	
+	@Override
+	public Future<SimpleHttpResponse> method(HttpMethod method, String path, String body){
+		ByteBuf content;
+		if(body!=null) {
+			 content = Unpooled.copiedBuffer(body, CharsetUtil.UTF_8);
+		}else {
+			content = Unpooled.EMPTY_BUFFER;
+		}
+		DefaultFullHttpRequest req = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, method, path,content);
+		req.headers().set(HttpHeaderNames.CONTENT_LENGTH,content.readableBytes());
 		return send(req);
 	}
 

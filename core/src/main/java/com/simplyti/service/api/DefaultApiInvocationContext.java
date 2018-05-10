@@ -13,9 +13,9 @@ import com.simplyti.service.exception.ExceptionHandler;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DefaultByteBufHolder;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.multipart.FileUpload;
 import io.netty.handler.codec.http.multipart.HttpPostMultipartRequestDecoder;
@@ -45,10 +45,7 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 		this.cachedRequestBody=Suppliers.memoize(this);
 	}
 	
-	public String uri() {
-		return msg.uri();
-	}
-
+	@Override
 	public String pathParam(String key) {
 		return cachedpathParams.computeIfAbsent(key, theKey->{
 			Integer group = msg.operation().pathParamNameToGroup().get(key);
@@ -60,20 +57,28 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 		});
 	}
 
+	@Override
 	public EventExecutor executor() {
 		return ctx.executor();
 	}
 
+	@Override
 	public I body() {
 		return cachedRequestBody.get();
 	}
 	
 	@Override
 	public Future<Void> send(O response) {
+		tryRelease();
 		return ctx.writeAndFlush(new ApiResponse(response,msg.isKeepAlive()))
 			.addListener(this::writeListener);
 	}
 	
+	private void release0() {
+		release();
+		released=true;
+	}
+
 	public void writeListener(Future<? super Void> f) {
 		if(!msg.isKeepAlive()) {
 			ctx.channel().close();
@@ -92,10 +97,11 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 	
 	public void tryRelease() {
 		if(!released) {
-			release();
+			release0();
 		}
 	}
 
+	@Override
 	public Future<Void> failure(Throwable error) {
 		tryRelease();
 		return exceptionHandler.exceptionCaught(ctx,error);
@@ -110,20 +116,17 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 		} else if(!content().isReadable() || 
 				msg.operation().requestType().getType().equals(Void.class)){
 			result = null;
-			release();
-			released=true;
+			release0();
 		} else if(msg.operation().requestType().getType().equals(String.class)){
 			result = (I) content().toString(CharsetUtil.UTF_8);
-			release();
-			released=true;
+			release0();
 		} else if(msg.operation().isMultipart()){
 			result = decodeMultipart();
 		} else{
 			byte[] data = new byte[content().readableBytes()];
 			content().readBytes(data);
 			result = JsonIterator.deserialize(data).as(msg.operation().requestType());
-			release();
-			released=true;
+			release0();
 		}
 		return result;
 	}
@@ -133,13 +136,14 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 		HttpPostMultipartRequestDecoder decoder = new HttpPostMultipartRequestDecoder(msg.request());
 		List<com.simplyti.service.api.multipart.FileUpload> files = decoder.getBodyHttpDatas().stream()
 			.filter(data->data.getHttpDataType().equals(HttpDataType.FileUpload))
-			.map(data->FileUpload.class.cast(data))
+			.map(FileUpload.class::cast)
 			.map(data->new com.simplyti.service.api.multipart.FileUpload(data.content().retain(),data.getFilename()))
 			.collect(Collectors.toList());
 		run(decoder::destroy);
 		return (I) files;
 	}
 
+	@Override
 	public String queryParam(String name) {
 		if(this.msg.params().containsKey(name)) {
 			return Iterables.getFirst(this.msg.params().get(name), null);
@@ -148,23 +152,20 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 		}
 	}
 
+	@Override
 	public List<String> queryParams(String name) {
 		return this.msg.params().get(name);
 	}
 
+	@Override
 	public Future<Void> close() {
 		release();
 		return ctx.close();
 	}
-
+	
 	@Override
-	public HttpHeaders headers() {
-		return msg.headers();
-	}
-
-	@Override
-	public ChannelHandlerContext channelContext() {
-		return ctx;
+	public Channel channel() {
+		return ctx.channel();
 	}
 
 	@Override

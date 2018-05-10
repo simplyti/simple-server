@@ -15,15 +15,15 @@ import com.simplyti.service.fileserver.FileServe;
 
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 
 @Sharable
-public class FileServeHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
+public class FileServeHandler extends SimpleChannelInboundHandler<HttpRequest> {
 	
 	private final Pattern pattern;
 	private final DirectoryResolver directoryResolver;
@@ -37,13 +37,7 @@ public class FileServeHandler extends SimpleChannelInboundHandler<FullHttpReques
 	}
 
 	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
-		Matcher matcher = pattern.matcher(request.uri());
-		if(!matcher.matches()){
-			ctx.fireChannelRead(request.retain());
-			return;
-		}
-		
+	protected void channelRead0(ChannelHandlerContext ctx, HttpRequest request) throws Exception {
 		if (request.method() != HttpMethod.GET) {
 			FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.METHOD_NOT_ALLOWED);
 			response.headers().set(HttpHeaderNames.CONTENT_LENGTH, 0);
@@ -51,8 +45,14 @@ public class FileServeHandler extends SimpleChannelInboundHandler<FullHttpReques
 			return;
 		}
 		
+		Matcher matcher = pattern.matcher(request.uri());
+		matcher.matches();
 		String path = directoryResolver.resolve(matcher) + File.separatorChar + matcher.group(1);
-		fileServer.serve(path, ctx, request);
+		fileServer.serve(path, ctx.channel(), request);
+	}
+
+	public boolean matchRequest(HttpRequest request) {
+		return pattern.matcher(request.uri()).matches();
 	}
 
 }

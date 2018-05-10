@@ -31,7 +31,7 @@ public class JaxRSBuilder<I,O> extends FinishableApiBuilder<I, O>{
 	private static final TypeLiteral<Object> VOID_TYPE = TypeLiteral.create(Void.class);
 
 	private JaxRSBuilder(ApiBuilder builder, HttpMethod method, String uri, TypeLiteral<I> requestType) {
-		super(builder, method, uri, requestType, false);
+		super(builder, method, uri, requestType, false, -1);
 	}
 
 	@SuppressWarnings("unchecked")

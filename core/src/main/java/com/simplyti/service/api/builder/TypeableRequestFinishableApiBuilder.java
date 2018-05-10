@@ -9,7 +9,7 @@ import com.simplyti.service.api.multipart.FileUpload;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpMethod;
 
-public class TypeableRequestFinishableApiBuilder extends RawFinishableApiBuilder{
+public class TypeableRequestFinishableApiBuilder extends RawFinishableApiBuilder implements BodyLengthConfigurable<TypeableRequestFinishableApiBuilder>{
 
 	public TypeableRequestFinishableApiBuilder(ApiBuilder builder, HttpMethod method, String uri) {
 		super(builder, method, uri);
@@ -21,17 +21,25 @@ public class TypeableRequestFinishableApiBuilder extends RawFinishableApiBuilder
 	}
 	
 	public <T> TypedRequestFinishableApiBuilder<T,Object> withRequestBodyType(TypeLiteral<T> type) {
-		return new TypedRequestFinishableApiBuilder<T,Object>(builder,method,uri,type);
+		return new TypedRequestFinishableApiBuilder<>(builder,method,uri,type, maxBodyLength);
 	}
 	
 	@SuppressWarnings("unchecked")
-	public <OO> TypableRequestTypedResponseFinishableApiBuilder<ByteBuf, OO> withResponseBodyType(Class<OO> responseType) {
-		return new TypableRequestTypedResponseFinishableApiBuilder<ByteBuf,OO>(builder,method,uri,TypeLiteral.create(ByteBuf.class));
+	@Override
+	public <O> TypableRequestTypedResponseFinishableApiBuilder<ByteBuf, O> withResponseBodyType(Class<O> responseType) {
+		return new TypableRequestTypedResponseFinishableApiBuilder<>(builder,method,uri,TypeLiteral.create(ByteBuf.class),maxBodyLength);
 	}
 
 	@SuppressWarnings("unchecked")
 	public TypedRequestFinishableApiBuilder<Collection<FileUpload>, Object> asFileUplod() {
-		return new TypedRequestFinishableApiBuilder<Collection<FileUpload>,Object>(builder,method,uri,TypeLiteral.create(Types.collectionOf(FileUpload.class)),true);
+		return new TypedRequestFinishableApiBuilder<>(builder,method,uri,TypeLiteral.create(Types.collectionOf(FileUpload.class)),
+				true, maxBodyLength);
 	}
 
+	@Override
+	public TypeableRequestFinishableApiBuilder withMaximunBodyLength(int length) {
+		maxBodyLength =length;
+		return this;
+	}
+	
 }

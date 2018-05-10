@@ -6,14 +6,11 @@ import java.util.List;
 import com.simplyti.service.clients.ClientChannel;
 import com.simplyti.service.clients.http.exception.HttpException;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpMessage;
 import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.HttpResponse;
 
 public class FullHttpResponseHandler extends HttpObjectAggregator {
 
@@ -27,21 +24,16 @@ public class FullHttpResponseHandler extends HttpObjectAggregator {
 	}
 
 	@Override
-	protected FullHttpMessage beginAggregation(HttpMessage start, ByteBuf content) throws Exception {
-		if(checkStatusCode) {
-			HttpResponse response = (HttpResponse) start;
-			if(response.status().code()>=400) {
+	protected void finishAggregation(FullHttpMessage aggregated) throws Exception {
+		FullHttpResponse response = (FullHttpResponse) aggregated;
+		if(!clientChannel.promise().isDone()) {
+			if(checkStatusCode && response.status().code()>=400) {
 				clientChannel.promise().setFailure(new HttpException(response.status().code()));
+			}else {
+				clientChannel.promise().setSuccess((FullHttpResponse) aggregated.retain());
 			}
 		}
-		return super.beginAggregation(start, content);
-	}
-
-	@Override
-	protected void finishAggregation(FullHttpMessage aggregated) throws Exception {
-		if(!clientChannel.promise().isDone()) {
-			clientChannel.promise().setSuccess((FullHttpResponse) aggregated.retain());
-		}
+		
 		clientChannel.pipeline().remove(this);
 		clientChannel.release();
 	}

@@ -2,6 +2,8 @@ package com.simplyti.service.exception;
 
 import java.io.FileNotFoundException;
 
+import com.simplyti.service.channel.ClientChannelGroup;
+
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
@@ -24,7 +26,11 @@ public class ExceptionHandler {
 			return writeError(ctx, HttpResponseStatus.NOT_FOUND);
 		} else {
 			log.error("Error ocurred during service execution", cause);
-			return writeError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+			if(ctx.channel().attr(ClientChannelGroup.IN_PROGRESS).get()) {
+				return writeError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+			}else {
+				return ctx.channel().newSucceededFuture();
+			}
 		}
 	}
 

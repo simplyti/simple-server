@@ -3,6 +3,7 @@ package com.simplyti.service.client;
 import javax.security.cert.X509Certificate;
 
 import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.concurrent.Future;
 
@@ -15,6 +16,8 @@ public interface SimpleHttpClient {
 	Future<SimpleHttpResponse> delete( String path);
 	
 	Future<SimpleHttpResponse> send(Object... obj);
+	
+	Future<SimpleHttpResponse> method(HttpMethod method, String path, String body);
 	
 	Future<SimpleHttpResponse> sendPort(String host,int port, boolean ssl, Object... obj);
 	

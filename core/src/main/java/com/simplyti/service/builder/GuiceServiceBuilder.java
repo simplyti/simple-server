@@ -45,7 +45,7 @@ public class GuiceServiceBuilder implements ServiceBuilder {
 				MoreObjects.firstNonNull(securedPort, DEFAULT_SECURE_PORT),fileServe);
 		ServiceModule coreModule = new ServiceModule(config,MoreObjects.firstNonNull(apiClasses, Collections.emptySet()));
 		Stream<Module> additinalModules = Optional.ofNullable(modules)
-				.map(modules->modules.stream())
+				.map(Collection::stream)
 				.orElse(Stream.<Module>empty());
 		Injector injector = Guice.createInjector(Stream.concat(additinalModules, Stream.of(coreModule)).collect(Collectors.toList()));
 		return injector.getInstance(Service.class);

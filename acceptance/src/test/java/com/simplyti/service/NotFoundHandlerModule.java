@@ -3,7 +3,7 @@ package com.simplyti.service;
 import javax.inject.Singleton;
 
 import com.google.inject.AbstractModule;
-import com.simplyti.service.channel.handler.DefaultBackendHandler;
+import com.simplyti.service.channel.handler.DefaultBackendFullRequestHandler;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -16,11 +16,11 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.CharsetUtil;
 
-public class NotFoundHandlerModule extends AbstractModule implements DefaultBackendHandler{
+public class NotFoundHandlerModule extends AbstractModule implements DefaultBackendFullRequestHandler{
 
 	@Override
 	protected void configure() {
-		bind(DefaultBackendHandler.class).to(NotFoundHandlerModule.class).in(Singleton.class);
+		bind(DefaultBackendFullRequestHandler.class).to(NotFoundHandlerModule.class).in(Singleton.class);
 	}
 
 	@Override

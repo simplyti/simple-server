@@ -8,17 +8,17 @@ public class TypedRequestFinishableApiBuilder<I,O> extends FinishableApiBuilder<
 	
 	private final TypeLiteral<I> requestType;
 	
-	public TypedRequestFinishableApiBuilder(ApiBuilder builder, HttpMethod method, String uri,TypeLiteral<I> requestType) {
-		this(builder, method, uri, requestType, false);
+	public TypedRequestFinishableApiBuilder(ApiBuilder builder, HttpMethod method, String uri,TypeLiteral<I> requestType, int maxBodyLength) {
+		this(builder, method, uri, requestType, false,maxBodyLength);
 	}
 
-	public TypedRequestFinishableApiBuilder(ApiBuilder builder, HttpMethod method, String uri,TypeLiteral<I> requestType, boolean multipart) {
-		super(builder, method, uri, requestType,multipart);
+	public TypedRequestFinishableApiBuilder(ApiBuilder builder, HttpMethod method, String uri,TypeLiteral<I> requestType, boolean multipart, int maxBodyLength) {
+		super(builder, method, uri, requestType,multipart,maxBodyLength);
 		this.requestType=requestType;
 	}
 
 	public <OO> TypedRequestResponseFinishableApiBuilder<I,OO> withResponseBodyType(Class<OO> responseType) {
-		return new TypedRequestResponseFinishableApiBuilder<I,OO>(builder, method, uri,requestType);
+		return new TypedRequestResponseFinishableApiBuilder<I,OO>(builder, method, uri,requestType,maxBodyLength);
 	}
 
 }

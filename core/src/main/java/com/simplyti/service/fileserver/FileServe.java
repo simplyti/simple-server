@@ -14,7 +14,7 @@ import java.util.Locale;
 
 import javax.activation.MimetypesFileTypeMap;
 
-import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.Channel;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
@@ -35,7 +35,7 @@ public class FileServe {
 	private final MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
 	private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
 
-	public void serve(String path, ChannelHandlerContext ctx, HttpRequest request) throws IOException {
+	public void serve(String path, Channel channel, HttpRequest request) throws IOException {
 		File file = new File(path);
 		if (file.isHidden() || !file.exists()) {
 			throw new FileNotFoundException();
@@ -47,7 +47,7 @@ public class FileServe {
             long ifModifiedSinceDateSeconds = Instant.from(ifModifiedSinceDate).getEpochSecond();
             long fileLastModifiedSeconds = Instant.ofEpochMilli(file.lastModified()).getEpochSecond();
             if (ifModifiedSinceDateSeconds == fileLastModifiedSeconds) {
-            		sendStatus(ctx,HttpResponseStatus.NOT_MODIFIED);
+            		sendStatus(channel,HttpResponseStatus.NOT_MODIFIED);
                 return;
             }
         }
@@ -67,14 +67,14 @@ public class FileServe {
         if (HttpUtil.isKeepAlive(request)) {
             response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
         }
-        ctx.write(response);
-		ctx.writeAndFlush(new HttpChunkedInput(new ChunkedFile(raf, 0,  fileLength, 8192)), ctx.newProgressivePromise());
+        channel.write(response);
+        channel.writeAndFlush(new HttpChunkedInput(new ChunkedFile(raf, 0,  fileLength, 8192)), channel.newProgressivePromise());
 	}
 	
-	private void sendStatus(ChannelHandlerContext ctx, HttpResponseStatus status) {
+	private void sendStatus(Channel channel, HttpResponseStatus status) {
 		FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status);
 		response.headers().set(HttpHeaderNames.CONTENT_LENGTH, 0);
-		ctx.writeAndFlush(response);
+		channel.writeAndFlush(response);
 	}
 	
 }

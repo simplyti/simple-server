@@ -1,5 +1,6 @@
 package com.simplyti.service;
 
+import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Joiner;
@@ -29,6 +30,9 @@ public class APITest implements ApiProvider{
 		builder.when().get("/close")
 			.then(ctx->ctx.close());
 		
+		builder.when().get("/remote")
+			.then(ctx->ctx.send(((InetSocketAddress)ctx.channel().remoteAddress()).getAddress().toString()));
+		
 		builder.when().post("/echo/delay")
 			.then(ctx->ctx.executor().schedule(()->ctx.send(ctx.body().copy()), Long.parseLong(ctx.queryParam("millis")), TimeUnit.MILLISECONDS));
 		
@@ -54,10 +58,10 @@ public class APITest implements ApiProvider{
 			.then(ctx->ctx.send(Joiner.on('m').join(ctx.queryParams("name"))));
 		
 		builder.when().get("/uri")
-			.then(ctx->ctx.send("Hello "+ctx.uri()));
+			.then(ctx->ctx.send("Hello "+ctx.request().uri()));
 		
 		builder.when().get("/headers")
-		.then(ctx->ctx.send("Hello "+ctx.headers().names()));
+			.then(ctx->ctx.send("Hello "+ctx.request().headers().names()));
 		
 		builder.when().post("/typed/request")
 			.withRequestBodyType(APITestDTO.class)
@@ -97,6 +101,13 @@ public class APITest implements ApiProvider{
 		
 		builder.when().delete("/delete")
 			.then(ctx->ctx.send("Bye!"));
+		
+		builder.when().get("/error/after/send")
+			.then(ctx->{
+				ctx.send("I Will send throw an error!");
+				throw new RuntimeException("This is a test error");
+			});
+	
 		
 		
 		builder.usingJaxRSContract(JaxRSAPITest.class);

@@ -61,6 +61,16 @@ Scenario: File server with API
 	When I send a "GET /hello" getting "#response"
 	Then I check that "#response" is equals to "Hello!"
 	
+Scenario: File server not match path
+	Given next file "#tempdir/testfiles/hello.txt" with createdDate "#createdDate" and content
+	"""
+	Hello from file!
+	"""
+	When I start a service "#serviceFuture" with file serve "#tempdir/testfiles" on "/statics" and API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I send a "GET /other/hello.txt" getting "#response"
+	Then I check that "#response" has status code 404
+	
 Scenario: Close connection when required
 	Given next file "#tempdir/testfiles/hello.txt" with createdDate "#createdDate" and content
 	"""

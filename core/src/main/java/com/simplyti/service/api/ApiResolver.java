@@ -12,6 +12,7 @@ import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.ApiProvider;
 
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.QueryStringDecoder;
 
 public class ApiResolver {
 	
@@ -25,9 +26,9 @@ public class ApiResolver {
 		this.operations=Collections.unmodifiableCollection(builderOperations);
 	}
 
-	public Optional<ApiMacher> getOperationFor(HttpMethod method, String uri) {
+	public Optional<ApiMacher> getOperationFor(HttpMethod method, QueryStringDecoder queryStringDecoder) {
 		return operations.stream().filter(operation -> operation.method().equals(method))
-				.map(operation -> new ApiMacher(operation, operation.pathTemplate().matcher(uri)))
+				.map(operation -> new ApiMacher(operation, operation.pathTemplate().matcher(queryStringDecoder.path()),queryStringDecoder.parameters()))
 				.filter(operation -> operation.matcher().matches())
 				.findFirst();
 	}

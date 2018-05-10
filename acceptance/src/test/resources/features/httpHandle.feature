@@ -41,6 +41,12 @@ Scenario: Not found
 	When I send a "GET /not/found" getting "#response"
 	And I check that "#response" has status code 404
 	
+Scenario: Not found with body
+	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I send a "POST /not/found" with body "Hello super server!" getting "#response"
+	And I check that "#response" has status code 404
+	
 Scenario: Failure operation
 	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
 	Then I check that "#serviceFuture" is success
@@ -164,8 +170,28 @@ Scenario: Close connection
 	Then I check that "#response" is failure
 	And I check that error failure message of "#response" is "Channel closed"
 	
+Scenario: Remote connection address
+	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I send a "GET /remote" getting "#response"
+	Then I check that "#response" is equals to "/127.0.0.1"
+	
 Scenario: Delete operation
 	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
 	Then I check that "#serviceFuture" is success
 	When I send a "DELETE /delete" getting "#response"
 	Then I check that "#response" is equals to "Bye!"
+	
+Scenario: Bad Http request
+	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I send a "THIS IS A BAD METHOD /delete" getting "#response"
+	And I check that "#response" has status code 400
+	
+Scenario: Error after send
+	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I send a "GET /error/after/send" getting "#response"
+	Then I check that "#response" is equals to "I Will send throw an error!"
+	And I check that "#response" has status code 200
+	And I check that client has 1 active connections

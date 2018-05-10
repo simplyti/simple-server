@@ -79,7 +79,7 @@ public class JaxRSAPITest {
 	@GET
 	@Path("throwexception")
 	public void throwException(APIContext<String> ctx) {
-		throw new RuntimeException("Error");
+		throw new RuntimeException("This is a test a error");
 	}
 	
 	@GET
@@ -91,7 +91,7 @@ public class JaxRSAPITest {
 	@GET
 	@Path("blocking/throwexception")
 	public void throwException() {
-		throw new RuntimeException("Error");
+		throw new RuntimeException("This is a test a error");
 	}
 
 }
