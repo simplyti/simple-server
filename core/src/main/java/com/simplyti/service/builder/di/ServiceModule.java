@@ -35,6 +35,7 @@ import com.simplyti.service.ssl.sni.DefaultServerCertificateProvider;
 import com.simplyti.service.ssl.sni.SNIKeyManager;
 import com.simplyti.service.ssl.sni.ServerCertificateProvider;
 import com.simplyti.service.channel.handler.DefaultBackendFullRequestHandler;
+import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;
 
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
@@ -57,6 +58,7 @@ public class ServiceModule extends AbstractModule {
 		bind(ClientChannelGroup.class).in(Singleton.class);
 		
 		OptionalBinder.newOptionalBinder(binder(), DefaultBackendFullRequestHandler.class);
+		OptionalBinder.newOptionalBinder(binder(), DefaultBackendRequestHandler.class);
 		
 		bind(EventLoopGroup.class).toProvider(EventLoopGroupProvider.class).in(Singleton.class);
 		bind(new TypeLiteral<Class<? extends ServerSocketChannel>>() {}).toProvider(SererChannelClassProvider.class).in(Singleton.class);
