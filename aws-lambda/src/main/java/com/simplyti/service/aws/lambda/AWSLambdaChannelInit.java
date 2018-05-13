@@ -7,6 +7,7 @@ import com.simplyti.service.aws.lambda.coders.AwsHttpResponseEncoder;
 import com.simplyti.service.channel.EntryChannelInit;
 
 import io.netty.channel.ChannelPipeline;
+import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.json.JsonObjectDecoder;
 import lombok.RequiredArgsConstructor;
 
@@ -19,6 +20,7 @@ public class AWSLambdaChannelInit implements EntryChannelInit{
 	@Override
 	public void init(ChannelPipeline pipeline) {
 		pipeline.addLast(awsHttpResponseEncoder);
+		pipeline.addLast(new HttpObjectAggregator(10000000));
 		pipeline.addLast(new JsonObjectDecoder());
 		pipeline.addLast(awsHttpLambdaRequestDecoder);
 	}
