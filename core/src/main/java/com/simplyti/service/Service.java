@@ -6,20 +6,24 @@ import com.simplyti.service.builder.ServiceBuilder;
 import io.netty.channel.EventLoop;
 import io.netty.util.concurrent.Future;
 
-public interface Service {
+public interface Service<T extends Service<T>> {
 	
 	public EventLoop executor();
 	
 	public Future<Void> stop();
 	
-	public Future<Service> start();
+	public Future<T> start();
 	
 	public Future<Void> stopFuture();
 	
 	public boolean stopping();
 
-	public static ServiceBuilder builder() {
-		return new GuiceServiceBuilder();
+	public static ServiceBuilder<DefaultService> builder() {
+		return builder(DefaultService.class);
+	}
+	
+	public static <T extends Service<T>> ServiceBuilder<T> builder(Class<T> serviceClass) {
+		return new GuiceServiceBuilder<>(serviceClass);
 	}
 
 }

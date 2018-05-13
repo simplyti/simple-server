@@ -14,15 +14,14 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
-import com.simplyti.service.DefaultService;
 import com.simplyti.service.Service;
 import com.simplyti.service.ServerConfig;
 import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.api.filter.OperationInboundFilter;
 import com.simplyti.service.api.health.HealthApi;
-import com.simplyti.service.api.shutdown.ShutdownApi;
 import com.simplyti.service.channel.ClientChannelGroup;
 import com.simplyti.service.channel.DefaultServiceChannelInitializer;
+import com.simplyti.service.channel.EntryChannelInit;
 import com.simplyti.service.channel.ServiceChannelInitializer;
 import com.simplyti.service.channel.handler.FileServeHandler;
 import com.simplyti.service.exception.ExceptionHandler;
@@ -54,8 +53,10 @@ public class ServiceModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		bind(Service.class).to(DefaultService.class).in(Singleton.class);
+		bind(new TypeLiteral<Service<?>>() {}).to(config.serviceClass()).in(Singleton.class);
 		bind(ClientChannelGroup.class).in(Singleton.class);
+		
+		OptionalBinder.newOptionalBinder(binder(), EntryChannelInit.class);
 		
 		OptionalBinder.newOptionalBinder(binder(), DefaultBackendFullRequestHandler.class);
 		OptionalBinder.newOptionalBinder(binder(), DefaultBackendRequestHandler.class);
@@ -77,7 +78,7 @@ public class ServiceModule extends AbstractModule {
 		bind(ExecutorService.class).toProvider(ExecutorServiceProvider.class).in(Singleton.class);
 	
 		Multibinder<ApiProvider> mangerAPiProviders = Multibinder.newSetBinder(binder(), ApiProvider.class);
-		Stream.concat(apiClasses.stream(), Stream.of(HealthApi.class,ShutdownApi.class))
+		Stream.concat(apiClasses.stream(), Stream.of(HealthApi.class))
 			.forEach(apiClass->mangerAPiProviders.addBinding().to(apiClass).in(Singleton.class));
 		
 		Multibinder.newSetBinder(binder(), OperationInboundFilter.class);

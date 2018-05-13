@@ -18,6 +18,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.stream.ChunkedWriteHandler;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
@@ -33,6 +34,7 @@ public class ApiRequestHandlerInit extends HandlerInit {
 		handlers.add(Maps.immutableEntry("aggregator", new HttpObjectAggregator(apiMacher.operation().maxBodyLength())));
 		handlers.add(Maps.immutableEntry("api-encoder",apiResponseEncoder));
 		handlers.add(Maps.immutableEntry("api-decoder",new ApiInvocationDecoder(apiMacher)));
+		handlers.add(Maps.immutableEntry("chunk-write", new ChunkedWriteHandler()));
 		handlers.add(Maps.immutableEntry("api-handler",apiInvocationHandler));
 		return handlers;
 	}

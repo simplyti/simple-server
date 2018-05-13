@@ -19,6 +19,7 @@ import org.apache.commons.io.FileUtils;
 
 import com.google.inject.Module;
 import com.jayway.awaitility.Awaitility;
+import com.simplyti.service.DefaultService;
 import com.simplyti.service.Service;
 import com.simplyti.service.TestServerStopHookModule;
 import com.simplyti.service.api.builder.ApiProvider;
@@ -65,11 +66,11 @@ public class ServiceBuilderStepDefs {
 	private Map<String,Object> scenarioData;
 	
 	@Inject
-	private List<Future<Service>> services;
+	private List<Future<DefaultService>> services;
 	
 	@When("^I start a service \"([^\"]*)\" with API \"([^\"]*)\"$")
 	public void iStartAServiceWithAPI(String key, Class<?extends ApiProvider> api) throws Exception {
-		Future<Service> futureService = Service.builder()
+		Future<DefaultService> futureService = Service.builder()
 			.withLog4J2Logger()
 			.withApi(api)
 			.build().start();
@@ -79,7 +80,7 @@ public class ServiceBuilderStepDefs {
 	
 	@When("^I start a service \"([^\"]*)\"$")
 	public void iStartAService(String key) throws Exception {
-		Future<Service> futureService = Service.builder()
+		Future<DefaultService> futureService = Service.builder()
 				.withLog4J2Logger()
 				.build().start();
 		services.add(futureService);
@@ -88,7 +89,7 @@ public class ServiceBuilderStepDefs {
 	
 	@When("^I start a service \"([^\"]*)\" with module \"([^\"]*)\"$")
 	public void iStartAServiceWithModule(String key, Class<? extends Module> module) throws Exception {
-		Future<Service> futureService = Service.builder()
+		Future<DefaultService> futureService = Service.builder()
 				.withLog4J2Logger()
 				.withModule(module)
 				.build().start();
@@ -135,7 +136,7 @@ public class ServiceBuilderStepDefs {
 	@When("^I start a service \"([^\"]*)\" with file serve \"([^\"]*)\" on \"([^\"]*)\"$")
 	public void iStartAServiceWithFileServeOn(String key, String directory, String path) throws Exception {
 		String thedir = directory.replaceAll("#tempdir", tempDir);
-		Future<Service> futureService = Service.builder()
+		Future<DefaultService> futureService = Service.builder()
 				.withLog4J2Logger()
 				.fileServe(path,thedir)
 				.build().start();
@@ -146,7 +147,7 @@ public class ServiceBuilderStepDefs {
 	@When("^I start a service \"([^\"]*)\" with file serve \"([^\"]*)\" on \"([^\"]*)\" and API \"([^\"]*)\"$")
 	public void iStartAServiceWithFileServeOnAndAPI(String key, String directory, String path, Class<?extends ApiProvider> api) throws Exception {
 		String thedir = directory.replaceAll("#tempdir", tempDir);
-		Future<Service> futureService = Service.builder()
+		Future<DefaultService> futureService = Service.builder()
 				.withLog4J2Logger()
 				.fileServe(path,thedir)
 				.withApi(api)
@@ -158,7 +159,7 @@ public class ServiceBuilderStepDefs {
 	@When("^I stop server \"([^\"]*)\" getting \"([^\"]*)\"$")
 	public void iStopServerGetting(String key, String resultKey) throws Exception {
 		@SuppressWarnings("unchecked")
-		Future<Service> futureService = (Future<Service>) scenarioData.get(key);
+		Future<DefaultService> futureService = (Future<DefaultService>) scenarioData.get(key);
 		scenarioData.put(resultKey,futureService.getNow().stop());
 	}
 	
@@ -186,7 +187,7 @@ public class ServiceBuilderStepDefs {
 	@SuppressWarnings("unchecked")
 	@When("^I start a service \"([^\"]*)\" with options:$")
 	public void iStartAServiceWithOptions(String key, List<Map<String, String>> options) {
-		ServiceBuilder builder = Service.builder();
+		ServiceBuilder<DefaultService> builder = Service.builder();
 		options.forEach(option->{
 			if(option.get("option").equals("withLog4J2Logger")) {
 				builder.withLog4J2Logger();
@@ -207,7 +208,7 @@ public class ServiceBuilderStepDefs {
 				throw new IllegalArgumentException("Unknown option "+option);
 			}
 		});
-		Future<Service> futureService = builder.build().start();
+		Future<DefaultService> futureService = builder.build().start();
 		services.add(futureService);
 		scenarioData.put(key, futureService);
 	}
@@ -225,7 +226,7 @@ public class ServiceBuilderStepDefs {
 	@When("^I check that \"([^\"]*)\" has been shutted down$")
 	public void iCheckThatHasBeenShuttedDown(String key) throws Exception {
 		@SuppressWarnings("unchecked")
-		Service service = ((Future<Service>) scenarioData.get(key)).getNow();
+		DefaultService service = ((Future<DefaultService>) scenarioData.get(key)).getNow();
 		Future<Void> stopFuture = service.stopFuture();
 		Awaitility.await().until(stopFuture::isDone);
 		assertThat(stopFuture.isSuccess(),equalTo(true));

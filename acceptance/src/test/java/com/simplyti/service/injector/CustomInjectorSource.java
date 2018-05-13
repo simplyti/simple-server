@@ -12,7 +12,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
-import com.simplyti.service.Service;
+import com.simplyti.service.DefaultService;
+import com.simplyti.service.aws.lambda.AWSLambda;
 import com.simplyti.service.client.DefaultSimpleHttpClient;
 import com.simplyti.service.client.SimpleHttpClient;
 import com.simplyti.service.clients.http.HttpClient;
@@ -44,7 +45,8 @@ public class CustomInjectorSource extends AbstractModule implements InjectorSour
 		bind(SimpleHttpClient.class).toInstance(client);
 		
 		bind(new TypeLiteral<Map<String,Object>>(){}).toProvider(Maps::newHashMap).in(ScenarioScoped.class);
-		bind(new TypeLiteral<List<Future<Service>>>(){}).toProvider(ArrayList::new).in(ScenarioScoped.class);
+		bind(new TypeLiteral<List<Future<DefaultService>>>(){}).toProvider(ArrayList::new).in(ScenarioScoped.class);
+		bind(new TypeLiteral<List<AWSLambda>>(){}).toProvider(ArrayList::new).in(ScenarioScoped.class);
 	}
 	
 

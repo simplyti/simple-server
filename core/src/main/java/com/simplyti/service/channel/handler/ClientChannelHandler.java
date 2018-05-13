@@ -29,7 +29,7 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 
 	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
 
-	private final Service service;
+	private final Service<?> service;
 	
 	private final List<String> currentHandlers = new ArrayList<>();
 
@@ -38,7 +38,7 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 	private final DefaultBackendHandlerInit defaultBackendFullRequestHandlerInit;
 
 	@Inject
-	public ClientChannelHandler(Service service,
+	public ClientChannelHandler(Service<?> service,
 			ApiRequestHandlerInit apiRequestHandlerInit,
 			FileServerHandlerInit fileServerHandlerInit,
 			DefaultBackendHandlerInit defaultBackendFullRequestHandlerInit) {

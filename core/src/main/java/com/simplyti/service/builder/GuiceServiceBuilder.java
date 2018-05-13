@@ -23,12 +23,15 @@ import com.simplyti.service.fileserver.FileServeConfiguration;
 
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Log4J2LoggerFactory;
+import io.netty.util.internal.logging.Slf4JLoggerFactory;
 import io.vavr.control.Try;
 
-public class GuiceServiceBuilder implements ServiceBuilder {
+public class GuiceServiceBuilder<T extends Service<?>> implements ServiceBuilder<T> {
 
 	private static final int DEFAULT_INSECURE_PORT = 8080;
 	private static final int DEFAULT_SECURE_PORT = 8443;
+	
+	private final Class<T> serviceClass;
 	
 	private String usingLogger;
 	private Collection<Class<? extends ApiProvider>> apiClasses;
@@ -38,9 +41,14 @@ public class GuiceServiceBuilder implements ServiceBuilder {
 
 	private FileServeConfiguration fileServe;
 
+	public GuiceServiceBuilder(Class<T> serviceClass) {
+		this.serviceClass=serviceClass;
+	}
+
 	@Override
-	public Service build() {
+	public T build() {
 		ServerConfig config = new ServerConfig(
+				serviceClass,
 				MoreObjects.firstNonNull(insecuredPort, DEFAULT_INSECURE_PORT),
 				MoreObjects.firstNonNull(securedPort, DEFAULT_SECURE_PORT),fileServe);
 		ServiceModule coreModule = new ServiceModule(config,MoreObjects.firstNonNull(apiClasses, Collections.emptySet()));
@@ -48,31 +56,39 @@ public class GuiceServiceBuilder implements ServiceBuilder {
 				.map(Collection::stream)
 				.orElse(Stream.<Module>empty());
 		Injector injector = Guice.createInjector(Stream.concat(additinalModules, Stream.of(coreModule)).collect(Collectors.toList()));
-		return injector.getInstance(Service.class);
+		return injector.getInstance(serviceClass);
 	}
 	
 	@Override
-	public ServiceBuilder insecuredPort(int port) {
+	public ServiceBuilder<T> insecuredPort(int port) {
 		this.insecuredPort=port;
 		return this;
 	}
 	
 	@Override
-	public ServiceBuilder securedPort(int port) {
+	public ServiceBuilder<T> securedPort(int port) {
 		this.securedPort=port;
 		return this;
 	}
 
 	@Override
-	public ServiceBuilder withLog4J2Logger() {
+	public ServiceBuilder<T> withLog4J2Logger() {
 		checkState(usingLogger==null,String.format("Logger already stablished to %s", usingLogger));
 		InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE);
 		this.usingLogger="log4j2";
 		return this;
 	}
+	
+	@Override
+	public ServiceBuilder<T> withSlf4jLogger() {
+		checkState(usingLogger==null,String.format("Logger already stablished to %s", usingLogger));
+		InternalLoggerFactory.setDefaultFactory(Slf4JLoggerFactory.INSTANCE);
+		this.usingLogger="slf4j";
+		return this;
+	}
 
 	@Override
-	public ServiceBuilder withApi(Class<? extends ApiProvider> apiClass) {
+	public ServiceBuilder<T> withApi(Class<? extends ApiProvider> apiClass) {
 		if(this.apiClasses==null){
 			this.apiClasses=Sets.newHashSet();
 		}
@@ -81,7 +97,7 @@ public class GuiceServiceBuilder implements ServiceBuilder {
 	}
 
 	@Override
-	public ServiceBuilder withModule(Module module) {
+	public ServiceBuilder<T> withModule(Module module) {
 		if(this.modules==null) {
 			this.modules=Sets.newHashSet();
 		}
@@ -90,12 +106,12 @@ public class GuiceServiceBuilder implements ServiceBuilder {
 	}
 	
 	@Override
-	public ServiceBuilder withModule(Class<? extends Module> module) {
+	public ServiceBuilder<T> withModule(Class<? extends Module> module) {
 		return withModule(Try.of(module::newInstance).get());
 	}
 
 	@Override
-	public ServiceBuilder fileServe(String path, String directory) {
+	public ServiceBuilder<T> fileServe(String path, String directory) {
 		this.fileServe=new FileServeConfiguration(Pattern.compile("^"+path+"/(.*)$"),DirectoryResolver.literal(directory));
 		return this;
 	}

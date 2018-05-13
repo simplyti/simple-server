@@ -220,6 +220,12 @@
 			<artifactId>simple-server-clients-http</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>com.simplyti.cloud</groupId>
+			<artifactId>simple-server-aws-lambda</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
 		<!-- Integration Tests -->
 		<dependency>

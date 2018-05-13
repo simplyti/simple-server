@@ -269,6 +269,7 @@
 
 	<modules>
 		<module>core</module>
+		<module>aws-lambda</module>
 		<module>auth-jwt</module>
 		<module>clients</module>
 		<module>clients-http</module>
