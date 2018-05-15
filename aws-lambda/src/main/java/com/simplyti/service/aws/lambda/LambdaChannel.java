@@ -11,7 +11,7 @@ import io.netty.channel.embedded.EmbeddedChannel;
 
 public class LambdaChannel extends EmbeddedChannel{
 
-	private byte[] inputBuffer;
+	private final byte[] inputBuffer;
 
 	public LambdaChannel(ServiceChannelInitializer channelInitHandler) {
 		super(DefaultChannelId.newInstance(),channelInitHandler);

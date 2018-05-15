@@ -3,11 +3,14 @@ package com.simplyti.service;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Inject;
+
 import com.google.common.base.Joiner;
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.ApiProvider;
 
 import io.netty.buffer.Unpooled;
+import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -15,6 +18,9 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 
 public class APITest implements ApiProvider{
+	
+	@Inject
+	private EventLoopGroup eventLoopGroup;
 
 	@Override
 	public void build(ApiBuilder builder) {
@@ -34,7 +40,7 @@ public class APITest implements ApiProvider{
 			.then(ctx->ctx.send(((InetSocketAddress)ctx.channel().remoteAddress()).getAddress().toString()));
 		
 		builder.when().post("/echo/delay")
-			.then(ctx->ctx.executor().schedule(()->ctx.send(ctx.body().copy()), Long.parseLong(ctx.queryParam("millis")), TimeUnit.MILLISECONDS));
+			.then(ctx->eventLoopGroup.next().schedule(()->ctx.send(ctx.body().copy()), Long.parseLong(ctx.queryParam("millis")), TimeUnit.MILLISECONDS));
 		
 		builder.when().get("/throwexception")
 			.then(ctx->throwRuntimeException(ctx.queryParam("message")));

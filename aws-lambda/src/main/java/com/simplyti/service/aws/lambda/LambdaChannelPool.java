@@ -10,6 +10,7 @@ import com.simplyti.service.aws.lambda.handler.OutputStreamHandler;
 import com.simplyti.service.channel.ServiceChannelInitializer;
 
 import io.netty.channel.Channel;
+import io.netty.channel.EventLoop;
 import io.netty.util.concurrent.Promise;
 import lombok.RequiredArgsConstructor;
 
@@ -19,10 +20,11 @@ public class LambdaChannelPool {
 	private final Queue<LambdaChannel> channels = Queues.newConcurrentLinkedQueue();
 	private final ServiceChannelInitializer channelInitHandler;
 
-	public LambdaChannel get(OutputStream outputStream,Promise<Void> promise) {
+	public LambdaChannel get(OutputStream outputStream,EventLoop eventLoop, Promise<Void> promise) {
 		LambdaChannel channel = channels.poll();
 		if(channel==null) {
 			channel = new LambdaChannel(channelInitHandler);
+			eventLoop.register(channel);
 		}
 		channel.pipeline().addFirst(new OutputStreamHandler(this,outputStream,promise));
 		return channel;

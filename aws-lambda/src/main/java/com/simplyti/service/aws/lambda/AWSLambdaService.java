@@ -43,8 +43,9 @@ public class AWSLambdaService extends AbstractService<AWSLambdaService>{
 	}
 
 	public Future<Void> handle(InputStream inputStream, OutputStream outputStream, Context context) throws IOException {
-		Promise<Void> promise = eventLoopGroup().next().newPromise();
-		LambdaChannel channel = embededChannelPool.get(outputStream,promise);
+		EventLoop eventLoop = eventLoopGroup().next();
+		Promise<Void> promise = eventLoop.newPromise();
+		LambdaChannel channel = embededChannelPool.get(outputStream,eventLoop,promise);
 		channel.read(inputStream);
 		return promise;
 	}
