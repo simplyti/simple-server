@@ -57,11 +57,11 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 			if(request.decoderResult().isFailure()) {
 				ReferenceCountUtil.release(msg);
 				ctx.fireExceptionCaught(new BadRequestException());
-			}else if ((added=apiRequestHandlerInit.canHandle(ctx,request,NAME)) !=null) {
-				handle(ctx,msg,added);
 			}else if((added=fileServerHandlerInit.canHandle(ctx,request,NAME))!=null){
 				handle(ctx,msg,added);
-			} else if((added=defaultBackendFullRequestHandlerInit.canHandle(ctx,request,NAME))!=null) {
+			} else if ((added=apiRequestHandlerInit.canHandle(ctx,request,NAME)) !=null) {
+				handle(ctx,msg,added);
+			}else if((added=defaultBackendFullRequestHandlerInit.canHandle(ctx,request,NAME))!=null) {
 				handle(ctx,msg,added);
 			} else {
 				ReferenceCountUtil.release(msg);
