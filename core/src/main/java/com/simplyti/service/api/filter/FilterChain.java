@@ -3,28 +3,24 @@ package com.simplyti.service.api.filter;
 import java.util.Iterator;
 import java.util.Set;
 
-import com.simplyti.service.api.ApiInvocation;
-import com.simplyti.service.api.ApiOperation;
-
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
 
-public class FilterChain implements FilterContext {
+public class FilterChain<T> implements FilterContext<T> {
 
 	private final Promise<Void> promise;
-	private final Iterator<OperationInboundFilter> iterator;
-	private final ApiInvocation<?> msg;
+	private final Iterator<? extends Filter<T>> iterator;
+	private final T msg;
 
-	private FilterChain(Set<OperationInboundFilter> filters, ChannelHandlerContext ctx, ApiInvocation<?> msg) {
+	private FilterChain(Set<? extends Filter<T>> filters, ChannelHandlerContext ctx, T msg) {
 		this.iterator =  filters.iterator();
 		this.promise = ctx.executor().newPromise();
 		this.msg=msg;
 	}
 
-	public static FilterChain of(Set<OperationInboundFilter> filters, ChannelHandlerContext ctx, ApiInvocation<?> msg) {
-		return new FilterChain(filters,ctx,msg);
+	public static <T> FilterChain<T> of(Set<? extends Filter<T>> filters, ChannelHandlerContext ctx, T msg) {
+		return new FilterChain<>(filters,ctx,msg);
 	}
 
 	public Future<Void> execute() {
@@ -42,18 +38,13 @@ public class FilterChain implements FilterContext {
 	}
 
 	@Override
-	public HttpHeaders headers() {
-		return msg.headers();
-	}
-
-	@Override
 	public void fail(Throwable cause) {
 		promise.setFailure(cause);
 	}
 
 	@Override
-	public ApiOperation<?, ?> operation() {
-		return msg.operation();
+	public T object() {
+		return msg;
 	}
 
 }

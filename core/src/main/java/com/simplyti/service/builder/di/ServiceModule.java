@@ -17,6 +17,7 @@ import com.google.inject.multibindings.OptionalBinder;
 import com.simplyti.service.Service;
 import com.simplyti.service.ServerConfig;
 import com.simplyti.service.api.builder.ApiProvider;
+import com.simplyti.service.api.filter.HttpResponseFilter;
 import com.simplyti.service.api.filter.OperationInboundFilter;
 import com.simplyti.service.api.health.HealthApi;
 import com.simplyti.service.channel.ClientChannelGroup;
@@ -82,6 +83,7 @@ public class ServiceModule extends AbstractModule {
 			.forEach(apiClass->mangerAPiProviders.addBinding().to(apiClass).in(Singleton.class));
 		
 		Multibinder.newSetBinder(binder(), OperationInboundFilter.class);
+		Multibinder.newSetBinder(binder(), HttpResponseFilter.class);
 		Multibinder.newSetBinder(binder(), ServerStartHook.class);
 		Multibinder.newSetBinder(binder(), ServerStopHook.class);
 		

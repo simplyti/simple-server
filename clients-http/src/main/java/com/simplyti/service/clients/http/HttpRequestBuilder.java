@@ -3,8 +3,10 @@ package com.simplyti.service.clients.http;
 import com.simplyti.service.clients.ClientRequestBuilder;
 import com.simplyti.service.clients.http.request.FinishableBodyHttpRequest;
 import com.simplyti.service.clients.http.request.FinishableHttpRequest;
+import com.simplyti.service.clients.http.request.StreamedHttpRequest;
 
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpRequest;
 
 public interface HttpRequestBuilder extends ClientRequestBuilder<HttpRequestBuilder>  {
 	
@@ -16,6 +18,8 @@ public interface HttpRequestBuilder extends ClientRequestBuilder<HttpRequestBuil
 
 	public FinishableBodyHttpRequest post(String path);
 
-	public FinishableHttpRequest sendFull(FullHttpRequest retain);
+	public FinishableHttpRequest sendFull(FullHttpRequest request);
+
+	public StreamedHttpRequest send(HttpRequest request);
 
 }

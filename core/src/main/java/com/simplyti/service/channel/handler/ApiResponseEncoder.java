@@ -2,11 +2,14 @@ package com.simplyti.service.channel.handler;
 
 import java.nio.CharBuffer;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 
 import com.jsoniter.output.JsonStream;
 import com.simplyti.service.api.ApiResponse;
+import com.simplyti.service.api.filter.FilterChain;
+import com.simplyti.service.api.filter.HttpResponseFilter;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
@@ -28,21 +31,38 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class ApiResponseEncoder extends MessageToMessageEncoder<ApiResponse> {
 	
+	private final Set<HttpResponseFilter> filters;
+	
 	@Override
 	protected void encode(ChannelHandlerContext ctx, ApiResponse msg, List<Object> out) throws Exception {
 		if(msg.response()==null){
-			out.add(buildHttpResponse(Unpooled.EMPTY_BUFFER, HttpResponseStatus.NO_CONTENT,msg));
+			handle(ctx,out,buildHttpResponse(Unpooled.EMPTY_BUFFER, HttpResponseStatus.NO_CONTENT,msg));
 		} else if(msg.response() instanceof CharSequence){
-			out.add(buildHttpResponse(ByteBufUtil.encodeString(ctx.alloc(), CharBuffer.wrap((CharSequence)msg.response()), CharsetUtil.UTF_8), HttpResponseStatus.OK,msg));
+			handle(ctx,out,buildHttpResponse(ByteBufUtil.encodeString(ctx.alloc(), CharBuffer.wrap((CharSequence)msg.response()), CharsetUtil.UTF_8), HttpResponseStatus.OK,msg));
 		} else if(msg.response() instanceof ByteBuf){
-			out.add(buildHttpResponse((ByteBuf) msg.response(), HttpResponseStatus.OK,msg));
+			handle(ctx,out,buildHttpResponse((ByteBuf) msg.response(), HttpResponseStatus.OK,msg));
 		}else{
 			ByteBuf buffer = ctx.alloc().buffer();
 			JsonStream.serialize(msg.response(), new ByteBufOutputStream(buffer));
-			out.add(buildHttpResponse(buffer, HttpResponseStatus.OK,msg));
+			handle(ctx,out,buildHttpResponse(buffer, HttpResponseStatus.OK,msg));
 		}
 	}
 	
+	private void handle(ChannelHandlerContext ctx, List<Object> out, FullHttpResponse response) {
+		if(filters.isEmpty()) {
+			out.add(response);
+		}else {
+			FilterChain.of(filters, ctx, response).execute()
+				.addListener(result->{
+					if(result.isSuccess()) {
+						out.add(response);
+					}else {
+						ctx.close();
+					}
+				});
+		}
+	}
+
 	private FullHttpResponse buildHttpResponse(ByteBuf content, HttpResponseStatus status, ApiResponse msg) {
 		FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, content);
 		response.headers().set(HttpHeaderNames.CONTENT_LENGTH, content.readableBytes());

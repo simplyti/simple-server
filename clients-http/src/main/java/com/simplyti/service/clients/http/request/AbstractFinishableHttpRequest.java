@@ -31,23 +31,23 @@ public abstract class AbstractFinishableHttpRequest implements FinishableHttpReq
 	
 	@Override
 	public Future<FullHttpResponse> fullResponse() {
-		return client.channel(endpoint,request(),clientChannel->
+		return client.<FullHttpResponse>channel(endpoint,request(),clientChannel->
 			clientChannel.pipeline().addLast(new FullHttpResponseHandler(clientChannel,checkStatusCode)),
-			timeoutMillis);
+			timeoutMillis).future();
 	}
 
 	@Override
 	public Future<Void> forEach(Consumer<HttpObject> consumer) {
-		return client.channel(endpoint,request(),clientChannel->
+		return client.<Void>channel(endpoint,request(),clientChannel->
 			clientChannel.pipeline().addLast(new HttpResponseHandler(clientChannel,consumer)),
-			timeoutMillis);
+			timeoutMillis).future();
 	}
 
 	@Override
 	public Future<Void> stream(Consumer<ByteBuf> consumer) {
-		return client.channel(endpoint,request(),clientChannel->
+		return client.<Void>channel(endpoint,request(),clientChannel->
 			clientChannel.pipeline().addLast(new StreamResponseHandler(clientChannel,consumer)),
-			timeoutMillis);
+			timeoutMillis).future();
 	}
 	
 	protected abstract FullHttpRequest request();

@@ -14,6 +14,7 @@ import com.simplyti.service.clients.Address;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
+import com.simplyti.service.clients.http.request.FinishableStreamedHttpRequest;
 import com.simplyti.service.clients.proxy.ProxiedEndpoint;
 import com.simplyti.service.clients.proxy.Proxy;
 import com.simplyti.service.clients.proxy.Proxy.ProxyType;
@@ -23,12 +24,22 @@ import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.CompositeByteBuf;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
+import io.netty.handler.codec.http.DefaultHttpContent;
+import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpContent;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObject;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.CharsetUtil;
+import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Future;
 import io.vavr.control.Try;
 
@@ -57,7 +68,7 @@ public class HttpClientStepDefs {
 	
 	@Before
 	public void checkProxy() {
-		HttpEndpoint target = HttpEndpoint.of("http://httpbin:8080/status/200");
+		HttpEndpoint target = HttpEndpoint.of("http://httpbin:80/status/200");
 		ProxiedEndpoint endpoint = ProxiedEndpoint.of(target).through("127.0.0.1", 3128, Proxy.ProxyType.HTTP);
 		Awaitility.await().until(()->{
 			Try<FullHttpResponse> result = Try.of(()->client
@@ -99,6 +110,41 @@ public class HttpClientStepDefs {
 			done.set(true);
 		});
 		Awaitility.await().until(done::get);
+	}
+	
+	@When("^I post \"([^\"]*)\" with body stream \"([^\"]*)\" and length of (\\d+) sgetting response \"([^\"]*)\" and response stream to \"([^\"]*)\"$")
+	public void iPostWithBodyStreamAndLengthOfSgettingResponse(String path, String streamKey, int length, String responseKey, String responseStreamKey) throws Exception {
+		HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, path);
+		request.headers().set(HttpHeaderNames.CONTENT_LENGTH,length);
+		List<HttpObject> responseStream = new ArrayList<>();
+		scenarioData.put(responseStreamKey, responseStream);
+		FinishableStreamedHttpRequest response = sutClient.withEndpoin(LOCAL_ENDPOINT)
+			.send(request)
+			.forEach(obj->responseStream.add(ReferenceCountUtil.retain(obj)));
+		scenarioData.put(responseKey, response);
+		scenarioData.put(streamKey, response);
+	}
+	
+	@Then("^I check that response stream \"([^\"]*)\" contains body \"([^\"]*)\"$")
+	public void iCheckThatResponseStreamContainsBody(String responseStreamKey, String expected) throws Exception {
+		@SuppressWarnings("unchecked")
+		List<HttpObject> responseStream = (List<HttpObject>) scenarioData.get(responseStreamKey);
+		CompositeByteBuf buff = new CompositeByteBuf(PooledByteBufAllocator.DEFAULT, false, 100);
+		responseStream.stream()
+			.filter(obj->obj instanceof HttpContent)
+			.map(HttpContent.class::cast)
+			.forEach(obj->buff.addComponent(true, obj.content()));
+		
+		assertThat(buff.toString(CharsetUtil.UTF_8),equalTo(expected));
+		buff.release();
+		buff.toString();
+	}
+	
+	@When("^I send \"([^\"]*)\" to stream \"([^\"]*)\" getting result \"([^\"]*)\"$")
+	public void iSendToStreamGettingResult(String data, String streamKey, String resultKey) throws Exception {
+		FinishableStreamedHttpRequest stream = (FinishableStreamedHttpRequest) scenarioData.get(streamKey);
+		Future<Void> result = stream.send(new DefaultHttpContent(Unpooled.wrappedBuffer(data.getBytes(CharsetUtil.UTF_8))));
+		scenarioData.put(resultKey, result);
 	}
 	
 	@When("^I get \"([^\"]*)\" getting response \"([^\"]*)\"$")

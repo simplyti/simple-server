@@ -1,6 +1,6 @@
 Feature: Clients
 
-Scenario: Connection are reused
+Scenario: Connection is reused
 	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
 	Then I check that "#serviceFuture" is success
 	When I get "/hello" getting response "#response"
@@ -46,6 +46,22 @@ Scenario: Single thread client
 	Then I check that "#serviceFuture" is success
 	When I get "/hello" using client "#client" in event loop "#eventLoopGroup" getting response "#response"
 	Then I check that "#response" is success
+	And I check that http response "#response" has body "Hello!"
 	When I get "/hello" using client "#client" in event loop "#eventLoopGroup" getting response "#response"
 	Then I check that "#response" is success
+	And I check that http response "#response" has body "Hello!"
 	And I check that http client "#client" has 1 iddle connection
+	
+Scenario: Connection write stream
+	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I post "/echo" with body stream "#stream" and length of 20 sgetting response "#response" and response stream to "#responseStream"
+	And I check that stream "#response" is not complete
+	When I send "Hello stream." to stream "#stream" getting result "#writeresult"
+	Then I check that "#writeresult" is success
+	And I check that stream "#response" is not complete
+	When I send "The end" to stream "#stream" getting result "#writeresult"
+	Then I check that "#writeresult" is success
+	And I check that stream "#response" is success
+	And I check that response stream "#responseStream" contains body "Hello stream.The end"
+	

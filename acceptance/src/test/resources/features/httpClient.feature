@@ -36,7 +36,7 @@ Scenario: Connection error
 	
 Scenario Outline: Get external endpoint socks proxy
 	Given "<type>" proxy "<address>" as "#proxy"
-	When I get url "http://httpbin:8080/status/204" through proxy "#proxy" getting response "#response"
+	When I get url "http://httpbin:80/status/204" through proxy "#proxy" getting response "#response"
 	Then I check that "#response" is success
 	And I check that http response "#response" has status code 204
 	And I check that http response "#response" has body ""

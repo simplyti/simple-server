@@ -2,6 +2,7 @@ package com.simplyti.service.auth;
 
 import javax.inject.Inject;
 
+import com.simplyti.service.api.ApiInvocation;
 import com.simplyti.service.api.filter.FilterContext;
 import com.simplyti.service.api.filter.OperationInboundFilter;
 import com.simplyti.service.exception.UnauthorizedException;
@@ -20,13 +21,13 @@ public class JWTAuthFilter implements OperationInboundFilter {
 	private final JWTConfiguration jwtConfiguration;
 
 	@Override
-	public void execute(FilterContext context) {
-		if(!context.operation().requiresAuth()) {
+	public void execute(FilterContext<ApiInvocation<?>> context) {
+		if(!context.object().operation().requiresAuth()) {
 			context.done();
-		}else if(!context.headers().contains(HttpHeaderNames.AUTHORIZATION)) {
+		}else if(!context.object().headers().contains(HttpHeaderNames.AUTHORIZATION)) {
 			context.fail(new UnauthorizedException());
 		} else {
-			String auth = context.headers().get(HttpHeaderNames.AUTHORIZATION);
+			String auth = context.object().headers().get(HttpHeaderNames.AUTHORIZATION);
 			if(auth.startsWith(BEARER_PREFIX)) {
 				String token = auth.substring(BEARER_PREFIX.length());
 				try{

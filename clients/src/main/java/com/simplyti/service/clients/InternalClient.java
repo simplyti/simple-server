@@ -41,21 +41,25 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 		this.channelPoolMap = new SimpleChannelPoolMap(eventLoopGroup, new MonitoredHandler(this, poolHandler));
 	}
 
-	public <T> Future<T> channel(Endpoint endpoint, Object msg, Consumer<ClientChannel<T>> consumer,
+	public <T> ClientFuture<T> channel(Endpoint endpoint, Object msg, Consumer<ClientChannel<T>> consumer,
 			long timeoutMillis) {
 		ChannelPool pool = channelPoolMap.get(endpoint);
 		Future<Channel> channelFuture = pool.acquire();
 		if (channelFuture.isDone()) {
 			if (channelFuture.isSuccess()) {
-				Promise<T> promise = eventLoopGroup.next().newPromise();
+				EventLoop eventLoop = channelFuture.getNow().eventLoop();
+				Promise<T> promise = eventLoop.newPromise();
 				send(consumer, pool, channelFuture.getNow(), promise, msg, timeoutMillis);
-				return promise;
+				return new ClientFuture<>(eventLoop,channelFuture,promise);
 			} else {
 				ReferenceCountUtil.release(msg);
-				return eventLoopGroup.next().newFailedFuture(channelFuture.cause());
+				EventLoop eventLoop = eventLoopGroup.next();
+				Future<T> promise = eventLoop.newFailedFuture(channelFuture.cause());
+				return new ClientFuture<>(eventLoop,channelFuture,promise);
 			}
 		} else {
-			Promise<T> promise = eventLoopGroup.next().newPromise();
+			EventLoop eventLoop = eventLoopGroup.next();
+			Promise<T> promise = eventLoop.newPromise();
 			channelFuture.addListener(f -> {
 				if (channelFuture.isSuccess()) {
 					send(consumer, pool, channelFuture.getNow(), promise, msg, timeoutMillis);
@@ -64,7 +68,7 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 					promise.setFailure(channelFuture.cause());
 				}
 			});
-			return promise;
+			return new ClientFuture<>(eventLoop,channelFuture,promise);
 		}
 	}
 
@@ -102,6 +106,10 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 
 	public int totalConnections() {
 		return allChannels.size();
+	}
+
+	public <T> Promise<T> newPromise() {
+		return eventLoopGroup.next().newPromise();
 	}
 
 }

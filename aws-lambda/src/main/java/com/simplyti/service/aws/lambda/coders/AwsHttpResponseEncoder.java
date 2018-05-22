@@ -16,11 +16,15 @@ public class AwsHttpResponseEncoder extends MessageToByteEncoder<FullHttpRespons
 
 	@Override
 	protected void encode(ChannelHandlerContext ctx, FullHttpResponse msg, ByteBuf out) throws Exception {
-		ImmutableMap<String, Object> awsResponse = ImmutableMap.<String,Object>builder()
+		ImmutableMap.Builder<String, Object> awsResponse = ImmutableMap.<String,Object>builder()
 				.put("statusCode",msg.status().code())
-				.put("body",msg.content().toString(CharsetUtil.UTF_8))
-				.build();
-		JsonStream.serialize(awsResponse, new ByteBufOutputStream(out));
+				.put("body",msg.content().toString(CharsetUtil.UTF_8));
+		
+		ImmutableMap.Builder<String, Object> headers = ImmutableMap.<String,Object>builder();
+		msg.headers().forEach(header->headers.put(header.getKey(), header.getValue()));
+		awsResponse.put("headers",headers.build());
+		
+		JsonStream.serialize(awsResponse.build(), new ByteBufOutputStream(out));
 	}
 
 }

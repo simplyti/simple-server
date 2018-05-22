@@ -4,6 +4,7 @@ package com.simplyti.service;
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.simplyti.service.api.ApiInvocation;
 import com.simplyti.service.api.filter.FilterContext;
 import com.simplyti.service.api.filter.OperationInboundFilter;
 import com.simplyti.service.exception.UnauthorizedException;
@@ -20,8 +21,8 @@ public class OperationInboundFilterModule  extends AbstractModule implements Ope
 	}
 
 	@Override
-	public void execute(FilterContext context) {
-		String authorization = context.headers().get(HttpHeaderNames.AUTHORIZATION);
+	public void execute(FilterContext<ApiInvocation<?>> context) {
+		String authorization = context.object().headers().get(HttpHeaderNames.AUTHORIZATION);
 		if(authorization==null) {
 			context.fail(new UnauthorizedException());
 		}else {

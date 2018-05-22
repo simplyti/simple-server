@@ -29,6 +29,7 @@ public class OutputStreamHandler extends ChannelOutboundHandlerAdapter {
 		data.readBytes(bytes);
 		data.release();
 		outputStream.write(bytes);
+		outputStream.close();
 		resultPromise.setSuccess(null);
 		promise.setSuccess();
 		embededChannelPool.offer(ctx.channel());

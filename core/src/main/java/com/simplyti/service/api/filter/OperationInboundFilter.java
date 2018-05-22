@@ -1,7 +1,7 @@
 package com.simplyti.service.api.filter;
 
-public interface OperationInboundFilter {
+import com.simplyti.service.api.ApiInvocation;
 
-	void execute(FilterContext context);
+public interface OperationInboundFilter extends Filter<ApiInvocation<?>>{
 
 }

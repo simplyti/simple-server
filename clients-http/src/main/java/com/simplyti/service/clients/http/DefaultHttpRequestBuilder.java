@@ -9,7 +9,9 @@ import com.simplyti.service.clients.InternalClient;
 import com.simplyti.service.clients.http.request.DefaultFinishabBodyleHttpRequest;
 import com.simplyti.service.clients.http.request.FinishableBodyHttpRequest;
 import com.simplyti.service.clients.http.request.FinishableHttpRequest;
+import com.simplyti.service.clients.http.request.StreamedHttpRequest;
 import com.simplyti.service.clients.http.request.DefaultFinishableHttpRequest;
+import com.simplyti.service.clients.http.request.DefaultStreamedHttpRequest;
 
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
@@ -18,6 +20,7 @@ import io.netty.handler.codec.http.EmptyHttpHeaders;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.CharsetUtil;
 
@@ -25,7 +28,6 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 
 	private final InternalClient target;
 	private final Endpoint endpoint;
-	
 	
 	private final DefaultHttpHeaders headers;
 	private boolean checkStatusCode;
@@ -66,6 +68,11 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 		String userpass = Joiner.on(':').join(user,password);
 		headers.set(HttpHeaderNames.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString(userpass.getBytes(CharsetUtil.UTF_8)));
 		return this;
+	}
+
+	@Override
+	public StreamedHttpRequest send(HttpRequest request) {
+		return new DefaultStreamedHttpRequest(target,endpoint,request,readTimeout());
 	}
 
 }
