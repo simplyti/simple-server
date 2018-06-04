@@ -27,6 +27,8 @@ public abstract class RestParam {
 			return Float.parseFloat(value);
 		} else if (type.isInstanceOf(Double.class) || type.isInstanceOf(Double.TYPE)) {
 			return Double.parseDouble(value);
+		} else if (type.isInstanceOf(Boolean.class) || type.isInstanceOf(Boolean.TYPE)) {
+			return Boolean.parseBoolean(value);
 		} else if (type.isInstanceOf(List.class)) {
 			ResolvedType itemType = type.typeParametersFor(List.class).get(0);
 			return StreamSupport.stream(Splitter.on(',').split(value).spliterator(), false).map(item -> convert(item, itemType)).collect(Collectors.toList());
