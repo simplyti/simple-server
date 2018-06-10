@@ -156,6 +156,11 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 	public List<String> queryParams(String name) {
 		return this.msg.params().get(name);
 	}
+	
+	@Override
+	public Map<String,List<String>> queryParams() {
+		return this.msg.params();
+	}
 
 	@Override
 	public Future<Void> close() {

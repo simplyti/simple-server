@@ -16,7 +16,7 @@ public class DefaultFinishableHttpRequest extends AbstractFinishableHttpRequest 
 	}
 
 	@Override
-	protected FullHttpRequest request() {
+	protected FullHttpRequest request0() {
 		return request;
 	}
 

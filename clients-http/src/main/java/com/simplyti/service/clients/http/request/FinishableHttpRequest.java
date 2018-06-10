@@ -1,5 +1,6 @@
 package com.simplyti.service.clients.http.request;
 
+import java.util.Map;
 import java.util.function.Consumer;
 
 import io.netty.buffer.ByteBuf;
@@ -14,5 +15,7 @@ public interface FinishableHttpRequest {
 	Future<Void> forEach(Consumer<HttpObject> consumer);
 
 	Future<Void> stream(Consumer<ByteBuf> consumer);
+
+	FinishableHttpRequest params(Map<String, String> params);
 
 }

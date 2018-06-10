@@ -1,5 +1,6 @@
 package com.simplyti.service.clients;
 
+import java.nio.channels.ClosedChannelException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -76,6 +77,7 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 			Object msg, long timeoutMillis) {
 		channelInit.accept(new ClientChannel<T>(pool, channel, promise));
 		channel.writeAndFlush(msg).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+		channel.closeFuture().addListener(f->promise.tryFailure(new ClosedChannelException()));
 		ScheduledFuture<?> timeoutTask = channel.eventLoop().schedule(
 				() -> promise.tryFailure(ReadTimeoutException.INSTANCE), timeoutMillis, TimeUnit.MILLISECONDS);
 		promise.addListener(f -> timeoutTask.cause());

@@ -34,7 +34,7 @@ public class DefaultFinishabBodyleHttpRequest extends AbstractFinishableHttpRequ
 		return this;
 	}
 	
-	protected FullHttpRequest request() {
+	protected FullHttpRequest request0() {
 		final ByteBuf body;
 		if(nullableBody!=null) {
 			body=nullableBody;
