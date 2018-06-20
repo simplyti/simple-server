@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.jsoniter.JsonIterator;
 import com.simplyti.service.exception.ExceptionHandler;
 
@@ -32,7 +31,6 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 	private final ChannelHandlerContext ctx;
 	private final ApiInvocation<I> msg;
 	
-	private final Map<String,String> cachedpathParams = Maps.newHashMap();
 	private final Supplier<I> cachedRequestBody;
 	
 	private boolean released = false ;
@@ -47,14 +45,7 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 	
 	@Override
 	public String pathParam(String key) {
-		return cachedpathParams.computeIfAbsent(key, theKey->{
-			Integer group = msg.operation().pathParamNameToGroup().get(key);
-			if(group==null){
-				return null;
-			}else{
-				return msg.matcher().group(group);
-			}
-		});
+		return msg.pathParam(key);
 	}
 
 	@Override
