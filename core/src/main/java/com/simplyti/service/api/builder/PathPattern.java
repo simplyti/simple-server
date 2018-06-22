@@ -62,7 +62,7 @@ public class PathPattern {
 			int regexInit = pathParamName.lastIndexOf(":");
 			String regex;
 			if (regexInit == -1) {
-				regex = "[^/]*";
+				regex = "[^/]+";
 			} else {
 				regex = pathParamName.substring(regexInit + 1);
 				pathParamName.replace(regexInit, pathParamName.length(), "");

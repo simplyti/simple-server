@@ -114,7 +114,11 @@ public class APITest implements ApiProvider{
 				throw new RuntimeException("This is a test error");
 			});
 	
+		builder.when().get("/resources")
+			.then(ctx->ctx.send("This is the resource list"));
 		
+		builder.when().get("/resources/{id}")
+			.then(ctx->ctx.send("This is the resource "+ctx.pathParam("id")));
 		
 		builder.usingJaxRSContract(JaxRSAPITest.class);
 	}

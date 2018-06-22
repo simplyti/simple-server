@@ -6,6 +6,9 @@ Scenario: Basic Http Handle
 	When I send a "GET /hello" getting "#response"
 	Then I check that "#response" is equals to "Hello!"
 	And I check that "#response" has status code 200
+	When I send a "GET /hello/" getting "#response"
+	Then I check that "#response" is equals to "Hello!"
+	And I check that "#response" has status code 200
 	And I check that client has 1 active connections
 	
 Scenario: Basic Http 1.0 Handle
@@ -75,6 +78,8 @@ Scenario: Dynamic path param request
 	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /pathparam/pablo" getting "#response"
+	Then I check that "#response" is equals to "Hello pablo"
+	When I send a "GET /pathparam/pablo/" getting "#response"
 	Then I check that "#response" is equals to "Hello pablo"
 	
 Scenario: Unexisting path param request
@@ -195,3 +200,13 @@ Scenario: Error after send
 	Then I check that "#response" is equals to "I Will send throw an error!"
 	And I check that "#response" has status code 200
 	And I check that client has 1 active connections
+	
+Scenario: Conflictive resource path when invoking with trailing slash
+	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I send a "GET /resources" getting "#response"
+	Then I check that "#response" is equals to "This is the resource list"
+	When I send a "GET /resources/1" getting "#response"
+	Then I check that "#response" is equals to "This is the resource 1"
+	When I send a "GET /resources/" getting "#response"
+	Then I check that "#response" is equals to "This is the resource list"
