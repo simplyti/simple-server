@@ -22,7 +22,7 @@ public class JWTAuthFilter implements OperationInboundFilter {
 
 	@Override
 	public void execute(FilterContext<ApiInvocation<?>> context) {
-		if(!context.object().operation().requiresAuth()) {
+		if(context.object().operation().meta("roles")==null) {
 			context.done();
 		}else if(!context.object().headers().contains(HttpHeaderNames.AUTHORIZATION)) {
 			context.fail(new UnauthorizedException());

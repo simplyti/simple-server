@@ -24,6 +24,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
 import lombok.RequiredArgsConstructor;
 
@@ -36,15 +37,17 @@ public class ApiResponseEncoder extends MessageToMessageEncoder<ApiResponse> {
 	@Override
 	protected void encode(ChannelHandlerContext ctx, ApiResponse msg, List<Object> out) throws Exception {
 		if(msg.response()==null){
-			handle(ctx,out,buildHttpResponse(Unpooled.EMPTY_BUFFER, HttpResponseStatus.NO_CONTENT,msg));
+			handle(ctx,out,buildHttpResponse(Unpooled.EMPTY_BUFFER, HttpResponseStatus.NO_CONTENT,msg,null));
 		} else if(msg.response() instanceof CharSequence){
-			handle(ctx,out,buildHttpResponse(ByteBufUtil.encodeString(ctx.alloc(), CharBuffer.wrap((CharSequence)msg.response()), CharsetUtil.UTF_8), HttpResponseStatus.OK,msg));
+			handle(ctx,out,buildHttpResponse(ByteBufUtil.encodeString(ctx.alloc(), CharBuffer.wrap((CharSequence)msg.response()), CharsetUtil.UTF_8), HttpResponseStatus.OK,msg,
+					HttpHeaderValues.TEXT_PLAIN));
 		} else if(msg.response() instanceof ByteBuf){
-			handle(ctx,out,buildHttpResponse((ByteBuf) msg.response(), HttpResponseStatus.OK,msg));
+			handle(ctx,out,buildHttpResponse((ByteBuf) msg.response(), HttpResponseStatus.OK,msg,
+					null));
 		}else{
 			ByteBuf buffer = ctx.alloc().buffer();
 			JsonStream.serialize(msg.response(), new ByteBufOutputStream(buffer));
-			handle(ctx,out,buildHttpResponse(buffer, HttpResponseStatus.OK,msg));
+			handle(ctx,out,buildHttpResponse(buffer, HttpResponseStatus.OK,msg,HttpHeaderValues.APPLICATION_JSON));
 		}
 	}
 	
@@ -63,10 +66,12 @@ public class ApiResponseEncoder extends MessageToMessageEncoder<ApiResponse> {
 		}
 	}
 
-	private FullHttpResponse buildHttpResponse(ByteBuf content, HttpResponseStatus status, ApiResponse msg) {
+	private FullHttpResponse buildHttpResponse(ByteBuf content, HttpResponseStatus status, ApiResponse msg, AsciiString contentType) {
 		FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, content);
 		response.headers().set(HttpHeaderNames.CONTENT_LENGTH, content.readableBytes());
-		response.headers().set(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.APPLICATION_JSON);
+		if(contentType!=null) {
+			response.headers().set(HttpHeaderNames.CONTENT_TYPE, contentType);
+		}
 		if(msg.isKeepAlive()) {
 			response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
 		}

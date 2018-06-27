@@ -20,7 +20,7 @@ import com.jsoniter.spi.TypeLiteral;
 import com.simplyti.service.api.APIContext;
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.FinishableApiBuilder;
-import com.simplyti.service.auth.RequiresAuth;
+import com.simplyti.service.meta.Meta;
 
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.util.internal.StringUtil;
@@ -75,9 +75,8 @@ public class JaxRSBuilder<I,O> extends FinishableApiBuilder<I, O>{
 		}
 		
 		JaxRSBuilder<Object, Object> jaxrsBuilder = new JaxRSBuilder<Object, Object>(builder, httpMethod, path.toString(), bodyType);
-		if(method.isAnnotationPresent(RequiresAuth.class)) {
-			jaxrsBuilder.withRequiresAuth();
-		}
+		Stream.concat(Stream.of(method.getAnnotationsByType(Meta.class)),Stream.of(clazz.getAnnotationsByType(Meta.class)))
+			.forEach(meta->jaxrsBuilder.withMeta(meta.name(), meta.value()));
 		jaxrsBuilder.then(new MethodInvocation(argumentIndexToRestParam.build(),contexArgIndex,method,instance,blockingExecutor));
 	}
 	

@@ -1,6 +1,7 @@
 package com.simplyti.service.api;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
@@ -14,13 +15,13 @@ public class ApiOperation<I,O> {
 	
 	private final HttpMethod method;
 	private final Pattern pathTemplate;
-	private final boolean requiresAuth;
 	private final Map<String,Integer> pathParamNameToGroup;
 	private final Consumer<ApiInvocationContext<I,O>> handler;
 	private final TypeLiteral<I> requestType;
 	private final int literalChars;
 	private final boolean multipart;
 	private final int maxBodyLength;
+	private final Map<String,Set<String>> metadata;
 	
 	public HttpMethod method() {
 		return method;
@@ -50,12 +51,12 @@ public class ApiOperation<I,O> {
 		return multipart;
 	}
 
-	public boolean requiresAuth() {
-		return requiresAuth;
-	}
-	
 	public int maxBodyLength() {
 		return maxBodyLength;
+	}
+	
+	public Set<String> meta(String name){
+		return this.metadata.get(name);
 	}
 
 }
