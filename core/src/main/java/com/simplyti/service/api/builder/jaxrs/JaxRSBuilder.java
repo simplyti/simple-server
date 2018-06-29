@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Stream;
 
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
@@ -68,7 +69,9 @@ public class JaxRSBuilder<I,O> extends FinishableApiBuilder<I, O>{
 				continue;
 			} else if (processQueryParam(parameterAnnotations[argIndex],resolvedType,argumentIndexToRestParam,argIndex)) {
 				continue;
-			}else{
+			} else if (processHeaderParam(parameterAnnotations[argIndex],resolvedType,argumentIndexToRestParam,argIndex)) {
+				continue;
+			} else{
 				bodyType = TypeLiteral.create(parametersTypes[argIndex]);
 				argumentIndexToRestParam.put(argIndex,new RestBodyParam(new TypeResolver().resolve(parametersTypes[argIndex])));
 			}
@@ -110,6 +113,24 @@ public class JaxRSBuilder<I,O> extends FinishableApiBuilder<I, O>{
 		if (pathParam.isPresent()) {
 			argumentIndexToRestParam.put(argIndex,
 					new RestPathParam(type, pathParam.get().value()));
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	private static boolean processHeaderParam(Annotation[] parameterAnnotations,ResolvedType type, Builder<Integer, RestParam> argumentIndexToRestParam,int argIndex) {
+		Optional<HeaderParam> headerParam = Stream.of(parameterAnnotations)
+				.filter(ann -> ann.annotationType().equals(HeaderParam.class)).findFirst()
+				.map(ann -> HeaderParam.class.cast(ann));
+		Optional<Object> defaultValue = Stream.of(parameterAnnotations)
+				.filter(ann -> ann.annotationType().equals(DefaultValue.class)).findFirst()
+				.map(ann -> DefaultValue.class.cast(ann))
+				.map(def->RestParam.convert(def.value(), type));
+		
+		if (headerParam.isPresent()) {
+			argumentIndexToRestParam.put(argIndex,
+					new RestHeaderParam(type, headerParam.get().value(),defaultValue.orElse(null)));
 			return true;
 		} else {
 			return false;

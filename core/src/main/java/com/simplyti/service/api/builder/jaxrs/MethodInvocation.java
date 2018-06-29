@@ -47,6 +47,14 @@ public class MethodInvocation implements Consumer<ApiInvocationContext<Object, O
 				} else {
 					args[entry.getKey()] = queryParam.defaultValue();
 				}
+			} else if (entry.getValue() instanceof RestHeaderParam) {
+				RestHeaderParam headerParam = (RestHeaderParam) entry.getValue();
+				List<String> params = def.request().headers().getAll(headerParam.name());
+				if (params!=null) {
+					args[entry.getKey()] = resolvHeaderParam(headerParam,params,entry.getValue().getType());
+				} else {
+					args[entry.getKey()] = headerParam.defaultValue();
+				}
 			} else {
 				args[entry.getKey()] = ctx.body();
 			}
@@ -80,6 +88,15 @@ public class MethodInvocation implements Consumer<ApiInvocationContext<Object, O
 	private Object resolvQueryParam(RestQueryParam queryParam, List<String> params, ResolvedType resolvedType) {
 		if (queryParam.getType().isInstanceOf(List.class) && params.size() != 1) {
 			ResolvedType itemType = queryParam.getType().typeParametersFor(List.class).get(0);
+			return params.stream().map(param -> RestParam.convert(param, itemType)).collect(Collectors.toList());
+		} else {
+			return RestParam.convert(Iterables.getFirst(params, null), resolvedType);
+		} 
+	}
+	
+	private Object resolvHeaderParam(RestHeaderParam headerParam, List<String> params, ResolvedType resolvedType) {
+		if (headerParam.getType().isInstanceOf(List.class) && params.size() != 1) {
+			ResolvedType itemType = headerParam.getType().typeParametersFor(List.class).get(0);
 			return params.stream().map(param -> RestParam.convert(param, itemType)).collect(Collectors.toList());
 		} else {
 			return RestParam.convert(Iterables.getFirst(params, null), resolvedType);

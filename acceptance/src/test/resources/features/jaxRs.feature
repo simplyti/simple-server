@@ -72,4 +72,8 @@ Scenario: Blocking method Method throw exception
 	When I send a "GET /jaxrs/blocking/throwexception" getting "#response"
 	And I check that "#response" has status code 500
 	
-	
+Scenario: Header param 
+	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I send a "GET /jaxrs/headerparam" with header "x-my-header" with value "Hello header" getting "#response"
+	Then I check that "#response" is equals to "Hello header"
