@@ -10,7 +10,6 @@ import com.simplyti.service.clients.channel.monitor.ClientMonitorHandler;
 import com.simplyti.service.clients.channel.monitor.MonitoredHandler;
 
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.group.ChannelGroup;
@@ -61,26 +60,37 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 		} else {
 			EventLoop eventLoop = eventLoopGroup.next();
 			Promise<T> promise = eventLoop.newPromise();
+			Promise<Channel> initializerChannelFuture = eventLoop.newPromise();
 			channelFuture.addListener(f -> {
 				if (channelFuture.isSuccess()) {
 					send(consumer, pool, channelFuture.getNow(), promise, msg, timeoutMillis);
+					initializerChannelFuture.setSuccess(channelFuture.getNow());
 				} else {
 					ReferenceCountUtil.release(msg);
 					promise.setFailure(channelFuture.cause());
+					initializerChannelFuture.setFailure(channelFuture.cause());
 				}
 			});
-			return new ClientFuture<>(eventLoop,channelFuture,promise);
+			return new ClientFuture<>(eventLoop,initializerChannelFuture,promise);
 		}
 	}
 
 	private <T> void send(Consumer<ClientChannel<T>> channelInit, ChannelPool pool, Channel channel, Promise<T> promise,
 			Object msg, long timeoutMillis) {
 		channelInit.accept(new ClientChannel<T>(pool, channel, promise));
-		channel.writeAndFlush(msg).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+		
 		channel.closeFuture().addListener(f->promise.tryFailure(new ClosedChannelException()));
-		ScheduledFuture<?> timeoutTask = channel.eventLoop().schedule(
-				() -> promise.tryFailure(ReadTimeoutException.INSTANCE), timeoutMillis, TimeUnit.MILLISECONDS);
-		promise.addListener(f -> timeoutTask.cause());
+		
+		channel.writeAndFlush(msg).addListener(f->{
+			if (!f.isSuccess()) {
+				promise.tryFailure(f.cause());
+            }else if(timeoutMillis>0) {
+        			ScheduledFuture<?> timeoutTask = channel.eventLoop().schedule(
+        					() -> promise.tryFailure(ReadTimeoutException.INSTANCE), timeoutMillis, TimeUnit.MILLISECONDS);
+        			promise.addListener(ignore -> timeoutTask.cause());
+            }
+		});
+		
 	}
 
 	public void released(Channel ch) {

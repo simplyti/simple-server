@@ -23,9 +23,9 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<HttpObject>
 	protected void channelRead0(ChannelHandlerContext ctx, HttpObject msg) throws Exception {
 		consumer.accept(msg);
 		if(msg instanceof LastHttpContent) {
-			clientChannel.promise().setSuccess(null);
 			clientChannel.pipeline().remove(this);
 			clientChannel.release();
+			clientChannel.promise().setSuccess(null);
 		}
 	}
 	

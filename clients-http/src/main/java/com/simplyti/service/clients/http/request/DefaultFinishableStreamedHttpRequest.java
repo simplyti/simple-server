@@ -10,13 +10,10 @@ import io.netty.util.concurrent.Promise;
 
 public class DefaultFinishableStreamedHttpRequest implements FinishableStreamedHttpRequest {
 
-	private final Future<Void> future;
-	
 	private final ClientFuture<Void> clientFuture;
 	
 	public DefaultFinishableStreamedHttpRequest(ClientFuture<Void> clientFuture) {
 		this.clientFuture=clientFuture;
-		this.future=clientFuture.future();
 	}
 
 	@Override
@@ -50,12 +47,18 @@ public class DefaultFinishableStreamedHttpRequest implements FinishableStreamedH
 
 	@Override
 	public boolean isDone() {
-		return future.isDone();
+		return clientFuture.future().isDone();
 	}
 
 	@Override
 	public boolean isSuccess() {
-		return future.isSuccess();
+		return clientFuture.future().isSuccess();
 	}
+
+	@Override
+	public Future<Void> future() {
+		return clientFuture.future();
+	}
+
 	
 }

@@ -11,4 +11,6 @@ public interface FinishableStreamedHttpRequest{
 
 	boolean isSuccess();
 
+	Future<Void> future();
+
 }
