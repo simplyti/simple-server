@@ -1,6 +1,6 @@
 package com.simplyti.service.clients.http.request;
 
-import com.simplyti.service.clients.ClientFuture;
+import com.simplyti.service.clients.ClientResponseFuture;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -10,9 +10,9 @@ import io.netty.util.concurrent.Promise;
 
 public class DefaultFinishableStreamedHttpRequest implements FinishableStreamedHttpRequest {
 
-	private final ClientFuture<Void> clientFuture;
+	private final ClientResponseFuture<Void> clientFuture;
 	
-	public DefaultFinishableStreamedHttpRequest(ClientFuture<Void> clientFuture) {
+	public DefaultFinishableStreamedHttpRequest(ClientResponseFuture<Void> clientFuture) {
 		this.clientFuture=clientFuture;
 	}
 
@@ -58,6 +58,11 @@ public class DefaultFinishableStreamedHttpRequest implements FinishableStreamedH
 	@Override
 	public Future<Void> future() {
 		return clientFuture.future();
+	}
+
+	@Override
+	public Future<Channel> channelFuture() {
+		return clientFuture.channelFuture();
 	}
 
 	

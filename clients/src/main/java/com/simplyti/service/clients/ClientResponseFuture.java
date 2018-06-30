@@ -4,13 +4,13 @@ import io.netty.channel.Channel;
 import io.netty.channel.EventLoop;
 import io.netty.util.concurrent.Future;
 
-public class ClientFuture<T> {
+public class ClientResponseFuture<T> {
 
 	private final Future<T> promise;
 	private final Future<Channel> channelFuture;
 	private final EventLoop eventLoop;
 
-	public ClientFuture(EventLoop eventLoop, Future<Channel> channelFuture, Future<T> promise) {
+	public ClientResponseFuture(EventLoop eventLoop, Future<Channel> channelFuture, Future<T> promise) {
 		this.eventLoop=eventLoop;
 		this.promise=promise;
 		this.channelFuture=channelFuture;

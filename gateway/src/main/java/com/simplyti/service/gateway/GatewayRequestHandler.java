@@ -74,7 +74,7 @@ public class GatewayRequestHandler implements DefaultBackendRequestHandler{
 			
 		clientsStreams.put(ctx.channel().id(), stream);
 		
-		stream.future().addListener(channelFuture->{
+		stream.channelFuture().addListener(channelFuture->{
 			if(!channelFuture.isSuccess()) {
 				log.warn("Cannot connect to backend {}: {}",endpoint,channelFuture.cause().toString());
 				ctx.fireExceptionCaught(new ServiceException(HttpResponseStatus.BAD_GATEWAY));

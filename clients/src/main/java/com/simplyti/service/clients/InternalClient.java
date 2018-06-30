@@ -41,7 +41,7 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 		this.channelPoolMap = new SimpleChannelPoolMap(eventLoopGroup, new MonitoredHandler(this, poolHandler));
 	}
 
-	public <T> ClientFuture<T> channel(Endpoint endpoint, Object msg, Consumer<ClientChannel<T>> consumer,
+	public <T> ClientResponseFuture<T> channel(Endpoint endpoint, Object msg, Consumer<ClientChannel<T>> consumer,
 			long timeoutMillis) {
 		ChannelPool pool = channelPoolMap.get(endpoint);
 		Future<Channel> channelFuture = pool.acquire();
@@ -50,12 +50,12 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 				EventLoop eventLoop = channelFuture.getNow().eventLoop();
 				Promise<T> promise = eventLoop.newPromise();
 				send(consumer, pool, channelFuture.getNow(), promise, msg, timeoutMillis);
-				return new ClientFuture<>(eventLoop,channelFuture,promise);
+				return new ClientResponseFuture<>(eventLoop,channelFuture,promise);
 			} else {
 				ReferenceCountUtil.release(msg);
 				EventLoop eventLoop = eventLoopGroup.next();
 				Future<T> promise = eventLoop.newFailedFuture(channelFuture.cause());
-				return new ClientFuture<>(eventLoop,channelFuture,promise);
+				return new ClientResponseFuture<>(eventLoop,channelFuture,promise);
 			}
 		} else {
 			EventLoop eventLoop = eventLoopGroup.next();
@@ -71,15 +71,14 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 					initializerChannelFuture.setFailure(channelFuture.cause());
 				}
 			});
-			return new ClientFuture<>(eventLoop,initializerChannelFuture,promise);
+			return new ClientResponseFuture<>(eventLoop,initializerChannelFuture,promise);
 		}
 	}
 
 	private <T> void send(Consumer<ClientChannel<T>> channelInit, ChannelPool pool, Channel channel, Promise<T> promise,
 			Object msg, long timeoutMillis) {
-		channelInit.accept(new ClientChannel<T>(pool, channel, promise));
-		
 		channel.closeFuture().addListener(f->promise.tryFailure(new ClosedChannelException()));
+		channelInit.accept(new ClientChannel<T>(pool, channel, promise));
 		
 		channel.writeAndFlush(msg).addListener(f->{
 			if (!f.isSuccess()) {

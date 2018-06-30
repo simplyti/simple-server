@@ -2,7 +2,7 @@ package com.simplyti.service.clients.http.request;
 
 import java.util.function.Consumer;
 
-import com.simplyti.service.clients.ClientFuture;
+import com.simplyti.service.clients.ClientResponseFuture;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.InternalClient;
 import com.simplyti.service.clients.http.handler.HttpResponseHandler;
@@ -26,7 +26,7 @@ public class DefaultStreamedHttpRequest implements StreamedHttpRequest {
 
 	@Override
 	public FinishableStreamedHttpRequest forEach(Consumer<HttpObject> consumer) {
-		ClientFuture<Void> future = client.channel(endpoint,request,clientChannel->
+		ClientResponseFuture<Void> future = client.channel(endpoint,request,clientChannel->
 			clientChannel.pipeline().addLast(new HttpResponseHandler(clientChannel,consumer)),timeoutMillis);
 		return new DefaultFinishableStreamedHttpRequest(future);
 	}
