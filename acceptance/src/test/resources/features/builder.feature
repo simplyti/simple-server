@@ -21,10 +21,11 @@ Scenario: I cannot start servers on same port
 	And I check that error failure message of "#serviceFuture" is "Address already in use"
 
 Scenario: I specify multiple apis
-	When I try to start a service "#serviceFuture" with options getting error "#error":
+	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi	| com.simplyti.service.APITest		|
 		| withApi	| com.simplyti.service.OtherAPITest	|
+	Then I check that "#serviceFuture" is success
 	When I send a "GET /hello" getting "#response"
 	Then I check that "#response" is equals to "Hello!"
 	When I send a "GET /other/hello" getting "#response"
