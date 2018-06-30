@@ -11,6 +11,7 @@ import io.netty.handler.codec.http.FullHttpMessage;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpStatusClass;
 
 public class FullHttpResponseHandler extends HttpObjectAggregator {
 
@@ -27,7 +28,7 @@ public class FullHttpResponseHandler extends HttpObjectAggregator {
 	protected void finishAggregation(FullHttpMessage aggregated) throws Exception {
 		FullHttpResponse response = (FullHttpResponse) aggregated;
 		if(!clientChannel.promise().isDone()) {
-			if(checkStatusCode && response.status().code()>=400) {
+			if(checkStatusCode && isError(response.status().codeClass())) {
 				clientChannel.promise().setFailure(new HttpException(response.status().code()));
 			}else {
 				clientChannel.promise().setSuccess((FullHttpResponse) aggregated.retain());
@@ -38,6 +39,11 @@ public class FullHttpResponseHandler extends HttpObjectAggregator {
 		clientChannel.release();
 	}
 	
+	private boolean isError(HttpStatusClass codeClass) {
+		return codeClass.equals(HttpStatusClass.CLIENT_ERROR) || 
+				codeClass.equals(HttpStatusClass.SERVER_ERROR);
+	}
+
 	@Override
     protected void decode(final ChannelHandlerContext ctx, HttpObject msg, List<Object> out) throws Exception {
 		super.decode(ctx, msg, new ArrayList<>());
