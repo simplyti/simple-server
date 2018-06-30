@@ -246,6 +246,16 @@ public class HttpClientStepDefs {
 		Future<FullHttpResponse> response = sutClient.withEndpoin(endpoint).get(endpoint.path()).fullResponse();
 		scenarioData.put(resultKey, response);
 	}
+	
+	@When("^I get \"([^\"]*)\" with query params getting response \"([^\"]*)\"$")
+	public void iGetWithQueryParamsGettingResponse(String path, String resultKey, Map<String,String> params) throws Exception {
+		Future<FullHttpResponse> response = sutClient
+				.withEndpoin(LOCAL_ENDPOINT)
+				.get(path)
+				.params(params)
+				.fullResponse();
+		scenarioData.put(resultKey, response);
+	}
 
 	@Given("^\"([^\"]*)\" proxy \"([^\"]*)\" as \"([^\"]*)\"$")
 	public void socksProxyAs(ProxyType type, String host, String key) throws Exception {

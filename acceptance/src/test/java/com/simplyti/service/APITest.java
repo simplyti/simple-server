@@ -63,6 +63,9 @@ public class APITest implements ApiProvider{
 		builder.when().get("/queryparams")
 			.then(ctx->ctx.send(Joiner.on('m').join(ctx.queryParams("name"))));
 		
+		builder.when().get("/queryparams/all")
+		.then(ctx->ctx.send(ctx.queryParams().toString()));
+		
 		builder.when().get("/uri")
 			.then(ctx->ctx.send("Hello "+ctx.request().uri()));
 		
