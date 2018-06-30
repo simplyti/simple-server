@@ -364,6 +364,13 @@ public class ServiceBuilderStepDefs {
 		
 	}
 	
+	@Then("^I check that \"([^\"]*)\" contains header \"([^\"]*)\" equals to \"([^\"]*)\"$")
+	public void iCheckThatContainsHeaderEqualsDate(String key, String header, String expected) throws Exception {
+		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(key);
+		assertThat(response.headers().contains(header),equalTo(true));
+		assertThat(response.headers().get(header),equalTo(expected));
+	}
+	
 	@Then("^I check that \"([^\"]*)\" contains header \"([^\"]*)\" equals to date \"([^\"]*)\"$")
 	public void iCheckThatContainsHeaderEqualsToDate(String key, String header, String datekey) throws Exception {
 		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(key);

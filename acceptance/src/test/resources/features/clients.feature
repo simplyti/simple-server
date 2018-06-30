@@ -55,13 +55,13 @@ Scenario: Single thread client
 Scenario: Connection write stream
 	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
 	Then I check that "#serviceFuture" is success
-	When I post "/echo" with body stream "#stream" and length of 20 sgetting response "#response" and response stream to "#responseStream"
-	And I check that stream "#response" is not complete
-	When I send "Hello stream." to stream "#stream" getting result "#writeresult"
+	When I post "/echo" with body stream "#stream", content part "Hello ", length of 20 getting response objects "#responseStream"
+	And I check that stream "#stream" is not complete
+	When I send "stream." to stream "#stream" getting result "#writeresult"
 	Then I check that "#writeresult" is success
-	And I check that stream "#response" is not complete
+	And I check that stream "#stream" is not complete
 	When I send "The end" to stream "#stream" getting result "#writeresult"
 	Then I check that "#writeresult" is success
-	And I check that stream "#response" is success
+	And I check that stream "#stream" is success
 	And I check that response stream "#responseStream" contains body "Hello stream.The end"
 	

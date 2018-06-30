@@ -10,3 +10,4 @@ Scenario: Basic Http Response filter
 	When I send a "GET /hello" getting "#response"
 	And I check that "#response" has status code 200
 	And I check that "#response" is equals to "Hello!"
+	And I check that "#response" contains header "access-control-allow-origin" equals to "*"

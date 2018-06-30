@@ -112,17 +112,17 @@ public class HttpClientStepDefs {
 		Awaitility.await().until(done::get);
 	}
 	
-	@When("^I post \"([^\"]*)\" with body stream \"([^\"]*)\" and length of (\\d+) sgetting response \"([^\"]*)\" and response stream to \"([^\"]*)\"$")
-	public void iPostWithBodyStreamAndLengthOfSgettingResponse(String path, String streamKey, int length, String responseKey, String responseStreamKey) throws Exception {
+	@When("^I post \"([^\"]*)\" with body stream \"([^\"]*)\", content part \"([^\"]*)\", length of (\\d+) getting response objects \"([^\"]*)\"$")
+	public void iPostWithBodyStreamAndLengthOfSgettingResponse(String path, String streamKey, String cotentPart, int length, String responseObjects) throws Exception {
 		HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, path);
 		request.headers().set(HttpHeaderNames.CONTENT_LENGTH,length);
 		List<HttpObject> responseStream = new ArrayList<>();
-		scenarioData.put(responseStreamKey, responseStream);
-		FinishableStreamedHttpRequest response = sutClient.withEndpoin(LOCAL_ENDPOINT)
+		scenarioData.put(responseObjects, responseStream);
+		FinishableStreamedHttpRequest stream = sutClient.withEndpoin(LOCAL_ENDPOINT)
 			.send(request)
 			.forEach(obj->responseStream.add(ReferenceCountUtil.retain(obj)));
-		scenarioData.put(responseKey, response);
-		scenarioData.put(streamKey, response);
+		stream.send(new DefaultHttpContent(Unpooled.wrappedBuffer(cotentPart.getBytes(CharsetUtil.UTF_8))));
+		scenarioData.put(streamKey, stream);
 	}
 	
 	@Then("^I check that response stream \"([^\"]*)\" contains body \"([^\"]*)\"$")
