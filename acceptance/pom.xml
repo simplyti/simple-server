@@ -87,6 +87,8 @@
 												<include name="core/target/classes" />
 												<include name="clients/target/classes" />
 												<include name="clients-http/target/classes" />
+												<include name="auth-jwt/target/classes" />
+												<include name="aws-lambda/target/classes" />
 											</dirset>
 										</classfiles>
 										<sourcefiles encoding="UTF-8">
