@@ -41,8 +41,7 @@ public class CustomInjectorSource extends AbstractModule implements InjectorSour
 		
 		EventLoopGroup eventLoopGroup = new NioEventLoopGroup(1);
 		bind(EventLoopGroup.class).toInstance(eventLoopGroup);
-		SimpleHttpClient client = new DefaultSimpleHttpClient(eventLoopGroup);
-		bind(SimpleHttpClient.class).toInstance(client);
+		bind(SimpleHttpClient.class).toInstance(new DefaultSimpleHttpClient(eventLoopGroup));
 		
 		bind(new TypeLiteral<Map<String,Object>>(){}).toProvider(Maps::newHashMap).in(ScenarioScoped.class);
 		bind(new TypeLiteral<List<Future<DefaultService>>>(){}).toProvider(ArrayList::new).in(ScenarioScoped.class);

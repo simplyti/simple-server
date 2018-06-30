@@ -7,6 +7,13 @@ services:
     ports:
     - "8081:80"
     
+  ssl-httpbin:
+    image: foxylion/nginx-self-signed-https:latest
+    environment:
+    - REMOTE_URL=http://httpbin:80
+    ports:
+    - "2223:443"
+    
   socks5:
     image: wernight/dante
     ports:

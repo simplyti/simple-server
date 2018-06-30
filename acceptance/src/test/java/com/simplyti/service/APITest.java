@@ -120,6 +120,9 @@ public class APITest implements ApiProvider{
 		builder.when().get("/resources/{id}")
 			.then(ctx->ctx.send("This is the resource "+ctx.pathParam("id")));
 		
+		builder.when().get("/anything")
+			.then(ctx->ctx.send("This is a prioritized response"));
+		
 		builder.usingJaxRSContract(JaxRSAPITest.class);
 	}
 

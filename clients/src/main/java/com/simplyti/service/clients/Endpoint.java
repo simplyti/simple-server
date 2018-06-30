@@ -1,5 +1,6 @@
 package com.simplyti.service.clients;
 
+import com.google.common.base.Joiner;
 import com.simplyti.service.clients.proxy.ProxiedEndpoint;
 
 import lombok.AllArgsConstructor;
@@ -22,6 +23,11 @@ public class Endpoint {
 
 	public ProxiedEndpoint asProxied() {
 		return ProxiedEndpoint.class.cast(this);
+	}
+	
+	@Override
+	public String toString() {
+		return Joiner.on("://").join(schema.name(),address);
 	}
 
 }

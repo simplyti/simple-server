@@ -273,6 +273,7 @@
 		<module>auth-jwt</module>
 		<module>clients</module>
 		<module>clients-http</module>
+		<module>gateway</module>
 		<module>acceptance</module>
 	</modules>
 
