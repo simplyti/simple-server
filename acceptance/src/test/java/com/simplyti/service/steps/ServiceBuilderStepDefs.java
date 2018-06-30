@@ -27,7 +27,7 @@ import com.simplyti.service.builder.ServiceBuilder;
 import com.simplyti.service.client.SimpleHttpClient;
 import com.simplyti.service.client.SimpleHttpResponse;
 import com.simplyti.service.clients.http.exception.HttpException;
-import com.simplyti.service.clients.http.request.FinishableStreamedHttpRequest;
+import com.simplyti.service.clients.http.request.StreamedHttpRequest;
 
 import cucumber.api.java.After;
 import cucumber.api.java.en.Given;
@@ -331,7 +331,7 @@ public class ServiceBuilderStepDefs {
 	@Then("^I check that stream \"([^\"]*)\" is not complete$")
 	public void iCheckThatStreamIsNotComplete(String key) throws Exception {
 		Thread.sleep(100);
-		FinishableStreamedHttpRequest future = (FinishableStreamedHttpRequest) scenarioData.get(key);
+		StreamedHttpRequest future = (StreamedHttpRequest) scenarioData.get(key);
 		assertThat(future.isDone(),equalTo(false));
 	}
 	
@@ -344,7 +344,7 @@ public class ServiceBuilderStepDefs {
 	
 	@Then("^I check that stream \"([^\"]*)\" is success$")
 	public void iCheckThatStreamIsSuccess(String key) throws Exception {
-		FinishableStreamedHttpRequest futureService = (FinishableStreamedHttpRequest) scenarioData.get(key);
+		StreamedHttpRequest futureService = (StreamedHttpRequest) scenarioData.get(key);
 		Awaitility.await().until(futureService::isDone);
 		assertThat(futureService.isSuccess(),equalTo(true));
 	}

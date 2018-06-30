@@ -1,69 +1,34 @@
 package com.simplyti.service.clients.http.request;
 
-import com.simplyti.service.clients.ClientResponseFuture;
+import java.util.function.Consumer;
 
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
+import com.simplyti.service.clients.ClientResponseFuture;
+import com.simplyti.service.clients.Endpoint;
+import com.simplyti.service.clients.InternalClient;
+import com.simplyti.service.clients.http.handler.HttpResponseHandler;
+
 import io.netty.handler.codec.http.HttpObject;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.Promise;
+import io.netty.handler.codec.http.HttpRequest;
 
 public class DefaultFinishableStreamedHttpRequest implements FinishableStreamedHttpRequest {
 
-	private final ClientResponseFuture<Void> clientFuture;
-	
-	public DefaultFinishableStreamedHttpRequest(ClientResponseFuture<Void> clientFuture) {
-		this.clientFuture=clientFuture;
+	private final InternalClient client;
+	private final Endpoint endpoint;
+	private final long timeoutMillis;
+	private final HttpRequest request;
+
+	public DefaultFinishableStreamedHttpRequest(InternalClient client, Endpoint endpoint, HttpRequest request, long timeoutMillis) {
+		this.client = client;
+		this.timeoutMillis=timeoutMillis;
+		this.endpoint = endpoint;
+		this.request = request;
 	}
 
 	@Override
-	public Future<Void> send(HttpObject request) {
-		 Future<Channel> channelFuture = clientFuture.channelFuture();
-		 if(channelFuture.isDone()) {
-			 if(channelFuture.isSuccess()) {
-				 return channelFuture.getNow().writeAndFlush(request);
-			 }else {
-				 return clientFuture.eventLoop().newFailedFuture(channelFuture.cause());
-			 }
-		 }else {
-			 Promise<Void> promise = clientFuture.eventLoop().newPromise();
-			 channelFuture.addListener(f->{
-				 if(channelFuture.isSuccess()) {
-					 ChannelFuture writeFuture = channelFuture.getNow().writeAndFlush(request);
-					 writeFuture.addListener(f2->{
-						 if(writeFuture.isSuccess()) {
-							 promise.setSuccess(null);
-						 }else {
-							 promise.setFailure(writeFuture.cause());
-						 }
-					 });
-				 }else {
-					 promise.setFailure(channelFuture.cause());
-				 }
-			 });
-			 return promise;
-		 }
+	public StreamedHttpRequest forEach(Consumer<HttpObject> consumer) {
+		ClientResponseFuture<Void> future = client.channel(endpoint,request,clientChannel->
+			clientChannel.pipeline().addLast(new HttpResponseHandler(clientChannel,consumer)),timeoutMillis);
+		return new DefaultStreamedHttpRequest(future);
 	}
 
-	@Override
-	public boolean isDone() {
-		return clientFuture.future().isDone();
-	}
-
-	@Override
-	public boolean isSuccess() {
-		return clientFuture.future().isSuccess();
-	}
-
-	@Override
-	public Future<Void> future() {
-		return clientFuture.future();
-	}
-
-	@Override
-	public Future<Channel> channelFuture() {
-		return clientFuture.channelFuture();
-	}
-
-	
 }

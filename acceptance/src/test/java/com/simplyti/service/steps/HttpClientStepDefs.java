@@ -14,7 +14,7 @@ import com.simplyti.service.clients.Address;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
-import com.simplyti.service.clients.http.request.FinishableStreamedHttpRequest;
+import com.simplyti.service.clients.http.request.StreamedHttpRequest;
 import com.simplyti.service.clients.proxy.ProxiedEndpoint;
 import com.simplyti.service.clients.proxy.Proxy;
 import com.simplyti.service.clients.proxy.Proxy.ProxyType;
@@ -118,7 +118,7 @@ public class HttpClientStepDefs {
 		request.headers().set(HttpHeaderNames.CONTENT_LENGTH,length);
 		List<HttpObject> responseStream = new ArrayList<>();
 		scenarioData.put(responseObjects, responseStream);
-		FinishableStreamedHttpRequest stream = sutClient.withEndpoin(LOCAL_ENDPOINT)
+		StreamedHttpRequest stream = sutClient.withEndpoin(LOCAL_ENDPOINT)
 			.send(request)
 			.forEach(obj->responseStream.add(ReferenceCountUtil.retain(obj)));
 		stream.send(new DefaultHttpContent(Unpooled.wrappedBuffer(cotentPart.getBytes(CharsetUtil.UTF_8))));
@@ -142,7 +142,7 @@ public class HttpClientStepDefs {
 	
 	@When("^I send \"([^\"]*)\" to stream \"([^\"]*)\" getting result \"([^\"]*)\"$")
 	public void iSendToStreamGettingResult(String data, String streamKey, String resultKey) throws Exception {
-		FinishableStreamedHttpRequest stream = (FinishableStreamedHttpRequest) scenarioData.get(streamKey);
+		StreamedHttpRequest stream = (StreamedHttpRequest) scenarioData.get(streamKey);
 		Future<Void> result = stream.send(new DefaultHttpContent(Unpooled.wrappedBuffer(data.getBytes(CharsetUtil.UTF_8))));
 		scenarioData.put(resultKey, result);
 	}

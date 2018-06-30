@@ -1,19 +1,11 @@
 package com.simplyti.service.clients.http.request;
 
-import io.netty.channel.Channel;
+import java.util.function.Consumer;
+
 import io.netty.handler.codec.http.HttpObject;
-import io.netty.util.concurrent.Future;
 
-public interface FinishableStreamedHttpRequest{
+public interface FinishableStreamedHttpRequest {
 	
-	Future<Void> send(HttpObject request);
-
-	boolean isDone();
-
-	boolean isSuccess();
-
-	Future<Void> future();
-
-	Future<Channel> channelFuture();
-
+	StreamedHttpRequest forEach(Consumer<HttpObject> consumer);
+	
 }

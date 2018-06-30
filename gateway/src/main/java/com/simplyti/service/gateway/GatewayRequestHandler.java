@@ -8,7 +8,7 @@ import com.google.common.collect.Maps;
 import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.http.HttpClient;
-import com.simplyti.service.clients.http.request.FinishableStreamedHttpRequest;
+import com.simplyti.service.clients.http.request.StreamedHttpRequest;
 import com.simplyti.service.exception.NotFoundException;
 import com.simplyti.service.exception.ServiceException;
 import com.simplyti.service.gateway.balancer.ServiceBalancer;
@@ -29,7 +29,7 @@ public class GatewayRequestHandler implements DefaultBackendRequestHandler{
 	
 	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
 	
-	private final Map<ChannelId,FinishableStreamedHttpRequest> clientsStreams = Maps.newConcurrentMap();
+	private final Map<ChannelId,StreamedHttpRequest> clientsStreams = Maps.newConcurrentMap();
 
 	private final ServiceDiscovery serviceDiscovery;
 	private final HttpClient client;
@@ -67,7 +67,7 @@ public class GatewayRequestHandler implements DefaultBackendRequestHandler{
 	}
 	
 	private void initialSend(ChannelHandlerContext ctx, Endpoint endpoint, HttpRequest request) {
-		FinishableStreamedHttpRequest stream = client.withEndpoin(endpoint)
+		StreamedHttpRequest stream = client.withEndpoin(endpoint)
 				.withReadTimeout(-1)
 				.send(ReferenceCountUtil.retain(request))
 				.forEach(resp->ctx.writeAndFlush(ReferenceCountUtil.retain(resp)));

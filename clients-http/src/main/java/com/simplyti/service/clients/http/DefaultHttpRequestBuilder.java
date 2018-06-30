@@ -9,9 +9,9 @@ import com.simplyti.service.clients.InternalClient;
 import com.simplyti.service.clients.http.request.DefaultFinishabBodyleHttpRequest;
 import com.simplyti.service.clients.http.request.FinishableBodyHttpRequest;
 import com.simplyti.service.clients.http.request.FinishableHttpRequest;
-import com.simplyti.service.clients.http.request.StreamedHttpRequest;
+import com.simplyti.service.clients.http.request.FinishableStreamedHttpRequest;
 import com.simplyti.service.clients.http.request.DefaultFinishableHttpRequest;
-import com.simplyti.service.clients.http.request.DefaultStreamedHttpRequest;
+import com.simplyti.service.clients.http.request.DefaultFinishableStreamedHttpRequest;
 
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
@@ -71,8 +71,8 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 	}
 
 	@Override
-	public StreamedHttpRequest send(HttpRequest request) {
-		return new DefaultStreamedHttpRequest(target,endpoint,request,readTimeout());
+	public FinishableStreamedHttpRequest send(HttpRequest request) {
+		return new DefaultFinishableStreamedHttpRequest(target,endpoint,request,readTimeout());
 	}
 
 }

@@ -3,7 +3,7 @@ package com.simplyti.service.clients.http;
 import com.simplyti.service.clients.ClientRequestBuilder;
 import com.simplyti.service.clients.http.request.FinishableBodyHttpRequest;
 import com.simplyti.service.clients.http.request.FinishableHttpRequest;
-import com.simplyti.service.clients.http.request.StreamedHttpRequest;
+import com.simplyti.service.clients.http.request.FinishableStreamedHttpRequest;
 
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpRequest;
@@ -20,6 +20,6 @@ public interface HttpRequestBuilder extends ClientRequestBuilder<HttpRequestBuil
 
 	public FinishableHttpRequest sendFull(FullHttpRequest request);
 
-	public StreamedHttpRequest send(HttpRequest request);
+	public FinishableStreamedHttpRequest send(HttpRequest request);
 
 }
