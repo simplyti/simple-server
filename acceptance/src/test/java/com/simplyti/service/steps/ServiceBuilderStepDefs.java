@@ -248,6 +248,12 @@ public class ServiceBuilderStepDefs {
 		scenarioData.put(resultKey, send(null,method,path,null,null).get());
 	}
 	
+	@When("^I send a \"([^\\s]*) ([^\"]*)\" with header \"([^\"]*)\" with value \"([^\"]*)\" getting \"([^\"]*)\"$")
+	public void iSendAWithHeaderWithValueGetting(String method, String path, String header, String value,String resultKey) throws Exception {
+		HttpHeaders headers = new DefaultHttpHeaders().add(header, value);
+		scenarioData.put(resultKey, send(null,method,path,null,headers).get());
+	}
+	
 	@When("^I send a \"([^\\s]*) ([^\"]*)\" with body \"([^\"]*)\" getting \"([^\"]*)\"$")
 	public void iSendAWithBodyGetting(String method, String path,String body, String resultKey) throws Exception {
 		scenarioData.put(resultKey, send(null,method,path,body,null).get());
