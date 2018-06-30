@@ -18,7 +18,7 @@ cache:
     - '$HOME/.m2/repository'
 
 script:
-- mvn verify && bash <(curl -s https://codecov.io/bash)
+- mvn -V --batch-mode -Dstyle.color=always clean verify && bash <(curl -s https://codecov.io/bash)
 
 deploy:
   - provider: script
