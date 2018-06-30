@@ -66,8 +66,8 @@ public class APITest implements ApiProvider{
 		builder.when().get("/uri")
 			.then(ctx->ctx.send("Hello "+ctx.request().uri()));
 		
-		builder.when().get("/headers")
-			.then(ctx->ctx.send("Hello "+ctx.request().headers().names()));
+		builder.when().get("/header/{key}")
+			.then(ctx->ctx.send("Hello "+ctx.request().headers().get(ctx.pathParam("key"))));
 		
 		builder.when().post("/typed/request")
 			.withRequestBodyType(APITestDTO.class)

@@ -117,8 +117,8 @@ Scenario: Retrieve Uri
 Scenario: Retrieve Headers
 	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
 	Then I check that "#serviceFuture" is success
-	When I send a "GET /headers" getting "#response"
-	Then I check that "#response" is equals to "Hello [content-length]"
+	When I send a "GET /header/my-header" with header "my-header" with value "service!" getting "#response"
+	Then I check that "#response" is equals to "Hello service!"
 	
 Scenario: Raw response 
 	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"

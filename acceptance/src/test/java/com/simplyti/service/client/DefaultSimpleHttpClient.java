@@ -65,6 +65,9 @@ public class DefaultSimpleHttpClient implements SimpleHttpClient {
 		if(headers!=null) {
 			req.headers().add(headers);
 		}
+		if(!req.headers().contains(HttpHeaderNames.HOST)) {
+			req.headers().set(HttpHeaderNames.HOST,"localhost");
+		}
 		return sendPort("localhost",sni,port,ssl,req);
 	}
 
