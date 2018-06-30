@@ -98,6 +98,7 @@
 										</sourcefiles>
 									</structure>
 									<html destdir="${project.build.directory}/coverage" />
+									<xml destfile="${project.build.directory}/coverage/jacoco.xml" />
 								</report>
 							</target>
 						</configuration>
@@ -161,35 +162,6 @@
 							<arguments>
 								<argument>down</argument>
 							</arguments>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.gmaven</groupId>
-  				<artifactId>groovy-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>copy-jacoco-it</id>
-						<phase>post-integration-test</phase>
-						<goals>
-							<goal>execute</goal>
-						</goals>
-						<configuration>
-							<source>
-								def jacocoExecFile = new File(project.build.directory, 'jacoco-it.exec');
-								if(jacocoExecFile.exists()){
-									def implDir = new File(project.basedir, '../');
-									implDir.eachFileRecurse(groovy.io.FileType.FILES){
-									    if(it.name.equals('pom.xml')){
-									    	def file = new File(it.toString().replaceFirst(/pom.xml$/, "target/jacoco.exec"))
-									    	file.getParentFile().mkdirs();
-									        new AntBuilder().copy( file:jacocoExecFile, 
-	                           					tofile:file)
-									    }
-									}
-								}	
-							</source>
 						</configuration>
 					</execution>
 				</executions>
