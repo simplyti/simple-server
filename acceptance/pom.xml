@@ -96,6 +96,8 @@
 												<include name="core/src/main/java" />
 												<include name="clients/src/main/java" />
 												<include name="clients-http/src/main/java" />
+												<include name="auth-jwt/src/main/java" />
+												<include name="aws-lambda/src/main/java" />
 											</dirset>
 										</sourcefiles>
 									</structure>
