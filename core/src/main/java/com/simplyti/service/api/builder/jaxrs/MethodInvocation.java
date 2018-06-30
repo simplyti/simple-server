@@ -13,6 +13,8 @@ import com.google.common.collect.Iterables;
 import com.simplyti.service.api.ApiInvocationContext;
 import com.simplyti.service.api.DefaultApiInvocationContext;
 
+import io.vavr.control.Try;
+
 public class MethodInvocation implements Consumer<ApiInvocationContext<Object, Object>> {
 
 	private final Map<Integer, RestParam> argumentIndexToRestParam;
@@ -41,36 +43,39 @@ public class MethodInvocation implements Consumer<ApiInvocationContext<Object, O
 				args[entry.getKey()] = RestParam.convert(def.pathParam(pathParam.name()), pathParam.getType());
 			} else if (entry.getValue() instanceof RestQueryParam) {
 				RestQueryParam queryParam = (RestQueryParam) entry.getValue();
-				List<String> params = def.queryParams(queryParam.name());
-				if (params!=null) {
-					args[entry.getKey()] = resolvQueryParam(queryParam,params,entry.getValue().getType());
-				} else {
-					args[entry.getKey()] = queryParam.defaultValue();
-				}
+				resolveDefaultedNamedParam(args,entry,queryParam,def.queryParams(queryParam.name()));
 			} else if (entry.getValue() instanceof RestHeaderParam) {
 				RestHeaderParam headerParam = (RestHeaderParam) entry.getValue();
-				List<String> params = def.request().headers().getAll(headerParam.name());
-				if (params!=null) {
-					args[entry.getKey()] = resolvHeaderParam(headerParam,params,entry.getValue().getType());
-				} else {
-					args[entry.getKey()] = headerParam.defaultValue();
-				}
+				resolveDefaultedNamedParam(args,entry,headerParam, def.request().headers().getAll(headerParam.name()));
 			} else {
 				args[entry.getKey()] = ctx.body();
 			}
 		}
 		
-		
 		if(contexArgIndex!=null){
 			args[contexArgIndex]=new JAXRSApiContext<>(ctx);
-			try{
-				method.invoke(instance, args);
-			}catch(Throwable error){
-				handleMethodException(ctx,error);
-			}
+			Try.of(()->method.invoke(instance, args))
+				.onFailure(error->handleMethodException(ctx,error));
 		}else{
 			blockingExecutor.execute(()->handleBlocking(ctx, args));
 		}
+	}
+
+	private void resolveDefaultedNamedParam(Object[] args, Entry<Integer, RestParam> entry, NamedDefaultedRestParam param,List<String> values) {
+		if (values!=null) {
+			args[entry.getKey()] = resolvParam(param,values,entry.getValue().getType());
+		} else {
+			args[entry.getKey()] = param.defaultValue();
+		}
+	}
+	
+	private Object resolvParam(NamedDefaultedRestParam param, List<String> values, ResolvedType resolvedType) {
+		if (param.getType().isInstanceOf(List.class) && values.size() != 1) {
+			ResolvedType itemType = param.getType().typeParametersFor(List.class).get(0);
+			return values.stream().map(value -> RestParam.convert(value, itemType)).collect(Collectors.toList());
+		} else {
+			return RestParam.convert(Iterables.getFirst(values, null), resolvedType);
+		} 
 	}
 
 	private void handleMethodException(ApiInvocationContext<Object, Object> ctx, Throwable error) {
@@ -78,29 +83,9 @@ public class MethodInvocation implements Consumer<ApiInvocationContext<Object, O
 	}
 
 	private void handleBlocking(ApiInvocationContext<Object, Object> ctx,Object[] args) {
-		try{
-			ctx.send(method.invoke(instance, args));
-		}catch (Throwable error){
-			handleMethodException(ctx,error);
-		}
-	}
-
-	private Object resolvQueryParam(RestQueryParam queryParam, List<String> params, ResolvedType resolvedType) {
-		if (queryParam.getType().isInstanceOf(List.class) && params.size() != 1) {
-			ResolvedType itemType = queryParam.getType().typeParametersFor(List.class).get(0);
-			return params.stream().map(param -> RestParam.convert(param, itemType)).collect(Collectors.toList());
-		} else {
-			return RestParam.convert(Iterables.getFirst(params, null), resolvedType);
-		} 
-	}
-	
-	private Object resolvHeaderParam(RestHeaderParam headerParam, List<String> params, ResolvedType resolvedType) {
-		if (headerParam.getType().isInstanceOf(List.class) && params.size() != 1) {
-			ResolvedType itemType = headerParam.getType().typeParametersFor(List.class).get(0);
-			return params.stream().map(param -> RestParam.convert(param, itemType)).collect(Collectors.toList());
-		} else {
-			return RestParam.convert(Iterables.getFirst(params, null), resolvedType);
-		} 
+		Try.of(()->method.invoke(instance, args))
+			.onSuccess(ctx::send)
+			.onFailure(error->handleMethodException(ctx,error));
 	}
 
 }

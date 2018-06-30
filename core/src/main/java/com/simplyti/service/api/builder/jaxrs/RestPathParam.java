@@ -2,17 +2,10 @@ package com.simplyti.service.api.builder.jaxrs;
 
 import com.fasterxml.classmate.ResolvedType;
 
-public class RestPathParam extends RestParam {
-
-	private final String name;
+public class RestPathParam extends NamedRestParam {
 
 	public RestPathParam(ResolvedType type, String name) {
-		super(type);
-		this.name = name;
+		super(type,name);
 	}
 	
-	public  String name() {
-		return name;
-	}
-
 }
