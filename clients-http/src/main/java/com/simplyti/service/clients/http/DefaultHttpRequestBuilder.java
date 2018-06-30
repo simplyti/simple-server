@@ -55,7 +55,7 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 
 	@Override
 	public FinishableBodyHttpRequest post(String uri) {
-		return new DefaultFinishabBodyleHttpRequest(target,endpoint,checkStatusCode,HttpMethod.POST,uri,readTimeout());
+		return new DefaultFinishabBodyleHttpRequest(target,endpoint,checkStatusCode,HttpMethod.POST,uri,headers,readTimeout());
 	}
 
 	@Override
