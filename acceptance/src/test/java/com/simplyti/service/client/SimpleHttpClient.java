@@ -27,4 +27,6 @@ public interface SimpleHttpClient {
 
 	X509Certificate lastServerCertificate();
 
+	Future<Void> closeConnections();
+
 }

@@ -18,6 +18,7 @@ import io.netty.channel.pool.AbstractChannelPoolMap;
 import io.netty.channel.pool.ChannelPool;
 import io.netty.channel.pool.SimpleChannelPool;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.util.concurrent.Future;
 
 public class ClientChannelPool extends AbstractChannelPoolMap<ServerAddress, ChannelPool>{
 	
@@ -53,6 +54,10 @@ public class ClientChannelPool extends AbstractChannelPoolMap<ServerAddress, Cha
 
 	public int activeConnections() {
 		return channelGroup.size();
+	}
+
+	public Future<Void> closeConnections() {
+		return channelGroup.close();
 	}
 	
 }

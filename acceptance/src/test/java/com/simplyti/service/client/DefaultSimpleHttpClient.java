@@ -66,7 +66,7 @@ public class DefaultSimpleHttpClient implements SimpleHttpClient {
 			req.headers().add(headers);
 		}
 		if(!req.headers().contains(HttpHeaderNames.HOST)) {
-			req.headers().set(HttpHeaderNames.HOST,"localhost");
+			req.headers().set(HttpHeaderNames.HOST,MoreObjects.firstNonNull(sni, "localhost"));
 		}
 		return sendPort("localhost",sni,port,ssl,req);
 	}
@@ -104,6 +104,11 @@ public class DefaultSimpleHttpClient implements SimpleHttpClient {
 	@Override
 	public X509Certificate lastServerCertificate() {
 		return serverCertificateHandler.lastCertificate();
+	}
+	
+	@Override
+	public Future<Void> closeConnections() {
+		return channelPoolMap.closeConnections();
 	}
 
 }

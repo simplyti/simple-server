@@ -16,7 +16,6 @@ import com.simplyti.service.exception.NotFoundException;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.ChannelDuplexHandler;
-import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.ReferenceCountUtil;
@@ -50,7 +49,7 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 	
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		if(msg instanceof HttpMessage) {
+		if(msg instanceof HttpRequest) {
 			ctx.channel().attr(ClientChannelGroup.IN_PROGRESS).set(true);
 			HttpRequest request = (HttpRequest) msg;
 			List<String> added;
