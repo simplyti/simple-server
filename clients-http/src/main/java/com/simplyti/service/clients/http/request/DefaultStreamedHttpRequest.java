@@ -4,7 +4,6 @@ import com.simplyti.service.clients.ClientResponseFuture;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import io.netty.handler.codec.http.HttpObject;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
 
@@ -17,7 +16,7 @@ public class DefaultStreamedHttpRequest implements StreamedHttpRequest {
 	}
 
 	@Override
-	public Future<Void> send(HttpObject request) {
+	public Future<Void> send(Object request) {
 		 Future<Channel> channelFuture = clientFuture.channelFuture();
 		 if(channelFuture.isDone()) {
 			 if(channelFuture.isSuccess()) {

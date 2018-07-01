@@ -6,21 +6,20 @@ import com.simplyti.service.clients.ClientChannel;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.LastHttpContent;
 
-public class HttpResponseHandler extends SimpleChannelInboundHandler<HttpObject> {
+public class HttpResponseHandler extends SimpleChannelInboundHandler<Object> {
 
 	private final ClientChannel<Void> clientChannel;
-	private final Consumer<HttpObject> consumer;
+	private final Consumer<Object> consumer;
 
-	public HttpResponseHandler(ClientChannel<Void> clientChannel, Consumer<HttpObject> consumer) {
+	public HttpResponseHandler(ClientChannel<Void> clientChannel, Consumer<Object> consumer) {
 		this.clientChannel=clientChannel;
 		this.consumer=consumer;
 	}
 
 	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, HttpObject msg) throws Exception {
+	protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
 		consumer.accept(msg);
 		if(msg instanceof LastHttpContent) {
 			clientChannel.pipeline().remove(this);

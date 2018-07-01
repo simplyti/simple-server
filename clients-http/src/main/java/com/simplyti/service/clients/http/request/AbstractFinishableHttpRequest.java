@@ -13,7 +13,6 @@ import com.simplyti.service.clients.http.handler.StreamResponseHandler;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.QueryStringEncoder;
 import io.netty.util.concurrent.Future;
 
@@ -49,7 +48,7 @@ public abstract class AbstractFinishableHttpRequest implements FinishableHttpReq
 	}
 
 	@Override
-	public Future<Void> forEach(Consumer<HttpObject> consumer) {
+	public Future<Void> forEach(Consumer<Object> consumer) {
 		return client.<Void>channel(endpoint,request(),clientChannel->
 			clientChannel.pipeline().addLast(new HttpResponseHandler(clientChannel,consumer)),
 			timeoutMillis).future();

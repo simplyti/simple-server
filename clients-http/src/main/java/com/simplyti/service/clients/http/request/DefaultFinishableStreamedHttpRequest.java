@@ -7,7 +7,6 @@ import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.InternalClient;
 import com.simplyti.service.clients.http.handler.HttpResponseHandler;
 
-import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 
 public class DefaultFinishableStreamedHttpRequest implements FinishableStreamedHttpRequest {
@@ -25,7 +24,7 @@ public class DefaultFinishableStreamedHttpRequest implements FinishableStreamedH
 	}
 
 	@Override
-	public StreamedHttpRequest forEach(Consumer<HttpObject> consumer) {
+	public StreamedHttpRequest forEach(Consumer<Object> consumer) {
 		ClientResponseFuture<Void> future = client.channel(endpoint,request,clientChannel->
 			clientChannel.pipeline().addLast(new HttpResponseHandler(clientChannel,consumer)),timeoutMillis);
 		return new DefaultStreamedHttpRequest(future);

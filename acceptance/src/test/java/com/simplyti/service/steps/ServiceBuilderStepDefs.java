@@ -424,5 +424,10 @@ public class ServiceBuilderStepDefs {
 		assertThat(error.code(),equalTo(code));
 	}
 	
+	@When("^I close all client connections$")
+	public void iCloseAllClientConnections() throws Exception {
+		client.closeConnections().sync();
+	}
+	
 
 }

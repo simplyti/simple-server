@@ -1,10 +1,8 @@
 package com.simplyti.service.channel.handler;
 
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.HttpObject;
+import io.netty.channel.SimpleChannelInboundHandler;
 
-public interface DefaultBackendRequestHandler {
+public abstract class DefaultBackendRequestHandler extends SimpleChannelInboundHandler<Object> {
 
-	void handle(ChannelHandlerContext ctx, HttpObject msg);
 	
 }

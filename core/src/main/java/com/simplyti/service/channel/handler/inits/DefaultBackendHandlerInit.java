@@ -6,12 +6,11 @@ import java.util.Optional;
 import java.util.Map.Entry;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 import com.google.common.collect.Maps;
 import com.simplyti.service.channel.handler.DefaultBackendFullRequestHandler;
 import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;
-import com.simplyti.service.channel.handler.DefaultFullRequestBackendHandler;
-import com.simplyti.service.channel.handler.DefaultRequestBackendHandler;
 
 import io.netty.channel.ChannelHandler;
 import io.netty.handler.codec.http.HttpObjectAggregator;
@@ -23,31 +22,27 @@ public class DefaultBackendHandlerInit extends HandlerInit{
 	
 	private final Optional<DefaultBackendFullRequestHandler> defaultBackendFullRequestHandler;
 	
-	private final Optional<DefaultBackendRequestHandler> defaultBackendRequestHandler;
+	private final Optional<Provider<DefaultBackendRequestHandler>> defaultBackendRequestHandler;
 	
-	private final DefaultFullRequestBackendHandler defaultFullRequestBackendHandler;
-	
-	private final DefaultRequestBackendHandler defaultRequestBackendHandler;
-
-	private Deque<Entry<String, ChannelHandler>> fullHandlers() {
+	private Deque<Entry<String, ChannelHandler>> fullHandlers(DefaultBackendFullRequestHandler handler) {
 		Deque<Entry<String, ChannelHandler>> handlers = new LinkedList<>();
 		handlers.add(Maps.immutableEntry("aggregator", new HttpObjectAggregator(10000000)));
-		handlers.add(Maps.immutableEntry("default-notfound-full", defaultFullRequestBackendHandler));
+		handlers.add(Maps.immutableEntry("default-notfound-full", handler));
 		return handlers;
 	}
 	
-	private Deque<Entry<String, ChannelHandler>> handlers() {
+	private Deque<Entry<String, ChannelHandler>> handlers(DefaultBackendRequestHandler handler) {
 		Deque<Entry<String, ChannelHandler>> handlers = new LinkedList<>();
-		handlers.add(Maps.immutableEntry("default-notfound", defaultRequestBackendHandler));
+		handlers.add(Maps.immutableEntry("default-notfound", handler));
 		return handlers;
 	}
 
 	@Override
 	protected Deque<Entry<String, ChannelHandler>> canHandle0(HttpRequest request) {
 		if(defaultBackendRequestHandler.isPresent()) {
-			return handlers();
+			return handlers(defaultBackendRequestHandler.get().get());
 		} else if(defaultBackendFullRequestHandler.isPresent()) {
-			return fullHandlers();
+			return fullHandlers(defaultBackendFullRequestHandler.get());
 		}else {
 			return null;
 		}
