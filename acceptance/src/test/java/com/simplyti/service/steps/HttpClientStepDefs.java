@@ -116,7 +116,7 @@ public class HttpClientStepDefs {
 	public void iPostWithBodyStreamAndLengthOfSgettingResponse(String path, String streamKey, String cotentPart, int length, String responseObjects) throws Exception {
 		HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, path);
 		request.headers().set(HttpHeaderNames.CONTENT_LENGTH,length);
-		List<Object> responseStream = new ArrayList<>();
+		List<HttpObject> responseStream = new ArrayList<>();
 		scenarioData.put(responseObjects, responseStream);
 		StreamedHttpRequest stream = sutClient.withEndpoin(LOCAL_ENDPOINT)
 			.send(request)
@@ -285,7 +285,7 @@ public class HttpClientStepDefs {
 	@Then("^I get url \"([^\"]*)\" getting http objects \"([^\"]*)\"$")
 	public void iGetUrlGettingHttpResponse(String endpointUrl, String resultKey) throws Exception {
 		HttpEndpoint endpoint = HttpEndpoint.of(endpointUrl);
-		List<Object> objets = new ArrayList<>();
+		List<HttpObject> objets = new ArrayList<>();
 		sutClient.withEndpoin(endpoint).get(endpoint.path())
 				.forEach(objets::add).await();
 		scenarioData.put(resultKey, objets);

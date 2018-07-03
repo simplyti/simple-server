@@ -40,9 +40,12 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 		this.iddleChannels=new DefaultChannelGroup(channelGroupsEventLoop);
 		this.channelPoolMap = new SimpleChannelPoolMap(eventLoopGroup, new MonitoredHandler(this, poolHandler));
 	}
-
-	public <T> ClientResponseFuture<T> channel(Endpoint endpoint, Object msg, Consumer<ClientChannel<T>> consumer,
-			long timeoutMillis) {
+	
+	public ChannelPool pool(Endpoint endpoint) {
+		return channelPoolMap.get(endpoint);
+	}
+	
+	public <T> ClientResponseFuture<T> channel(Endpoint endpoint, Object msg, Consumer<ClientChannel<T>> consumer, long timeoutMillis) {
 		ChannelPool pool = channelPoolMap.get(endpoint);
 		Future<Channel> channelFuture = pool.acquire();
 		if (channelFuture.isDone()) {

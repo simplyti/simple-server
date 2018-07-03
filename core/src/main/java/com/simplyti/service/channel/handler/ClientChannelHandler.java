@@ -16,7 +16,10 @@ import com.simplyti.service.exception.NotFoundException;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.ChannelDuplexHandler;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.internal.logging.InternalLogger;
@@ -35,6 +38,8 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 	private final ApiRequestHandlerInit apiRequestHandlerInit;
 	private final FileServerHandlerInit fileServerHandlerInit;
 	private final DefaultBackendHandlerInit defaultBackendFullRequestHandlerInit;
+
+	private boolean upgrading;
 
 	@Inject
 	public ClientChannelHandler(Service<?> service,
@@ -78,10 +83,19 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 
 	@Override
 	public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+		if(msg instanceof HttpResponse && "Upgrade".equalsIgnoreCase(((HttpResponse) msg).headers().get(HttpHeaderNames.CONNECTION))) {
+			this.upgrading=true;
+		}
+		
 		if(msg instanceof LastHttpContent) {
-			currentHandlers.forEach(handler->ctx.pipeline().remove(handler));
-			currentHandlers.clear();
-			promise.addListener(future -> {
+			promise.addListener(f->{
+				if(upgrading) {
+					ctx.pipeline().remove(HttpServerCodec.class);
+					ctx.pipeline().remove(this);
+				} else {
+					currentHandlers.forEach(handler->ctx.pipeline().remove(handler));
+					currentHandlers.clear();
+				}
 				ctx.channel().attr(ClientChannelGroup.IN_PROGRESS).set(false);
 				if(service.stopping()){
 					log.info("Server is stopping, close channel");
