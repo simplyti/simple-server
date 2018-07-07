@@ -5,7 +5,10 @@ Scenario: Basic auth
 	Then I check that "#response" is success
 	And I check that http response "#response" has body
 	"""
-	{"authenticated":true,"user":"pepe"}
+	{
+	  "authenticated": true, 
+	  "user": "pepe"
+	}
 	
 	"""
 	
