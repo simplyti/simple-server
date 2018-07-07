@@ -15,6 +15,7 @@ import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.clients.http.request.StreamedHttpRequest;
+import com.simplyti.service.clients.http.ws.WebSocketClient;
 import com.simplyti.service.clients.proxy.ProxiedEndpoint;
 import com.simplyti.service.clients.proxy.Proxy;
 import com.simplyti.service.clients.proxy.Proxy.ProxyType;
@@ -31,6 +32,7 @@ import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.http.DefaultHttpContent;
 import io.netty.handler.codec.http.DefaultHttpRequest;
+import io.netty.handler.codec.http.DefaultLastHttpContent;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -38,6 +40,7 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Future;
@@ -125,6 +128,19 @@ public class HttpClientStepDefs {
 		scenarioData.put(streamKey, stream);
 	}
 	
+	@When("^I post \"([^\"]*)\" using client \"([^\"]*)\" with body stream \"([^\"]*)\", content part \"([^\"]*)\", length of (\\d+) getting response objects \"([^\"]*)\"$")
+	public void iPostWithBodyStreamAndLengthOfSgettingResponse(String path,String clientKey, String streamKey, String cotentPart, int length, String responseObjects) throws Exception {
+		HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, path);
+		request.headers().set(HttpHeaderNames.CONTENT_LENGTH,length);
+		List<HttpObject> responseStream = new ArrayList<>();
+		scenarioData.put(responseObjects, responseStream);
+		StreamedHttpRequest stream = ((HttpClient)scenarioData.get(clientKey)).withEndpoin(LOCAL_ENDPOINT)
+			.send(request)
+			.forEach(obj->responseStream.add(ReferenceCountUtil.retain(obj)));
+		stream.send(new DefaultHttpContent(Unpooled.wrappedBuffer(cotentPart.getBytes(CharsetUtil.UTF_8))));
+		scenarioData.put(streamKey, stream);
+	}
+	
 	@Then("^I check that response stream \"([^\"]*)\" contains body \"([^\"]*)\"$")
 	public void iCheckThatResponseStreamContainsBody(String responseStreamKey, String expected) throws Exception {
 		@SuppressWarnings("unchecked")
@@ -144,6 +160,13 @@ public class HttpClientStepDefs {
 	public void iSendToStreamGettingResult(String data, String streamKey, String resultKey) throws Exception {
 		StreamedHttpRequest stream = (StreamedHttpRequest) scenarioData.get(streamKey);
 		Future<Void> result = stream.send(new DefaultHttpContent(Unpooled.wrappedBuffer(data.getBytes(CharsetUtil.UTF_8))));
+		scenarioData.put(resultKey, result);
+	}
+	
+	@When("^I send last \"([^\"]*)\" to stream \"([^\"]*)\" getting result \"([^\"]*)\"$")
+	public void iSendLastToStreamGettingResult(String data, String streamKey, String resultKey) throws Exception {
+		StreamedHttpRequest stream = (StreamedHttpRequest) scenarioData.get(streamKey);
+		Future<Void> result = stream.send(new DefaultLastHttpContent(Unpooled.wrappedBuffer(data.getBytes(CharsetUtil.UTF_8))));
 		scenarioData.put(resultKey, result);
 	}
 	
@@ -313,5 +336,42 @@ public class HttpClientStepDefs {
 		List<ByteBuf> objects = (List<ByteBuf>) scenarioData.get(key);
 		assertThat(objects,hasSize(number));
 	}
+	
+	@When("^I send message \"([^\"]*)\" to websocket \"([^\"]*)\" getting text stream \"([^\"]*)\" and write \"([^\"]*)\"$")
+	public void iSendAWebsocketTextMessageGettingResponseStreamAs(String msg, String wsKey, String stream,String result) throws Exception {
+		StringBuilder data = new StringBuilder();
+		scenarioData.put(stream, data);
+		WebSocketClient ws = client.withEndpoin(LOCAL_ENDPOINT)
+			.websocket("/",frame->data.append(((TextWebSocketFrame)frame).text()));
+		scenarioData.put(wsKey, ws);
+		scenarioData.put(result, ws.send(msg));
+	}
+	
+	@When("^I send message \"([^\"]*)\" to websocket \"([^\"]*)\" with address \"([^\"]*)\" getting text stream \"([^\"]*)\" and write \"([^\"]*)\"$")
+	public void iSendAWebsocketTextMessageGettingResponseStreamAs(String msg, String wsKey, String endpointUrl, String stream,String result) throws Exception {
+		HttpEndpoint endpoint = HttpEndpoint.of(endpointUrl);
+		StringBuilder data = new StringBuilder();
+		scenarioData.put(stream, data);
+		WebSocketClient ws = client.withEndpoin(endpoint)
+			.websocket("/",frame->data.append(((TextWebSocketFrame)frame).text()));
+		scenarioData.put(wsKey, ws);
+		scenarioData.put(result, ws.send(msg));
+	}
+	
+	@Then("^I check that text stream \"([^\"]*)\" is equals to \"([^\"]*)\"$")
+	public void iCheckThatTextIsEqualsTo(String key, String expected) throws Exception {
+		StringBuilder data = (StringBuilder) scenarioData.get(key);
+		Awaitility.await().until(()->((StringBuilder) scenarioData.get(key)).toString(),equalTo(expected));
+		assertThat(data.toString(),equalTo(expected));
+		data.delete(0, data.length());
+	}
+	
+	@When("^I send message \"([^\"]*)\" to websocket \"([^\"]*)\" getting \"([^\"]*)\"$")
+	public void iSendMessageToWebsocketGetting(String msg, String wsKey, String result) throws Exception {
+		WebSocketClient ws = (WebSocketClient) scenarioData.get(wsKey);
+		scenarioData.put(result, ws.send(msg));
+	}
+	
+	
 	
 }

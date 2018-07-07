@@ -349,6 +349,13 @@ public class ServiceBuilderStepDefs {
 		assertThat(futureService.isSuccess(),equalTo(true));
 	}
 	
+	@When("^I check that stream \"([^\"]*)\" is failure$")
+	public void iCheckThatStreamIsFailure(String key) throws Exception {
+		StreamedHttpRequest futureService = (StreamedHttpRequest) scenarioData.get(key);
+		Awaitility.await().until(futureService::isDone);
+		assertThat(futureService.isSuccess(),equalTo(false));
+	}
+	
 	@Then("^I check that \"([^\"]*)\" is failure$")
 	public void iCheckThatIsFailure(String key) throws Exception {
 		Future<?> futureService = (Future<?>) scenarioData.get(key);

@@ -144,7 +144,7 @@ Scenario: Host service match only when host header present
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I create a service with host "httpbin.docker" with path "/status" and backend "http://127.0.0.1:8081"
-	When I send a "GET /status/200" getting "#response"
+	And I send a "GET /status/200" getting "#response"
 	Then I check that "#response" has status code 404
 	When I send a "GET /status/200" with header "host" with value "httpbin.docker" getting "#response"
 	Then I check that "#response" has status code 200
@@ -157,8 +157,45 @@ Scenario: Path template
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I create a service with path "/status/{code:\d+}" and backend "http://127.0.0.1:8081"
-	When I send a "GET /status/200" getting "#response"
+	And I send a "GET /status/200" getting "#response"
 	Then I check that "#response" has status code 200
 	When I send a "GET /status/baad" getting "#response"
 	Then I check that "#response" has status code 404
+
+Scenario: Web socket backend
+	When I start a service "#serviceFuture" with options:
+		| option	 			| value |
+		| withModule			| com.simplyti.service.gateway.GatewayModule |
+		| withModule			| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| withLog4J2Logger	|		|
+	Then I check that "#serviceFuture" is success
+	When I create a service with backend "http://127.0.0.1:8010"
+	And I send message "Hello WS!" to websocket "#ws" getting text stream "#stream" and write "#writeFuture"
+	Then I check that "#writeFuture" is success
+	And I check that text stream "#stream" is equals to "Server received from client: Hello WS!"
+	When I send message "Bye WS!" to websocket "#ws" getting "#writeFuture"
+	Then I check that "#writeFuture" is success
+	And I check that text stream "#stream" is equals to "Server received from client: Bye WS!"
+	
+Scenario: Web socket service connection error
+	When I start a service "#serviceFuture" with options:
+		| option	 			| value |
+		| withModule			| com.simplyti.service.gateway.GatewayModule |
+		| withModule			| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| withLog4J2Logger	|		|
+	Then I check that "#serviceFuture" is success
+	When I create a service with backend "http://127.0.0.1:9090"
+	And I send message "Hello WS!" to websocket "#ws" getting text stream "#stream" and write "#writeFuture"
+	Then I check that "#writeFuture" is failure
+
+Scenario: Web socket service bad handshake
+	When I start a service "#serviceFuture" with options:
+		| option	 			| value |
+		| withModule			| com.simplyti.service.gateway.GatewayModule |
+		| withModule			| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| withLog4J2Logger	|		|
+	Then I check that "#serviceFuture" is success
+	When I create a service with backend "http://127.0.0.1:8081"
+	And I send message "Hello WS!" to websocket "#ws" getting text stream "#stream" and write "#writeFuture"
+	Then I check that "#writeFuture" is failure
 	

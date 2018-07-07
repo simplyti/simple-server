@@ -3,7 +3,7 @@ package com.simplyti.service.clients.http.handler;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.simplyti.service.clients.ClientChannel;
+import com.simplyti.service.clients.ClientRequestChannel;
 import com.simplyti.service.clients.http.exception.HttpException;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -15,10 +15,10 @@ import io.netty.handler.codec.http.HttpStatusClass;
 
 public class FullHttpResponseHandler extends HttpObjectAggregator {
 
-	private final ClientChannel<FullHttpResponse> clientChannel;
+	private final ClientRequestChannel<FullHttpResponse> clientChannel;
 	private final boolean checkStatusCode;
 
-	public FullHttpResponseHandler(ClientChannel<FullHttpResponse> clientChannel, boolean checkStatusCode) {
+	public FullHttpResponseHandler(ClientRequestChannel<FullHttpResponse> clientChannel, boolean checkStatusCode) {
 		super(10000000);
 		this.checkStatusCode = checkStatusCode;
 		this.clientChannel = clientChannel;
@@ -27,14 +27,13 @@ public class FullHttpResponseHandler extends HttpObjectAggregator {
 	@Override
 	protected void finishAggregation(FullHttpMessage aggregated) throws Exception {
 		FullHttpResponse response = (FullHttpResponse) aggregated;
-		if(!clientChannel.promise().isDone()) {
+		if(!clientChannel.resultPromise().isDone()) {
 			if(checkStatusCode && isError(response.status().codeClass())) {
-				clientChannel.promise().setFailure(new HttpException(response.status().code()));
+				clientChannel.resultPromise().setFailure(new HttpException(response.status().code()));
 			}else {
-				clientChannel.promise().setSuccess((FullHttpResponse) aggregated.retain());
+				clientChannel.resultPromise().setSuccess((FullHttpResponse) aggregated.retain());
 			}
 		}
-		
 		clientChannel.pipeline().remove(this);
 		clientChannel.release();
 	}

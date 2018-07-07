@@ -61,3 +61,11 @@ Scenario: Get http objects
 Scenario: Get http stream
 	When I get url "http://127.0.0.1:8081/stream/5" getting stream "#stream"
 	Then I check that stream "#stream" contains 5 items
+	
+Scenario: WebSocket connection
+ 	And I send message "Hello WS!" to websocket "#ws" with address "http://127.0.0.1:8010" getting text stream "#stream" and write "#writeFuture"
+	Then I check that "#writeFuture" is success
+	And I check that text stream "#stream" is equals to "Server received from client: Hello WS!"
+	When I send message "Bye WS!" to websocket "#ws" getting "#writeFuture"
+	Then I check that "#writeFuture" is success
+	And I check that text stream "#stream" is equals to "Server received from client: Bye WS!"

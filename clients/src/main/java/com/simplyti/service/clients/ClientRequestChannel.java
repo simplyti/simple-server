@@ -8,25 +8,24 @@ import lombok.experimental.Accessors;
 import lombok.experimental.Delegate;
 
 @Accessors(fluent=true)
-public class ClientChannel<T> implements Channel {
+public class ClientRequestChannel<T> implements Channel {
 
 	@Delegate(types=Channel.class)
 	private final Channel channel;
 	
 	@Getter
-	private final Promise<T> promise;
+	private final Promise<T> resultPromise;
 	
 	private final ChannelPool pool;
 
-	public ClientChannel(ChannelPool pool, Channel channel, Promise<T> promise) {
+	public ClientRequestChannel(ChannelPool pool, Channel channel, Promise<T> resultPromise) {
 		this.channel=channel;
-		this.promise=promise;
+		this.resultPromise=resultPromise;
 		this.pool=pool;
 	}
 
 	public void release() {
 		pool.release(channel);
 	}
-
 
 }

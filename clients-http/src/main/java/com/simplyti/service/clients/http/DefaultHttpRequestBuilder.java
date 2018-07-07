@@ -1,39 +1,49 @@
 package com.simplyti.service.clients.http;
 
 import java.util.Base64;
+import java.util.function.Consumer;
 
 import com.google.common.base.Joiner;
 import com.simplyti.service.clients.AbstractClientRequestBuilder;
+import com.simplyti.service.clients.ClientRequestChannel;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.InternalClient;
 import com.simplyti.service.clients.http.request.DefaultFinishabBodyleHttpRequest;
 import com.simplyti.service.clients.http.request.FinishableBodyHttpRequest;
 import com.simplyti.service.clients.http.request.FinishableHttpRequest;
 import com.simplyti.service.clients.http.request.FinishableStreamedHttpRequest;
+import com.simplyti.service.clients.http.ws.DefaultWebSocketClient;
+import com.simplyti.service.clients.http.ws.WebSocketClient;
+import com.simplyti.service.clients.http.ws.handler.WebSocketChannelHandler;
 import com.simplyti.service.clients.http.request.DefaultFinishableHttpRequest;
 import com.simplyti.service.clients.http.request.DefaultFinishableStreamedHttpRequest;
 
 import io.netty.buffer.Unpooled;
+import io.netty.channel.EventLoop;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.EmptyHttpHeaders;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.util.CharsetUtil;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.Promise;
 
 public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<HttpRequestBuilder> implements HttpRequestBuilder {
 
-	private final InternalClient target;
+	private final InternalClient client;
 	private final Endpoint endpoint;
 	
 	private final DefaultHttpHeaders headers;
 	private boolean checkStatusCode;
 
 	public DefaultHttpRequestBuilder(InternalClient target, Endpoint endpoint,boolean checkStatusCode) {
-		this.target=target;
+		this.client=target;
 		this.endpoint=endpoint;
 		this.checkStatusCode=checkStatusCode;
 		this.headers = new DefaultHttpHeaders(true);
@@ -50,22 +60,22 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 	public FinishableHttpRequest get(String uri) {
 		FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri, Unpooled.EMPTY_BUFFER,
 				headers,EmptyHttpHeaders.INSTANCE);
-		return new DefaultFinishableHttpRequest(target,endpoint,checkStatusCode,request,readTimeout());
+		return new DefaultFinishableHttpRequest(client,endpoint,checkStatusCode,request,readTimeout());
 	}
 
 	@Override
 	public FinishableBodyHttpRequest post(String uri) {
-		return new DefaultFinishabBodyleHttpRequest(target,endpoint,checkStatusCode,HttpMethod.POST,uri,headers,readTimeout());
+		return new DefaultFinishabBodyleHttpRequest(client,endpoint,checkStatusCode,HttpMethod.POST,uri,headers,readTimeout());
 	}
 	
 	@Override
 	public FinishableBodyHttpRequest put(String uri) {
-		return new DefaultFinishabBodyleHttpRequest(target,endpoint,checkStatusCode,HttpMethod.PUT,uri,headers,readTimeout());
+		return new DefaultFinishabBodyleHttpRequest(client,endpoint,checkStatusCode,HttpMethod.PUT,uri,headers,readTimeout());
 	}
 
 	@Override
 	public FinishableHttpRequest sendFull(FullHttpRequest request) {
-		return new DefaultFinishableHttpRequest(target,endpoint,checkStatusCode,request,readTimeout());
+		return new DefaultFinishableHttpRequest(client,endpoint,checkStatusCode,request,readTimeout());
 	}
 
 	@Override
@@ -77,7 +87,18 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 
 	@Override
 	public FinishableStreamedHttpRequest send(HttpRequest request) {
-		return new DefaultFinishableStreamedHttpRequest(target,endpoint,request,readTimeout());
+		return new DefaultFinishableStreamedHttpRequest(client,endpoint,request,readTimeout());
+	}
+
+	@Override
+	public WebSocketClient websocket(String uri, Consumer<WebSocketFrame> consumer) {
+		EventLoop executor = client.eventLoopGroup().next();
+		Promise<Void> promise = executor.newPromise();
+		Future<ClientRequestChannel<Void>> clientChannel = client.channel(endpoint,channel->{
+			channel.pipeline().addLast(new HttpObjectAggregator(65536));
+			channel.pipeline().addLast(new WebSocketChannelHandler(endpoint,uri,headers,channel,consumer));
+		},promise);
+		return new DefaultWebSocketClient(clientChannel,executor);
 	}
 
 }

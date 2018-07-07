@@ -2,7 +2,7 @@ package com.simplyti.service.clients.http.handler;
 
 import java.util.function.Consumer;
 
-import com.simplyti.service.clients.ClientChannel;
+import com.simplyti.service.clients.ClientRequestChannel;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -13,10 +13,10 @@ import io.netty.handler.codec.http.LastHttpContent;
 
 public class StreamResponseHandler extends SimpleChannelInboundHandler<HttpObject> {
 
-	private final ClientChannel<Void> clientChannel;
+	private final ClientRequestChannel<Void> clientChannel;
 	private final Consumer<ByteBuf> consumer;
 
-	public StreamResponseHandler(ClientChannel<Void> clientChannel, Consumer<ByteBuf> consumer) {
+	public StreamResponseHandler(ClientRequestChannel<Void> clientChannel, Consumer<ByteBuf> consumer) {
 		this.clientChannel=clientChannel;
 		this.consumer=consumer;
 	}
@@ -27,7 +27,7 @@ public class StreamResponseHandler extends SimpleChannelInboundHandler<HttpObjec
 			consumer.accept(((HttpContent) msg).content());
 		}
 		if(msg instanceof LastHttpContent) {
-			clientChannel.promise().setSuccess(null);
+			clientChannel.resultPromise().setSuccess(null);
 			clientChannel.pipeline().remove(this);
 			clientChannel.release();
 		}

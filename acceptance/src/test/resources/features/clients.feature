@@ -39,6 +39,10 @@ Scenario: Request timeout
 	When I post "/echo/delay?millis=500" with body "Hey!" and response time 200 getting response "#response"
 	Then I check that "#response" is failure
 	
+Scenario: Connection error
+	When I get "/hello" getting response "#response"
+	And I check that "#response" is failure
+	
 Scenario: Single thread client
 	Given a single thread event loop group "#eventLoopGroup"
 	When I create an http client "#client" with event loop group "#eventLoopGroup"
@@ -52,7 +56,7 @@ Scenario: Single thread client
 	And I check that http response "#response" has body "Hello!"
 	And I check that http client "#client" has 1 iddle connection
 	
-Scenario: Connection write stream
+Scenario: Connection write stream with http objecs
 	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
 	Then I check that "#serviceFuture" is success
 	When I post "/echo" with body stream "#stream", content part "Hello ", length of 20 getting response objects "#responseStream"
@@ -60,8 +64,44 @@ Scenario: Connection write stream
 	When I send "stream." to stream "#stream" getting result "#writeresult"
 	Then I check that "#writeresult" is success
 	And I check that stream "#stream" is not complete
-	When I send "The end" to stream "#stream" getting result "#writeresult"
+	When I send last "The end" to stream "#stream" getting result "#writeresult"
 	Then I check that "#writeresult" is success
 	And I check that stream "#stream" is success
 	And I check that response stream "#responseStream" contains body "Hello stream.The end"
+	And I check that http client has 1 iddle connection
+	When I post "/echo" with body stream "#stream", content part "Bye", length of 4 getting response objects "#responseStream"
+	And I check that stream "#stream" is not complete
+	When I send last "!" to stream "#stream" getting result "#writeresult"
+	Then I check that "#writeresult" is success
+	And I check that stream "#stream" is success
+	And I check that response stream "#responseStream" contains body "Bye!"
+	And I check that http client has 1 iddle connection
 	
+Scenario: Single thread stream with http objects
+	Given a single thread event loop group "#eventLoopGroup"
+	When I create an http client "#client" with event loop group "#eventLoopGroup"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I post "/echo" using client "#client" with body stream "#stream", content part "Hello ", length of 20 getting response objects "#responseStream"
+	And I check that stream "#stream" is not complete
+	When I send "stream." to stream "#stream" getting result "#writeresult"
+	Then I check that "#writeresult" is success
+	And I check that stream "#stream" is not complete
+	When I send last "The end" to stream "#stream" getting result "#writeresult"
+	Then I check that "#writeresult" is success
+	And I check that stream "#stream" is success
+	And I check that response stream "#responseStream" contains body "Hello stream.The end"
+	And I check that http client "#client" has 1 iddle connection
+	When I post "/echo" using client "#client" with body stream "#stream", content part "Bye", length of 4 getting response objects "#responseStream"
+	And I check that stream "#stream" is not complete
+	When I send last "!" to stream "#stream" getting result "#writeresult"
+	Then I check that "#writeresult" is success
+	And I check that stream "#stream" is success
+	And I check that response stream "#responseStream" contains body "Bye!"
+	And I check that http client "#client" has 1 iddle connection
+	
+Scenario: Connection error when write stream
+	When I post "/echo" with body stream "#stream", content part "Hello", length of 6 getting response objects "#responseStream"
+	And I check that stream "#stream" is failure
+	When I send "!" to stream "#stream" getting result "#writeresult"
+	Then I check that "#writeresult" is failure
