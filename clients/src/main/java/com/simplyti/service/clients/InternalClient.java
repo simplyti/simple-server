@@ -20,6 +20,7 @@ import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.ScheduledFuture;
+import io.vavr.control.Try;
 
 public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 
@@ -111,7 +112,7 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 			if (channelFuture.isSuccess()) {
 				EventLoop eventLoop = channelFuture.getNow().eventLoop();
 				ClientRequestChannel<T> client = new ClientRequestChannel<>(pool,channelFuture.getNow(),promise);
-				channelFuture.getNow().pipeline().remove(ChannelClientInitHandler.class);
+				Try.run(()->channelFuture.getNow().pipeline().remove(ChannelClientInitHandler.class));
 				requestChannelInitializer.initialize(client);
 				client.pipeline().addLast(new ChannelClientInitHandler<T>(null,client));
 				return eventLoop.newSucceededFuture(client);
@@ -126,12 +127,14 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 				if (channelFuture.isSuccess()) {
 					Channel channel = channelFuture.getNow();
 					ClientRequestChannel<T> clientChannel = new ClientRequestChannel<>(pool,channel,promise);
+					Try.run(()->channelFuture.getNow().pipeline().remove(ChannelClientInitHandler.class));
 					requestChannelInitializer.initialize(clientChannel);
 					if(channel.attr(INITIALIZED).get()==null) {
 						clientChannel.pipeline().addLast(new ChannelClientInitHandler<>(clientPromise,clientChannel));
 						clientChannel.pipeline().fireUserEventTriggered(ClientChannelEvent.INIT);
 						channel.attr(INITIALIZED).set(true);
 					}else {
+						clientChannel.pipeline().addLast(new ChannelClientInitHandler<T>(null,clientChannel));
 						clientPromise.setSuccess(clientChannel);
 					}
 				} else {
