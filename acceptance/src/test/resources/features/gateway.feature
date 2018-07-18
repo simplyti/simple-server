@@ -8,7 +8,7 @@ Scenario: Simple gateway
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I create a service with path "/base64" and backend "http://127.0.0.1:8081"
-	When I send a "GET /base64/SGVsbG8gR2F0ZXdheQ==" getting "#response"
+	And I send a "GET /base64/SGVsbG8gR2F0ZXdheQ==" getting "#response"
 	Then I check that "#response" has status code 200
 	And I check that "#response" is equals to "Hello Gateway"
 
@@ -31,7 +31,7 @@ Scenario: Not available service
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I create a service with path "/status"
-	When I send a "GET /status/200" getting "#response"
+	And I send a "GET /status/200" getting "#response"
 	Then I check that "#response" has status code 503
 	And I check that "#response" is equals to ""
 	
@@ -43,7 +43,7 @@ Scenario: Bad gateway service
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I create a service with path "/status" and backend "http://127.0.0.1:9090"
-	When I send a "GET /status/200" getting "#response"
+	And I send a "GET /status/200" getting "#response"
 	Then I check that "#response" has status code 502
 	And I check that "#response" is equals to ""
 	
@@ -62,8 +62,8 @@ Scenario: Streamed body post
 		| withLog4J2Logger	|		|
 	Then I check that "#gatewayFuture" is success
 	When I create a service with path "/echo" and backend "http://127.0.0.1:9090"
-	When I post "/echo" with body stream "#stream", content part "Hello ", length of 20 getting response objects "#response"
-	And I check that stream "#stream" is not complete
+	And I post "/echo" with body stream "#stream", content part "Hello ", length of 20 getting response objects "#response"
+	Then I check that stream "#stream" is not complete
 	When I send "stream." to stream "#stream" getting result "#writeresult"
 	Then I check that "#writeresult" is success
 	And I check that stream "#stream" is not complete
@@ -88,7 +88,7 @@ Scenario: Service method match
 	When I create a service with method "GET" with path "/anything" and backend "http://127.0.0.1:8081"
 	And I create a service with method "GET" with path "/status" and backend "http://127.0.0.1:8081"
 	And I create a service with method "POST" with path "/echo" and backend "http://127.0.0.1:9090"
-	When I send a "GET /anything" getting "#response"
+	And I send a "GET /anything" getting "#response"
 	Then I check that "#response" has status code 200
 	When I send a "GET /status/302" getting "#response"
 	Then I check that "#response" has status code 302
@@ -111,7 +111,7 @@ Scenario: Especific method is prioritized
 	Then I check that "#gatewayFuture" is success
 	When I create a service with path "/anything" and backend "http://127.0.0.1:8081"
 	And I create a service with method "GET" with path "/anything" and backend "http://127.0.0.1:9090"
-	When I send a "GET /anything" getting "#response"
+	And I send a "GET /anything" getting "#response"
 	Then I check that "#response" has status code 200
 	And I check that "#response" is equals to "This is a prioritized response"
 	When I send a "POST /anything" getting "#response"
@@ -132,7 +132,7 @@ Scenario: Especific host is prioritized
 	Then I check that "#gatewayFuture" is success
 	When I create a service with backend "http://127.0.0.1:8081"
 	And I create a service with host "service.local" and backend "http://127.0.0.1:9090"
-	When I send a "GET /anything" with header "host" with value "service.local" getting "#response"
+	And I send a "GET /anything" with header "host" with value "service.local" getting "#response"
 	Then I check that "#response" has status code 200
 	And I check that "#response" is equals to "This is a prioritized response"
 	

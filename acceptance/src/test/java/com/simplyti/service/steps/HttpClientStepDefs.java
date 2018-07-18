@@ -326,16 +326,26 @@ public class HttpClientStepDefs {
 		HttpEndpoint endpoint = HttpEndpoint.of(endpointUrl);
 		List<ByteBuf> stream = new ArrayList<>();
 		sutClient.withEndpoin(endpoint).get(endpoint.path())
-				.stream(stream::add).await();
+				.stream(data->stream.add(Unpooled.copiedBuffer(data))).sync();
 		scenarioData.put(resultKey, stream);
 	}
-
+	
+	@SuppressWarnings("unchecked")
 	@Then("^I check that stream \"([^\"]*)\" contains (\\d+) items$")
 	public void iCheckThatStreamContainsItems(String key, int number) throws Exception {
-		@SuppressWarnings("unchecked")
+		Awaitility.await().until(()->(List<ByteBuf>) scenarioData.get(key),hasSize(number));
 		List<ByteBuf> objects = (List<ByteBuf>) scenarioData.get(key);
 		assertThat(objects,hasSize(number));
 	}
+	
+	@Then("^I check that item (\\d+) of stream \"([^\"]*)\" is equals to$")
+	public void iCheckThatItemOfStreamIsEqualsTo(int item, String key, String expected) throws Exception {
+		@SuppressWarnings("unchecked")
+		List<ByteBuf> objects = (List<ByteBuf>) scenarioData.get(key);
+		ByteBuf data = objects.get(item);
+		assertThat(data.toString(CharsetUtil.UTF_8),equalTo(expected));
+	}
+
 	
 	@When("^I send message \"([^\"]*)\" to websocket \"([^\"]*)\" getting text stream \"([^\"]*)\" and write \"([^\"]*)\"$")
 	public void iSendAWebsocketTextMessageGettingResponseStreamAs(String msg, String wsKey, String stream,String result) throws Exception {
