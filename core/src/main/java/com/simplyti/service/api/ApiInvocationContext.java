@@ -3,6 +3,8 @@ package com.simplyti.service.api;
 import java.util.List;
 import java.util.Map;
 
+import com.simplyti.service.sse.SSEStream;
+
 public interface ApiInvocationContext<I,O> extends APIContext<O>{
 	
 	public I body();
@@ -10,5 +12,7 @@ public interface ApiInvocationContext<I,O> extends APIContext<O>{
 	public Map<String,List<String>> queryParams();
 	public String queryParam(String name);
 	public String pathParam(String key);
+	
+	public SSEStream sse();
 	
 }

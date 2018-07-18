@@ -9,6 +9,8 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.Iterables;
 import com.jsoniter.JsonIterator;
 import com.simplyti.service.exception.ExceptionHandler;
+import com.simplyti.service.sse.DefaultSSEStream;
+import com.simplyti.service.sse.SSEStream;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DefaultByteBufHolder;
@@ -167,6 +169,12 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 	@Override
 	public HttpRequest request() {
 		return msg.request();
+	}
+
+	@Override
+	public SSEStream sse() {
+		tryRelease();
+		return new DefaultSSEStream(ctx);
 	}
 
 }
