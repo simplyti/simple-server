@@ -23,17 +23,21 @@ import io.netty.handler.codec.http.EmptyHttpHeaders;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.util.AttributeKey;
 import lombok.RequiredArgsConstructor;
 
 @Sharable
 @RequiredArgsConstructor(onConstructor=@__(@Inject))
 public class AwsHttpLambdaRequestDecoder extends MessageToMessageDecoder<ByteBuf>{
 	
+	private static final AttributeKey<Any> EVENT = AttributeKey.valueOf("aws.lambda.event");
+
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
 		byte[] data = new byte[msg.readableBytes()];
 		msg.readBytes(data);
 		Any event = JsonIterator.deserialize(data);
+		ctx.channel().attr(EVENT).set(event);
 		out.add(new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, 
 				HttpMethod.valueOf(event.get("httpMethod").toString()), 
 				path(event),
