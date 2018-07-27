@@ -53,6 +53,7 @@ import static io.vavr.control.Try.run;
 import static org.junit.Assert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.containsString;
 
 public class ServiceBuilderStepDefs {
 	
@@ -368,6 +369,13 @@ public class ServiceBuilderStepDefs {
 		Future<?> futureService = (Future<?>) scenarioData.get(key);
 		assertThat(futureService.isSuccess(),equalTo(false));
 		assertThat(futureService.cause().getMessage(),equalTo(expected));
+	}
+
+	@Then("^I check that error failure message of \"([^\"]*)\" contains \"([^\"]*)\"$")
+	public void iCheckThatErrorFailureMessageOfContains(String key, String expected) throws Exception {
+		Future<?> futureService = (Future<?>) scenarioData.get(key);
+		assertThat(futureService.isSuccess(),equalTo(false));
+		assertThat(futureService.cause().getMessage(),containsString(expected));
 		
 	}
 	
