@@ -10,14 +10,18 @@ import javax.inject.Provider;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.kqueue.KQueue;
+import io.netty.channel.kqueue.KQueueEventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 
 public class EventLoopGroupProvider implements Provider<EventLoopGroup>{
 	
 	private static Class<? extends EventLoopGroup> EVENT_LOOP_GROUP_CLASS = Match(Epoll.isAvailable()).of(
 			Case($(Boolean.TRUE), EpollEventLoopGroup.class),
-			Case($(), NioEventLoopGroup.class )
-	);
+			Case($(), Match(KQueue.isAvailable()).of(
+					Case($(Boolean.TRUE), KQueueEventLoopGroup.class),
+					Case($(), NioEventLoopGroup.class )
+			)));
 
 	@Override
 	public EventLoopGroup get() {

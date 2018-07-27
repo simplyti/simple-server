@@ -11,6 +11,8 @@ import javax.inject.Provider;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
+import io.netty.channel.kqueue.KQueueEventLoopGroup;
+import io.netty.channel.kqueue.KQueueServerSocketChannel;
 import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class SererChannelClassProvider implements Provider<Class<? extends Serve
 	public Class<? extends ServerSocketChannel> get() {
 		return Match(eventLoopGroup).of(
 				Case($(instanceOf(EpollEventLoopGroup.class)), EpollServerSocketChannel.class),
+				Case($(instanceOf(KQueueEventLoopGroup.class)), KQueueServerSocketChannel.class),
 				Case($(), NioServerSocketChannel.class));
 	}
 

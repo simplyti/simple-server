@@ -17,6 +17,8 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollSocketChannel;
+import io.netty.channel.kqueue.KQueueEventLoopGroup;
+import io.netty.channel.kqueue.KQueueSocketChannel;
 import io.netty.channel.pool.AbstractChannelPoolMap;
 import io.netty.channel.pool.ChannelPool;
 import io.netty.channel.pool.ChannelPoolHandler;
@@ -56,6 +58,7 @@ public class SimpleChannelPoolMap extends AbstractChannelPoolMap<Endpoint, Chann
 	private Class<? extends Channel> channelClass(EventLoopGroup eventLoopGroup) {
 		return Match(eventLoopGroup).of(
 				Case($(instanceOf(EpollEventLoopGroup.class)), EpollSocketChannel.class),
+				Case($(instanceOf(KQueueEventLoopGroup.class)), KQueueSocketChannel.class),
 				Case($(), NioSocketChannel.class));
 	}
 

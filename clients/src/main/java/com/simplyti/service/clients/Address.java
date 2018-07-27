@@ -1,6 +1,5 @@
 package com.simplyti.service.clients;
 
-import com.google.common.base.Joiner;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -18,7 +17,7 @@ public class Address {
 	
 	@Override
 	public String toString() {
-		return Joiner.on(':').join(host,port);
+		return host+":"+port;
 	}
 	
 }
