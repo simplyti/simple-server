@@ -83,3 +83,9 @@ Scenario: WebSocket connection
 	When I send message "Bye WS!" to websocket "#ws" getting "#writeFuture"
 	Then I check that "#writeFuture" is success
 	And I check that text stream "#stream" is equals to "Server received from client: Bye WS!"
+	
+Scenario: Get SSE stream
+	When I start a service "#serviceFuture" with API "com.simplyti.service.SSEApi"
+	Then I check that "#serviceFuture" is success
+	When I get url "http://127.0.0.1:8080/sse" getting sse stream "#stream"
+	Then I check that stream "#stream" contains 2 items

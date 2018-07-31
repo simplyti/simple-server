@@ -15,6 +15,7 @@ import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.clients.http.request.StreamedHttpRequest;
+import com.simplyti.service.clients.http.sse.ServerEvent;
 import com.simplyti.service.clients.http.ws.WebSocketClient;
 import com.simplyti.service.clients.proxy.ProxiedEndpoint;
 import com.simplyti.service.clients.proxy.Proxy;
@@ -342,6 +343,15 @@ public class HttpClientStepDefs {
 		List<ByteBuf> stream = new ArrayList<>();
 		sutClient.withEndpoin(endpoint).get(endpoint.path())
 				.stream(data->stream.add(Unpooled.copiedBuffer(data))).sync();
+		scenarioData.put(resultKey, stream);
+	}
+	
+	@When("^I get url \"([^\"]*)\" getting sse stream \"([^\"]*)\"$")
+	public void iGetUrlGettingSSEStream(String endpointUrl, String resultKey) throws Exception {
+		HttpEndpoint endpoint = HttpEndpoint.of(endpointUrl);
+		List<ServerEvent> stream = new ArrayList<>();
+		sutClient.withEndpoin(endpoint).get(endpoint.path())
+				.sse(event->stream.add(event)).sync();
 		scenarioData.put(resultKey, stream);
 	}
 	
