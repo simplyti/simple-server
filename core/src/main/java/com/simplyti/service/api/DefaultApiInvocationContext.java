@@ -11,6 +11,7 @@ import com.jsoniter.JsonIterator;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.sse.DefaultSSEStream;
 import com.simplyti.service.sse.SSEStream;
+import com.simplyti.service.sse.ServerSentEventEncoder;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DefaultByteBufHolder;
@@ -32,17 +33,20 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 	private final ExceptionHandler exceptionHandler;
 	private final ChannelHandlerContext ctx;
 	private final ApiInvocation<I> msg;
-	
 	private final Supplier<I> cachedRequestBody;
+	private final ServerSentEventEncoder serverSentEventEncoder;
 	
 	private boolean released = false ;
 	
-	public DefaultApiInvocationContext(ChannelHandlerContext ctx,ApiInvocation<I> msg, ExceptionHandler exceptionHandler) {
+	
+	public DefaultApiInvocationContext(ChannelHandlerContext ctx,ApiInvocation<I> msg, ExceptionHandler exceptionHandler,
+			ServerSentEventEncoder serverSentEventEncoder) {
 		super(msg.content());
 		this.exceptionHandler=exceptionHandler;
 		this.ctx=ctx;
 		this.msg=msg;
 		this.cachedRequestBody=Suppliers.memoize(this);
+		this.serverSentEventEncoder=serverSentEventEncoder;
 	}
 	
 	@Override
@@ -174,7 +178,7 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 	@Override
 	public SSEStream sse() {
 		tryRelease();
-		return new DefaultSSEStream(ctx);
+		return new DefaultSSEStream(ctx,serverSentEventEncoder);
 	}
 
 }

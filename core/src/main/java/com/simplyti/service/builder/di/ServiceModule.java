@@ -28,6 +28,7 @@ import com.simplyti.service.channel.handler.FileServeHandler;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.hook.ServerStartHook;
 import com.simplyti.service.hook.ServerStopHook;
+import com.simplyti.service.sse.ServerSentEventEncoder;
 import com.simplyti.service.ssl.IoCKeyManagerFactory;
 import com.simplyti.service.ssl.IoCKeyManagerFactorySpi;
 import com.simplyti.service.ssl.IoCSecurityProvider;
@@ -74,6 +75,7 @@ public class ServiceModule extends AbstractModule {
 			bind(FileServeHandler.class).in(Singleton.class);
 		}
 		
+		bind(ServerSentEventEncoder.class).in(Singleton.class);
 		bind(ExceptionHandler.class).in(Singleton.class);
 		
 		bind(ExecutorService.class).toProvider(ExecutorServiceProvider.class).in(Singleton.class);

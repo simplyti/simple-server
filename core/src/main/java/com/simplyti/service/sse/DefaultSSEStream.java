@@ -2,7 +2,6 @@ package com.simplyti.service.sse;
 
 import com.simplyti.service.clients.pending.PendingMessages;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -10,7 +9,6 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.HttpVersion;
-import io.netty.util.CharsetUtil;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
 
@@ -21,18 +19,18 @@ public class DefaultSSEStream implements SSEStream {
 	
 	private boolean updated = false;
 	
-	public DefaultSSEStream(ChannelHandlerContext ctx) {
+	public DefaultSSEStream(ChannelHandlerContext ctx,ServerSentEventEncoder serverEventEncoder) {
 		this.ctx=ctx;
 		this.pendingMessages=new PendingMessages();
 		HttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
 		response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/event-stream");
 		ctx.writeAndFlush(response)
-				.addListener(f->updateConnection(f));
+				.addListener(f->updateConnection(f,serverEventEncoder));
 	}
 
-	private void updateConnection(Future<? super Void> f) {
+	private void updateConnection(Future<? super Void> f, ServerSentEventEncoder serverEventEncoder) {
 		if(f.isSuccess()) {
-			ctx.pipeline().remove(HttpServerCodec.class);
+			ctx.pipeline().replace(HttpServerCodec.class, "sse-codec", serverEventEncoder);
 		}else {
 			pendingMessages.fail(f.cause());
 		}
@@ -41,28 +39,37 @@ public class DefaultSSEStream implements SSEStream {
 
 	@Override
 	public Future<Void> send(String data) {
+		return send(new ServerEvent(null,null,data));
+	}
+	
+	@Override
+	public Future<Void> send(String event, String data) {
+		return send(new ServerEvent(event,null,data));
+	}
+	
+	private Future<Void> send(ServerEvent event) {
 		if(updated) {
-			return send0(data);
+			return ctx.writeAndFlush(event);
 		}else {
-			return addPending(data);
+			return addPending(event);
 		}
 	}
 
-	private Future<Void> addPending(String data) {
+	private Future<Void> addPending(ServerEvent event) {
 		Promise<Void> promise = ctx.executor().newPromise();
 		if(ctx.executor().inEventLoop()) {
-			addPending0(promise,data);
+			addPending0(promise,event);
 		}else {
-			ctx.executor().submit(()->addPending0(promise,data));
+			ctx.executor().submit(()->addPending0(promise,event));
 		}
 		return promise;
 	}
 	
-	private void addPending0(Promise<Void> promise, String msg) {
+	private void addPending0(Promise<Void> promise, ServerEvent event) {
 		if(updated) {
-			send0(msg).addListener(f->toPromise(f,promise));
+			ctx.writeAndFlush(event).addListener(f->toPromise(f,promise));
 		}else {
-			pendingMessages.pending(promise,msg);
+			pendingMessages.pending(promise,event);
 		}
 	}
 	
@@ -72,14 +79,6 @@ public class DefaultSSEStream implements SSEStream {
 		}else {
 			promise.setFailure(f.cause());
 		}
-	}
-
-	private Future<Void> send0(String data) {
-		ByteBuf buffer = ctx.alloc().buffer();
-		buffer.writeCharSequence("data:", CharsetUtil.UTF_8);
-		buffer.writeCharSequence(data, CharsetUtil.UTF_8);
-		buffer.writeCharSequence("\n\n", CharsetUtil.UTF_8);
-		return ctx.writeAndFlush(buffer);
 	}
 
 }
