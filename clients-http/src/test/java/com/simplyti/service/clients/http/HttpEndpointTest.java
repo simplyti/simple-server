@@ -8,7 +8,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
 
 @RunWith(Parameterized.class)
 public class HttpEndpointTest {
@@ -43,11 +44,11 @@ public class HttpEndpointTest {
     @Test
     public void test() {
     		HttpEndpoint result = HttpEndpoint.of(endpoint);
-        assertThat(result.schema().name()).isEqualTo(schema);
-        assertThat(result.schema().ssl()).isEqualTo(ssl);
-        assertThat(result.address().host()).isEqualTo(host);
-        assertThat(result.address().port()).isEqualTo(port);
-        assertThat(result.path()).isEqualTo(path);
+        assertThat(result.schema().name(),equalTo(schema));
+        assertThat(result.schema().ssl(),equalTo(ssl));
+        assertThat(result.address().host(),equalTo(host));
+        assertThat(result.address().port(),equalTo(port));
+        assertThat(result.path(),equalTo(path));
     }
 
 }

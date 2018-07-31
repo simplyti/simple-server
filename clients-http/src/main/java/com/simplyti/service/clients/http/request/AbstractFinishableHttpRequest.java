@@ -1,9 +1,9 @@
 package com.simplyti.service.clients.http.request;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import com.google.common.collect.Maps;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.InternalClient;
 import com.simplyti.service.clients.http.handler.FullHttpResponseHandler;
@@ -32,7 +32,7 @@ public abstract class AbstractFinishableHttpRequest implements FinishableHttpReq
 		this.timeoutMillis=timeoutMillis;
 		this.checkStatusCode=checkStatusCode;
 		this.endpoint = endpoint;
-		this.params=Maps.newHashMap();
+		this.params=new HashMap<>();
 	}
 	
 	@Override

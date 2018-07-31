@@ -1,7 +1,5 @@
 package com.simplyti.service.clients.http;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,7 +48,7 @@ public class HttpEndpoint extends Endpoint{
 		}
 		
 		Matcher matcher = PATTERN.matcher(hostPart);
-		checkArgument(matcher.matches());
+		matcher.matches();
 		Optional<String> optionalSchema = Optional.ofNullable(matcher.group(1));
 		Schema schema = optionalSchema
 				.map(str->str.equals(HTTPS_SCHEMA.name())?HTTPS_SCHEMA:HTTP_SCHEMA)

@@ -3,7 +3,6 @@ package com.simplyti.service.clients.http;
 import java.util.Base64;
 import java.util.function.Consumer;
 
-import com.google.common.base.Joiner;
 import com.simplyti.service.clients.AbstractClientRequestBuilder;
 import com.simplyti.service.clients.ClientRequestChannel;
 import com.simplyti.service.clients.Endpoint;
@@ -80,7 +79,7 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 
 	@Override
 	public HttpRequestBuilder withBasicAuth(String user, String password) {
-		String userpass = Joiner.on(':').join(user,password);
+		String userpass = user+":"+password;
 		headers.set(HttpHeaderNames.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString(userpass.getBytes(CharsetUtil.UTF_8)));
 		return this;
 	}
