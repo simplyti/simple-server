@@ -54,10 +54,23 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 		this.checkStatusCode=true;
 		return this;
 	}
+	
+	@Override
+	public HttpRequestBuilder withIgnoreStatusCode() {
+		this.checkStatusCode=false;
+		return this;
+	}
 
 	@Override
 	public FinishableHttpRequest get(String uri) {
 		FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri, Unpooled.EMPTY_BUFFER,
+				headers,EmptyHttpHeaders.INSTANCE);
+		return new DefaultFinishableHttpRequest(client,endpoint,checkStatusCode,request,readTimeout());
+	}
+	
+	@Override
+	public FinishableHttpRequest delete(String uri) {
+		FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.DELETE, uri, Unpooled.EMPTY_BUFFER,
 				headers,EmptyHttpHeaders.INSTANCE);
 		return new DefaultFinishableHttpRequest(client,endpoint,checkStatusCode,request,readTimeout());
 	}

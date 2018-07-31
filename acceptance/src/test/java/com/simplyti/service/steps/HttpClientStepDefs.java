@@ -177,6 +177,21 @@ public class HttpClientStepDefs {
 		scenarioData.put(resultKey, response);
 	}
 	
+	@When("^I get \"([^\"]*)\" ignoring status getting response \"([^\"]*)\"$")
+	public void iGetWithClientIgnoringStatusGettingResponse(String path, String resultKey) throws Exception {
+		Future<FullHttpResponse> response = sutClient.withEndpoin(LOCAL_ENDPOINT)
+			.withIgnoreStatusCode()
+			.get(path).fullResponse();
+		scenarioData.put(resultKey, response);
+	}
+	
+	@When("^I delete \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	public void iDeleteWithClientGettingResponse(String path, String resultKey) throws Exception {
+		Future<FullHttpResponse> response = sutClient.withEndpoin(LOCAL_ENDPOINT)
+			.delete(path).fullResponse();
+		scenarioData.put(resultKey, response);
+	}
+	
 	@Then("^I check that http client \"([^\"]*)\" has (\\d+) iddle connection$")
 	public void iCheckThatHttpClientHasIddleConnection(String clientKey, int number) throws Exception {
 		HttpClient client = (HttpClient) scenarioData.get(clientKey);

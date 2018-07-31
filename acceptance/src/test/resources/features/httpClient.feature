@@ -7,6 +7,13 @@ Scenario: Get request
 	Then I check that "#response" is success
 	And I check that http response "#response" has body "Hello!"
 	
+Scenario: Delete request
+	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I delete "/delete" getting response "#response"
+	Then I check that "#response" is success
+	And I check that http response "#response" has body "Bye!"
+	
 Scenario: Post request
 	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
 	Then I check that "#serviceFuture" is success
@@ -36,6 +43,13 @@ Scenario: Http client error
 	When I get "/responsecode/401" getting response "#response"
 	Then I check that "#response" is failure
 	And I check that http error of "#response" contains status code 401
+	
+Scenario: Ignoring status request
+	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I get "/responsecode/401" ignoring status getting response "#response"
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 401
 	
 Scenario: Connection error
 	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
