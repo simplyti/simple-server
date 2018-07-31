@@ -7,13 +7,13 @@ Scenario: SSE server
 	Then I check that stream "#stream" contains 2 items
 	And I check that item 0 of stream "#stream" is equals to
 	"""
-	data:Hello!
+	data: Hello!
 	
 	
 	"""
 	And I check that item 1 of stream "#stream" is equals to
 	"""
-	data:Bye!
+	data: Bye!
 	
 	
 	"""
