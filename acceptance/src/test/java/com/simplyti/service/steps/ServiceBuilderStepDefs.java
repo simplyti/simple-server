@@ -364,6 +364,13 @@ public class ServiceBuilderStepDefs {
 		assertThat(futureService.isSuccess(),equalTo(false));
 	}
 	
+	@When("^I check that \"([^\"]*)\" has conention closed failure$")
+	public void iCheckThatHasConentionClosrdFailure(String key) throws Exception {
+		Future<?> futureService = (Future<?>) scenarioData.get(key);
+		Awaitility.await().until(futureService::isDone);
+		assertThat(futureService.cause(),instanceOf(ClosedChannelException.class));
+	}
+	
 	@Then("^I check that error failure message of \"([^\"]*)\" is \"([^\"]*)\"$")
 	public void iCheckThatErrorFailureMessageOfIs(String key, String expected) throws Exception {
 		Future<?> futureService = (Future<?>) scenarioData.get(key);

@@ -1,5 +1,7 @@
 package com.simplyti.service.clients;
 
+import java.nio.channels.ClosedChannelException;
+
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.concurrent.Promise;
@@ -28,6 +30,11 @@ public class ChannelClientInitHandler<T> extends ChannelInboundHandlerAdapter {
 		 }else {
 			 channelPromise.setFailure(cause);
 		 }
+    }
+	
+	@Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+		client.resultPromise().tryFailure(new ClosedChannelException());
     }
 
 }

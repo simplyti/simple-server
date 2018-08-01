@@ -55,7 +55,9 @@ public class DefaultService extends AbstractService<DefaultService> implements S
 	protected Future<Void> bind(EventLoop executor){
 		Promise<Void> aggregated = executor.newPromise();
 		PromiseCombiner combiner = new PromiseCombiner();
-		combiner.add(bind(executor,config.insecuredPort()));
+		if(config.insecuredPort()>0) {
+			combiner.add(bind(executor,config.insecuredPort()));
+		}
 		combiner.add(bind(executor,config.securedPort()));
 		combiner.finish(aggregated);
 		return aggregated;
