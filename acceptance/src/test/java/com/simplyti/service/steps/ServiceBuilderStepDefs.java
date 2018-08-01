@@ -55,6 +55,7 @@ import static org.junit.Assert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.instanceOf;
 
 public class ServiceBuilderStepDefs {
 	
