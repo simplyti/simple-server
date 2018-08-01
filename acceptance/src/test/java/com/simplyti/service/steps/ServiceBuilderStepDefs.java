@@ -1,6 +1,7 @@
 package com.simplyti.service.steps;
 
 import java.io.IOException;
+import java.nio.channels.ClosedChannelException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
