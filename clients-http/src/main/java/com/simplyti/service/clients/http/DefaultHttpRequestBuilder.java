@@ -50,6 +50,12 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 	}
 	
 	@Override
+	public HttpRequestBuilder withHeader(String name, String value) {
+		headers.add(name,value);
+		return this;
+	}
+	
+	@Override
 	public HttpRequestBuilder withCheckStatusCode() {
 		this.checkStatusCode=true;
 		return this;
