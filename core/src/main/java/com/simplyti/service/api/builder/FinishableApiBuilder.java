@@ -1,14 +1,9 @@
 package com.simplyti.service.api.builder;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collector;
-import java.util.stream.Stream;
 
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.jsoniter.spi.TypeLiteral;
@@ -29,7 +24,7 @@ public abstract class FinishableApiBuilder<I,O> {
 	
 	protected int maxBodyLength;
 	
-	private Map<String, Set<String>> metadata;
+	private Map<String, String> metadata;
 	
 	public FinishableApiBuilder(ApiBuilder builder, HttpMethod method, String uri, TypeLiteral<I> requestType, boolean multipart,
 			int maxBodyLength) {
@@ -41,17 +36,11 @@ public abstract class FinishableApiBuilder<I,O> {
 		this.maxBodyLength=maxBodyLength;
 	}
 	
-	public FinishableApiBuilder<I,O> withMeta(String name, String... values) {
+	public FinishableApiBuilder<I,O> withMeta(String name, String value) {
 		if(metadata ==null) {
 			metadata = Maps.newHashMap();
 		}
-		if(metadata.containsKey(name)) {
-			Stream.of(values).forEach(value->metadata.get(name).add(value));
-		}else {
-			Set<String> list = new HashSet<>();
-			Stream.of(values).forEach(value->list.add(value));
-			metadata.put(name, list);
-		}
+		metadata.put(name, value);
 		return this;
 	}
 	
@@ -61,16 +50,11 @@ public abstract class FinishableApiBuilder<I,O> {
 				multipart,noNegative(maxBodyLength,DEFAULT_MAX_BODY),metadata()));
 	}
 	
-	private Map<String,Set<String>> metadata() {
+	private Map<String,String> metadata() {
 		if(metadata==null) {
 			return Collections.emptyMap();
 		}else {
-			Supplier<ImmutableMap.Builder<String, Set<String>>> supplier = ImmutableMap.Builder::new;
-			return this.metadata.entrySet().stream()
-				.collect(Collector.of(supplier, 
-						(b, entry) -> b.put(entry.getKey(),Collections.unmodifiableSet(entry.getValue())), 
-						(l, r) -> l.putAll(r.build()), 
-						ImmutableMap.Builder::build));
+			return ImmutableMap.<String,String>builder().putAll(metadata).build();
 		}
 	}
 

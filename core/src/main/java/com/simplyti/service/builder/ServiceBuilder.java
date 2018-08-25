@@ -24,4 +24,6 @@ public interface ServiceBuilder<T extends Service<?>> {
 
 	public ServiceBuilder<T> withSlf4jLogger();
 
+	public ServiceBuilder<T> disableInsecurePort();
+
 }

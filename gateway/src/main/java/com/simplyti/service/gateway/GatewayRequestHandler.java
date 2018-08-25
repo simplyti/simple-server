@@ -1,14 +1,15 @@
 package com.simplyti.service.gateway;
 
+
 import javax.inject.Inject;
 
+import com.simplyti.service.api.filter.FilterChain;
 import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.InternalClient;
 import com.simplyti.service.clients.pending.PendingMessages;
 import com.simplyti.service.exception.NotFoundException;
 import com.simplyti.service.exception.ServiceException;
-import com.simplyti.service.gateway.balancer.ServiceBalancer;
 import com.simplyti.service.gateway.handler.BackendProxyHandler;
 
 import io.netty.channel.Channel;
@@ -31,10 +32,8 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	private final InternalClient client;
 
 	private final PendingMessages pendingMessages = new PendingMessages();
-	
 	private Channel backendChannel;
-
-	private boolean failed;
+	private boolean ignoreNextMessages;
 
 	@Inject
 	public GatewayRequestHandler(InternalClient client, ServiceDiscovery serviceDiscovery) {
@@ -47,26 +46,55 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 		if (msg instanceof HttpRequest) {
 			HttpRequest request = (HttpRequest) msg;
 			QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
-			ServiceBalancer service = serviceDiscovery.get(request.headers().get(HttpHeaderNames.HOST),request.method(), decoder.path());
+			BackendService service = serviceDiscovery.get(request.headers().get(HttpHeaderNames.HOST),request.method(), decoder.path());
 			if (service == null) {
 				ctx.fireExceptionCaught(new NotFoundException());
+				this.ignoreNextMessages=true;
 			} else {
-				Endpoint endpoint = service.next();
-				if (endpoint == null) {
-					ctx.fireExceptionCaught(new ServiceException(HttpResponseStatus.SERVICE_UNAVAILABLE));
-				} else {
-					connectToEndpoint(ctx, endpoint);
+				if(service.filters().isEmpty()) {
+					serviceProceed(ctx,service);
+				}else {
+					filterRequest(ctx,service,request);
 				}
 			}
 		}
 		
 		if (backendChannel != null) {
 			backendChannel.writeAndFlush(ReferenceCountUtil.retain(msg)).addListener(f->handleWriteFuture(ctx,f));
-		} else if(!failed){
+		} else if(!ignoreNextMessages){
 			pendingMessages.pending(ctx.executor().newPromise(), msg);
 		}
 	}
 	
+	private void filterRequest(ChannelHandlerContext ctx, BackendService service, HttpRequest request) {
+		Future<Boolean> filterResult = FilterChain.of(service.filters(),ctx,request).execute();
+		filterResult.addListener(result->{
+			if(result.isSuccess()) {
+				if(filterResult.getNow()) {
+					serviceProceed(ctx,service);
+				}else {
+					pendingMessages.fail(new RuntimeException("Handled by filter"));
+					this.ignoreNextMessages=true;
+				}
+			}else {
+				ctx.fireExceptionCaught(result.cause());
+				pendingMessages.fail(result.cause());
+				this.ignoreNextMessages=true;
+			}
+		});
+	}
+
+	private void serviceProceed(ChannelHandlerContext ctx, BackendService service) {
+		Endpoint endpoint = service.loadBalander().next();
+		if (endpoint == null) {
+			ctx.fireExceptionCaught(new ServiceException(HttpResponseStatus.SERVICE_UNAVAILABLE));
+			pendingMessages.fail(new RuntimeException("No endpoints"));
+			this.ignoreNextMessages=true;
+		} else {
+			connectToEndpoint(ctx, endpoint);
+		}
+	}
+
 	private void connectToEndpoint(ChannelHandlerContext ctx, Endpoint endpoint) {
 		ChannelPool pool = client.pool(endpoint);
 		Future<Channel> channelFuture = pool.acquire();
@@ -90,7 +118,7 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 			log.warn("Cannot connect to backend {}: {}", endpoint, backendChannelFuture.cause().toString());
 			ctx.fireExceptionCaught(new ServiceException(HttpResponseStatus.BAD_GATEWAY));
 			pendingMessages.fail(backendChannelFuture.cause());
-			failed=true;
+			ignoreNextMessages=true;
 		}
 	}
 	

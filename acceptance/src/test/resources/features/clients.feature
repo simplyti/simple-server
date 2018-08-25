@@ -105,3 +105,10 @@ Scenario: Connection error when write stream
 	And I check that stream "#stream" is failure
 	When I send "!" to stream "#stream" getting result "#writeresult"
 	Then I check that "#writeresult" is failure
+	
+Scenario: Connection closed
+	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I get "/close" getting response "#response"
+	And I check that "#response" is failure
+	And I check that "#response" has conention closed failure

@@ -47,6 +47,11 @@ public class DefaultSSEStream implements SSEStream {
 		return send(new ServerEvent(event,null,data));
 	}
 	
+	@Override
+	public Future<Void> send(String id, String event, String data) {
+		return send(new ServerEvent(event,id,data));
+	}
+	
 	private Future<Void> send(ServerEvent event) {
 		if(updated) {
 			return ctx.writeAndFlush(event);

@@ -1,6 +1,7 @@
 package com.simplyti.service.steps;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.nio.channels.ClosedChannelException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,6 +13,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.security.cert.X509Certificate;
@@ -41,6 +47,12 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.QueryStringEncoder;
+import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
+import io.netty.handler.codec.http.cookie.ClientCookieEncoder;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory;
 import io.netty.handler.codec.http.multipart.HttpDataFactory;
 import io.netty.handler.codec.http.multipart.HttpPostRequestEncoder;
@@ -205,6 +217,12 @@ public class ServiceBuilderStepDefs {
 				String value = option.get("value");
 				if(value.startsWith("#")) {
 					builder.withModule((Module)scenarioData.get(value));
+				}else if(value.matches("^[^\\(]+\\(.*\\)$")){
+					Matcher matcher = Pattern.compile("^([^\\(]+)\\((.*)\\)$").matcher(value);
+					matcher.matches();
+					Class<? extends Module> clazz = (Class<? extends Module>) Try.of(()->Class.forName(matcher.group(1))).get();
+					String[] args = matcher.group(2).split(",");
+					builder.withModule(construct(clazz,args));
 				}else {
 					builder.withModule((Class<? extends Module>)Try.of(()->Class.forName(value)).get());
 				}
@@ -215,6 +233,49 @@ public class ServiceBuilderStepDefs {
 		Future<DefaultService> futureService = builder.build().start();
 		services.add(futureService);
 		scenarioData.put(key, futureService);
+	}
+
+	private Module construct(Class<? extends Module> clazz, String[] args) {
+		@SuppressWarnings("unchecked")
+		Constructor<?extends Module>[] constructors = (Constructor<? extends Module>[]) clazz.getConstructors();
+		Object[] constructorArgs = buildArgs(constructors[0].getParameterTypes(),args);
+		if(constructors.length==1) {
+			return Try.of(()->constructors[0].newInstance(constructorArgs)).get();
+		}else {
+			List<Constructor<? extends Module>> matchArgConstructor = Stream.of(constructors).filter(constructor->constructor.getParameterTypes().length==constructorArgs.length)
+				.collect(Collectors.toList());
+			if(matchArgConstructor.size()==1) {
+				return Try.of(()->matchArgConstructor.get(0).newInstance(constructorArgs)).get();
+			}else {
+				Class<?>[] types = Stream.of(constructorArgs).map(object->object.getClass()).toArray(Class<?>[]::new);
+				Optional<Constructor<? extends Module>> constructor = matchArgConstructor.stream().filter(it->matchParameters(it.getParameterTypes(),types)).findFirst();
+				if(constructor.isPresent()) {
+					return Try.of(()->constructor.get().newInstance(constructorArgs)).get();
+				}else {
+					return null;
+				}
+			}
+		}
+	}
+
+
+	private boolean matchParameters(Class<?>[] parameterTypes, Class<?>[] types) {
+		for(int i=0;i<types.length;i++) {
+			if(!parameterTypes[i].equals(types[i])) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private Object[] buildArgs(Class<?>[] parameterTypes, String[] args) {
+		return Stream.of(args).map(value->{
+			if(value.startsWith("#")) {
+				return scenarioData.get(value);
+			}else {
+				return value;
+			}
+		}).toArray();
 	}
 
 	@After
@@ -251,11 +312,61 @@ public class ServiceBuilderStepDefs {
 		scenarioData.put(resultKey, send(null,method,path,null,null).get());
 	}
 	
+	@When("^I send a \"([^\\s]*) ([^\"]*)\" getting \"([^\"]*)\" with status code (\\d+) eventually$")
+	public void iSendAGettingWithStatusCodeEventually(String method, String path, String resultKey, int code) throws Exception {
+	    Awaitility.await().until(()->{
+	    		SimpleHttpResponse response = send(null,method,path,null,null).get();
+	    		scenarioData.put(resultKey,response);
+	    		return response.status();
+	    },equalTo(code));
+	    
+	}
+	
+	@When("^I send a \"([^\\s]*) ([^\"]*)\" following auth redirect of \"([^\"]*)\" getting \"([^\"]*)\"$")
+	public void iSendAFollowingAuthRedirectOfGetting(String method, String path, String responseKey, String newResponseKey) throws Exception {
+		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(responseKey);
+		QueryStringDecoder decoder = new QueryStringDecoder(response.headers().get(HttpHeaderNames.LOCATION));
+		QueryStringEncoder encoder = new QueryStringEncoder(path);
+		encoder.addParam("state", decoder.parameters().get("state").get(0));
+		encoder.addParam("code", "XXXXXX");
+		scenarioData.put(newResponseKey, send(null,method, encoder.toString(),null,null).get());
+	}
+	
+	@When("^I send a \"([^\\s]*) ([^\"]*)\" (\\d+) following auth redirect of \"([^\"]*)\" getting \"([^\"]*)\"$")
+	public void iSendAGetting(String method, String path, int port, String responseKey, String newResponseKey) throws Exception {
+		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(responseKey);
+		QueryStringDecoder decoder = new QueryStringDecoder(response.headers().get(HttpHeaderNames.LOCATION));
+		QueryStringEncoder encoder = new QueryStringEncoder(path);
+		encoder.addParam("state", decoder.parameters().get("state").get(0));
+		encoder.addParam("code", "XXXXXX");
+		scenarioData.put(newResponseKey, send(null,method, encoder.toString(),null,null).get());
+	}
+	
 	@When("^I send a \"([^\\s]*) ([^\"]*)\" with header \"([^\"]*)\" with value \"([^\"]*)\" getting \"([^\"]*)\"$")
 	public void iSendAWithHeaderWithValueGetting(String method, String path, String header, String value,String resultKey) throws Exception {
 		HttpHeaders headers = new DefaultHttpHeaders().add(header, value);
 		scenarioData.put(resultKey, send(null,method,path,null,headers).get());
 	}
+	
+	@Then("^I send a \"([^\\s]*) ([^\"]*)\" with cookie \"([^\"]*)\" with value \"([^\"]*)\" getting \"([^\"]*)\"$")
+	public void iSendAWithCookieWithValueGetting(String method, String path, String cName, String cValue, String resultKey) throws Exception {
+		HttpHeaders headers = new DefaultHttpHeaders().add(HttpHeaderNames.COOKIE, ClientCookieEncoder.LAX.encode(cName,cValue));
+		scenarioData.put(resultKey, send(null,method,path,null,headers).get());
+	}
+	
+	@When("^I send a \"([^\\s]*) ([^\"]*)\" with cookies from response \"([^\"]*)\" getting \"([^\"]*)\"$")
+	public void iSendAWithCookiesFromResponseGetting(String method, String path, String responseKey, String resultKey) throws Exception {
+		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(responseKey);
+		
+		List<String> cookies = response.headers().getAll(HttpHeaderNames.SET_COOKIE).stream()
+				.map(ClientCookieDecoder.LAX::decode)
+				.map(ServerCookieEncoder.LAX::encode)
+				.collect(Collectors.toList());
+		
+		HttpHeaders headers = new DefaultHttpHeaders().add(HttpHeaderNames.COOKIE, cookies);
+		scenarioData.put(resultKey, send(null,method,path,null,headers).get());
+	}
+
 	
 	@When("^I send a \"([^\\s]*) ([^\"]*)\" with body \"([^\"]*)\" getting \"([^\"]*)\"$")
 	public void iSendAWithBodyGetting(String method, String path,String body, String resultKey) throws Exception {
@@ -453,5 +564,28 @@ public class ServiceBuilderStepDefs {
 		client.closeConnections().sync();
 	}
 	
-
+	@Then("^I check that \"([^\"]*)\" has location header \"([^\"]*)\"$")
+	public void iCheckThatHasLocationHeader(String key, String expectedLocation) throws Exception {
+		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(key);
+		String location = response.headers().get(HttpHeaderNames.LOCATION);
+		assertThat(location,equalTo(expectedLocation));
+	}
+	
+	@Then("^I check that \"([^\"]*)\" has cookie \"([^\"]*)\" header \"([^\"]*)\"$")
+	public void iCheckThatHasCookieHeader(String key, String name, String expected) throws Exception {
+		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(key);
+		String coockies = response.headers().get(HttpHeaderNames.SET_COOKIE);
+		Cookie cookie = ClientCookieDecoder.LAX.decode(coockies);
+		assertThat(cookie.name(),equalTo(name));
+		assertThat(cookie.value(),equalTo(expected));
+	}
+	
+	@Then("^I check that \"([^\"]*)\" has cookie \"([^\"]*)\"$")
+	public void iCheckThatHasCookie(String key, String name) throws Exception {
+		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(key);
+		String coockies = response.headers().get(HttpHeaderNames.SET_COOKIE);
+		Cookie cookie = ClientCookieDecoder.LAX.decode(coockies);
+		assertThat(cookie.name(),equalTo(name));
+	}
+	
 }

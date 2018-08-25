@@ -15,11 +15,17 @@ import io.netty.handler.codec.http.HttpResponse;
 public class ServerEventResponseHandler extends SimpleChannelInboundHandler<Object> {
 
 	private final Consumer<ServerEvent> consumer;
+	private final ClientRequestChannel<Void> clientChannel;
 
 	public ServerEventResponseHandler(ClientRequestChannel<Void> channel, Consumer<ServerEvent> consumer) {
-		channel.closeFuture().addListener(f->channel.resultPromise().setSuccess(null));
+		this.clientChannel=channel;
 		this.consumer=consumer;
 	}
+	
+	@Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+		clientChannel.resultPromise().setSuccess(null);
+    }
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {

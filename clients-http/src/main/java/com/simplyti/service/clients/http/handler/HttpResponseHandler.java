@@ -1,5 +1,6 @@
 package com.simplyti.service.clients.http.handler;
 
+import java.nio.channels.ClosedChannelException;
 import java.util.function.Consumer;
 
 import com.simplyti.service.clients.ClientRequestChannel;
@@ -18,6 +19,11 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<HttpObject>
 		this.clientChannel=clientChannel;
 		this.consumer=consumer;
 	}
+	
+	@Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+		clientChannel.resultPromise().setFailure(new ClosedChannelException());
+    }
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, HttpObject msg) throws Exception {

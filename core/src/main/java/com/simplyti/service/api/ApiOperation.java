@@ -1,7 +1,6 @@
 package com.simplyti.service.api;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
@@ -21,7 +20,7 @@ public class ApiOperation<I,O> {
 	private final int literalChars;
 	private final boolean multipart;
 	private final int maxBodyLength;
-	private final Map<String,Set<String>> metadata;
+	private final Map<String,String> metadata;
 	
 	public HttpMethod method() {
 		return method;
@@ -55,7 +54,7 @@ public class ApiOperation<I,O> {
 		return maxBodyLength;
 	}
 	
-	public Set<String> meta(String name){
+	public Object meta(String name){
 		return this.metadata.get(name);
 	}
 

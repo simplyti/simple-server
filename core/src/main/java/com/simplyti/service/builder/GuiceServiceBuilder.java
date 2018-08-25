@@ -66,6 +66,12 @@ public class GuiceServiceBuilder<T extends Service<?>> implements ServiceBuilder
 	}
 	
 	@Override
+	public ServiceBuilder<T> disableInsecurePort() {
+		this.insecuredPort=-1;
+		return this;
+	}
+	
+	@Override
 	public ServiceBuilder<T> securedPort(int port) {
 		this.securedPort=port;
 		return this;

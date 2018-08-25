@@ -7,7 +7,9 @@ public class TestServiceDiscoveryModule extends AbstractModule{
 
 	@Override
 	public void configure() {
-		bind(ServiceDiscovery.class).toInstance(TestServiceDiscovery.getInstance());
+		TestServiceDiscovery discovery =TestServiceDiscovery.getInstance(); 
+		requestInjection(discovery);
+		bind(ServiceDiscovery.class).toInstance(discovery);
 	}
 	
 }

@@ -291,7 +291,7 @@
 		<module>commons</module>
 		<module>core</module>
 		<module>aws-lambda</module>
-		<module>auth-jwt</module>
+		<module>auth-oidc</module>
 		<module>clients</module>
 		<module>clients-http</module>
 		<module>gateway</module>

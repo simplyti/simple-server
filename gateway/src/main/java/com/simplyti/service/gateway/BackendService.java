@@ -1,9 +1,13 @@
 package com.simplyti.service.gateway;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
 import java.util.regex.Pattern;
 
+import com.google.common.base.MoreObjects;
 import com.simplyti.service.api.builder.PathPattern;
+import com.simplyti.service.api.filter.HttpRequetFilter;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.gateway.balancer.RoundRobinLoadBalancer;
 import com.simplyti.service.gateway.balancer.ServiceBalancer;
@@ -30,16 +34,18 @@ public class BackendService implements Comparable<BackendService>{
 	private final String host;
 	private final HttpMethod method;
 	private final String path;
+	private final Set<HttpRequetFilter> filters;
 	private final Pattern pattern;
 	private final int literalCount;
 	
 	private ServiceBalancer loadBalander;
-	
-	public BackendService(String host, HttpMethod method, String path,Collection<Endpoint> endpoints) {
+
+	public BackendService(String host, HttpMethod method, String path, Set<HttpRequetFilter> filters, Collection<Endpoint> endpoints) {
 		this.loadBalander = new RoundRobinLoadBalancer(endpoints);
 		this.host=host;
 		this.method=method;
 		this.path=path;
+		this.filters=MoreObjects.firstNonNull(filters, Collections.emptySet());
 		if(path==null) {
 			this.pattern = null;
 			literalCount=0;
@@ -137,6 +143,10 @@ public class BackendService implements Comparable<BackendService>{
 	public void clear() {
 		this.loadBalander = loadBalander.clear();
 		log.info("Cleared service endpoints");
+	}
+
+	public Set<HttpRequetFilter> filters() {
+		return filters;
 	}
 
 }

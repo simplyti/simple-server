@@ -10,7 +10,7 @@ import io.netty.util.concurrent.Promise;
 
 public class FilterChain<T> implements FilterContext<T> {
 
-	private final Promise<Void> promise;
+	private final Promise<Boolean> promise;
 	private final Iterator<? extends Filter<T>> iterator;
 	private final T msg;
 	private final Channel channel;
@@ -26,17 +26,17 @@ public class FilterChain<T> implements FilterContext<T> {
 		return new FilterChain<>(filters,ctx,msg);
 	}
 
-	public Future<Void> execute() {
+	public Future<Boolean> execute() {
 		iterator.next().execute(this);
 		return promise;
 	}
 
 	@Override
-	public void done() {
-		if(iterator.hasNext()) {
+	public void done(boolean doContinue) {
+		if(doContinue && iterator.hasNext()) {
 			iterator.next().execute(this);
 		}else {
-			promise.setSuccess(null);
+			promise.setSuccess(doContinue);
 		}
 	}
 

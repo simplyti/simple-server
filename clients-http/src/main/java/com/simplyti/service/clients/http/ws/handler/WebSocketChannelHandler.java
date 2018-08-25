@@ -20,10 +20,11 @@ public class WebSocketChannelHandler extends SimpleChannelInboundHandler<Object>
 	
 	private final Consumer<WebSocketFrame> consumer;
 	private final WebSocketClientHandshaker handshaker;
+	private final ClientRequestChannel<Void> clientChannel;
 
 	public WebSocketChannelHandler(Endpoint endpoint, String uri, HttpHeaders headers, ClientRequestChannel<Void> channel, Consumer<WebSocketFrame> consumer) {
 		this.consumer = consumer;
-		channel.closeFuture().addListener(f->channel.resultPromise().setSuccess(null));
+		this.clientChannel=channel;
 		this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(
 				URI.create("ws://"+endpoint.toString()+uri), WebSocketVersion.V13, null, false, headers, 1280000);
 	}
@@ -31,6 +32,11 @@ public class WebSocketChannelHandler extends SimpleChannelInboundHandler<Object>
 	@Override
     public void handlerAdded(final ChannelHandlerContext ctx) throws Exception {
         handshaker.handshake(ctx.channel());
+    }
+	
+	@Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+		clientChannel.resultPromise().setSuccess(null);
     }
 	
 	@Override

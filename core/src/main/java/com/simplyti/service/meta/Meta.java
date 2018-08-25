@@ -12,6 +12,6 @@ import java.lang.annotation.Target;
 public @interface Meta {
 	
 	String name();
-	String[] value();
+	String value();
 
 }

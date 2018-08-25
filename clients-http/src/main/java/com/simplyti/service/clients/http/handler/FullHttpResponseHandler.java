@@ -1,5 +1,6 @@
 package com.simplyti.service.clients.http.handler;
 
+import java.nio.channels.ClosedChannelException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +24,11 @@ public class FullHttpResponseHandler extends HttpObjectAggregator {
 		this.checkStatusCode = checkStatusCode;
 		this.clientChannel = clientChannel;
 	}
+	
+	@Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+		clientChannel.resultPromise().setFailure(new ClosedChannelException());
+    }
 
 	@Override
 	protected void finishAggregation(FullHttpMessage aggregated) throws Exception {

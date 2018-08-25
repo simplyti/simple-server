@@ -5,7 +5,6 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.simplyti.service.clients.Endpoint;
-import com.simplyti.service.gateway.balancer.ServiceBalancer;
 
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.util.internal.logging.InternalLogger;
@@ -18,18 +17,12 @@ public class DefaultServiceDiscovery implements ServiceDiscovery{
 	private final Set<BackendService> services = Sets.newTreeSet();
 
 	@Override
-	public ServiceBalancer get(String host, HttpMethod method, String path) {
-		Optional<ServiceBalancer> foundService = services.stream()
+	public BackendService get(String host, HttpMethod method, String path) {
+		return services.stream()
 			.filter(entry -> entry.method() == null || entry.method().equals(method))
 			.filter(entry -> entry.host()== null || ( host!=null && entry.host().equals(host)))
 			.filter(entry -> entry.pattern() == null || entry.path().equals(path) || entry.pattern().matcher(path).matches())
-			.findFirst().map(BackendService::loadBalander);
-		
-		if(foundService.isPresent()) {
-			return foundService.get();
-		}else {
-			return null;
-		}
+			.findFirst().orElse(null);
 	}
 	
 	protected void clear(String host, HttpMethod method, String path) {
