@@ -39,7 +39,7 @@ public class DefaultService extends AbstractService<DefaultService> implements S
 			@StartStopLoop EventLoop startStopLoop, ServerConfig config, ClientChannelGroup clientChannelGroup,
 			Class<? extends ServerSocketChannel> serverChannelClass, Set<ServerStartHook> serverStartHook,
 			Set<ServerStopHook> serverStopHook){
-		super(eventLoopGroup,startStopLoop,clientChannelGroup,serverStartHook,serverStopHook);
+		super(eventLoopGroup,startStopLoop,clientChannelGroup,serverStartHook,serverStopHook,config);
 		this.config=config;
 		this.serverChannels=new DefaultChannelGroup(startStopLoop);
 		this.bootstrap = new ServerBootstrap().group(startStopLoop, eventLoopGroup).channel(serverChannelClass)
@@ -58,7 +58,9 @@ public class DefaultService extends AbstractService<DefaultService> implements S
 		if(config.insecuredPort()>0) {
 			combiner.add(bind(executor,config.insecuredPort()));
 		}
-		combiner.add(bind(executor,config.securedPort()));
+		if(config.securedPort()>0) {
+			combiner.add(bind(executor,config.securedPort()));
+		}
 		combiner.finish(aggregated);
 		return aggregated;
 	}

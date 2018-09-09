@@ -4,6 +4,8 @@ import com.google.inject.Module;
 import com.simplyti.service.Service;
 import com.simplyti.service.api.builder.ApiProvider;
 
+import io.netty.channel.EventLoopGroup;
+
 public interface ServiceBuilder<T extends Service<?>> {
 
 	public T build();
@@ -25,5 +27,9 @@ public interface ServiceBuilder<T extends Service<?>> {
 	public ServiceBuilder<T> withSlf4jLogger();
 
 	public ServiceBuilder<T> disableInsecurePort();
+	
+	public ServiceBuilder<T> disableSecuredPort();
+
+	public ServiceBuilder<T> eventLoopGroup(EventLoopGroup eventLoopGroup);
 
 }

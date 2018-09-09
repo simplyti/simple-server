@@ -31,20 +31,24 @@ public abstract class AbstractService<T extends Service<T>> implements Service<T
 	private final ClientChannelGroup clientChannelGroup;
 	private final Set<ServerStartHook> serverStartHook;
 	private final Set<ServerStopHook> serverStopHook;
+	private final ServerConfig config;
 	
 	private boolean stopping;
+	
 	
 	@Inject
 	public AbstractService(EventLoopGroup eventLoopGroup,
 			@StartStopLoop EventLoop startStopLoop, ClientChannelGroup clientChannelGroup,
 			Set<ServerStartHook> serverStartHook,
-			Set<ServerStopHook> serverStopHook){
+			Set<ServerStopHook> serverStopHook,
+			ServerConfig config){
 		this.eventLoopGroup=eventLoopGroup;
 		this.startStopLoop=startStopLoop;
 		this.stopFuture=startStopLoop.newPromise();
 		this.clientChannelGroup=clientChannelGroup;
 		this.serverStartHook=serverStartHook;
 		this.serverStopHook=serverStopHook;
+		this.config=config;
 	}
 	
 	public Future<T> start() {
@@ -130,7 +134,10 @@ public abstract class AbstractService<T extends Service<T>> implements Service<T
 		log.info("Stopping executors...");
 		run(()->Runtime.getRuntime().removeShutdownHook(jvmShutdownHook));
 		stopFuture.setSuccess(null);
-		eventLoopGroup.shutdownGracefully();
+		if(!config.externalEventLoopGroup()) {
+			eventLoopGroup.shutdownGracefully();
+		}
+		
 		executor().shutdownGracefully();
 	}
 	

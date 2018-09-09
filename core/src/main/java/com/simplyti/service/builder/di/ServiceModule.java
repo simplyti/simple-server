@@ -47,10 +47,12 @@ public class ServiceModule extends AbstractModule {
 	
 	private final ServerConfig config;
 	private final Collection<Class<? extends ApiProvider>> apiClasses;
+	private final EventLoopGroup eventLoopGroup;
 
-	public ServiceModule(ServerConfig config, Collection<Class<? extends ApiProvider>> apiClasses){
+	public ServiceModule(ServerConfig config, Collection<Class<? extends ApiProvider>> apiClasses, EventLoopGroup eventLoopGroup){
 		this.config=config;
 		this.apiClasses=apiClasses;
+		this.eventLoopGroup=eventLoopGroup;
 	}
 
 	@Override
@@ -63,7 +65,12 @@ public class ServiceModule extends AbstractModule {
 		OptionalBinder.newOptionalBinder(binder(), DefaultBackendFullRequestHandler.class);
 		OptionalBinder.newOptionalBinder(binder(), DefaultBackendRequestHandler.class);
 		
-		bind(EventLoopGroup.class).toProvider(EventLoopGroupProvider.class).in(Singleton.class);
+		if(eventLoopGroup==null) {
+			bind(EventLoopGroup.class).toProvider(EventLoopGroupProvider.class).in(Singleton.class);
+		} else {
+			bind(EventLoopGroup.class).toInstance(eventLoopGroup);
+		}
+		
 		bind(new TypeLiteral<Class<? extends ServerSocketChannel>>() {}).toProvider(SererChannelClassProvider.class).in(Singleton.class);
 		bind(EventLoop.class).annotatedWith(StartStopLoop.class).toProvider(StartStopLoopProvider.class).in(Singleton.class);
 		bind(ServerConfig.class).toInstance(config);

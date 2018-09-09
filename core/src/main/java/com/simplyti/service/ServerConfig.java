@@ -8,12 +8,15 @@ public class ServerConfig {
 	private final int insecuredPort;
 	private final int securedPort;
 	private final FileServeConfiguration fileServer;
+	private final boolean externalEventLoopGroup;
 	
-	public ServerConfig(Class<? extends Service<?>> serviceClass, int insecuredPort, int securedPort, FileServeConfiguration fileServer){
+	public ServerConfig(Class<? extends Service<?>> serviceClass, int insecuredPort, int securedPort, FileServeConfiguration fileServer,
+			boolean externalEventLoopGroup){
 		this.serviceClass=serviceClass;
 		this.insecuredPort=insecuredPort;
 		this.securedPort=securedPort;
 		this.fileServer=fileServer;
+		this.externalEventLoopGroup=externalEventLoopGroup;
 	}
 
 	public int insecuredPort() {
@@ -30,6 +33,11 @@ public class ServerConfig {
 
 	public FileServeConfiguration fileServe() {
 		return fileServer;
+	}
+	
+	
+	public boolean externalEventLoopGroup() {
+		return externalEventLoopGroup;
 	}
 
 }

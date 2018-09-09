@@ -21,6 +21,7 @@ import com.simplyti.service.builder.di.ServiceModule;
 import com.simplyti.service.fileserver.DirectoryResolver;
 import com.simplyti.service.fileserver.FileServeConfiguration;
 
+import io.netty.channel.EventLoopGroup;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Log4J2LoggerFactory;
 import io.netty.util.internal.logging.Slf4JLoggerFactory;
@@ -40,6 +41,7 @@ public class GuiceServiceBuilder<T extends Service<?>> implements ServiceBuilder
 	private Integer securedPort;
 
 	private FileServeConfiguration fileServe;
+	private EventLoopGroup eventLoopGroup;
 
 	public GuiceServiceBuilder(Class<T> serviceClass) {
 		this.serviceClass=serviceClass;
@@ -50,8 +52,8 @@ public class GuiceServiceBuilder<T extends Service<?>> implements ServiceBuilder
 		ServerConfig config = new ServerConfig(
 				serviceClass,
 				MoreObjects.firstNonNull(insecuredPort, DEFAULT_INSECURE_PORT),
-				MoreObjects.firstNonNull(securedPort, DEFAULT_SECURE_PORT),fileServe);
-		ServiceModule coreModule = new ServiceModule(config,MoreObjects.firstNonNull(apiClasses, Collections.emptySet()));
+				MoreObjects.firstNonNull(securedPort, DEFAULT_SECURE_PORT),fileServe,eventLoopGroup!=null);
+		ServiceModule coreModule = new ServiceModule(config,MoreObjects.firstNonNull(apiClasses, Collections.emptySet()),eventLoopGroup);
 		Stream<Module> additinalModules = Optional.ofNullable(modules)
 				.map(Collection::stream)
 				.orElse(Stream.<Module>empty());
@@ -68,6 +70,12 @@ public class GuiceServiceBuilder<T extends Service<?>> implements ServiceBuilder
 	@Override
 	public ServiceBuilder<T> disableInsecurePort() {
 		this.insecuredPort=-1;
+		return this;
+	}
+	
+	@Override
+	public ServiceBuilder<T> disableSecuredPort() {
+		this.securedPort=-1;
 		return this;
 	}
 	
@@ -119,6 +127,12 @@ public class GuiceServiceBuilder<T extends Service<?>> implements ServiceBuilder
 	@Override
 	public ServiceBuilder<T> fileServe(String path, String directory) {
 		this.fileServe=new FileServeConfiguration(Pattern.compile("^"+path+"/(.*)$"),DirectoryResolver.literal(directory));
+		return this;
+	}
+
+	@Override
+	public ServiceBuilder<T> eventLoopGroup(EventLoopGroup eventLoopGroup) {
+		this.eventLoopGroup=eventLoopGroup;
 		return this;
 	}
 
