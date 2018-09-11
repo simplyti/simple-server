@@ -22,4 +22,8 @@ public class MethodApiBuilder {
 		return new TypeableRequestFinishableApiBuilder(builder,HttpMethod.DELETE,uri);
 	}
 
+	public TypeableRequestFinishableApiBuilder put(String uri) {
+		return new TypeableRequestFinishableApiBuilder(builder,HttpMethod.PUT,uri);
+	}
+
 }
