@@ -16,6 +16,7 @@ import com.simplyti.service.sse.ServerSentEventEncoder;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.ReferenceCountUtil;
+import io.netty.util.concurrent.Future;
 import lombok.RequiredArgsConstructor;
 
 @Sharable
@@ -36,10 +37,12 @@ public class ApiInvocationHandler extends SimpleChannelInboundHandler<ApiInvocat
 		if(filters.isEmpty()) {
 			serviceProceed(ctx,msg);
 		}else {
-			FilterChain.of(filters,ctx,msg).execute()
-				.addListener(result->{
+			Future<Boolean> futureHandled = FilterChain.of(filters,ctx,msg).execute();
+			futureHandled.addListener(result->{
 					if(result.isSuccess()) {
-						serviceProceed(ctx,msg);
+						if(!futureHandled.getNow()) {
+							serviceProceed(ctx,msg);
+						}
 					}else {
 						ctx.fireExceptionCaught(result.cause());
 					}

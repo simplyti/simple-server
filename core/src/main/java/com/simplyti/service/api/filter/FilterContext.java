@@ -5,7 +5,7 @@ import io.netty.channel.Channel;
 public interface FilterContext<T> {
 	
 	public default void done() {
-		done(true);
+		done(false);
 	}
 
 	public void done(boolean doContinue);

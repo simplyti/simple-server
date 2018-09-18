@@ -32,11 +32,11 @@ public class FilterChain<T> implements FilterContext<T> {
 	}
 
 	@Override
-	public void done(boolean doContinue) {
-		if(doContinue && iterator.hasNext()) {
+	public void done(boolean handled) {
+		if(!handled && iterator.hasNext()) {
 			iterator.next().execute(this);
 		}else {
-			promise.setSuccess(doContinue);
+			promise.setSuccess(handled);
 		}
 	}
 

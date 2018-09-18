@@ -67,14 +67,14 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	}
 	
 	private void filterRequest(ChannelHandlerContext ctx, BackendService service, HttpRequest request) {
-		Future<Boolean> filterResult = FilterChain.of(service.filters(),ctx,request).execute();
-		filterResult.addListener(result->{
+		Future<Boolean> futureHandled = FilterChain.of(service.filters(),ctx,request).execute();
+		futureHandled.addListener(result->{
 			if(result.isSuccess()) {
-				if(filterResult.getNow()) {
-					serviceProceed(ctx,service);
-				}else {
+				if(futureHandled.getNow()) {
 					pendingMessages.fail(new RuntimeException("Handled by filter"));
 					this.ignoreNextMessages=true;
+				}else {
+					serviceProceed(ctx,service);
 				}
 			}else {
 				ctx.fireExceptionCaught(result.cause());

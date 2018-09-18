@@ -92,7 +92,7 @@ public abstract class AbstractOpenIdFilter<T> implements Filter<T>{
 			resp.headers().set(HttpHeaderNames.LOCATION,authRedirect);
 			resp.headers().set(HttpHeaderNames.CONTENT_LENGTH,0);
 			context.channel().writeAndFlush(resp).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
-			context.done(false);
+			context.done(true);
 		}
 	}
 
