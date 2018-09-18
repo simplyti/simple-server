@@ -46,8 +46,12 @@ public class ApiResponseEncoder extends MessageToMessageEncoder<ApiResponse> {
 					null));
 		}else{
 			ByteBuf buffer = ctx.alloc().buffer();
-			JsonStream.serialize(msg.response(), new ByteBufOutputStream(buffer));
-			handle(ctx,out,buildHttpResponse(buffer, HttpResponseStatus.OK,msg,HttpHeaderValues.APPLICATION_JSON));
+			try {
+				JsonStream.serialize(msg.response(), new ByteBufOutputStream(buffer));
+				handle(ctx,out,buildHttpResponse(buffer, HttpResponseStatus.OK,msg,HttpHeaderValues.APPLICATION_JSON));
+			} catch (Throwable error) {
+				buffer.release();
+			}
 		}
 	}
 	

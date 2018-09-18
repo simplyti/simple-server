@@ -77,10 +77,14 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 	}
 
 	public void writeListener(Future<? super Void> f) {
-		if(!msg.isKeepAlive()) {
-			ctx.channel().close();
+		if(f.isSuccess()) {
+			if(!msg.isKeepAlive()) {
+				ctx.channel().close();
+			}
+			tryRelease();
+		}else {
+			failure(f.cause());
 		}
-		tryRelease();
 	}
 	
 	@SuppressWarnings("unchecked")
