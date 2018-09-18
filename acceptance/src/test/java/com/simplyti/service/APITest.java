@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import com.google.common.base.Joiner;
+import com.jsoniter.spi.JsoniterSpi;
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.ApiProvider;
 
@@ -125,6 +126,11 @@ public class APITest implements ApiProvider{
 		
 		builder.when().get("/anything")
 			.then(ctx->ctx.send("This is a prioritized response"));
+		
+		JsoniterSpi.registerTypeEncoder(SerializedErrorDTO.class, (obj,stream)->{throw new RuntimeException("No serializable");});
+		builder.when().get("/json/serialize/error")
+			.withResponseBodyType(SerializedErrorDTO.class)
+			.then(ctx->ctx.send(new SerializedErrorDTO()));
 		
 		builder.usingJaxRSContract(JaxRSAPITest.class);
 	}

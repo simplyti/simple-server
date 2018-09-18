@@ -210,3 +210,10 @@ Scenario: Conflictive resource path when invoking with trailing slash
 	Then I check that "#response" is equals to "This is the resource 1"
 	When I send a "GET /resources/" getting "#response"
 	Then I check that "#response" is equals to "This is the resource list"
+	
+Scenario: Error encoding json object
+	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I send a "GET /json/serialize/error" getting "#response"
+	And I check that "#response" has status code 500
+	Then I check that "#response" is equals to ""
