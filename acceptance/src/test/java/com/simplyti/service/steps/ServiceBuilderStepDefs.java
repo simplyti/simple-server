@@ -463,6 +463,9 @@ public class ServiceBuilderStepDefs {
 	public void iCheckThatStreamIsSuccess(String key) throws Exception {
 		StreamedHttpRequest futureService = (StreamedHttpRequest) scenarioData.get(key);
 		Awaitility.await().until(futureService::isDone);
+		if(!futureService.isSuccess()) {
+			futureService.cause().printStackTrace();
+		}
 		assertThat(futureService.isSuccess(),equalTo(true));
 	}
 	
