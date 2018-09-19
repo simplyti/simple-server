@@ -24,7 +24,7 @@ public class StreamResponseHandler extends SimpleChannelInboundHandler<HttpObjec
 	
 	@Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		clientChannel.resultPromise().setFailure(new ClosedChannelException());
+		clientChannel.setFailure(new ClosedChannelException());
     }
 
 	@Override
@@ -33,7 +33,7 @@ public class StreamResponseHandler extends SimpleChannelInboundHandler<HttpObjec
 			consumer.accept(((HttpContent) msg).content());
 		}
 		if(msg instanceof LastHttpContent) {
-			clientChannel.resultPromise().setSuccess(null);
+			clientChannel.setSuccess(null);
 			clientChannel.pipeline().remove(this);
 			clientChannel.release();
 		}

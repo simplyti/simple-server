@@ -51,6 +51,7 @@ public class ApiResponseEncoder extends MessageToMessageEncoder<ApiResponse> {
 				handle(ctx,out,buildHttpResponse(buffer, HttpResponseStatus.OK,msg,HttpHeaderValues.APPLICATION_JSON));
 			} catch (Throwable error) {
 				buffer.release();
+				throw error;
 			}
 		}
 	}

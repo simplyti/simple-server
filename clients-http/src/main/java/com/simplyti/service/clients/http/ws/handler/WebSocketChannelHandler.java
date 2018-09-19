@@ -36,7 +36,7 @@ public class WebSocketChannelHandler extends SimpleChannelInboundHandler<Object>
 	
 	@Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		clientChannel.resultPromise().setSuccess(null);
+		clientChannel.setSuccess(null);
     }
 	
 	@Override

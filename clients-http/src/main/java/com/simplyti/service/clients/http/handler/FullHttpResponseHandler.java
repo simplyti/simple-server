@@ -27,17 +27,17 @@ public class FullHttpResponseHandler extends HttpObjectAggregator {
 	
 	@Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		clientChannel.resultPromise().setFailure(new ClosedChannelException());
+		clientChannel.setFailure(new ClosedChannelException());
     }
 
 	@Override
 	protected void finishAggregation(FullHttpMessage aggregated) throws Exception {
 		FullHttpResponse response = (FullHttpResponse) aggregated;
-		if(!clientChannel.resultPromise().isDone()) {
+		if(!clientChannel.isDone()) {
 			if(checkStatusCode && isError(response.status().codeClass())) {
-				clientChannel.resultPromise().setFailure(new HttpException(response.status().code()));
+				clientChannel.setFailure(new HttpException(response.status().code()));
 			}else {
-				clientChannel.resultPromise().setSuccess((FullHttpResponse) aggregated.retain());
+				clientChannel.setSuccess((FullHttpResponse) aggregated.retain());
 			}
 		}
 		clientChannel.pipeline().remove(this);

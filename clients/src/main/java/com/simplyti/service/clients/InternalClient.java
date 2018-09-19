@@ -16,16 +16,12 @@ import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.pool.ChannelPool;
 import io.netty.channel.pool.ChannelPoolHandler;
 import io.netty.handler.timeout.ReadTimeoutException;
-import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.ScheduledFuture;
-import io.vavr.control.Try;
 
 public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 
-	private static final AttributeKey<Boolean> INITIALIZED = AttributeKey.valueOf("client.initialized");
-	
 	private final EventLoopGroup eventLoopGroup;
 	private final SimpleChannelPoolMap channelPoolMap;
 	
@@ -76,73 +72,90 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 
 	
 	public <T> Future<T> channel(Endpoint endpoint, ClientRequestChannelInitializer<T> initializer, Object message, long timeoutMillis) {
-		Promise<T> promise = eventLoopGroup.next().newPromise();
-		Future<ClientRequestChannel<T>> clientFuture = this.channel(endpoint,initializer, promise);
+		EventLoop eventLoop = eventLoopGroup.next();
+		Promise<T> resultPromise = eventLoop.newPromise();
+		
+		Future<ClientRequestChannel<T>> clientFuture = this.channel(endpoint,initializer, resultPromise);
 		if(clientFuture.isDone()) {
 			if(clientFuture.isSuccess()) {
 				clientFuture.getNow().writeAndFlush(message).addListener(write->handleWriteFuture(clientFuture.getNow(),write,timeoutMillis));
 			}else {
-				return promise.setFailure(clientFuture.cause());
+				return resultPromise.setFailure(clientFuture.cause());
 			}
 		}else {
 			clientFuture.addListener(f->{
 				if(clientFuture.isSuccess()) {
 					clientFuture.getNow().writeAndFlush(message).addListener(write->handleWriteFuture(clientFuture.getNow(),write,timeoutMillis));
 				}else {
-					promise.setFailure(clientFuture.cause());
+					resultPromise.setFailure(clientFuture.cause());
 				}
 			});
 		}
-		return promise;
+		return resultPromise;
 	}
 
 	public void handleWriteFuture(ClientRequestChannel<?> channel, Future<?> future, long timeoutMillis) {
 		if (!future.isSuccess()) {
 			channel.pipeline().fireExceptionCaught(future.cause());
         }else if(timeoutMillis>0) {
-        		ScheduledFuture<?> timeoutTask = channel.eventLoop().schedule(() -> channel.resultPromise().setFailure(ReadTimeoutException.INSTANCE), timeoutMillis, TimeUnit.MILLISECONDS);
-        		channel.resultPromise().addListener(ignore -> timeoutTask.cancel(false));
+        		ScheduledFuture<?> timeoutTask = channel.eventLoop().schedule(() -> channel.setFailure(ReadTimeoutException.INSTANCE), timeoutMillis, TimeUnit.MILLISECONDS);
+        		channel.addListener(ignore -> timeoutTask.cancel(false));
         }
 	}
 
-	public <T> Future<ClientRequestChannel<T>> channel(Endpoint endpoint, ClientRequestChannelInitializer<T> requestChannelInitializer, Promise<T> promise) {
+	public <T> Future<ClientRequestChannel<T>> channel(Endpoint endpoint, ClientRequestChannelInitializer<T> clientRequestChannelHandler, Promise<T> resultPromise) {
 		ChannelPool pool = channelPoolMap.get(endpoint);
 		Future<Channel> channelFuture = pool.acquire();
 		if (channelFuture.isDone()) {
 			if (channelFuture.isSuccess()) {
-				EventLoop eventLoop = channelFuture.getNow().eventLoop();
-				ClientRequestChannel<T> client = new ClientRequestChannel<>(pool,channelFuture.getNow(),promise);
-				Try.run(()->channelFuture.getNow().pipeline().remove(ChannelClientInitHandler.class));
-				requestChannelInitializer.initialize(client);
-				client.pipeline().addLast(new ChannelClientInitHandler<T>(null,client));
-				return eventLoop.newSucceededFuture(client);
+				Channel channel = channelFuture.getNow();
+				return clientRequestChannel(clientRequestChannelHandler, pool,channel,resultPromise);
 			} else {
-				EventLoop eventLoop = eventLoopGroup.next();
-				return eventLoop.newFailedFuture(channelFuture.cause());
+				return eventLoopGroup.next().newFailedFuture(channelFuture.cause());
 			}
 		} else {
 			EventLoop eventLoop = eventLoopGroup.next();
 			Promise<ClientRequestChannel<T>> clientPromise = eventLoop.newPromise();
 			channelFuture.addListener(f -> {
 				if (channelFuture.isSuccess()) {
-					Channel channel = channelFuture.getNow();
-					ClientRequestChannel<T> clientChannel = new ClientRequestChannel<>(pool,channel,promise);
-					Try.run(()->channelFuture.getNow().pipeline().remove(ChannelClientInitHandler.class));
-					requestChannelInitializer.initialize(clientChannel);
-					if(channel.attr(INITIALIZED).get()==null) {
-						clientChannel.pipeline().addLast(new ChannelClientInitHandler<>(clientPromise,clientChannel));
-						clientChannel.pipeline().fireUserEventTriggered(ClientChannelEvent.INIT);
-						channel.attr(INITIALIZED).set(true);
-					}else {
-						clientChannel.pipeline().addLast(new ChannelClientInitHandler<T>(null,clientChannel));
-						clientPromise.setSuccess(clientChannel);
-					}
+					Future<ClientRequestChannel<T>> fcrc = clientRequestChannel(clientRequestChannelHandler, pool,channelFuture.getNow(),resultPromise);
+					fcrc.addListener(f2->toPromise(fcrc,clientPromise));
 				} else {
 					clientPromise.setFailure(channelFuture.cause());
 				}
 			});
 			return clientPromise;
 		} 
+	}
+
+	private <T> void toPromise(Future<ClientRequestChannel<T>> future, Promise<ClientRequestChannel<T>> promise) {
+		if(future.isSuccess()) {
+			promise.setSuccess(future.getNow());
+		}else {
+			promise.setFailure(future.cause());
+		}
+	}
+
+	private <T> Future<ClientRequestChannel<T>> clientRequestChannel( ClientRequestChannelInitializer<T> clientRequestChannelHandler, ChannelPool pool, Channel channel, Promise<T> resultPromise) {
+		ClientRequestChannel<T> clientRequestChannel = new ClientRequestChannel<>(pool,channel,resultPromise);
+		clientRequestChannelHandler.initialize(clientRequestChannel);
+		EventLoop channelLoop = channel.eventLoop();
+		if(ChannelClientInitHandler.isInitialized(channel)) {
+			return channelLoop.newSucceededFuture(clientRequestChannel);
+		}else {
+			Promise<ClientRequestChannel<T>> clientPromise =  channelLoop.newPromise();
+			if(channelLoop.inEventLoop()) {
+				initialize(clientRequestChannel,clientPromise);
+			}else {
+				channelLoop.execute(()->initialize(clientRequestChannel,clientPromise));
+			}
+			return clientPromise;
+		}
+	}
+
+	private <T> void initialize(ClientRequestChannel<T> clientRequestChannel, Promise<ClientRequestChannel<T>> clientPromise) {
+		clientRequestChannel.pipeline().addLast(new ChannelClientInitHandler<>(clientPromise,clientRequestChannel));
+		clientRequestChannel.pipeline().fireUserEventTriggered(ClientChannelEvent.INIT);
 	}
 
 	public EventLoopGroup eventLoopGroup() {

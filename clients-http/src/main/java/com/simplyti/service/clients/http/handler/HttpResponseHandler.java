@@ -22,14 +22,14 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<HttpObject>
 	
 	@Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		clientChannel.resultPromise().setFailure(new ClosedChannelException());
+		clientChannel.setFailure(new ClosedChannelException());
     }
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, HttpObject msg) throws Exception {
 		consumer.accept(msg);
 		if(msg instanceof LastHttpContent) {
-			clientChannel.resultPromise().setSuccess(null);
+			clientChannel.setSuccess(null);
 			clientChannel.pipeline().remove(this);
 			clientChannel.release();
 		}

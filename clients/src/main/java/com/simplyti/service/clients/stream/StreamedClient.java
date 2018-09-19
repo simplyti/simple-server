@@ -83,10 +83,10 @@ public class StreamedClient<T> {
 	}
 
 	public boolean isDone() {
-		return clientChannel.isDone() && (!clientChannel.isSuccess() || (clientChannel.isSuccess() && clientChannel.getNow().resultPromise().isDone()));
+		return clientChannel.isDone() && (!clientChannel.isSuccess() || (clientChannel.isSuccess() && clientChannel.getNow().isDone()));
 	}
 
 	public boolean isSuccess() {
-		return clientChannel.isSuccess() && clientChannel.getNow().resultPromise().isSuccess();
+		return clientChannel.isSuccess() && clientChannel.getNow().isSuccess();
 	}
 }

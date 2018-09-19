@@ -24,7 +24,7 @@ public class ServerEventResponseHandler extends SimpleChannelInboundHandler<Obje
 	
 	@Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		clientChannel.resultPromise().setSuccess(null);
+		clientChannel.setSuccess(null);
     }
 
 	@Override

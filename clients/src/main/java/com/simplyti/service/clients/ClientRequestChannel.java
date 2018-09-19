@@ -2,8 +2,9 @@ package com.simplyti.service.clients;
 
 import io.netty.channel.Channel;
 import io.netty.channel.pool.ChannelPool;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
-import lombok.Getter;
 import lombok.experimental.Accessors;
 import lombok.experimental.Delegate;
 
@@ -13,7 +14,6 @@ public class ClientRequestChannel<T> implements Channel {
 	@Delegate(types=Channel.class)
 	private final Channel channel;
 	
-	@Getter
 	private final Promise<T> resultPromise;
 	
 	private final ChannelPool pool;
@@ -26,6 +26,26 @@ public class ClientRequestChannel<T> implements Channel {
 
 	public void release() {
 		pool.release(channel);
+	}
+
+	public void setFailure(Throwable cause) {
+		this.resultPromise.setFailure(cause);
+	}
+
+	public boolean isDone() {
+		return resultPromise.isDone();
+	}
+
+	public boolean isSuccess() {
+		return resultPromise.isSuccess();
+	}
+
+	public void setSuccess(T result) {
+		this.resultPromise.setSuccess(result);
+	}
+
+	public Promise<T> addListener(GenericFutureListener<? extends Future<? super T>> listener) {
+		return resultPromise.addListener(listener);
 	}
 
 }
