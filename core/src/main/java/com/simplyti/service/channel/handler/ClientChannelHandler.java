@@ -3,8 +3,6 @@ package com.simplyti.service.channel.handler;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
-
 import com.simplyti.service.Service;
 import com.simplyti.service.channel.ClientChannelGroup;
 import com.simplyti.service.channel.handler.inits.ApiRequestHandlerInit;
@@ -41,7 +39,6 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 
 	private boolean upgrading;
 
-	@Inject
 	public ClientChannelHandler(Service<?> service,
 			ApiRequestHandlerInit apiRequestHandlerInit,
 			FileServerHandlerInit fileServerHandlerInit,
@@ -88,13 +85,14 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 		}
 		
 		if(msg instanceof LastHttpContent) {
+			if(!upgrading) {
+				currentHandlers.forEach(handler->ctx.pipeline().remove(handler));
+				currentHandlers.clear();
+			}
 			promise.addListener(f->{
 				if(upgrading) {
 					ctx.pipeline().remove(HttpServerCodec.class);
 					ctx.pipeline().remove(this);
-				} else {
-					currentHandlers.forEach(handler->ctx.pipeline().remove(handler));
-					currentHandlers.clear();
 				}
 				ctx.channel().attr(ClientChannelGroup.IN_PROGRESS).set(false);
 				if(service.stopping()){
