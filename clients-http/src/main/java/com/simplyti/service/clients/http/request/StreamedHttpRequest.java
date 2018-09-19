@@ -8,6 +8,8 @@ public interface StreamedHttpRequest{
 	boolean isDone();
 
 	boolean isSuccess();
+	
+	Throwable cause();
 
 	Future<Void> send(HttpContent request);
 

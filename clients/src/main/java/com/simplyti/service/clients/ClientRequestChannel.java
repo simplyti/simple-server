@@ -48,4 +48,8 @@ public class ClientRequestChannel<T> implements Channel {
 		return resultPromise.addListener(listener);
 	}
 
+	public Throwable cause() {
+		return resultPromise.cause();
+	}
+
 }

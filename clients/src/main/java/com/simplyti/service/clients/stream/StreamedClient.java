@@ -89,4 +89,12 @@ public class StreamedClient<T> {
 	public boolean isSuccess() {
 		return clientChannel.isSuccess() && clientChannel.getNow().isSuccess();
 	}
+	
+	public Throwable cause() {
+		if(!clientChannel.isSuccess()) {
+			return clientChannel.cause();
+		}else {
+			return clientChannel.getNow().cause();
+		}
+	}
 }
