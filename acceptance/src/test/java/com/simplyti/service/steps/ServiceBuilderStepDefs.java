@@ -453,6 +453,9 @@ public class ServiceBuilderStepDefs {
 	public void iCheckThatIsSuccess(String key) throws Exception {
 		Future<?> futureService = (Future<?>) scenarioData.get(key);
 		Awaitility.await().until(futureService::isDone);
+		if(!futureService.isSuccess()) {
+			futureService.cause().printStackTrace();
+		}
 		assertThat(futureService.isSuccess(),equalTo(true));
 	}
 	

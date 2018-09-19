@@ -56,7 +56,6 @@ Scenario: Single thread client
 	And I check that http response "#response" has body "Hello!"
 	And I check that http client "#client" has 1 iddle connection
 	
-@wip
 Scenario: Connection write stream with http objecs
 	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
 	Then I check that "#serviceFuture" is success
