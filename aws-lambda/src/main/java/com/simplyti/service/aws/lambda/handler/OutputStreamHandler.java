@@ -32,6 +32,7 @@ public class OutputStreamHandler extends ChannelOutboundHandlerAdapter {
 		outputStream.close();
 		resultPromise.setSuccess(null);
 		promise.setSuccess();
+		ctx.channel().pipeline().remove(this);
 		embededChannelPool.offer(ctx.channel());
     }
 

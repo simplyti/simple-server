@@ -31,7 +31,6 @@ public class LambdaChannelPool {
 	}
 
 	public void offer(Channel channel) {
-		channel.pipeline().removeFirst();
 		channels.offer((LambdaChannel) channel);
 	}
 
