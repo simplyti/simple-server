@@ -3,7 +3,12 @@ package com.simplyti.service.channel.handler;
 
 import io.netty.channel.ChannelHandler.Sharable;
 
-import java.util.Set;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import javax.annotation.Priority;
 
 import com.google.inject.Inject;
 import com.simplyti.service.api.ApiInvocation;
@@ -17,15 +22,32 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Future;
-import lombok.RequiredArgsConstructor;
 
 @Sharable
-@RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class ApiInvocationHandler extends SimpleChannelInboundHandler<ApiInvocation<?>> {
 	
-	private final Set<OperationInboundFilter> filters;
+	private static final Comparator<Object> PRIORITY_ANN_ORDER = (o1,o2)-> {
+		Integer o1Priority = Optional.ofNullable(o1.getClass().getAnnotation(Priority.class))
+			.map(priority->priority.value())
+			.orElse(Integer.MAX_VALUE);
+		
+		Integer o2Priority = Optional.ofNullable(o2.getClass().getAnnotation(Priority.class))
+				.map(priority->priority.value())
+				.orElse(Integer.MAX_VALUE);
+		
+		return o1Priority.compareTo(o2Priority);
+	};
+	
+	private final List<OperationInboundFilter> filters;
 	private final ExceptionHandler exceptionHandler;
 	private final ServerSentEventEncoder serverEventEncoder;
+	
+	@Inject
+	public ApiInvocationHandler(List<OperationInboundFilter> filters, ExceptionHandler exceptionHandler, ServerSentEventEncoder serverEventEncoder) {
+		this.filters=filters.stream().sorted(PRIORITY_ANN_ORDER).collect(Collectors.toList());
+		this.exceptionHandler=exceptionHandler;
+		this.serverEventEncoder=serverEventEncoder;
+	}
 	
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, ApiInvocation<?> msg) throws Exception {

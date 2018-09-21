@@ -66,6 +66,10 @@
 			<groupId>com.fasterxml</groupId>
 			<artifactId>classmate</artifactId>
 		</dependency>
+		<dependency>
+		    <groupId>javax.annotation</groupId>
+		    <artifactId>javax.annotation-api</artifactId>
+		</dependency>
 
 		<!-- JAX-RS -->
 		<dependency>

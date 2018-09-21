@@ -1,7 +1,7 @@
 package com.simplyti.service.api.filter;
 
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.Set;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -15,14 +15,14 @@ public class FilterChain<T> implements FilterContext<T> {
 	private final T msg;
 	private final Channel channel;
 
-	private FilterChain(Set<? extends Filter<T>> filters, ChannelHandlerContext ctx, T msg) {
+	private FilterChain(Collection<? extends Filter<T>> filters, ChannelHandlerContext ctx, T msg) {
 		this.iterator =  filters.iterator();
 		this.channel=ctx.channel();
 		this.promise = ctx.executor().newPromise();
 		this.msg=msg;
 	}
 
-	public static <T> FilterChain<T> of(Set<? extends Filter<T>> filters, ChannelHandlerContext ctx, T msg) {
+	public static <T> FilterChain<T> of(Collection<? extends Filter<T>> filters, ChannelHandlerContext ctx, T msg) {
 		return new FilterChain<>(filters,ctx,msg);
 	}
 
