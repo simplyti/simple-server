@@ -6,6 +6,7 @@ import io.netty.channel.ChannelHandler.Sharable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.Priority;
@@ -43,7 +44,7 @@ public class ApiInvocationHandler extends SimpleChannelInboundHandler<ApiInvocat
 	private final ServerSentEventEncoder serverEventEncoder;
 	
 	@Inject
-	public ApiInvocationHandler(List<OperationInboundFilter> filters, ExceptionHandler exceptionHandler, ServerSentEventEncoder serverEventEncoder) {
+	public ApiInvocationHandler(Set<OperationInboundFilter> filters, ExceptionHandler exceptionHandler, ServerSentEventEncoder serverEventEncoder) {
 		this.filters=filters.stream().sorted(PRIORITY_ANN_ORDER).collect(Collectors.toList());
 		this.exceptionHandler=exceptionHandler;
 		this.serverEventEncoder=serverEventEncoder;
