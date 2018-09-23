@@ -35,32 +35,38 @@ public class ServiceDiscoveryStepDefs {
 	
 	@When("^I create a service with path \"([^\"]*)\" and backend \"([^\"]*)\"$")
 	public void iCreateAServiceWithPathAndBackend(String path, String target) throws Exception {
-		TestServiceDiscovery.getInstance().addService(null, null, path, HttpEndpoint.of(target));
+		TestServiceDiscovery.getInstance().addService(null, null, path, null, HttpEndpoint.of(target));
 	}
 	
 	@When("^I create a service with method \"([^\"]*)\" with path \"([^\"]*)\" and backend \"([^\"]*)\"$")
 	public void iCreateAServiceWithMethodWithPathAndBackend(String method, String path, String target) throws Exception {
-		TestServiceDiscovery.getInstance().addService(null, HttpMethod.valueOf(method), path, HttpEndpoint.of(target));
+		TestServiceDiscovery.getInstance().addService(null, HttpMethod.valueOf(method), path,null, HttpEndpoint.of(target));
 	}
 	
 	@When("^I create a service with host \"([^\"]*)\" with path \"([^\"]*)\" and backend \"([^\"]*)\"$")
 	public void iCreateAServiceWithHostWithPathAndBackend(String host, String path, String target) throws Exception {
-		TestServiceDiscovery.getInstance().addService(host, null, path, HttpEndpoint.of(target));
+		TestServiceDiscovery.getInstance().addService(host, null, path,null, HttpEndpoint.of(target));
+	}
+	
+
+	@When("^I create a service with path \"([^\"]*)\", rewrite \"([^\"]*)\" and backend \"([^\"]*)\"$")
+	public void iCreateAServiceWithPathRewriteAndBackend(String path, String rewrite, String target) throws Exception {
+		TestServiceDiscovery.getInstance().addService(null, null, path,rewrite, HttpEndpoint.of(target));
 	}
 	
 	@When("^I create a service with path \"([^\"]*)\"$")
 	public void iCreateAServiceWithPath(String path) throws Exception {
-		TestServiceDiscovery.getInstance().addService(null, null, path, null);
+		TestServiceDiscovery.getInstance().addService(null, null, path,null, null);
 	}
 	
 	@When("^I create a service with backend \"([^\"]*)\"$")
 	public void iCreateAServiceWithBackend(String target) throws Exception {
-		TestServiceDiscovery.getInstance().addService(null, null, null, HttpEndpoint.of(target));
+		TestServiceDiscovery.getInstance().addService(null, null, null, null,HttpEndpoint.of(target));
 	}
 
 	@When("^I create a service with host \"([^\"]*)\" and backend \"([^\"]*)\"$")
 	public void iCreateAServiceWithHostAndBackend(String host, String target) throws Exception {
-		TestServiceDiscovery.getInstance().addService(host, null, null, HttpEndpoint.of(target));
+		TestServiceDiscovery.getInstance().addService(host, null, null, null, HttpEndpoint.of(target));
 	}
 	
 	@Then("^I check that \"([^\"]*)\" has status code (\\d+) with location starting with \"([^\"]*)\"$")

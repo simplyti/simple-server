@@ -31,12 +31,12 @@ public class TestServiceDiscovery extends DefaultServiceDiscovery {
 		INSTANCE=null;
 	}
 
-	public void addService(String host, HttpMethod method, String path, Endpoint endpoint) {
-		this.addService(new BackendService(host, method, path, null, endpoint==null?null:Collections.singleton(endpoint)));
+	public void addService(String host, HttpMethod method, String path, String rewrite, Endpoint endpoint) {
+		this.addService(new BackendService(host, method, path,rewrite, null, endpoint==null?null:Collections.singleton(endpoint)));
 	}
 	
-	public void addService(String host, HttpMethod method, String path, Set<HttpRequetFilter> security, Endpoint endpoint) {
-		this.addService(new BackendService(host, method, path, security, endpoint==null?null:Collections.singleton(endpoint)));
+	public void addService(String host, HttpMethod method, String path,String rewrite, Set<HttpRequetFilter> security, Endpoint endpoint) {
+		this.addService(new BackendService(host, method, path, rewrite, security, endpoint==null?null:Collections.singleton(endpoint)));
 	}
 
 	public <T> T getInstance(Class<T> clazz) {

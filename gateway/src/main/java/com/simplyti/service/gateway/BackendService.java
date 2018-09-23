@@ -34,17 +34,19 @@ public class BackendService implements Comparable<BackendService>{
 	private final String host;
 	private final HttpMethod method;
 	private final String path;
+	private final String rewrite;
 	private final Set<HttpRequetFilter> filters;
 	private final Pattern pattern;
 	private final int literalCount;
 	
 	private ServiceBalancer loadBalander;
 
-	public BackendService(String host, HttpMethod method, String path, Set<HttpRequetFilter> filters, Collection<Endpoint> endpoints) {
+	public BackendService(String host, HttpMethod method, String path, String rewrite, Set<HttpRequetFilter> filters, Collection<Endpoint> endpoints) {
 		this.loadBalander = new RoundRobinLoadBalancer(endpoints);
 		this.host=host;
 		this.method=method;
 		this.path=path;
+		this.rewrite=rewrite;
 		this.filters=MoreObjects.firstNonNull(filters, Collections.emptySet());
 		if(path==null) {
 			this.pattern = null;

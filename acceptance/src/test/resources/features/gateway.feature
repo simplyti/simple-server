@@ -161,6 +161,17 @@ Scenario: Path template
 	Then I check that "#response" has status code 200
 	When I send a "GET /status/baad" getting "#response"
 	Then I check that "#response" has status code 404
+	
+Scenario: Path template
+	When I start a service "#serviceFuture" with options:
+		| option	 			| value |
+		| withModule			| com.simplyti.service.gateway.GatewayModule |
+		| withModule			| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| withLog4J2Logger	|		|
+	Then I check that "#serviceFuture" is success
+	When I create a service with path "/{code:\d+}", rewrite "/status" and backend "http://127.0.0.1:8081"
+	And I send a "GET /200" getting "#response"
+	Then I check that "#response" has status code 200
 
 Scenario: Web socket backend
 	When I start a service "#serviceFuture" with options:

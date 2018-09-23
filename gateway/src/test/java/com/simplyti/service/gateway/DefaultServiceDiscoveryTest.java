@@ -19,8 +19,8 @@ public class DefaultServiceDiscoveryTest {
 	@Test
 	public void testMatch() {
 		DefaultServiceDiscovery discovery = new DefaultServiceDiscovery();
-		discovery.addService(new BackendService("example.com", null, null, null,Collections.singleton(new Endpoint(HTTP,new Address("127.0.0.1",8080)))));
-		discovery.addService(new BackendService("example.com", null, "/resource",null,Collections.singleton(new Endpoint(HTTP,new Address("127.0.0.2",8080)))));
+		discovery.addService(new BackendService("example.com", null, null,null, null,Collections.singleton(new Endpoint(HTTP,new Address("127.0.0.1",8080)))));
+		discovery.addService(new BackendService("example.com", null, "/resource",null,null,Collections.singleton(new Endpoint(HTTP,new Address("127.0.0.2",8080)))));
 		
 		Endpoint endpoint = discovery.get("example.com", HttpMethod.GET, "/").loadBalander().next();
 		assertThat(endpoint).isNotNull();
