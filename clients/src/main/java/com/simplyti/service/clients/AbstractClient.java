@@ -5,6 +5,7 @@ import com.simplyti.service.clients.channel.monitor.ClientMonitor;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.pool.ChannelPoolHandler;
+import io.netty.util.concurrent.Future;
 
 public abstract class AbstractClient<B extends ClientRequestBuilder<B>> implements Client<B> {
 	
@@ -21,6 +22,11 @@ public abstract class AbstractClient<B extends ClientRequestBuilder<B>> implemen
 	
 	protected InternalClient client() {
 		return internalClient;
+	}
+	
+	@Override
+	public Future<Void> close() {
+		return internalClient.close();
 	}
 
 }

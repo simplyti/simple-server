@@ -7,7 +7,7 @@ import com.simplyti.service.clients.AbstractClientRequestBuilder;
 import com.simplyti.service.clients.ClientRequestChannel;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.InternalClient;
-import com.simplyti.service.clients.http.request.DefaultFinishabBodyleHttpRequest;
+import com.simplyti.service.clients.http.request.DefaultFinishableBodyHttpRequest;
 import com.simplyti.service.clients.http.request.FinishableBodyHttpRequest;
 import com.simplyti.service.clients.http.request.FinishableHttpRequest;
 import com.simplyti.service.clients.http.request.FinishableStreamedHttpRequest;
@@ -83,12 +83,12 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 
 	@Override
 	public FinishableBodyHttpRequest post(String uri) {
-		return new DefaultFinishabBodyleHttpRequest(client,endpoint,checkStatusCode,HttpMethod.POST,uri,headers,config());
+		return new DefaultFinishableBodyHttpRequest(client,endpoint,checkStatusCode,HttpMethod.POST,uri,headers,config());
 	}
 	
 	@Override
 	public FinishableBodyHttpRequest put(String uri) {
-		return new DefaultFinishabBodyleHttpRequest(client,endpoint,checkStatusCode,HttpMethod.PUT,uri,headers,config());
+		return new DefaultFinishableBodyHttpRequest(client,endpoint,checkStatusCode,HttpMethod.PUT,uri,headers,config());
 	}
 
 	@Override

@@ -17,7 +17,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
 
-public class DefaultFinishabBodyleHttpRequest extends AbstractFinishableHttpRequest implements FinishableBodyHttpRequest {
+public class DefaultFinishableBodyHttpRequest extends AbstractFinishableHttpRequest implements FinishableBodyHttpRequest {
 
 	private final HttpMethod method;
 	private final String uri;
@@ -26,7 +26,7 @@ public class DefaultFinishabBodyleHttpRequest extends AbstractFinishableHttpRequ
 	
 	private HttpHeaders headers;
 
-	public DefaultFinishabBodyleHttpRequest(InternalClient client, Endpoint endpoint,boolean checkStatusCode, HttpMethod method, String uri, HttpHeaders headers, ClientConfig config) {
+	public DefaultFinishableBodyHttpRequest(InternalClient client, Endpoint endpoint,boolean checkStatusCode, HttpMethod method, String uri, HttpHeaders headers, ClientConfig config) {
 		super(client, endpoint, checkStatusCode,config);
 		this.method = method;
 		this.uri = uri;
