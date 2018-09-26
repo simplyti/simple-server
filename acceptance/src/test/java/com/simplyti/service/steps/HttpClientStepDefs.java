@@ -10,6 +10,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import com.jayway.awaitility.Awaitility;
+import com.simplyti.service.client.tracer.SimpleRequestTracer;
 import com.simplyti.service.clients.Address;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.http.HttpClient;
@@ -20,6 +21,7 @@ import com.simplyti.service.clients.http.ws.WebSocketClient;
 import com.simplyti.service.clients.proxy.ProxiedEndpoint;
 import com.simplyti.service.clients.proxy.Proxy;
 import com.simplyti.service.clients.proxy.Proxy.ProxyType;
+import com.simplyti.service.clients.trace.RequestTracer;
 
 import cucumber.api.java.Before;
 import cucumber.api.java.en.Given;
@@ -407,6 +409,28 @@ public class HttpClientStepDefs {
 		scenarioData.put(result, ws.send(msg));
 	}
 	
+	
+	@Given("^a simple client request tracer \"([^\"]*)\"$")
+	public void aSimpleClientRequestTracer(String key) throws Exception {
+	    this.scenarioData.put(key, new SimpleRequestTracer());
+	}
+
+	@When("^I get \"([^\"]*)\" getting response \"([^\"]*)\" with request tracer \"([^\"]*)\"$")
+	public void iGetGettingResponseWithRequestTracer(String path, String resultKey, String tracerKey) throws Exception {
+		RequestTracer<?,?> tracer =  (RequestTracer<?,?>) scenarioData.get(tracerKey);
+		Future<FullHttpResponse> response = sutClient.withEndpoin(LOCAL_ENDPOINT)
+				.withTracer(tracer)
+				.get(path).fullResponse();
+		
+		scenarioData.put(resultKey, response);
+	}
+
+	@Then("^I check that tracer \"([^\"]*)\" contains (\\d+) request$")
+	public void iCheckThatTracerContainsRequest(String tracerKey, int count) throws Exception {
+		SimpleRequestTracer tracer =  (SimpleRequestTracer) scenarioData.get(tracerKey);
+		assertThat(tracer.requests(),hasSize(1));
+	}
+
 	
 	
 }

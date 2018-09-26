@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.simplyti.service.clients.ClientRequestChannel;
+import com.simplyti.service.clients.events.ClientResponseEvent;
 import com.simplyti.service.clients.http.exception.HttpException;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -33,6 +34,7 @@ public class FullHttpResponseHandler extends HttpObjectAggregator {
 	@Override
 	protected void finishAggregation(FullHttpMessage aggregated) throws Exception {
 		FullHttpResponse response = (FullHttpResponse) aggregated;
+		clientChannel.pipeline().fireUserEventTriggered(new ClientResponseEvent(response));
 		if(!clientChannel.isDone()) {
 			if(checkStatusCode && isError(response.status().codeClass())) {
 				clientChannel.setFailure(new HttpException(response.status().code()));

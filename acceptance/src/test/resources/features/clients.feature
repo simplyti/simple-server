@@ -112,3 +112,12 @@ Scenario: Connection closed
 	When I get "/close" getting response "#response"
 	And I check that "#response" is failure
 	And I check that "#response" has conention closed failure
+	
+Scenario: Client custom tracer
+	Given a simple client request tracer "#tracer"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I get "/hello" getting response "#response" with request tracer "#tracer"
+	Then I check that "#response" is success
+	And I check that http response "#response" has body "Hello!"
+	And I check that tracer "#tracer" contains 1 request

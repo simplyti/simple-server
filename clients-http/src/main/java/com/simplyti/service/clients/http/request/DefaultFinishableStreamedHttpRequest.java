@@ -2,6 +2,7 @@ package com.simplyti.service.clients.http.request;
 
 import java.util.function.Consumer;
 
+import com.simplyti.service.clients.ClientConfig;
 import com.simplyti.service.clients.ClientRequestChannel;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.InternalClient;
@@ -17,12 +18,12 @@ public class DefaultFinishableStreamedHttpRequest implements FinishableStreamedH
 
 	private final InternalClient client;
 	private final Endpoint endpoint;
-	private final long timeoutMillis;
+	private final ClientConfig config;
 	private final HttpRequest request;
 
-	public DefaultFinishableStreamedHttpRequest(InternalClient client, Endpoint endpoint, HttpRequest request, long timeoutMillis) {
+	public DefaultFinishableStreamedHttpRequest(InternalClient client, Endpoint endpoint, HttpRequest request, ClientConfig config) {
 		this.client = client;
-		this.timeoutMillis=timeoutMillis;
+		this.config=config;
 		this.endpoint = endpoint;
 		this.request = request;
 	}
@@ -31,9 +32,9 @@ public class DefaultFinishableStreamedHttpRequest implements FinishableStreamedH
 	public StreamedHttpRequest forEach(Consumer<HttpObject> consumer) {
 		EventLoop executor = client.eventLoopGroup().next();
 		Promise<Void> promise = executor.newPromise();
-		Future<ClientRequestChannel<Void>> futureClient = client.<Void>channel(endpoint,channel->{
+		Future<ClientRequestChannel<Void>> futureClient = client.<Void>channel(config,endpoint,channel->{
 			channel.pipeline().addLast(new HttpResponseHandler(channel,consumer));
-			channel.writeAndFlush(request).addListener(f->client.handleWriteFuture(channel, f, timeoutMillis));
+			channel.writeAndFlush(request).addListener(f->client.handleWriteFuture(channel, f, config.timeoutMillis()));
 		},promise);
 		return new DefaultStreamedHttpRequest(futureClient,executor);
 	}

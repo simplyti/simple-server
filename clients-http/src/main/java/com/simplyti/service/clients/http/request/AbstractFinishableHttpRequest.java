@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import com.simplyti.service.clients.ClientConfig;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.InternalClient;
 import com.simplyti.service.clients.http.handler.FullHttpResponseHandler;
@@ -24,14 +25,13 @@ public abstract class AbstractFinishableHttpRequest implements FinishableHttpReq
 	protected final InternalClient client;
 	protected final Endpoint endpoint;
 	private final boolean checkStatusCode;
-	private final long timeoutMillis;
+	private final ClientConfig config;
 	
 	private final Map<String,String> params;
 	
-	public AbstractFinishableHttpRequest(InternalClient client, Endpoint endpoint, boolean checkStatusCode,
-			long timeoutMillis) {
+	public AbstractFinishableHttpRequest(InternalClient client, Endpoint endpoint, boolean checkStatusCode, ClientConfig config) {
 		this.client = client;
-		this.timeoutMillis=timeoutMillis;
+		this.config=config;
 		this.checkStatusCode=checkStatusCode;
 		this.endpoint = endpoint;
 		this.params=new HashMap<>();
@@ -47,28 +47,28 @@ public abstract class AbstractFinishableHttpRequest implements FinishableHttpReq
 	public Future<FullHttpResponse> fullResponse() {
 		return client.channel(endpoint,channel->{
 			channel.pipeline().addLast(new FullHttpResponseHandler(channel,checkStatusCode));
-		},request(),timeoutMillis);
+		},request(),config);
 	}
 
 	@Override
 	public Future<Void> forEach(Consumer<HttpObject> consumer) {
 		return client.channel(endpoint,channel->{
 			channel.pipeline().addLast(new HttpResponseHandler(channel,consumer));
-		},request(),timeoutMillis);
+		},request(),config);
 	}
 
 	@Override
 	public Future<Void> stream(Consumer<ByteBuf> consumer) {
 		return client.channel(endpoint,channel->{
 			channel.pipeline().addLast(new StreamResponseHandler(channel,consumer));
-		},request(),timeoutMillis);
+		},request(),config);
 	}
 	
 	@Override
 	public Future<Void> sse(Consumer<ServerEvent> consumer) {
 		return client.channel(endpoint,channel->{
 			channel.pipeline().addLast(new ServerEventResponseHandler(channel,consumer));
-		},request(),timeoutMillis);
+		},request(),config);
 	}
 	
 	private FullHttpRequest request() {

@@ -71,29 +71,29 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 	public FinishableHttpRequest get(String uri) {
 		FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri, Unpooled.EMPTY_BUFFER,
 				headers,EmptyHttpHeaders.INSTANCE);
-		return new DefaultFinishableHttpRequest(client,endpoint,checkStatusCode,request,readTimeout());
+		return new DefaultFinishableHttpRequest(client,endpoint,checkStatusCode,request,config());
 	}
 	
 	@Override
 	public FinishableHttpRequest delete(String uri) {
 		FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.DELETE, uri, Unpooled.EMPTY_BUFFER,
 				headers,EmptyHttpHeaders.INSTANCE);
-		return new DefaultFinishableHttpRequest(client,endpoint,checkStatusCode,request,readTimeout());
+		return new DefaultFinishableHttpRequest(client,endpoint,checkStatusCode,request,config());
 	}
 
 	@Override
 	public FinishableBodyHttpRequest post(String uri) {
-		return new DefaultFinishabBodyleHttpRequest(client,endpoint,checkStatusCode,HttpMethod.POST,uri,headers,readTimeout());
+		return new DefaultFinishabBodyleHttpRequest(client,endpoint,checkStatusCode,HttpMethod.POST,uri,headers,config());
 	}
 	
 	@Override
 	public FinishableBodyHttpRequest put(String uri) {
-		return new DefaultFinishabBodyleHttpRequest(client,endpoint,checkStatusCode,HttpMethod.PUT,uri,headers,readTimeout());
+		return new DefaultFinishabBodyleHttpRequest(client,endpoint,checkStatusCode,HttpMethod.PUT,uri,headers,config());
 	}
 
 	@Override
 	public FinishableHttpRequest sendFull(FullHttpRequest request) {
-		return new DefaultFinishableHttpRequest(client,endpoint,checkStatusCode,request,readTimeout());
+		return new DefaultFinishableHttpRequest(client,endpoint,checkStatusCode,request,config());
 	}
 
 	@Override
@@ -105,14 +105,14 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 
 	@Override
 	public FinishableStreamedHttpRequest send(HttpRequest request) {
-		return new DefaultFinishableStreamedHttpRequest(client,endpoint,request,readTimeout());
+		return new DefaultFinishableStreamedHttpRequest(client,endpoint,request,config());
 	}
 
 	@Override
 	public WebSocketClient websocket(String uri, Consumer<WebSocketFrame> consumer) {
 		EventLoop executor = client.eventLoopGroup().next();
 		Promise<Void> promise = executor.newPromise();
-		Future<ClientRequestChannel<Void>> clientChannel = client.channel(endpoint,channel->{
+		Future<ClientRequestChannel<Void>> clientChannel = client.channel(config(),endpoint,channel->{
 			channel.pipeline().addLast(new HttpObjectAggregator(65536));
 			channel.pipeline().addLast(new WebSocketChannelHandler(endpoint,uri,headers,channel,consumer));
 		},promise);

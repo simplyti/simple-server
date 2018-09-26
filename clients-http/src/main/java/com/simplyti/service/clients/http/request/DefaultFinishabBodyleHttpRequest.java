@@ -2,6 +2,7 @@ package com.simplyti.service.clients.http.request;
 
 import java.util.function.Function;
 
+import com.simplyti.service.clients.ClientConfig;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.InternalClient;
 
@@ -25,9 +26,8 @@ public class DefaultFinishabBodyleHttpRequest extends AbstractFinishableHttpRequ
 	
 	private HttpHeaders headers;
 
-	public DefaultFinishabBodyleHttpRequest(InternalClient client, Endpoint endpoint,boolean checkStatusCode, HttpMethod method,
-			String uri, HttpHeaders headers, long readTimeout) {
-		super(client, endpoint, checkStatusCode,readTimeout);
+	public DefaultFinishabBodyleHttpRequest(InternalClient client, Endpoint endpoint,boolean checkStatusCode, HttpMethod method, String uri, HttpHeaders headers, ClientConfig config) {
+		super(client, endpoint, checkStatusCode,config);
 		this.method = method;
 		this.uri = uri;
 		this.headers=headers;

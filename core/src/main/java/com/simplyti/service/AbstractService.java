@@ -42,6 +42,7 @@ public abstract class AbstractService<T extends Service<T>> implements Service<T
 			Set<ServerStartHook> serverStartHook,
 			Set<ServerStopHook> serverStopHook,
 			ServerConfig config){
+		Runtime.getRuntime().addShutdownHook(jvmShutdownHook);
 		this.eventLoopGroup=eventLoopGroup;
 		this.startStopLoop=startStopLoop;
 		this.stopFuture=startStopLoop.newPromise();

@@ -25,6 +25,7 @@ public class ClientRequestChannel<T> implements Channel {
 	}
 
 	public void release() {
+		this.channel.pipeline().fireUserEventTriggered(ClientChannelEvent.END_REQUEST);
 		pool.release(channel);
 	}
 

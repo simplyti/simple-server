@@ -7,6 +7,7 @@ import com.simplyti.service.clients.channel.monitor.ClientMonitor;
 import com.simplyti.service.clients.channel.monitor.ClientMonitorHandler;
 import com.simplyti.service.clients.channel.monitor.MonitoredHandler;
 import com.simplyti.service.clients.init.ClientRequestChannelInitializer;
+import com.simplyti.service.clients.trace.RequestTracerHandler;
 
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoop;
@@ -70,22 +71,21 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 		return allChannels.size();
 	}
 
-	
-	public <T> Future<T> channel(Endpoint endpoint, ClientRequestChannelInitializer<T> initializer, Object message, long timeoutMillis) {
+	public <T> Future<T> channel(Endpoint endpoint, ClientRequestChannelInitializer<T> initializer, Object message, ClientConfig config) {
 		EventLoop eventLoop = eventLoopGroup.next();
 		Promise<T> resultPromise = eventLoop.newPromise();
 		
-		Future<ClientRequestChannel<T>> clientFuture = this.channel(endpoint,initializer, resultPromise);
+		Future<ClientRequestChannel<T>> clientFuture = this.channel(config,endpoint,initializer, resultPromise);
 		if(clientFuture.isDone()) {
 			if(clientFuture.isSuccess()) {
-				clientFuture.getNow().writeAndFlush(message).addListener(write->handleWriteFuture(clientFuture.getNow(),write,timeoutMillis));
+				clientFuture.getNow().writeAndFlush(message).addListener(write->handleWriteFuture(clientFuture.getNow(),write,config.timeoutMillis()));
 			}else {
 				return resultPromise.setFailure(clientFuture.cause());
 			}
 		}else {
 			clientFuture.addListener(f->{
 				if(clientFuture.isSuccess()) {
-					clientFuture.getNow().writeAndFlush(message).addListener(write->handleWriteFuture(clientFuture.getNow(),write,timeoutMillis));
+					clientFuture.getNow().writeAndFlush(message).addListener(write->handleWriteFuture(clientFuture.getNow(),write,config.timeoutMillis()));
 				}else {
 					resultPromise.setFailure(clientFuture.cause());
 				}
@@ -103,13 +103,13 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
         }
 	}
 
-	public <T> Future<ClientRequestChannel<T>> channel(Endpoint endpoint, ClientRequestChannelInitializer<T> clientRequestChannelHandler, Promise<T> resultPromise) {
+	public <T> Future<ClientRequestChannel<T>> channel(ClientConfig config, Endpoint endpoint, ClientRequestChannelInitializer<T> clientRequestChannelHandler, Promise<T> resultPromise) {
 		ChannelPool pool = channelPoolMap.get(endpoint);
 		Future<Channel> channelFuture = pool.acquire();
 		if (channelFuture.isDone()) {
 			if (channelFuture.isSuccess()) {
 				Channel channel = channelFuture.getNow();
-				return clientRequestChannel(clientRequestChannelHandler, pool,channel,resultPromise);
+				return clientRequestChannel(config,clientRequestChannelHandler, pool,channel,resultPromise);
 			} else {
 				return eventLoopGroup.next().newFailedFuture(channelFuture.cause());
 			}
@@ -118,7 +118,7 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 			Promise<ClientRequestChannel<T>> clientPromise = eventLoop.newPromise();
 			channelFuture.addListener(f -> {
 				if (channelFuture.isSuccess()) {
-					Future<ClientRequestChannel<T>> fcrc = clientRequestChannel(clientRequestChannelHandler, pool,channelFuture.getNow(),resultPromise);
+					Future<ClientRequestChannel<T>> fcrc = clientRequestChannel(config,clientRequestChannelHandler, pool,channelFuture.getNow(),resultPromise);
 					fcrc.addListener(f2->toPromise(fcrc,clientPromise));
 				} else {
 					clientPromise.setFailure(channelFuture.cause());
@@ -136,9 +136,10 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 		}
 	}
 
-	private <T> Future<ClientRequestChannel<T>> clientRequestChannel( ClientRequestChannelInitializer<T> clientRequestChannelHandler, ChannelPool pool, Channel channel, Promise<T> resultPromise) {
+	private <T> Future<ClientRequestChannel<T>> clientRequestChannel(ClientConfig config, ClientRequestChannelInitializer<T> clientRequestChannelHandler, ChannelPool pool, Channel channel, Promise<T> resultPromise) {
 		ClientRequestChannel<T> clientRequestChannel = new ClientRequestChannel<>(pool,channel,resultPromise);
 		clientRequestChannelHandler.initialize(clientRequestChannel);
+		addTracer(clientRequestChannel,config);
 		EventLoop channelLoop = channel.eventLoop();
 		if(ChannelClientInitHandler.isInitialized(channel)) {
 			return channelLoop.newSucceededFuture(clientRequestChannel);
@@ -150,6 +151,12 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 				channelLoop.execute(()->initialize(clientRequestChannel,clientPromise));
 			}
 			return clientPromise;
+		}
+	}
+
+	private void addTracer(Channel channel, ClientConfig config) {
+		if(config.tracer()!=null) {
+			channel.pipeline().addLast(new RequestTracerHandler<>(config.tracer()));
 		}
 	}
 
