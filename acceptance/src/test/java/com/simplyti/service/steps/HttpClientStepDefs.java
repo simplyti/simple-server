@@ -431,6 +431,10 @@ public class HttpClientStepDefs {
 		assertThat(tracer.requests(),hasSize(1));
 	}
 
+	@When("^I close client connections \"([^\"]*)\"$")
+	public void iCloseClientConnections(String key) throws Exception {
+		scenarioData.put(key,sutClient.close());
+	}
 	
 	
 }

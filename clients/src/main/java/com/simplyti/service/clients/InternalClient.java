@@ -169,8 +169,8 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 		return eventLoopGroup;
 	}
 
-	public Future<Void> close() {
-		return allChannels.close();
+	public Future<Void> closeIdleClannels() {
+		return iddleChannels.close();
 	}
 
 }

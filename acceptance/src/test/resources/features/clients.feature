@@ -121,3 +121,16 @@ Scenario: Client custom tracer
 	Then I check that "#response" is success
 	And I check that http response "#response" has body "Hello!"
 	And I check that tracer "#tracer" contains 1 request
+	
+Scenario: Client connections close
+	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I get "/hello" getting response "#response"
+	Then I check that "#response" is success
+	And I check that http response "#response" has body "Hello!"
+	And I check that http client has 1 iddle connection
+	When I close client connections "#closeFuture"
+	Then I check that "#closeFuture" is success
+	And I check that http client has 0 iddle connection
+	
+	

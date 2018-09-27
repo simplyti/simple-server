@@ -26,7 +26,7 @@ public abstract class AbstractClient<B extends ClientRequestBuilder<B>> implemen
 	
 	@Override
 	public Future<Void> close() {
-		return internalClient.close();
+		return internalClient.closeIdleClannels();
 	}
 
 }
