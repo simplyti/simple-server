@@ -1,22 +1,23 @@
 package com.simplyti.service.clients.http;
 
 import com.simplyti.service.clients.AbstractClient;
-import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.http.channel.HttpChannelInitializer;
 
 import io.netty.channel.EventLoopGroup;
 
 public class DefaultHttpClient extends AbstractClient<HttpRequestBuilder> implements HttpClient {
 
-	private boolean checkStatusCode;
+	private final boolean checkStatusCode;
+	private final HttpEndpoint endpoint;
 
-	public DefaultHttpClient(EventLoopGroup eventLoopGroup, boolean checkStatusCode) {
+	public DefaultHttpClient(EventLoopGroup eventLoopGroup, HttpEndpoint endpoint, boolean checkStatusCode) {
 		super(eventLoopGroup,new HttpChannelInitializer());
 		this.checkStatusCode=checkStatusCode;
+		this.endpoint=endpoint;
 	}
 
 	@Override
-	public HttpRequestBuilder withEndpoin(Endpoint endpoint) {
+	public HttpRequestBuilder request() {
 		return new DefaultHttpRequestBuilder(client(),endpoint,checkStatusCode);
 	}
 

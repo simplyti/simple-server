@@ -14,13 +14,14 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpStatusClass;
+import io.netty.util.ReferenceCountUtil;
 
-public class FullHttpResponseHandler extends HttpObjectAggregator {
+public class FullHttpResponseHandler<T> extends HttpObjectAggregator {
 
-	private final ClientRequestChannel<FullHttpResponse> clientChannel;
+	private final ClientRequestChannel<T> clientChannel;
 	private final boolean checkStatusCode;
 
-	public FullHttpResponseHandler(ClientRequestChannel<FullHttpResponse> clientChannel, boolean checkStatusCode) {
+	public FullHttpResponseHandler(ClientRequestChannel<T> clientChannel, boolean checkStatusCode) {
 		super(52428800);
 		this.checkStatusCode = checkStatusCode;
 		this.clientChannel = clientChannel;
@@ -39,11 +40,16 @@ public class FullHttpResponseHandler extends HttpObjectAggregator {
 			if(checkStatusCode && isError(response.status().codeClass())) {
 				clientChannel.setFailure(new HttpException(response.status().code()));
 			}else {
-				clientChannel.setSuccess((FullHttpResponse) aggregated.retain());
+				clientChannel.setSuccess(handle((FullHttpResponse) aggregated));
 			}
 		}
 		clientChannel.pipeline().remove(this);
 		clientChannel.release();
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected T handle(FullHttpResponse msg) {
+		return (T) ReferenceCountUtil.retain(msg);
 	}
 	
 	private boolean isError(HttpStatusClass codeClass) {

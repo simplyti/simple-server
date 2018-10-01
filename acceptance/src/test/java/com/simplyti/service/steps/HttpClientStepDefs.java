@@ -10,6 +10,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import com.jayway.awaitility.Awaitility;
+import com.jsoniter.JsonIterator;
+import com.jsoniter.any.Any;
 import com.simplyti.service.client.tracer.SimpleRequestTracer;
 import com.simplyti.service.clients.Address;
 import com.simplyti.service.clients.Endpoint;
@@ -78,7 +80,8 @@ public class HttpClientStepDefs {
 		ProxiedEndpoint endpoint = ProxiedEndpoint.of(target).through("127.0.0.1", 3128, Proxy.ProxyType.HTTP);
 		Awaitility.await().until(()->{
 			Try<FullHttpResponse> result = Try.of(()->client
-					.withEndpoin(endpoint)
+					.request()
+					.withEndpoint(endpoint)
 					.withReadTimeout(1000)
 					.get(target.path())
 					.fullResponse().get());
@@ -110,7 +113,7 @@ public class HttpClientStepDefs {
 		EventLoop eventloop = (EventLoop) scenarioData.get(eventloopKey);
 		AtomicBoolean done = new AtomicBoolean();
 		eventloop.execute(()->{
-			Future<FullHttpResponse> response = client.withEndpoin(LOCAL_ENDPOINT)
+			Future<FullHttpResponse> response = client.request().withEndpoint(LOCAL_ENDPOINT)
 					.get(path).fullResponse();
 			scenarioData.put(resultKey, response);
 			done.set(true);
@@ -124,7 +127,7 @@ public class HttpClientStepDefs {
 		request.headers().set(HttpHeaderNames.CONTENT_LENGTH,length);
 		List<HttpObject> responseStream = new ArrayList<>();
 		scenarioData.put(responseObjects, responseStream);
-		StreamedHttpRequest stream = sutClient.withEndpoin(LOCAL_ENDPOINT)
+		StreamedHttpRequest stream = sutClient.request().withEndpoint(LOCAL_ENDPOINT)
 			.send(request)
 			.forEach(obj->responseStream.add(ReferenceCountUtil.retain(obj)));
 		stream.send(new DefaultHttpContent(Unpooled.wrappedBuffer(cotentPart.getBytes(CharsetUtil.UTF_8))));
@@ -137,7 +140,7 @@ public class HttpClientStepDefs {
 		request.headers().set(HttpHeaderNames.CONTENT_LENGTH,length);
 		List<HttpObject> responseStream = new ArrayList<>();
 		scenarioData.put(responseObjects, responseStream);
-		StreamedHttpRequest stream = ((HttpClient)scenarioData.get(clientKey)).withEndpoin(LOCAL_ENDPOINT)
+		StreamedHttpRequest stream = ((HttpClient)scenarioData.get(clientKey)).request().withEndpoint(LOCAL_ENDPOINT)
 			.send(request)
 			.forEach(obj->responseStream.add(ReferenceCountUtil.retain(obj)));
 		stream.send(new DefaultHttpContent(Unpooled.wrappedBuffer(cotentPart.getBytes(CharsetUtil.UTF_8))));
@@ -175,14 +178,35 @@ public class HttpClientStepDefs {
 	
 	@When("^I get \"([^\"]*)\" getting response \"([^\"]*)\"$")
 	public void iGetWithClientGettingResponse(String path, String resultKey) throws Exception {
-		Future<FullHttpResponse> response = sutClient.withEndpoin(LOCAL_ENDPOINT)
+		Future<FullHttpResponse> response = sutClient.request().withEndpoint(LOCAL_ENDPOINT)
 			.get(path).fullResponse();
 		scenarioData.put(resultKey, response);
 	}
 	
+	@When("^I get \"([^\"]*)\" getting transformed response to any \"([^\"]*)\"$")
+	public void iGetWithClientGettingTransformedResponseToAny(String path, String resultKey) throws Exception {
+		Future<Any> response = sutClient.request().withEndpoint(LOCAL_ENDPOINT)
+			.get(path).fullResponse(this::toAny);
+		scenarioData.put(resultKey, response);
+	}
+	
+	@Then("^I check that any \"([^\"]*)\" has property \"([^\"]*)\" equals to \"([^\"]*)\"$")
+	public void iCheckThatAnyHasPropertyEqualsTo(String key, String property, String expected) throws Exception {
+		@SuppressWarnings("unchecked")
+		Future<Any> response = (Future<Any>) scenarioData.get(key);
+		Any any = response.getNow();
+		assertThat(any.get(property).toString(), equalTo(expected));
+	}
+	
+	private Any toAny(FullHttpResponse response) {
+		byte[] data = new byte[response.content().readableBytes()];
+		response.content().readBytes(data);
+		return JsonIterator.deserialize(data);
+	}
+	
 	@When("^I get \"([^\"]*)\" ignoring status getting response \"([^\"]*)\"$")
 	public void iGetWithClientIgnoringStatusGettingResponse(String path, String resultKey) throws Exception {
-		Future<FullHttpResponse> response = sutClient.withEndpoin(LOCAL_ENDPOINT)
+		Future<FullHttpResponse> response = sutClient.request().withEndpoint(LOCAL_ENDPOINT)
 			.withIgnoreStatusCode()
 			.get(path).fullResponse();
 		scenarioData.put(resultKey, response);
@@ -190,7 +214,7 @@ public class HttpClientStepDefs {
 	
 	@When("^I delete \"([^\"]*)\" getting response \"([^\"]*)\"$")
 	public void iDeleteWithClientGettingResponse(String path, String resultKey) throws Exception {
-		Future<FullHttpResponse> response = sutClient.withEndpoin(LOCAL_ENDPOINT)
+		Future<FullHttpResponse> response = sutClient.request().withEndpoint(LOCAL_ENDPOINT)
 			.delete(path).fullResponse();
 		scenarioData.put(resultKey, response);
 	}
@@ -221,7 +245,7 @@ public class HttpClientStepDefs {
 	@When("^I get \"([^\"]*)\" to port (\\d+) getting response \"([^\"]*)\"$")
 	public void iGetToPortGettingResponse(String path, int port, String resultKey) throws Exception {
 		Future<FullHttpResponse> response = sutClient
-				.withEndpoin(new Endpoint(HttpEndpoint.HTTP_SCHEMA, new Address(LOCAL_ENDPOINT.address().host(), port)))
+				.request().withEndpoint(new Endpoint(HttpEndpoint.HTTP_SCHEMA, new Address(LOCAL_ENDPOINT.address().host(), port)))
 				.get(path).fullResponse();
 		scenarioData.put(resultKey, response);
 	}
@@ -229,7 +253,7 @@ public class HttpClientStepDefs {
 	@When("^I get \"([^\"]*)\" to port (\\d+) with basic auth \"([^\"]*)\" \"([^\"]*)\" getting response \"([^\"]*)\"$")
 	public void iGetToPortWithBasicAuthGettingResponse(String path, int port, String user, String pass, String resultKey) throws Exception {
 		Future<FullHttpResponse> response = sutClient
-				.withEndpoin(new Endpoint(HttpEndpoint.HTTP_SCHEMA, new Address(LOCAL_ENDPOINT.address().host(), port)))
+				.request().withEndpoint(new Endpoint(HttpEndpoint.HTTP_SCHEMA, new Address(LOCAL_ENDPOINT.address().host(), port)))
 				.withBasicAuth(user, pass)
 				.get(path).fullResponse();
 		scenarioData.put(resultKey, response);
@@ -237,7 +261,7 @@ public class HttpClientStepDefs {
 	
 	@When("^I post \"([^\"]*)\" with body \"([^\"]*)\" getting response \"([^\"]*)\"$")
 	public void iGetWithClientGetingResponse(String path,String body, String resultKey) throws Exception {
-		Future<FullHttpResponse> response =  sutClient.withEndpoin(LOCAL_ENDPOINT)
+		Future<FullHttpResponse> response =  sutClient.request().withEndpoint(LOCAL_ENDPOINT)
 			.post(path)
 			.body(alloc->alloc.buffer().writeBytes(Unpooled.copiedBuffer(body, CharsetUtil.UTF_8)))
 			.fullResponse();
@@ -246,7 +270,7 @@ public class HttpClientStepDefs {
 	
 	@When("^I post \"([^\"]*)\" with body \"([^\"]*)\" and response time (\\d+) getting response \"([^\"]*)\"$")
 	public void iPostWithBodyAndResponseTimeGettingResponse(String path, String body, int timeout, String resultKey) throws Exception {
-		Future<FullHttpResponse> response =  sutClient.withEndpoin(LOCAL_ENDPOINT)
+		Future<FullHttpResponse> response =  sutClient.request().withEndpoint(LOCAL_ENDPOINT)
 				.withReadTimeout(timeout)
 				.post(path)
 				.body(alloc->alloc.buffer().writeBytes(Unpooled.copiedBuffer(body, CharsetUtil.UTF_8)))
@@ -284,14 +308,14 @@ public class HttpClientStepDefs {
 	@Then("^I get url \"([^\"]*)\" getting response \"([^\"]*)\"$")
 	public void iGetUrlGettingResponse(String endpointUrl, String resultKey) throws Exception {
 		HttpEndpoint endpoint = HttpEndpoint.of(endpointUrl);
-		Future<FullHttpResponse> response = sutClient.withEndpoin(endpoint).get(endpoint.path()).fullResponse();
+		Future<FullHttpResponse> response = sutClient.request().withEndpoint(endpoint).get(endpoint.path()).fullResponse();
 		scenarioData.put(resultKey, response);
 	}
 	
 	@When("^I get \"([^\"]*)\" with query params getting response \"([^\"]*)\"$")
 	public void iGetWithQueryParamsGettingResponse(String path, String resultKey, Map<String,String> params) throws Exception {
 		Future<FullHttpResponse> response = sutClient
-				.withEndpoin(LOCAL_ENDPOINT)
+				.request().withEndpoint(LOCAL_ENDPOINT)
 				.get(path)
 				.params(params)
 				.fullResponse();
@@ -319,7 +343,7 @@ public class HttpClientStepDefs {
 			endpoint = ProxiedEndpoint.of(target).throughHTTP(proxy.address().host(), proxy.address().port());
 			break;
 		}
-		Future<FullHttpResponse> response = sutClient.withEndpoin(endpoint).get(target.path()).fullResponse();
+		Future<FullHttpResponse> response = sutClient.request().withEndpoint(endpoint).get(target.path()).fullResponse();
 		scenarioData.put(resultKey, response);
 	}
 	
@@ -327,7 +351,7 @@ public class HttpClientStepDefs {
 	public void iGetUrlGettingHttpResponse(String endpointUrl, String resultKey) throws Exception {
 		HttpEndpoint endpoint = HttpEndpoint.of(endpointUrl);
 		List<HttpObject> objets = new ArrayList<>();
-		sutClient.withEndpoin(endpoint).get(endpoint.path())
+		sutClient.request().withEndpoint(endpoint).get(endpoint.path())
 				.forEach(objets::add).await();
 		scenarioData.put(resultKey, objets);
 	}
@@ -343,7 +367,7 @@ public class HttpClientStepDefs {
 	public void iGetUrlGettingStream(String endpointUrl, String resultKey) throws Exception {
 		HttpEndpoint endpoint = HttpEndpoint.of(endpointUrl);
 		List<ByteBuf> stream = new ArrayList<>();
-		sutClient.withEndpoin(endpoint).get(endpoint.path())
+		sutClient.request().withEndpoint(endpoint).get(endpoint.path())
 				.stream(data->stream.add(Unpooled.copiedBuffer(data))).sync();
 		scenarioData.put(resultKey, stream);
 	}
@@ -352,7 +376,7 @@ public class HttpClientStepDefs {
 	public void iGetUrlGettingSSEStream(String endpointUrl, String resultKey) throws Exception {
 		HttpEndpoint endpoint = HttpEndpoint.of(endpointUrl);
 		List<ServerEvent> stream = new ArrayList<>();
-		sutClient.withEndpoin(endpoint).get(endpoint.path())
+		sutClient.request().withEndpoint(endpoint).get(endpoint.path())
 				.sse(event->stream.add(event)).sync();
 		scenarioData.put(resultKey, stream);
 	}
@@ -378,7 +402,7 @@ public class HttpClientStepDefs {
 	public void iSendAWebsocketTextMessageGettingResponseStreamAs(String msg, String wsKey, String stream,String result) throws Exception {
 		StringBuilder data = new StringBuilder();
 		scenarioData.put(stream, data);
-		WebSocketClient ws = client.withEndpoin(LOCAL_ENDPOINT)
+		WebSocketClient ws = client.request().withEndpoint(LOCAL_ENDPOINT)
 			.websocket("/",frame->data.append(((TextWebSocketFrame)frame).text()));
 		scenarioData.put(wsKey, ws);
 		scenarioData.put(result, ws.send(msg));
@@ -389,7 +413,7 @@ public class HttpClientStepDefs {
 		HttpEndpoint endpoint = HttpEndpoint.of(endpointUrl);
 		StringBuilder data = new StringBuilder();
 		scenarioData.put(stream, data);
-		WebSocketClient ws = client.withEndpoin(endpoint)
+		WebSocketClient ws = client.request().withEndpoint(endpoint)
 			.websocket("/",frame->data.append(((TextWebSocketFrame)frame).text()));
 		scenarioData.put(wsKey, ws);
 		scenarioData.put(result, ws.send(msg));
@@ -418,7 +442,7 @@ public class HttpClientStepDefs {
 	@When("^I get \"([^\"]*)\" getting response \"([^\"]*)\" with request tracer \"([^\"]*)\"$")
 	public void iGetGettingResponseWithRequestTracer(String path, String resultKey, String tracerKey) throws Exception {
 		RequestTracer<?,?> tracer =  (RequestTracer<?,?>) scenarioData.get(tracerKey);
-		Future<FullHttpResponse> response = sutClient.withEndpoin(LOCAL_ENDPOINT)
+		Future<FullHttpResponse> response = sutClient.request().withEndpoint(LOCAL_ENDPOINT)
 				.withTracer(tracer)
 				.get(path).fullResponse();
 		

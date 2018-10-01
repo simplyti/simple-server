@@ -6,7 +6,20 @@ public abstract class AbstractClientRequestBuilder<B extends ClientRequestBuilde
 	
 	private static final int DEFAULT_READ_TIMEOUT = 5000;
 	private int readTimeout = DEFAULT_READ_TIMEOUT;
+	
 	private RequestTracer<?,?> tracer;
+	private Endpoint endpoint;
+	
+	public AbstractClientRequestBuilder(Endpoint endpoint) {
+		this.endpoint=endpoint;
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public B withEndpoint(Endpoint endpoint) {
+		this.endpoint=endpoint;
+		return (B) this;
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -23,7 +36,7 @@ public abstract class AbstractClientRequestBuilder<B extends ClientRequestBuilde
 	}
 	
 	protected ClientConfig config() {
-		return new ClientConfig(readTimeout,tracer);
+		return new ClientConfig(endpoint,readTimeout,tracer);
 	}
 
 }

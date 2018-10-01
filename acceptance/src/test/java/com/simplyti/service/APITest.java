@@ -89,6 +89,10 @@ public class APITest implements ApiProvider{
 			.withResponseBodyType(APITestDTO.class)
 			.then(ctx->ctx.send(new APITestDTO("Typed response")));
 		
+		builder.when().get("/hello/json")
+		.withResponseBodyType(APITestDTO.class)
+		.then(ctx->ctx.send(new APITestDTO(ctx.queryParam("name"))));
+		
 		builder.when().post("/typed/request/response")
 			.withRequestBodyType(APITestDTO.class)
 			.withResponseBodyType(APITestDTO.class)

@@ -1,7 +1,7 @@
 package com.simplyti.service.clients.stream;
 
 import com.simplyti.service.clients.ClientRequestChannel;
-import com.simplyti.service.clients.pending.PendingMessages;
+import com.simplyti.service.commons.pending.PendingMessages;
 
 import io.netty.channel.EventLoop;
 import io.netty.util.ReferenceCountUtil;

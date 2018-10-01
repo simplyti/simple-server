@@ -90,3 +90,10 @@ Scenario: Get SSE stream
 	Then I check that "#serviceFuture" is success
 	When I get url "http://127.0.0.1:8080/sse" getting sse stream "#stream"
 	Then I check that stream "#stream" contains 2 items
+	
+Scenario: Request with response transform
+	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I get "/hello/json?name=Pablo" getting transformed response to any "#any"
+	Then I check that "#any" is success
+	And I check that any "#any" has property "message" equals to "Pablo"

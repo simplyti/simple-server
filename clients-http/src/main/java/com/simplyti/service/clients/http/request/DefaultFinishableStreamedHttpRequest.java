@@ -17,14 +17,12 @@ import io.netty.util.concurrent.Promise;
 public class DefaultFinishableStreamedHttpRequest implements FinishableStreamedHttpRequest {
 
 	private final InternalClient client;
-	private final Endpoint endpoint;
 	private final ClientConfig config;
 	private final HttpRequest request;
 
 	public DefaultFinishableStreamedHttpRequest(InternalClient client, Endpoint endpoint, HttpRequest request, ClientConfig config) {
 		this.client = client;
 		this.config=config;
-		this.endpoint = endpoint;
 		this.request = request;
 	}
 
@@ -32,7 +30,7 @@ public class DefaultFinishableStreamedHttpRequest implements FinishableStreamedH
 	public StreamedHttpRequest forEach(Consumer<HttpObject> consumer) {
 		EventLoop executor = client.eventLoopGroup().next();
 		Promise<Void> promise = executor.newPromise();
-		Future<ClientRequestChannel<Void>> futureClient = client.<Void>channel(config,endpoint,channel->{
+		Future<ClientRequestChannel<Void>> futureClient = client.<Void>channel(config,channel->{
 			channel.pipeline().addLast(new HttpResponseHandler(channel,consumer));
 			channel.writeAndFlush(request).addListener(f->client.handleWriteFuture(channel, f, config.timeoutMillis()));
 		},promise);

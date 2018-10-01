@@ -1,4 +1,4 @@
-package com.simplyti.service.clients.pending;
+package com.simplyti.service.commons.pending;
 
 import io.netty.channel.Channel;
 import io.netty.util.ReferenceCountUtil;

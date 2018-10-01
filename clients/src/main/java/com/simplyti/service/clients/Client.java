@@ -6,7 +6,7 @@ import io.netty.util.concurrent.Future;
 
 public interface Client<B extends ClientRequestBuilder<B>> {
 	
-	public B withEndpoin(Endpoint endpoint);
+	public B request();
 	
 	public ClientMonitor monitor();
 	

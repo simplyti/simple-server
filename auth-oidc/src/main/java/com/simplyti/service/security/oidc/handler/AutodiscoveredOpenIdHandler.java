@@ -33,7 +33,8 @@ public class AutodiscoveredOpenIdHandler extends DefaultFullOpenidHandler implem
 	}
 
 	private void getWellKnownConfiguration(HttpClient client, Endpoint endpoint) {
-		Future<FullHttpResponse> futureResponse = client.withEndpoin(endpoint)
+		Future<FullHttpResponse> futureResponse = client.request()
+				.withEndpoint(endpoint)
 				.withCheckStatusCode()
 				.get("/.well-known/openid-configuration")
 				.fullResponse();
@@ -53,7 +54,8 @@ public class AutodiscoveredOpenIdHandler extends DefaultFullOpenidHandler implem
 	
 	private void getJwsKey(HttpClient client) {
 		HttpEndpoint endpoint = HttpEndpoint.of(oidc.jwsUri());
-		Future<FullHttpResponse> futureResponse = client.withEndpoin(endpoint )
+		Future<FullHttpResponse> futureResponse = client.request()
+			.withEndpoint(endpoint )
 			.withCheckStatusCode()
 			.get(endpoint.path())
 			.fullResponse();

@@ -65,7 +65,7 @@ public class OpenIdApi implements ApiProvider{
 				request.headers().set(HttpHeaderNames.CONTENT_TYPE,HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED);
 				request.headers().set(HttpHeaderNames.CONTENT_LENGTH,request.content().readableBytes());
 				
-				Future<FullHttpResponse> result = httpClient.withEndpoin(tokenEndpoint)
+				Future<FullHttpResponse> result = httpClient.request().withEndpoint(tokenEndpoint)
 					.withCheckStatusCode()
 					.sendFull(request).fullResponse();
 				

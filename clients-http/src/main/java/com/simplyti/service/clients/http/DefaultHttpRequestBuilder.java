@@ -4,6 +4,7 @@ import java.util.Base64;
 import java.util.function.Consumer;
 
 import com.simplyti.service.clients.AbstractClientRequestBuilder;
+import com.simplyti.service.clients.ClientConfig;
 import com.simplyti.service.clients.ClientRequestChannel;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.InternalClient;
@@ -42,11 +43,11 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 	private boolean checkStatusCode;
 
 	public DefaultHttpRequestBuilder(InternalClient target, Endpoint endpoint,boolean checkStatusCode) {
+		super(endpoint);
 		this.client=target;
 		this.endpoint=endpoint;
 		this.checkStatusCode=checkStatusCode;
 		this.headers = new DefaultHttpHeaders(true);
-		headers.add(HttpHeaderNames.HOST,endpoint.address().host());
 	}
 	
 	@Override
@@ -69,31 +70,37 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 
 	@Override
 	public FinishableHttpRequest get(String uri) {
-		FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri, Unpooled.EMPTY_BUFFER,
-				headers,EmptyHttpHeaders.INSTANCE);
-		return new DefaultFinishableHttpRequest(client,endpoint,checkStatusCode,request,config());
+		ClientConfig config = config();
+		headers.add(HttpHeaderNames.HOST,config.endpoint().address().host());
+		FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri, Unpooled.EMPTY_BUFFER, headers,EmptyHttpHeaders.INSTANCE);
+		return new DefaultFinishableHttpRequest(client,checkStatusCode,request,config);
 	}
 	
 	@Override
 	public FinishableHttpRequest delete(String uri) {
-		FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.DELETE, uri, Unpooled.EMPTY_BUFFER,
-				headers,EmptyHttpHeaders.INSTANCE);
-		return new DefaultFinishableHttpRequest(client,endpoint,checkStatusCode,request,config());
+		ClientConfig config = config();
+		headers.add(HttpHeaderNames.HOST,config.endpoint().address().host());
+		FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.DELETE, uri, Unpooled.EMPTY_BUFFER, headers,EmptyHttpHeaders.INSTANCE);
+		return new DefaultFinishableHttpRequest(client,checkStatusCode,request,config);
 	}
 
 	@Override
 	public FinishableBodyHttpRequest post(String uri) {
-		return new DefaultFinishableBodyHttpRequest(client,endpoint,checkStatusCode,HttpMethod.POST,uri,headers,config());
+		ClientConfig config = config();
+		headers.add(HttpHeaderNames.HOST,config.endpoint().address().host());
+		return new DefaultFinishableBodyHttpRequest(client,checkStatusCode,HttpMethod.POST,uri,headers,config);
 	}
 	
 	@Override
 	public FinishableBodyHttpRequest put(String uri) {
-		return new DefaultFinishableBodyHttpRequest(client,endpoint,checkStatusCode,HttpMethod.PUT,uri,headers,config());
+		ClientConfig config = config();
+		headers.add(HttpHeaderNames.HOST,config.endpoint().address().host());
+		return new DefaultFinishableBodyHttpRequest(client,checkStatusCode,HttpMethod.PUT,uri,headers,config);
 	}
 
 	@Override
 	public FinishableHttpRequest sendFull(FullHttpRequest request) {
-		return new DefaultFinishableHttpRequest(client,endpoint,checkStatusCode,request,config());
+		return new DefaultFinishableHttpRequest(client,checkStatusCode,request,config());
 	}
 
 	@Override
@@ -112,9 +119,11 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 	public WebSocketClient websocket(String uri, Consumer<WebSocketFrame> consumer) {
 		EventLoop executor = client.eventLoopGroup().next();
 		Promise<Void> promise = executor.newPromise();
-		Future<ClientRequestChannel<Void>> clientChannel = client.channel(config(),endpoint,channel->{
+		ClientConfig config = config();
+		headers.add(HttpHeaderNames.HOST,config.endpoint().address().host());
+		Future<ClientRequestChannel<Void>> clientChannel = client.channel(config,channel->{
 			channel.pipeline().addLast(new HttpObjectAggregator(65536));
-			channel.pipeline().addLast(new WebSocketChannelHandler(endpoint,uri,headers,channel,consumer));
+			channel.pipeline().addLast(new WebSocketChannelHandler(config,uri,headers,channel,consumer));
 		},promise);
 		return new DefaultWebSocketClient(clientChannel,executor);
 	}

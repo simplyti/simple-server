@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 
 import com.simplyti.service.clients.ClientRequestChannel;
 import com.simplyti.service.clients.ClientChannelEvent;
-import com.simplyti.service.clients.Endpoint;
+import com.simplyti.service.clients.ClientConfig;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -22,11 +22,11 @@ public class WebSocketChannelHandler extends SimpleChannelInboundHandler<Object>
 	private final WebSocketClientHandshaker handshaker;
 	private final ClientRequestChannel<Void> clientChannel;
 
-	public WebSocketChannelHandler(Endpoint endpoint, String uri, HttpHeaders headers, ClientRequestChannel<Void> channel, Consumer<WebSocketFrame> consumer) {
+	public WebSocketChannelHandler(ClientConfig config, String uri, HttpHeaders headers, ClientRequestChannel<Void> channel, Consumer<WebSocketFrame> consumer) {
 		this.consumer = consumer;
 		this.clientChannel=channel;
 		this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(
-				URI.create("ws://"+endpoint.toString()+uri), WebSocketVersion.V13, null, false, headers, 1280000);
+				URI.create("ws://"+config.endpoint().toString()+uri), WebSocketVersion.V13, null, false, headers, 1280000);
 	}
 	
 	@Override

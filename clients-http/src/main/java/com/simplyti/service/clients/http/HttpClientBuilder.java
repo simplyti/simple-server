@@ -5,7 +5,7 @@ import io.netty.channel.EventLoopGroup;
 public class HttpClientBuilder {
 
 	private EventLoopGroup eventLoopGroup;
-	
+	private HttpEndpoint endpoint;
 	private boolean checkStatusCode;
 
 	public HttpClientBuilder eventLoopGroup(EventLoopGroup eventLoopGroup) {
@@ -14,9 +14,14 @@ public class HttpClientBuilder {
 	}
 
 	public HttpClient build() {
-		return new DefaultHttpClient(eventLoopGroup,checkStatusCode);
+		return new DefaultHttpClient(eventLoopGroup,endpoint,checkStatusCode);
 	}
 
+	public HttpClientBuilder withEndpoint(HttpEndpoint endpoint) {
+		this.endpoint=endpoint;
+		return this;
+	}
+	
 	public HttpClientBuilder withCheckStatusCode() {
 		checkStatusCode = true;
 		return this;

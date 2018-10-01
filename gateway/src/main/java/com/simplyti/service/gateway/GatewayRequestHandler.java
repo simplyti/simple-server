@@ -1,13 +1,12 @@
 package com.simplyti.service.gateway;
 
-
 import javax.inject.Inject;
 
 import com.simplyti.service.api.filter.FilterChain;
 import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.InternalClient;
-import com.simplyti.service.clients.pending.PendingMessages;
+import com.simplyti.service.commons.pending.PendingMessages;
 import com.simplyti.service.exception.NotFoundException;
 import com.simplyti.service.exception.ServiceException;
 import com.simplyti.service.gateway.handler.BackendProxyHandler;

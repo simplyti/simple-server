@@ -2,6 +2,7 @@ package com.simplyti.service.clients.http.request;
 
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import com.simplyti.service.clients.http.sse.ServerEvent;
 
@@ -13,6 +14,8 @@ import io.netty.util.concurrent.Future;
 public interface FinishableHttpRequest {
 
 	Future<FullHttpResponse> fullResponse();
+	
+	<T> Future<T> fullResponse(Function<FullHttpResponse,T> function);
 
 	Future<Void> forEach(Consumer<HttpObject> consumer);
 

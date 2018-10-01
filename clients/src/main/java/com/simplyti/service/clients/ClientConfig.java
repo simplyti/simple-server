@@ -11,6 +11,7 @@ import lombok.experimental.Accessors;
 @Accessors(fluent=true)
 public class ClientConfig {
 	
+	private final Endpoint endpoint;
 	private final long timeoutMillis;
 	private final  RequestTracer<?,?> tracer;
 

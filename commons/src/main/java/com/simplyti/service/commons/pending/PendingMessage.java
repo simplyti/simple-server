@@ -1,4 +1,4 @@
-package com.simplyti.service.clients.pending;
+package com.simplyti.service.commons.pending;
 
 import io.netty.util.Recycler;
 import io.netty.util.concurrent.Promise;

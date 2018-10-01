@@ -1,6 +1,6 @@
 package com.simplyti.service.sse;
 
-import com.simplyti.service.clients.pending.PendingMessages;
+import com.simplyti.service.commons.pending.PendingMessages;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
