@@ -56,7 +56,7 @@
 		<javax.annotation.version>1.3.2</javax.annotation.version>
 
 		<!-- Networking -->
-		<netty.version>4.1.29.Final</netty.version>
+		<netty.version>4.1.30.Final</netty.version>
 
 		<!-- JAX-RS -->
 		<jax-rs.version>2.1.1</jax-rs.version>

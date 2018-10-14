@@ -1,7 +1,5 @@
 package com.simplyti.service.clients.ssl;
 
-import static io.vavr.control.Try.of;
-
 import com.simplyti.service.clients.Address;
 
 import io.netty.channel.Channel;
@@ -10,6 +8,7 @@ import io.netty.channel.pool.ChannelPoolHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import lombok.SneakyThrows;
 
 public class SSLChannelInitializer extends AbstractChannelPoolHandler{
 	
@@ -17,11 +16,12 @@ public class SSLChannelInitializer extends AbstractChannelPoolHandler{
 	private final ChannelPoolHandler nestedInitializer;
 	private final Address address;
 
+	@SneakyThrows
 	public SSLChannelInitializer(ChannelPoolHandler nestedInitializer, Address address) {
-		this.sslCtx = of(()->SslContextBuilder
+		this.sslCtx = SslContextBuilder
 				.forClient()
 				.trustManager(InsecureTrustManagerFactory.INSTANCE)
-				.build()).get();
+				.build();
 		this.nestedInitializer=nestedInitializer;
 		this.address=address;
 	}

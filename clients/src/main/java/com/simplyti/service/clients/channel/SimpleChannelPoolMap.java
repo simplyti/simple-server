@@ -1,9 +1,7 @@
 package com.simplyti.service.clients.channel;
 
-import static io.vavr.API.$;
-import static io.vavr.API.Case;
-import static io.vavr.API.Match;
-import static io.vavr.Predicates.instanceOf;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.proxy.channel.NoResolvingSocketAddress;
@@ -23,12 +21,19 @@ import io.netty.channel.pool.AbstractChannelPoolMap;
 import io.netty.channel.pool.ChannelPool;
 import io.netty.channel.pool.ChannelPoolHandler;
 import io.netty.channel.pool.SimpleChannelPool;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
 public class SimpleChannelPoolMap extends AbstractChannelPoolMap<Endpoint, ChannelPool> {
 	
 	private final Bootstrap bootstrap;
 	private final ChannelPoolHandler initializer;
+	
+	private static final Map<Class<? extends EventLoopGroup>,Class<? extends SocketChannel>> NATIVE_CHANNEL_CLASS = new HashMap<>(2);
+	static {
+		NATIVE_CHANNEL_CLASS.put(EpollEventLoopGroup.class,EpollSocketChannel.class);
+		NATIVE_CHANNEL_CLASS.put(KQueueEventLoopGroup.class,KQueueSocketChannel.class);
+	}
 
 	public SimpleChannelPoolMap(EventLoopGroup eventLoopGroup, ChannelPoolHandler poolHandler) {
 		this.bootstrap = new Bootstrap().group(eventLoopGroup)
@@ -56,10 +61,7 @@ public class SimpleChannelPoolMap extends AbstractChannelPoolMap<Endpoint, Chann
 	}
 
 	private Class<? extends Channel> channelClass(EventLoopGroup eventLoopGroup) {
-		return Match(eventLoopGroup).of(
-				Case($(instanceOf(EpollEventLoopGroup.class)), EpollSocketChannel.class),
-				Case($(instanceOf(KQueueEventLoopGroup.class)), KQueueSocketChannel.class),
-				Case($(), NioSocketChannel.class));
+		return NATIVE_CHANNEL_CLASS.getOrDefault(eventLoopGroup.getClass(), NioSocketChannel.class);
 	}
 
 }
