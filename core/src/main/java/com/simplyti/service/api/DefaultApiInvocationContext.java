@@ -2,6 +2,7 @@ package com.simplyti.service.api;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Supplier;
@@ -12,6 +13,7 @@ import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.sse.DefaultSSEStream;
 import com.simplyti.service.sse.SSEStream;
 import com.simplyti.service.sse.ServerSentEventEncoder;
+import com.simplyti.service.sync.SyncTaskSubmitter;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DefaultByteBufHolder;
@@ -35,18 +37,20 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 	private final ApiInvocation<I> msg;
 	private final Supplier<I> cachedRequestBody;
 	private final ServerSentEventEncoder serverSentEventEncoder;
+	private final SyncTaskSubmitter syncTaskSubmitter;
 	
 	private boolean released = false ;
 	
 	
 	public DefaultApiInvocationContext(ChannelHandlerContext ctx,ApiInvocation<I> msg, ExceptionHandler exceptionHandler,
-			ServerSentEventEncoder serverSentEventEncoder) {
+			ServerSentEventEncoder serverSentEventEncoder, SyncTaskSubmitter syncTaskSubmitter) {
 		super(msg.content());
 		this.exceptionHandler=exceptionHandler;
 		this.ctx=ctx;
 		this.msg=msg;
 		this.cachedRequestBody=Suppliers.memoize(this);
 		this.serverSentEventEncoder=serverSentEventEncoder;
+		this.syncTaskSubmitter=syncTaskSubmitter;
 	}
 	
 	@Override
@@ -183,6 +187,11 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 	public SSEStream sse() {
 		tryRelease();
 		return new DefaultSSEStream(ctx,serverSentEventEncoder);
+	}
+
+	@Override
+	public Future<O> sync(Callable<O> task) {
+		return syncTaskSubmitter.submit(ctx.executor(), task);
 	}
 
 }

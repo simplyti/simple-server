@@ -217,3 +217,15 @@ Scenario: Error encoding json object
 	When I send a "GET /json/serialize/error" getting "#response"
 	And I check that "#response" has status code 500
 	Then I check that "#response" is equals to ""
+	
+Scenario: Invocation context can handle futures
+	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I send a "GET /typed/response/future" getting "#response"
+	Then I check that "#response" is equals to '{"message":"Hello future!"}'
+	
+Scenario: Invocation context can submit sync tasks
+	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	Then I check that "#serviceFuture" is success
+	When I send a "GET /typed/response/sync" getting "#response"
+	Then I check that "#response" match witch '\{"message":"Hello from thread blockingGroup-.*"\}'

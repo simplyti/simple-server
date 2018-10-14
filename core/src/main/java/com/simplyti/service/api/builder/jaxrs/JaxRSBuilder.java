@@ -4,7 +4,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Stream;
 
 import javax.ws.rs.DefaultValue;
@@ -22,6 +21,7 @@ import com.simplyti.service.api.APIContext;
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.FinishableApiBuilder;
 import com.simplyti.service.meta.Meta;
+import com.simplyti.service.sync.SyncTaskSubmitter;
 
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.util.internal.StringUtil;
@@ -36,7 +36,7 @@ public class JaxRSBuilder<I,O> extends FinishableApiBuilder<I, O>{
 	}
 
 	@SuppressWarnings("unchecked")
-	public static void build(ApiBuilder builder, Class<?> clazz, Method method, Object instance, ExecutorService blockingExecutor) {
+	public static void build(ApiBuilder builder, Class<?> clazz, Method method, Object instance, SyncTaskSubmitter syncTaskSubmitter) {
 		StringBuilder path = new StringBuilder();
 		boolean hasBasePath=false;
 		if (clazz.isAnnotationPresent(Path.class)) {
@@ -80,7 +80,7 @@ public class JaxRSBuilder<I,O> extends FinishableApiBuilder<I, O>{
 		JaxRSBuilder<Object, Object> jaxrsBuilder = new JaxRSBuilder<Object, Object>(builder, httpMethod, path.toString(), bodyType);
 		Stream.concat(Stream.of(method.getAnnotationsByType(Meta.class)),Stream.of(clazz.getAnnotationsByType(Meta.class)))
 			.forEach(meta->jaxrsBuilder.withMeta(meta.name(), meta.value()));
-		jaxrsBuilder.then(new MethodInvocation(argumentIndexToRestParam.build(),contexArgIndex,method,instance,blockingExecutor));
+		jaxrsBuilder.then(new MethodInvocation(argumentIndexToRestParam.build(),contexArgIndex,method,instance,syncTaskSubmitter));
 	}
 	
 	private static String trim(String value) {

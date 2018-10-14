@@ -18,6 +18,7 @@ import com.simplyti.service.api.filter.FilterChain;
 import com.simplyti.service.api.filter.OperationInboundFilter;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.sse.ServerSentEventEncoder;
+import com.simplyti.service.sync.SyncTaskSubmitter;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -42,12 +43,15 @@ public class ApiInvocationHandler extends SimpleChannelInboundHandler<ApiInvocat
 	private final List<OperationInboundFilter> filters;
 	private final ExceptionHandler exceptionHandler;
 	private final ServerSentEventEncoder serverEventEncoder;
+	private final SyncTaskSubmitter syncTaskSubmitter;
 	
 	@Inject
-	public ApiInvocationHandler(Set<OperationInboundFilter> filters, ExceptionHandler exceptionHandler, ServerSentEventEncoder serverEventEncoder) {
+	public ApiInvocationHandler(Set<OperationInboundFilter> filters, ExceptionHandler exceptionHandler, ServerSentEventEncoder serverEventEncoder,
+			SyncTaskSubmitter syncTaskSubmitter) {
 		this.filters=filters.stream().sorted(PRIORITY_ANN_ORDER).collect(Collectors.toList());
 		this.exceptionHandler=exceptionHandler;
 		this.serverEventEncoder=serverEventEncoder;
+		this.syncTaskSubmitter=syncTaskSubmitter;
 	}
 	
 	@Override
@@ -86,7 +90,7 @@ public class ApiInvocationHandler extends SimpleChannelInboundHandler<ApiInvocat
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private <I,O> DefaultApiInvocationContext<I,O> context(ChannelHandlerContext ctx, ApiInvocation msg) {
-		return new DefaultApiInvocationContext<I,O>(ctx,msg,exceptionHandler,serverEventEncoder);
+		return new DefaultApiInvocationContext<I,O>(ctx,msg,exceptionHandler,serverEventEncoder,syncTaskSubmitter);
 	}
 
 }

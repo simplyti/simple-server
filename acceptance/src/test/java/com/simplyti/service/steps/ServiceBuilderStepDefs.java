@@ -422,6 +422,12 @@ public class ServiceBuilderStepDefs {
 		assertThat(response.body(),equalTo(expected));
 	}
 	
+	@Then("^I check that \"([^\"]*)\" match witch '([^']*)'$")
+	public void iCheckThatMatchWitch(String key, String regex) throws Exception {
+		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(key);
+		assertThat(response.body().matches(regex),equalTo(true));
+	}
+	
 	@Then("^I check that \"([^\"]*)\" has status code (\\d+)$")
 	public void iCheckThatHasStatusCode(String key, int code) throws Exception {
 		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(key);

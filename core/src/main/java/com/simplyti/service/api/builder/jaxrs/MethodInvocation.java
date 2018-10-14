@@ -4,7 +4,6 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -12,8 +11,9 @@ import com.fasterxml.classmate.ResolvedType;
 import com.google.common.collect.Iterables;
 import com.simplyti.service.api.ApiInvocationContext;
 import com.simplyti.service.api.DefaultApiInvocationContext;
+import com.simplyti.service.sync.SyncTaskSubmitter;
 
-import io.vavr.control.Try;
+import io.netty.util.concurrent.Future;
 
 public class MethodInvocation implements Consumer<ApiInvocationContext<Object, Object>> {
 
@@ -22,15 +22,15 @@ public class MethodInvocation implements Consumer<ApiInvocationContext<Object, O
 	private final Object instance;
 	private final Integer contexArgIndex;
 	
-	private final ExecutorService blockingExecutor;
+	private final SyncTaskSubmitter syncTaskSubmitter;
 
 	public MethodInvocation(Map<Integer, RestParam> argumentIndexToRestParam,Integer contexArgIndex, Method method,Object instance,
-			ExecutorService blockingExecutor) {
+			SyncTaskSubmitter syncTaskSubmitter) {
 		this.argumentIndexToRestParam=argumentIndexToRestParam;
 		this.method=method;
 		this.instance=instance;
 		this.contexArgIndex=contexArgIndex;
-		this.blockingExecutor=blockingExecutor;
+		this.syncTaskSubmitter=syncTaskSubmitter;
 	}
 
 	@Override
@@ -54,10 +54,20 @@ public class MethodInvocation implements Consumer<ApiInvocationContext<Object, O
 		
 		if(contexArgIndex!=null){
 			args[contexArgIndex]=new JAXRSApiContext<>(ctx);
-			Try.of(()->method.invoke(instance, args))
-				.onFailure(error->handleMethodException(ctx,error));
+			try{
+				method.invoke(instance, args);
+			}catch(Throwable cause) {
+				ctx.failure(cause);
+			}
 		}else{
-			blockingExecutor.execute(()->handleBlocking(ctx, args));
+			Future<Object> future = syncTaskSubmitter.submit(ctx.executor(),()->method.invoke(instance, args));
+			future.addListener(f->{
+				if(f.isSuccess()) {
+					ctx.send(future.getNow());
+				}else {
+					ctx.failure(future.cause());
+				}
+			});
 		}
 	}
 
@@ -76,16 +86,6 @@ public class MethodInvocation implements Consumer<ApiInvocationContext<Object, O
 		} else {
 			return RestParam.convert(Iterables.getFirst(values, null), resolvedType);
 		} 
-	}
-
-	private void handleMethodException(ApiInvocationContext<Object, Object> ctx, Throwable error) {
-		ctx.failure(error.getCause());
-	}
-
-	private void handleBlocking(ApiInvocationContext<Object, Object> ctx,Object[] args) {
-		Try.of(()->method.invoke(instance, args))
-			.onSuccess(ctx::send)
-			.onFailure(error->handleMethodException(ctx,error));
 	}
 
 }

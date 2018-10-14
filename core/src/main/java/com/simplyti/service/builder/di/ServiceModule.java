@@ -35,6 +35,8 @@ import com.simplyti.service.ssl.IoCSecurityProvider;
 import com.simplyti.service.ssl.sni.DefaultServerCertificateProvider;
 import com.simplyti.service.ssl.sni.SNIKeyManager;
 import com.simplyti.service.ssl.sni.ServerCertificateProvider;
+import com.simplyti.service.sync.DefaultSyncTaskSubmitter;
+import com.simplyti.service.sync.SyncTaskSubmitter;
 import com.simplyti.service.channel.handler.DefaultBackendFullRequestHandler;
 import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;
 
@@ -86,6 +88,7 @@ public class ServiceModule extends AbstractModule {
 		bind(ExceptionHandler.class).in(Singleton.class);
 		
 		bind(ExecutorService.class).toProvider(ExecutorServiceProvider.class).in(Singleton.class);
+		bind(SyncTaskSubmitter.class).to(DefaultSyncTaskSubmitter.class).in(Singleton.class);
 	
 		Multibinder<ApiProvider> mangerAPiProviders = Multibinder.newSetBinder(binder(), ApiProvider.class);
 		Stream.concat(apiClasses.stream(), Stream.of(HealthApi.class))

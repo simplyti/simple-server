@@ -7,9 +7,11 @@ import javax.inject.Inject;
 
 import com.google.common.base.Joiner;
 import com.jsoniter.spi.JsoniterSpi;
+import com.simplyti.service.api.ApiInvocationContext;
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.ApiProvider;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
@@ -17,6 +19,8 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.Promise;
 
 public class APITest implements ApiProvider{
 	
@@ -89,9 +93,17 @@ public class APITest implements ApiProvider{
 			.withResponseBodyType(APITestDTO.class)
 			.then(ctx->ctx.send(new APITestDTO("Typed response")));
 		
+		builder.when().get("/typed/response/future")
+			.withResponseBodyType(APITestDTO.class)
+			.thenFuture(ctx->futureResponse(ctx));
+		
+		builder.when().get("/typed/response/sync")
+			.withResponseBodyType(APITestDTO.class)
+			.thenFuture(ctx->ctx.sync(()->new APITestDTO("Hello from thread "+Thread.currentThread().getName())));
+		
 		builder.when().get("/hello/json")
-		.withResponseBodyType(APITestDTO.class)
-		.then(ctx->ctx.send(new APITestDTO(ctx.queryParam("name"))));
+			.withResponseBodyType(APITestDTO.class)
+			.then(ctx->ctx.send(new APITestDTO(ctx.queryParam("name"))));
 		
 		builder.when().post("/typed/request/response")
 			.withRequestBodyType(APITestDTO.class)
@@ -137,6 +149,12 @@ public class APITest implements ApiProvider{
 			.then(ctx->ctx.send(new SerializedErrorDTO()));
 		
 		builder.usingJaxRSContract(JaxRSAPITest.class);
+	}
+
+	private Future<APITestDTO> futureResponse(ApiInvocationContext<ByteBuf, APITestDTO> ctx) {
+		Promise<APITestDTO> promise = ctx.executor().newPromise();
+		ctx.executor().schedule(()->promise.setSuccess(new APITestDTO("Hello future!")), 10, TimeUnit.MILLISECONDS);
+		return promise;
 	}
 
 	private void throwRuntimeException(String message) {

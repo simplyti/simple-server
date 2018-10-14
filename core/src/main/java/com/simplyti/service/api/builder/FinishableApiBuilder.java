@@ -3,6 +3,7 @@ package com.simplyti.service.api.builder;
 import java.util.Collections;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -11,6 +12,7 @@ import com.simplyti.service.api.ApiInvocationContext;
 import com.simplyti.service.api.ApiOperation;
 
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.util.concurrent.Future;
 
 public abstract class FinishableApiBuilder<I,O> {
 	
@@ -48,6 +50,10 @@ public abstract class FinishableApiBuilder<I,O> {
 		PathPattern pathPattern = PathPattern.build(uri);
 		builder.add(new ApiOperation<I,O>(method, pathPattern.pattern(), pathPattern.pathParamNameToGroup(),consumer,requestType,pathPattern.literalCount(),
 				multipart,noNegative(maxBodyLength,DEFAULT_MAX_BODY),metadata()));
+	}
+	
+	public void thenFuture(Function<ApiInvocationContext<I,O>,Future<O>> futureFunction) {
+		then(new InvocationFutureHandle<I,O>(futureFunction));
 	}
 	
 	private Map<String,String> metadata() {
