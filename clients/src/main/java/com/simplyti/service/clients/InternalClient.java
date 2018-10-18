@@ -1,5 +1,6 @@
 package com.simplyti.service.clients;
 
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import com.simplyti.service.clients.channel.SimpleChannelPoolMap;
@@ -11,6 +12,7 @@ import com.simplyti.service.clients.trace.RequestTracerHandler;
 import com.simplyti.service.commons.Promises;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.group.ChannelGroup;
@@ -99,9 +101,17 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 		if (!future.isSuccess()) {
 			channel.pipeline().fireExceptionCaught(future.cause());
         }else if(timeoutMillis>0) {
-        		ScheduledFuture<?> timeoutTask = channel.eventLoop().schedule(() -> channel.setFailure(ReadTimeoutException.INSTANCE), timeoutMillis, TimeUnit.MILLISECONDS);
+        		ScheduledFuture<?> timeoutTask = channel.eventLoop().schedule(() -> readTimeOutFail(channel), timeoutMillis, TimeUnit.MILLISECONDS);
         		channel.addListener(ignore -> timeoutTask.cancel(false));
         }
+	}
+
+	private void readTimeOutFail(ClientRequestChannel<?> channel) {
+		channel.setFailure(ReadTimeoutException.INSTANCE);
+		for(Entry<String, ChannelHandler> handler:channel.pipeline()){
+			channel.pipeline().remove(handler.getValue());
+		}
+		channel.close();
 	}
 
 	public <T> Future<ClientRequestChannel<T>> channel(ClientConfig config, ClientRequestChannelInitializer<T> clientRequestChannelHandler, Promise<T> resultPromise) {
