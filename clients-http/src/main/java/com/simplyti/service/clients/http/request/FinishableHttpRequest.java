@@ -25,4 +25,8 @@ public interface FinishableHttpRequest {
 
 	FinishableHttpRequest params(Map<String, String> params);
 
+	FinishableHttpRequest param(String name);
+
+	FinishableHttpRequest param(String name, Object value);
+
 }

@@ -27,7 +27,7 @@ public abstract class AbstractFinishableHttpRequest implements FinishableHttpReq
 	private final boolean checkStatusCode;
 	private final ClientConfig config;
 	
-	private final Map<String,String> params;
+	private final Map<String,Object> params;
 	
 	public AbstractFinishableHttpRequest(InternalClient client, boolean checkStatusCode, ClientConfig config) {
 		this.client = client;
@@ -39,6 +39,18 @@ public abstract class AbstractFinishableHttpRequest implements FinishableHttpReq
 	@Override
 	public FinishableHttpRequest params(Map<String, String> params) {
 		this.params.putAll(params);
+		return this;
+	}
+	
+	@Override
+	public FinishableHttpRequest param(String name) {
+		this.params.put(name, null);
+		return this;
+	}
+	
+	@Override
+	public FinishableHttpRequest param(String name, Object value) {
+		this.params.put(name, value);
 		return this;
 	}
 	
@@ -84,7 +96,7 @@ public abstract class AbstractFinishableHttpRequest implements FinishableHttpReq
 		
 		FullHttpRequest request = request0();
 		QueryStringEncoder encoder = new QueryStringEncoder(request.uri());
-		params.forEach(encoder::addParam);
+		params.forEach((name,value)->encoder.addParam(name, value!=null?value.toString():null));
 		return request.setUri(encoder.toString());
 	}
 	
