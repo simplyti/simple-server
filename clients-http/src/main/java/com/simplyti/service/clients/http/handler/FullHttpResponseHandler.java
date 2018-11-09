@@ -62,4 +62,9 @@ public class FullHttpResponseHandler<T> extends HttpObjectAggregator {
 		super.decode(ctx, msg, new ArrayList<>());
 	}
 	
+	@Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+		clientChannel.setFailure(cause);
+    }
+	
 }

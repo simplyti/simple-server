@@ -30,7 +30,9 @@ public class ClientRequestChannel<T> implements Channel {
 	}
 
 	public void setFailure(Throwable cause) {
-		this.resultPromise.setFailure(cause);
+		if(!resultPromise.isDone()) {
+			this.resultPromise.setFailure(cause);
+		}
 	}
 
 	public boolean isDone() {

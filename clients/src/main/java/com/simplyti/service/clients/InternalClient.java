@@ -99,7 +99,11 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 
 	public void handleWriteFuture(ClientRequestChannel<?> channel, Future<?> future, long timeoutMillis) {
 		if (!future.isSuccess()) {
-			channel.pipeline().fireExceptionCaught(future.cause());
+			if(channel.eventLoop().inEventLoop()) {
+				channel.setFailure(future.cause());
+			}else {
+				channel.eventLoop().submit(()->channel.setFailure(future.cause()));
+			}
         }else if(timeoutMillis>0) {
         		ScheduledFuture<?> timeoutTask = channel.eventLoop().schedule(() -> readTimeOutFail(channel), timeoutMillis, TimeUnit.MILLISECONDS);
         		channel.addListener(ignore -> timeoutTask.cancel(false));
