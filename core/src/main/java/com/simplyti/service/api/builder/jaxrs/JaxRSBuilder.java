@@ -37,23 +37,8 @@ public class JaxRSBuilder<I,O> extends FinishableApiBuilder<I, O>{
 
 	@SuppressWarnings("unchecked")
 	public static void build(ApiBuilder builder, Class<?> clazz, Method method, Object instance, SyncTaskSubmitter syncTaskSubmitter) {
-		StringBuilder path = new StringBuilder();
-		boolean hasBasePath=false;
-		if (clazz.isAnnotationPresent(Path.class)) {
-			path.append(trim(clazz.getAnnotation(Path.class).value()));
-			hasBasePath=true;
-		}
-		if(method.isAnnotationPresent(Path.class)) {
-			if(hasBasePath){
-				path.append('/');
-			}
-			path.append(trim(method.getAnnotation(Path.class).value()));
-		}
-		
-		HttpMethod httpMethod = Stream.of(method.getAnnotations())
-				.filter(ann -> ann.annotationType().isAnnotationPresent(javax.ws.rs.HttpMethod.class))
-				.map(ann -> ann.annotationType().getAnnotation(javax.ws.rs.HttpMethod.class).value())
-				.map(HttpMethod::valueOf).findFirst().get();
+		String path = path(clazz,method);
+		HttpMethod httpMethod = method(method);
 		
 		Builder<Integer, RestParam> argumentIndexToRestParam = ImmutableMap.<Integer, RestParam>builder();
 		Annotation[][] parameterAnnotations = method.getParameterAnnotations();
@@ -83,6 +68,29 @@ public class JaxRSBuilder<I,O> extends FinishableApiBuilder<I, O>{
 		jaxrsBuilder.then(new MethodInvocation(argumentIndexToRestParam.build(),contexArgIndex,method,instance,syncTaskSubmitter));
 	}
 	
+	public static HttpMethod method(Method method) {
+		return Stream.of(method.getAnnotations())
+		.filter(ann -> ann.annotationType().isAnnotationPresent(javax.ws.rs.HttpMethod.class))
+		.map(ann -> ann.annotationType().getAnnotation(javax.ws.rs.HttpMethod.class).value())
+		.map(HttpMethod::valueOf).findFirst().orElse(null);
+	}
+
+	public static String path(Class<?> clazz, Method method) {
+		StringBuilder path = new StringBuilder();
+		boolean hasBasePath=false;
+		if (clazz.isAnnotationPresent(Path.class)) {
+			path.append(trim(clazz.getAnnotation(Path.class).value()));
+			hasBasePath=true;
+		}
+		if(method.isAnnotationPresent(Path.class)) {
+			if(hasBasePath){
+				path.append('/');
+			}
+			path.append(trim(method.getAnnotation(Path.class).value()));
+		}
+		return path.toString();
+	}
+
 	private static String trim(String value) {
 		return value.replaceAll("^/+", StringUtil.EMPTY_STRING)
 				.replaceAll("/+$",  StringUtil.EMPTY_STRING);
