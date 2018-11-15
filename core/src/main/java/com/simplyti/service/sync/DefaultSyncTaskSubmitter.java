@@ -20,13 +20,13 @@ private final ExecutorService executor;
 	
 	public Future<Void> submit(EventExecutor executor, VoidCallable task) {
 		Promise<Void> promise = executor.newPromise();
-		this.executor.submit(new CatcExceptionVoidCall(task,promise));
+		this.executor.execute(new CatcExceptionVoidCall(task,promise));
 		return promise;
 	}
 
 	public <T> Future<T> submit(EventExecutor executor, Callable<T> task) {
 		Promise<T> promise = executor.newPromise();
-		this.executor.submit(new CatcExceptionCall<>(task,promise));
+		this.executor.execute(new CatcExceptionCall<>(task,promise));
 		return promise;
 	}
 	
