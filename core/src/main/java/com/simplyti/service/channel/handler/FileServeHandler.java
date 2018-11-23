@@ -21,6 +21,7 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.QueryStringDecoder;
 
 @Sharable
 public class FileServeHandler extends SimpleChannelInboundHandler<HttpRequest> {
@@ -45,7 +46,7 @@ public class FileServeHandler extends SimpleChannelInboundHandler<HttpRequest> {
 			return;
 		}
 		
-		Matcher matcher = pattern.matcher(request.uri());
+		Matcher matcher = pattern.matcher(new QueryStringDecoder(request.uri()).path());
 		matcher.matches();
 		String path = directoryResolver.resolve(matcher) + File.separatorChar + matcher.group(1);
 		fileServer.serve(path, ctx.channel(), request);
