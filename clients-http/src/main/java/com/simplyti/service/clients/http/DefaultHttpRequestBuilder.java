@@ -97,6 +97,14 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 		headers.add(HttpHeaderNames.HOST,config.endpoint().address().host());
 		return new DefaultFinishableBodyHttpRequest(client,checkStatusCode,HttpMethod.PUT,uri,headers,config);
 	}
+	
+	@Override
+	public FinishableHttpRequest options(String uri) {
+		ClientConfig config = config();
+		headers.add(HttpHeaderNames.HOST,config.endpoint().address().host());
+		FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.OPTIONS, uri, Unpooled.EMPTY_BUFFER, headers,EmptyHttpHeaders.INSTANCE);
+		return new DefaultFinishableHttpRequest(client,checkStatusCode,request,config);
+	}
 
 	@Override
 	public FinishableHttpRequest sendFull(FullHttpRequest request) {
