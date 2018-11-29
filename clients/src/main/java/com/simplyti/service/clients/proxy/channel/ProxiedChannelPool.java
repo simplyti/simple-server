@@ -3,6 +3,7 @@ package com.simplyti.service.clients.proxy.channel;
 import com.simplyti.service.clients.proxy.Proxy;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.pool.ChannelHealthChecker;
 import io.netty.channel.pool.ChannelPoolHandler;
 import io.netty.channel.pool.SimpleChannelPool;
 import io.netty.channel.ChannelFuture;
@@ -13,8 +14,8 @@ public class ProxiedChannelPool extends SimpleChannelPool {
 
 	private ProxyHandlerInitializer proxyHandlerInitializer;
 
-	public ProxiedChannelPool(Bootstrap bootstrap, ChannelPoolHandler handler, Proxy proxy) {
-		super(bootstrap, handler);
+	public ProxiedChannelPool(Bootstrap bootstrap, ChannelPoolHandler handler, Proxy proxy, ChannelHealthChecker check) {
+		super(bootstrap, handler,check);
 		this.proxyHandlerInitializer=new ProxyHandlerInitializer(handler,proxy);
 	}
 
