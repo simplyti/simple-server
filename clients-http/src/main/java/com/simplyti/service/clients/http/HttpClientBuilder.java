@@ -1,10 +1,11 @@
 package com.simplyti.service.clients.http;
 
+import com.simplyti.service.clients.ClientBuilder;
 import com.simplyti.service.clients.Endpoint;
 
 import io.netty.channel.EventLoopGroup;
 
-public class HttpClientBuilder {
+public class HttpClientBuilder extends ClientBuilder<HttpClientBuilder>{
 
 	private EventLoopGroup eventLoopGroup;
 	private Endpoint endpoint;
@@ -16,7 +17,7 @@ public class HttpClientBuilder {
 	}
 
 	public HttpClient build() {
-		return new DefaultHttpClient(eventLoopGroup,endpoint,checkStatusCode);
+		return new DefaultHttpClient(eventLoopGroup,endpoint,checkStatusCode,poolConfig);
 	}
 
 	public HttpClientBuilder withEndpoint(Endpoint endpoint) {

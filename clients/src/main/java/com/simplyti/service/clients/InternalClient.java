@@ -1,5 +1,7 @@
 package com.simplyti.service.clients;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
@@ -17,14 +19,18 @@ import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.channel.pool.ChannelHealthChecker;
 import io.netty.channel.pool.ChannelPool;
 import io.netty.channel.pool.ChannelPoolHandler;
 import io.netty.handler.timeout.ReadTimeoutException;
+import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.ScheduledFuture;
 
-public class InternalClient implements ClientMonitor, ClientMonitorHandler {
+public class InternalClient implements ClientMonitor, ClientMonitorHandler, ChannelHealthChecker {
+	
+	private static final AttributeKey<Instant> LAST_USAGE = AttributeKey.newInstance("last.usage");
 
 	private final EventLoopGroup eventLoopGroup;
 	private final SimpleChannelPoolMap channelPoolMap;
@@ -33,14 +39,17 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 	private final ChannelGroup activeChannels;
 	private final ChannelGroup iddleChannels;
 
+	private PoolConfig poolConfig;
 
-	public InternalClient(EventLoopGroup eventLoopGroup, ChannelPoolHandler poolHandler) {
+
+	public InternalClient(EventLoopGroup eventLoopGroup, ChannelPoolHandler poolHandler, PoolConfig poolConfig) {
 		this.eventLoopGroup = eventLoopGroup;
 		EventLoop channelGroupsEventLoop = eventLoopGroup.next();
 		this.allChannels=new DefaultChannelGroup(channelGroupsEventLoop);
 		this.activeChannels=new DefaultChannelGroup(channelGroupsEventLoop);
 		this.iddleChannels=new DefaultChannelGroup(channelGroupsEventLoop);
-		this.channelPoolMap = new SimpleChannelPoolMap(eventLoopGroup, new MonitoredHandler(this, poolHandler));
+		this.channelPoolMap = new SimpleChannelPoolMap(eventLoopGroup, new MonitoredHandler(this, poolHandler), this);
+		this.poolConfig = poolConfig;
 	}
 	
 	public ChannelPool pool(Endpoint endpoint) {
@@ -48,6 +57,7 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 	}
 	
 	public void released(Channel ch) {
+		ch.attr(LAST_USAGE).set(Instant.now());
 		activeChannels.remove(ch);
 		iddleChannels.add(ch);
 	}
@@ -55,6 +65,26 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler {
 	public void acquired(Channel ch) {
 		iddleChannels.remove(ch);
 		activeChannels.add(ch);
+	}
+	
+	@Override
+	public Future<Boolean> isHealthy(Channel ch) {
+		EventLoop loop = ch.eventLoop();
+		if(ch.isActive()) {
+			final Instant lastUsage = ch.attr(LAST_USAGE).getAndSet(Instant.now());
+			if(poolConfig==null || poolConfig.maxIdle() <0 || lastUsage == null) {
+				return loop.newSucceededFuture(Boolean.TRUE);
+			}else {
+				long iddleTime = ChronoUnit.SECONDS.between(lastUsage, Instant.now());
+				if(iddleTime<=this.poolConfig.maxIdle() ) {
+					return loop.newSucceededFuture(Boolean.TRUE);
+				}else {
+					return loop.newSucceededFuture(Boolean.FALSE);
+				}
+			}
+		}else {
+			return loop.newSucceededFuture(Boolean.FALSE);
+		}
 	}
 
 	public void created(Channel ch) {

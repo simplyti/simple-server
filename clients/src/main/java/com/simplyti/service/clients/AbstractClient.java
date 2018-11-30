@@ -11,8 +11,8 @@ public abstract class AbstractClient<B extends ClientRequestBuilder<B>> implemen
 	
 	private final InternalClient internalClient;
 
-	public AbstractClient(EventLoopGroup eventLoopGroup, ChannelPoolHandler poolHandler) {
-		this.internalClient = new InternalClient(eventLoopGroup, poolHandler);
+	public AbstractClient(EventLoopGroup eventLoopGroup, ChannelPoolHandler poolHandler, PoolConfig poolConfig) {
+		this.internalClient = new InternalClient(eventLoopGroup, poolHandler, poolConfig);
 	}
 
 	@Override

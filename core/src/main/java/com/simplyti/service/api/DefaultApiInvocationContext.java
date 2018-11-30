@@ -14,6 +14,7 @@ import com.simplyti.service.sse.DefaultSSEStream;
 import com.simplyti.service.sse.SSEStream;
 import com.simplyti.service.sse.ServerSentEventEncoder;
 import com.simplyti.service.sync.SyncTaskSubmitter;
+import com.simplyti.service.sync.VoidCallable;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DefaultByteBufHolder;
@@ -191,6 +192,11 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 
 	@Override
 	public Future<O> sync(Callable<O> task) {
+		return syncTaskSubmitter.submit(ctx.executor(), task);
+	}
+	
+	@Override
+	public Future<Void> sync(VoidCallable task) {
 		return syncTaskSubmitter.submit(ctx.executor(), task);
 	}
 

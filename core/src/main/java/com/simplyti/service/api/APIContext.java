@@ -2,6 +2,8 @@ package com.simplyti.service.api;
 
 import java.util.concurrent.Callable;
 
+import com.simplyti.service.sync.VoidCallable;
+
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
@@ -15,6 +17,7 @@ public interface APIContext<T> {
 	public Future<Void> failure(Throwable error);
 	
 	public Future<T> sync(Callable<T> task);
+	public Future<Void> sync(VoidCallable task);
 	
 	public Channel channel();
 	public EventExecutor executor();

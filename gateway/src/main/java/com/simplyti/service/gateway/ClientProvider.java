@@ -15,7 +15,7 @@ public class ClientProvider implements Provider<InternalClient>{
 	
 	@Override
 	public InternalClient get() {
-		return new InternalClient(eventLoopGroup,new ProxyClientChannelPoolHandler());
+		return new InternalClient(eventLoopGroup,new ProxyClientChannelPoolHandler(),null);
 	}
 
 }
