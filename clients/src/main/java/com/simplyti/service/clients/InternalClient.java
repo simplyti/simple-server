@@ -40,6 +40,10 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler, Chan
 	private final ChannelGroup iddleChannels;
 
 	private PoolConfig poolConfig;
+	
+	public InternalClient(EventLoopGroup eventLoopGroup, ChannelPoolHandler poolHandler) {
+		this(eventLoopGroup,poolHandler,null);
+	}
 
 
 	public InternalClient(EventLoopGroup eventLoopGroup, ChannelPoolHandler poolHandler, PoolConfig poolConfig) {

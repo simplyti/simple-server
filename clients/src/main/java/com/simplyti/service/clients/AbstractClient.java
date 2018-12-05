@@ -10,6 +10,10 @@ import io.netty.util.concurrent.Future;
 public abstract class AbstractClient<B extends ClientRequestBuilder<B>> implements Client<B> {
 	
 	private final InternalClient internalClient;
+	
+	public AbstractClient(EventLoopGroup eventLoopGroup, ChannelPoolHandler poolHandler) {
+		this(eventLoopGroup,poolHandler,null);
+	}
 
 	public AbstractClient(EventLoopGroup eventLoopGroup, ChannelPoolHandler poolHandler, PoolConfig poolConfig) {
 		this.internalClient = new InternalClient(eventLoopGroup, poolHandler, poolConfig);
