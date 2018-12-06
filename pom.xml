@@ -44,7 +44,7 @@
 		<groovy-maven-plugin.version>2.0</groovy-maven-plugin.version>
 		<nexus-staging-maven-plugin.version>1.6.8</nexus-staging-maven-plugin.version>
 
-		<releasing>false</releasing>
+		<stagingId>simplyti-${project.artifactId}</stagingId>
 		
 		<!-- Lombok -->
 		<lombok.version>1.16.20</lombok.version>
@@ -125,19 +125,12 @@
 					<version>${groovy-maven-plugin.version}</version>
 				</plugin>
 				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-deploy-plugin</artifactId>
-					<configuration>
-						<skip>${releasing}</skip>
-					</configuration>
-				</plugin>
-				<plugin>
 					<groupId>org.sonatype.plugins</groupId>
 					<artifactId>nexus-staging-maven-plugin</artifactId>
 					<version>${nexus-staging-maven-plugin.version}</version>
 					<extensions>true</extensions>
 					<configuration>
-						<skipStaging>${!releasing}</skipStaging>
+						<stagingRepositoryId>${stagingId}</stagingRepositoryId>
 						<serverId>ossrh</serverId>
 						<nexusUrl>https://oss.sonatype.org/service/local/staging/deploy/maven2</nexusUrl>
 					</configuration>
