@@ -30,6 +30,8 @@ public interface HttpRequestBuilder extends ClientRequestBuilder<HttpRequestBuil
 	
 	public FinishableBodyHttpRequest put(String path);
 	
+	public FinishableBodyHttpRequest patch(String path);
+	
 	public FinishableHttpRequest options(String path);
 
 	public FinishableHttpRequest sendFull(FullHttpRequest request);

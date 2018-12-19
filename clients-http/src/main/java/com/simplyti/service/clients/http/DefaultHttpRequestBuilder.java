@@ -99,6 +99,13 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 	}
 	
 	@Override
+	public FinishableBodyHttpRequest patch(String uri) {
+		ClientConfig config = config();
+		headers.add(HttpHeaderNames.HOST,config.endpoint().address().host());
+		return new DefaultFinishableBodyHttpRequest(client,checkStatusCode,HttpMethod.PATCH,uri,headers,config);
+	}
+	
+	@Override
 	public FinishableHttpRequest options(String uri) {
 		ClientConfig config = config();
 		headers.add(HttpHeaderNames.HOST,config.endpoint().address().host());
