@@ -33,11 +33,11 @@ Scenario: New connection are created if needed
 Scenario: Request timeout
 	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
 	Then I check that "#serviceFuture" is success
+	When I post "/echo/delay?millis=500" with body "Hey!" and response time 200 getting response "#response"
+	Then I check that "#response" is failure
 	When I post "/echo/delay?millis=500" with body "Hey!" and response time 700 getting response "#response"
 	And I check that "#response" is success
 	And I check that http response "#response" has body "Hey!"
-	When I post "/echo/delay?millis=500" with body "Hey!" and response time 200 getting response "#response"
-	Then I check that "#response" is failure
 	
 Scenario: Connection error
 	When I get "/hello" getting response "#response"

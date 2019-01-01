@@ -522,8 +522,8 @@ public class ServiceBuilderStepDefs {
 	public void iCheckThatContainsHeaderEqualsToDate(String key, String header, String datekey) throws Exception {
 		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(key);
 		assertThat(response.headers().contains(header),equalTo(true));
-		Instant date = Instant.from(CACHE_DATE_PATTERN.parse(response.headers().get(header)));
-		assertThat(date.toEpochMilli(),equalTo(scenarioData.get(datekey)));
+		String date = CACHE_DATE_PATTERN.format(ZonedDateTime.ofInstant(Instant.ofEpochMilli((long) scenarioData.get(datekey)),ZoneId.of("GMT")));
+		assertThat(response.headers().get(header),equalTo(date));
 	}
 	
 	@When("^I send a \\\"([^\\s]*) ([^\"]*)\\\" with if-modified-since header \"([^\"]*)\" getting \"([^\"]*)\"$")

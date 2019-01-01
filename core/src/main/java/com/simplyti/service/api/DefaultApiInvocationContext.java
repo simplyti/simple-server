@@ -1,5 +1,6 @@
 package com.simplyti.service.api;
 
+import java.nio.channels.ClosedChannelException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -26,6 +27,7 @@ import io.netty.handler.codec.http.multipart.FileUpload;
 import io.netty.handler.codec.http.multipart.HttpPostMultipartRequestDecoder;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType;
 import io.netty.util.CharsetUtil;
+import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.Future;
 
@@ -72,8 +74,13 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 	@Override
 	public Future<Void> send(O response) {
 		tryRelease();
-		return ctx.writeAndFlush(new ApiResponse(response,msg.isKeepAlive()))
-			.addListener(this::writeListener);
+		if(ctx.channel().isActive()) {
+			return ctx.writeAndFlush(new ApiResponse(response,msg.isKeepAlive()))
+					.addListener(this::writeListener);
+		}else {
+			ReferenceCountUtil.release(response);
+			return failure(new ClosedChannelException());
+		}
 	}
 	
 	private void release0() {

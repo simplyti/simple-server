@@ -12,11 +12,13 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.CharsetUtil;
+import io.netty.util.ReferenceCountUtil;
 
 public class NotFoundHandler extends DefaultBackendRequestHandler {
 	
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
+		ReferenceCountUtil.release(msg);
 		if(msg instanceof LastHttpContent) {
 			ByteBuf body = Unpooled.copiedBuffer("This is a custom handler", CharsetUtil.UTF_8);
 			FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND,body);
