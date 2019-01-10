@@ -25,5 +25,9 @@ public class MethodApiBuilder {
 	public TypeableRequestFinishableApiBuilder put(String uri) {
 		return new TypeableRequestFinishableApiBuilder(builder,HttpMethod.PUT,uri);
 	}
+	
+	public TypeableRequestFinishableApiBuilder patch(String uri) {
+		return new TypeableRequestFinishableApiBuilder(builder,HttpMethod.PATCH,uri);
+	}
 
 }

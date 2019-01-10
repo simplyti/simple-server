@@ -17,6 +17,7 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.ReferenceCountUtil;
@@ -84,7 +85,7 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 			this.upgrading=true;
 		}
 		
-		if(msg instanceof LastHttpContent) {
+		if(!isContinue(msg) && msg instanceof LastHttpContent) {
 			if(!upgrading) {
 				currentHandlers.forEach(handler->ctx.pipeline().remove(handler));
 				currentHandlers.clear();
@@ -102,6 +103,10 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 			});
 		}
 		ctx.write(msg, promise);
+	}
+
+	private boolean isContinue(Object msg) {
+		return msg instanceof HttpResponse && ((HttpResponse) msg).status().equals(HttpResponseStatus.CONTINUE);
 	}
 	
 }
