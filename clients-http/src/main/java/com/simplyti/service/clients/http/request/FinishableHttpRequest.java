@@ -7,6 +7,7 @@ import java.util.function.Function;
 import com.simplyti.service.clients.http.sse.ServerEvent;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.util.concurrent.Future;
@@ -19,6 +20,7 @@ public interface FinishableHttpRequest {
 
 	Future<Void> forEach(Consumer<HttpObject> consumer);
 
+	Future<Void> stream(String handlerName, ChannelHandler handler);
 	Future<Void> stream(Consumer<ByteBuf> consumer);
 	
 	Future<Void> sse(Consumer<ServerEvent> consumer);

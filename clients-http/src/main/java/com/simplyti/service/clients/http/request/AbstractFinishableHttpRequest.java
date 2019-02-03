@@ -15,6 +15,7 @@ import com.simplyti.service.clients.http.handler.StreamResponseHandler;
 import com.simplyti.service.clients.http.sse.ServerEvent;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpObject;
@@ -79,6 +80,14 @@ public abstract class AbstractFinishableHttpRequest implements FinishableHttpReq
 	public Future<Void> stream(Consumer<ByteBuf> consumer) {
 		return client.channel(channel->{
 			channel.pipeline().addLast(new StreamResponseHandler(channel,consumer));
+		},request(),config);
+	}
+	
+	@Override
+	public Future<Void> stream(String handlerName, ChannelHandler handler) {
+		return client.channel(channel->{
+			channel.pipeline().addLast(new StreamResponseHandler(channel,null));
+			channel.pipeline().addLast(handlerName,handler);
 		},request(),config);
 	}
 	

@@ -30,7 +30,11 @@ public class StreamResponseHandler extends SimpleChannelInboundHandler<HttpObjec
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, HttpObject msg) throws Exception {
 		if(msg instanceof HttpContent && ((HttpContent) msg).content().isReadable()) {
-			consumer.accept(((HttpContent) msg).content());
+			if(consumer!=null) {
+				consumer.accept(((HttpContent) msg).content());
+			}else {
+				ctx.fireChannelRead(((HttpContent) msg).content().retain());
+			}
 		}
 		if(msg instanceof LastHttpContent) {
 			clientChannel.setSuccess(null);

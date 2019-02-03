@@ -17,6 +17,7 @@ import com.simplyti.service.aws.lambda.AWSLambda;
 import com.simplyti.service.client.DefaultSimpleHttpClient;
 import com.simplyti.service.client.SimpleHttpClient;
 import com.simplyti.service.clients.http.HttpClient;
+import com.simplyti.service.clients.k8s.KubeClient;
 
 import cucumber.runtime.java.guice.InjectorSource;
 import cucumber.runtime.java.guice.ScenarioScoped;
@@ -46,6 +47,11 @@ public class CustomInjectorSource extends AbstractModule implements InjectorSour
 		bind(new TypeLiteral<Map<String,Object>>(){}).toProvider(Maps::newHashMap).in(ScenarioScoped.class);
 		bind(new TypeLiteral<List<Future<DefaultService>>>(){}).toProvider(ArrayList::new).in(ScenarioScoped.class);
 		bind(new TypeLiteral<List<AWSLambda>>(){}).toProvider(ArrayList::new).in(ScenarioScoped.class);
+		bind(KubeClient.class).annotatedWith(Names.named("singleton"))
+		.toInstance(KubeClient.builder()
+			.eventLoopGroup(eventLoopGroup)
+			.server("http://localhost:8082")
+		.build());
 	}
 	
 

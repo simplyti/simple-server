@@ -42,12 +42,16 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 	private final DefaultHttpHeaders headers;
 	private boolean checkStatusCode;
 
-	public DefaultHttpRequestBuilder(InternalClient target, Endpoint endpoint,boolean checkStatusCode) {
+	public DefaultHttpRequestBuilder(InternalClient target, Endpoint endpoint,String bearerAuth,boolean checkStatusCode) {
 		super(endpoint);
 		this.client=target;
 		this.endpoint=endpoint;
 		this.checkStatusCode=checkStatusCode;
 		this.headers = new DefaultHttpHeaders(true);
+		
+		if(bearerAuth!=null) {
+			this.headers.set(HttpHeaderNames.AUTHORIZATION, "Bearer "+bearerAuth);
+		}
 	}
 	
 	@Override

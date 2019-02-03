@@ -11,17 +11,19 @@ public class DefaultHttpClient extends AbstractClient<HttpRequestBuilder> implem
 
 	private final boolean checkStatusCode;
 	private final Endpoint endpoint;
+	private final String bearerAuth;
 
-	public DefaultHttpClient(EventLoopGroup eventLoopGroup, Endpoint endpoint, boolean checkStatusCode,
+	public DefaultHttpClient(EventLoopGroup eventLoopGroup, Endpoint endpoint, String bearerAuth, boolean checkStatusCode,
 			PoolConfig poolConfig) {
 		super(eventLoopGroup,new HttpChannelInitializer(),poolConfig);
 		this.checkStatusCode=checkStatusCode;
 		this.endpoint=endpoint;
+		this.bearerAuth=bearerAuth;
 	}
 
 	@Override
 	public HttpRequestBuilder request() {
-		return new DefaultHttpRequestBuilder(client(),endpoint,checkStatusCode);
+		return new DefaultHttpRequestBuilder(client(),endpoint,bearerAuth,checkStatusCode);
 	}
 
 }

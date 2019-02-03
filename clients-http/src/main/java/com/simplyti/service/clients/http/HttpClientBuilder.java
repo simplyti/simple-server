@@ -10,6 +10,7 @@ public class HttpClientBuilder extends ClientBuilder<HttpClientBuilder>{
 	private EventLoopGroup eventLoopGroup;
 	private Endpoint endpoint;
 	private boolean checkStatusCode;
+	private String bearerAuth;
 
 	public HttpClientBuilder eventLoopGroup(EventLoopGroup eventLoopGroup) {
 		this.eventLoopGroup = eventLoopGroup;
@@ -17,7 +18,7 @@ public class HttpClientBuilder extends ClientBuilder<HttpClientBuilder>{
 	}
 
 	public HttpClient build() {
-		return new DefaultHttpClient(eventLoopGroup,endpoint,checkStatusCode,poolConfig);
+		return new DefaultHttpClient(eventLoopGroup,endpoint,bearerAuth,checkStatusCode,poolConfig);
 	}
 
 	public HttpClientBuilder withEndpoint(Endpoint endpoint) {
@@ -27,6 +28,11 @@ public class HttpClientBuilder extends ClientBuilder<HttpClientBuilder>{
 	
 	public HttpClientBuilder withCheckStatusCode() {
 		checkStatusCode = true;
+		return this;
+	}
+
+	public HttpClientBuilder withBearerAuth(String bearerAuth) {
+		this.bearerAuth=bearerAuth;
 		return this;
 	}
 

@@ -205,11 +205,20 @@
 		</dependency>
 		<dependency>
 			<groupId>com.simplyti.cloud</groupId>
+			<artifactId>simple-server-clients-k8s</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.simplyti.cloud</groupId>
 			<artifactId>simple-server-aws-lambda</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 
 		<!-- Integration Tests -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>io.cucumber</groupId>
 			<artifactId>cucumber-junit</artifactId>
