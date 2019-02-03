@@ -28,3 +28,51 @@ services:
     image: minimum2scp/squid
     ports:
     - "3128:3128"
+    
+  etcd:
+    image: quay.io/coreos/etcd:v3.3.1
+    restart: on-failure
+    command:
+    - /usr/local/bin/etcd
+    - --name=etcd0
+    - --advertise-client-urls=http://127.0.0.1:2379
+    - --listen-client-urls=http://0.0.0.0:2379
+    - --initial-advertise-peer-urls=http://127.0.0.1:2380
+    - --listen-peer-urls=http://0.0.0.0:2380
+    - --initial-cluster-token=etcd-cluster-1
+    - --initial-cluster-state=new
+
+  apiserver:
+    image: gcr.io/google_containers/hyperkube:v1.10.9
+    restart: on-failure
+    command:
+    - /hyperkube
+    - apiserver
+    - --insecure-bind-address=0.0.0.0
+    - --service-cluster-ip-range=10.10.0.0/16
+    - --etcd-servers=http://etcd:2379
+    - --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota
+    - --client-ca-file=/var/run/kubernetes/apiserver.crt
+    - --service-account-key-file=/var/run/kubernetes/apiserver.key
+    - --v=1
+    ports:
+    - 8082:8080
+    volumes:
+    - master:/var/run/kubernetes:rw
+    
+  controller-manager:
+    image: gcr.io/google_containers/hyperkube:v1.10.9
+    restart: on-failure
+    command:
+    - /hyperkube
+    - controller-manager
+    - --master=http://apiserver:8080
+    - --leader-elect=true
+    - --root-ca-file=/var/run/kubernetes/apiserver.crt
+    - --service-account-private-key-file=/var/run/kubernetes/apiserver.key
+    - --v=1
+    volumes:
+    - master:/var/run/kubernetes:rw
+    
+volumes:
+  master:
