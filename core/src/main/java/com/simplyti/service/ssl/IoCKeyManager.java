@@ -1,4 +1,4 @@
-package com.simplyti.service.ssl.sni;
+package com.simplyti.service.ssl;
 
 import java.net.Socket;
 import java.security.Principal;
@@ -15,7 +15,7 @@ import javax.net.ssl.X509ExtendedKeyManager;
 
 import com.google.common.base.Predicates;
 
-public class SNIKeyManager extends X509ExtendedKeyManager {
+public class IoCKeyManager extends X509ExtendedKeyManager {
 
 	private static final String DEFAULT = "default";
 	
@@ -23,7 +23,7 @@ public class SNIKeyManager extends X509ExtendedKeyManager {
 	private final Optional<ServerCertificateProvider> certProvider;
 
 	@Inject
-	public SNIKeyManager(Optional<DefaultServerCertificateProvider> defaultProvider, Optional<ServerCertificateProvider> certProvider) {
+	public IoCKeyManager(Optional<DefaultServerCertificateProvider> defaultProvider, Optional<ServerCertificateProvider> certProvider) {
 		this.defaultProvider = defaultProvider.orElse(new SelfSignedServerCertificateProvider());
 		this.certProvider=certProvider;
 	}
@@ -51,6 +51,7 @@ public class SNIKeyManager extends X509ExtendedKeyManager {
 		}
 	}
 
+	@Override
 	public String chooseEngineServerAlias(String keyType, Principal[] issuers, SSLEngine engine) {
 		String hostname = retrieveHostName(engine);
 		if (hostname != null) {

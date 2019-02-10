@@ -2,13 +2,17 @@ package com.simplyti.service.exception;
 
 import java.io.FileNotFoundException;
 
+import javax.ws.rs.WebApplicationException;
+
 import com.simplyti.service.channel.ClientChannelGroup;
+import com.simplyti.service.jaxrs.SimpleResponse;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.concurrent.Future;
@@ -20,29 +24,35 @@ public class ExceptionHandler {
 	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
 
 	public Future<Void> exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-		if (cause instanceof ServiceException) {
-			return writeError(ctx, ((ServiceException) cause).status());
+		if(cause instanceof WebApplicationException) {
+			SimpleResponse response = (SimpleResponse) ((WebApplicationException) cause).getResponse();
+			return writeResponse(ctx, response.responseStatus(),response.headers());
+		} else if (cause instanceof ServiceException) {
+			return writeResponse(ctx, ((ServiceException) cause).status(),null);
 		} else if (cause instanceof FileNotFoundException) {
-			return writeError(ctx, HttpResponseStatus.NOT_FOUND);
+			return writeResponse(ctx, HttpResponseStatus.NOT_FOUND,null);
 		} else {
 			log.error("Error ocurred during service execution", cause);
 			if(ctx.channel().attr(ClientChannelGroup.IN_PROGRESS).get()) {
-				return writeError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+				return writeResponse(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR,null);
 			}else {
 				return ctx.channel().newSucceededFuture();
 			}
 		}
 	}
 
-	private Future<Void> writeError(ChannelHandlerContext ctx, HttpResponseStatus status) {
-		return ctx.writeAndFlush(error(status));
+	private Future<Void> writeResponse(ChannelHandlerContext ctx, HttpResponseStatus status, HttpHeaders headers) {
+		return ctx.writeAndFlush(response(status,headers));
 	}
 
-	private FullHttpResponse error(HttpResponseStatus statusCode) {
-		FullHttpResponse internalServerError = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, statusCode,
+	private FullHttpResponse response(HttpResponseStatus statusCode, HttpHeaders headers) {
+		FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, statusCode,
 				Unpooled.EMPTY_BUFFER);
-		internalServerError.headers().add(HttpHeaderNames.CONTENT_LENGTH, 0);
-		return internalServerError;
+		if(headers!=null) {
+			response.headers().add(headers);
+		}
+		response.headers().set(HttpHeaderNames.CONTENT_LENGTH, 0);
+		return response;
 	}
 
 }

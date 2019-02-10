@@ -3,6 +3,7 @@ package com.simplyti.service.exception;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 
+@Deprecated
 @SuppressWarnings("serial")
 public class BadRequestException extends ServiceException {
 	

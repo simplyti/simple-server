@@ -25,7 +25,7 @@ Scenario: Request with valid JWT gets 200 status
 	And I check that "#response" has status code 200
 	Then I check that "#response" is equals to "Hello OIDC!"
 	
-Scenario: Request with an invalid JWT gets 401 status
+Scenario: Request with an invalid JWT gets 403 status
 	Given a JWT sign key "#key"
 	And an invalid JWT token "#token" signed with alg "HS512"
 	When I start a service "#serviceFuture" with options:
@@ -35,9 +35,9 @@ Scenario: Request with an invalid JWT gets 401 status
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /hello" with jwt token "#token" getting "#response"
-	And I check that "#response" has status code 401
+	And I check that "#response" has status code 403
 	
-Scenario: Request with a malformed JWT gets 401 status
+Scenario: Request with a malformed JWT gets 403 status
 	Given a JWT sign key "#key"
 	And a malformed JWT token "#token"
 	When I start a service "#serviceFuture" with options:
@@ -47,7 +47,7 @@ Scenario: Request with a malformed JWT gets 401 status
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /hello" with jwt token "#token" getting "#response"
-	And I check that "#response" has status code 401
+	And I check that "#response" has status code 403
 	
 Scenario: Request with no auth required gets 200
     Given a JWT sign key "#key"

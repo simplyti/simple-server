@@ -45,7 +45,7 @@
 		<nexus-staging-maven-plugin.version>1.6.8</nexus-staging-maven-plugin.version>
 
 		<!-- Lombok -->
-		<lombok.version>1.16.22</lombok.version>
+		<lombok.version>1.18.4</lombok.version>
 
 		<!-- IoC -->
 		<guice.version>4.2.0</guice.version>

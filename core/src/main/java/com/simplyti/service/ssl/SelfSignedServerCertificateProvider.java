@@ -1,4 +1,4 @@
-package com.simplyti.service.ssl.sni;
+package com.simplyti.service.ssl;
 
 import java.security.cert.X509Certificate;
 

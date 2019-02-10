@@ -17,6 +17,7 @@ import com.google.inject.multibindings.OptionalBinder;
 import com.simplyti.service.Service;
 import com.simplyti.service.ServerConfig;
 import com.simplyti.service.api.builder.ApiProvider;
+import com.simplyti.service.api.filter.HttpRequetFilter;
 import com.simplyti.service.api.filter.HttpResponseFilter;
 import com.simplyti.service.api.filter.OperationInboundFilter;
 import com.simplyti.service.api.health.HealthApi;
@@ -29,12 +30,12 @@ import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.hook.ServerStartHook;
 import com.simplyti.service.hook.ServerStopHook;
 import com.simplyti.service.sse.ServerSentEventEncoder;
+import com.simplyti.service.ssl.DefaultServerCertificateProvider;
+import com.simplyti.service.ssl.IoCKeyManager;
 import com.simplyti.service.ssl.IoCKeyManagerFactory;
 import com.simplyti.service.ssl.IoCKeyManagerFactorySpi;
 import com.simplyti.service.ssl.IoCSecurityProvider;
-import com.simplyti.service.ssl.sni.DefaultServerCertificateProvider;
-import com.simplyti.service.ssl.sni.SNIKeyManager;
-import com.simplyti.service.ssl.sni.ServerCertificateProvider;
+import com.simplyti.service.ssl.ServerCertificateProvider;
 import com.simplyti.service.sync.DefaultSyncTaskSubmitter;
 import com.simplyti.service.sync.SyncTaskSubmitter;
 import com.simplyti.service.channel.handler.DefaultBackendFullRequestHandler;
@@ -94,6 +95,7 @@ public class ServiceModule extends AbstractModule {
 		Stream.concat(apiClasses.stream(), Stream.of(HealthApi.class))
 			.forEach(apiClass->mangerAPiProviders.addBinding().to(apiClass).in(Singleton.class));
 		
+		Multibinder.newSetBinder(binder(), HttpRequetFilter.class);
 		Multibinder.newSetBinder(binder(), OperationInboundFilter.class);
 		Multibinder.newSetBinder(binder(), HttpResponseFilter.class);
 		Multibinder.newSetBinder(binder(), ServerStartHook.class);
@@ -101,7 +103,7 @@ public class ServiceModule extends AbstractModule {
 		
 		//SSL
 		bind(Provider.class).to(IoCSecurityProvider.class).in(Singleton.class);
-		bind(KeyManager.class).to(SNIKeyManager.class).in(Singleton.class);
+		bind(KeyManager.class).to(IoCKeyManager.class).in(Singleton.class);
 		bind(KeyManagerFactorySpi.class).to(IoCKeyManagerFactorySpi.class).in(Singleton.class);
 		bind(KeyManagerFactory.class).to(IoCKeyManagerFactory.class).in(Singleton.class);
 		bind(SslContext.class).toProvider(SslContextProvider.class).in(Singleton.class);

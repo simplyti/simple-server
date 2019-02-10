@@ -5,8 +5,8 @@ import java.security.cert.X509Certificate;
 import javax.inject.Singleton;
 
 import com.google.inject.AbstractModule;
-import com.simplyti.service.ssl.sni.ServerCertificate;
-import com.simplyti.service.ssl.sni.ServerCertificateProvider;
+import com.simplyti.service.ssl.ServerCertificate;
+import com.simplyti.service.ssl.ServerCertificateProvider;
 
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.vavr.control.Try;

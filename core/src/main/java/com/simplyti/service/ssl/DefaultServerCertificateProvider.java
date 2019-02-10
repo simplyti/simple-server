@@ -1,4 +1,4 @@
-package com.simplyti.service.ssl.sni;
+package com.simplyti.service.ssl;
 
 public interface DefaultServerCertificateProvider extends ServerCertificateProvider {
 

@@ -2,11 +2,13 @@ package com.simplyti.service.channel;
 
 import java.net.InetSocketAddress;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.inject.Inject;
 
 import com.simplyti.service.ServerConfig;
 import com.simplyti.service.Service;
+import com.simplyti.service.api.filter.HttpRequetFilter;
 import com.simplyti.service.channel.handler.ApiExceptionHandler;
 import com.simplyti.service.channel.handler.ClientChannelHandler;
 import com.simplyti.service.channel.handler.inits.ApiRequestHandlerInit;
@@ -45,6 +47,8 @@ public class DefaultServiceChannelInitializer extends ChannelInboundHandlerAdapt
 	private final FileServerHandlerInit fileServerHandlerInit;
 	private final DefaultBackendHandlerInit defaultBackendFullRequestHandlerInit;
 	
+	private final Set<HttpRequetFilter> filters;
+	
 	private final Optional<EntryChannelInit> entryChannelInit;
 	
 	@Override
@@ -63,8 +67,9 @@ public class DefaultServiceChannelInitializer extends ChannelInboundHandlerAdapt
 		});
 		
 		ChannelPipeline pipeline = channel.pipeline();
-		if(channel instanceof SocketChannel && ((InetSocketAddress)channel.localAddress()).getPort()==serverConfig.securedPort()) {
-			pipeline.addLast(sslCtx.newHandler(channel.alloc()));
+		if(channel instanceof SocketChannel && 
+				((InetSocketAddress)channel.localAddress()).getPort()==serverConfig.securedPort()) {
+			pipeline.addLast("ssl",sslCtx.newHandler(channel.alloc()));
 		}
 		
 		if(entryChannelInit.isPresent()) {
@@ -73,7 +78,7 @@ public class DefaultServiceChannelInitializer extends ChannelInboundHandlerAdapt
 			pipeline.addLast(new HttpServerCodec());
 		}
 		
-		pipeline.addLast(ClientChannelHandler.NAME, new ClientChannelHandler(service,apiRequestHandlerInit,fileServerHandlerInit,defaultBackendFullRequestHandlerInit));
+		pipeline.addLast(ClientChannelHandler.NAME, new ClientChannelHandler(service,apiRequestHandlerInit,fileServerHandlerInit,defaultBackendFullRequestHandlerInit,filters));
 		pipeline.addLast(apiExceptionHandler);
 	}
 

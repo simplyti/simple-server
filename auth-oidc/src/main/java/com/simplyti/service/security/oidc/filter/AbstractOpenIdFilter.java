@@ -3,10 +3,12 @@ package com.simplyti.service.security.oidc.filter;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.ws.rs.ForbiddenException;
+import javax.ws.rs.NotAuthorizedException;
+import javax.ws.rs.ServiceUnavailableException;
+
 import com.simplyti.service.api.filter.Filter;
 import com.simplyti.service.api.filter.FilterContext;
-import com.simplyti.service.exception.ServiceException;
-import com.simplyti.service.exception.UnauthorizedException;
 import com.simplyti.service.security.oidc.callback.OpenIdApi;
 import com.simplyti.service.security.oidc.config.auto.AutodiscoveryOpenIdIncompleteException;
 import com.simplyti.service.security.oidc.handler.OpenIdHandler;
@@ -54,14 +56,14 @@ public abstract class AbstractOpenIdFilter<T> implements Filter<T>{
 			}else if(oidcConfig.isRedirectable()) {
 				handleRedirect(context,request);
 			}else {
-				context.fail(new UnauthorizedException());
+				context.fail(new NotAuthorizedException(BEARER_PREFIX));
 			}
 		} else {
 			String auth = request.headers().get(HttpHeaderNames.AUTHORIZATION);
 			if(auth.startsWith(BEARER_PREFIX)) {
 				checkToken(context,request,auth.substring(BEARER_PREFIX.length()));
 			}else {
-				context.fail(new UnauthorizedException());
+				context.fail(new NotAuthorizedException(BEARER_PREFIX));
 			}
 		}
 	}
@@ -74,11 +76,11 @@ public abstract class AbstractOpenIdFilter<T> implements Filter<T>{
 			request.headers().set(HttpHeaderNames.AUTHORIZATION,BEARER_PREFIX+" "+token);
 			context.done();
 		} catch (SignatureException| MalformedJwtException e) {
-			context.fail(new UnauthorizedException());
+			context.fail(new ForbiddenException());
 		}catch (ExpiredJwtException e) {
 			handleRedirect(context,request);
 		} catch (AutodiscoveryOpenIdIncompleteException e) {
-			context.fail(new ServiceException(HttpResponseStatus.SERVICE_UNAVAILABLE));
+			context.fail(new ServiceUnavailableException());
 		}
 	}
 
@@ -86,7 +88,7 @@ public abstract class AbstractOpenIdFilter<T> implements Filter<T>{
 		RedirectableOpenIdHandler redirectable = oidcConfig.redirectable();
 		String authRedirect = redirectable.getAuthorizationUrl(request);
 		if(authRedirect==null) {
-			context.fail(new UnauthorizedException());
+			context.fail(new NotAuthorizedException(BEARER_PREFIX));
 		} else {
 			FullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.FOUND);
 			resp.headers().set(HttpHeaderNames.LOCATION,authRedirect);
