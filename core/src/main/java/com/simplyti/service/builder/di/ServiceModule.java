@@ -9,6 +9,9 @@ import javax.inject.Singleton;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.KeyManagerFactorySpi;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.TrustManagerFactorySpi;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
@@ -31,11 +34,16 @@ import com.simplyti.service.hook.ServerStartHook;
 import com.simplyti.service.hook.ServerStopHook;
 import com.simplyti.service.sse.ServerSentEventEncoder;
 import com.simplyti.service.ssl.DefaultServerCertificateProvider;
+import com.simplyti.service.ssl.DefaultSslHandlerFactory;
 import com.simplyti.service.ssl.IoCKeyManager;
 import com.simplyti.service.ssl.IoCKeyManagerFactory;
 import com.simplyti.service.ssl.IoCKeyManagerFactorySpi;
 import com.simplyti.service.ssl.IoCSecurityProvider;
+import com.simplyti.service.ssl.IoCTrustManager;
+import com.simplyti.service.ssl.IoCTrustManagerFactory;
+import com.simplyti.service.ssl.IoCTrustManagerFactorySpi;
 import com.simplyti.service.ssl.ServerCertificateProvider;
+import com.simplyti.service.ssl.SslHandlerFactory;
 import com.simplyti.service.sync.DefaultSyncTaskSubmitter;
 import com.simplyti.service.sync.SyncTaskSubmitter;
 import com.simplyti.service.channel.handler.DefaultBackendFullRequestHandler;
@@ -106,7 +114,12 @@ public class ServiceModule extends AbstractModule {
 		bind(KeyManager.class).to(IoCKeyManager.class).in(Singleton.class);
 		bind(KeyManagerFactorySpi.class).to(IoCKeyManagerFactorySpi.class).in(Singleton.class);
 		bind(KeyManagerFactory.class).to(IoCKeyManagerFactory.class).in(Singleton.class);
+		bind(TrustManager.class).to(IoCTrustManager.class).in(Singleton.class);
+		bind(TrustManagerFactorySpi.class).to(IoCTrustManagerFactorySpi.class).in(Singleton.class);
+		bind(TrustManagerFactory.class).to(IoCTrustManagerFactory.class).in(Singleton.class);
+		
 		bind(SslContext.class).toProvider(SslContextProvider.class).in(Singleton.class);
+		bind(SslHandlerFactory.class).to(DefaultSslHandlerFactory.class).in(Singleton.class);
 		
 		OptionalBinder.newOptionalBinder(binder(), DefaultServerCertificateProvider.class);
 		OptionalBinder.newOptionalBinder(binder(), ServerCertificateProvider.class);

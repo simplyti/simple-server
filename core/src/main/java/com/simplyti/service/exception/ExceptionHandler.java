@@ -23,6 +23,7 @@ public class ExceptionHandler {
 
 	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
 
+	@SuppressWarnings("deprecation")
 	public Future<Void> exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 		if(cause instanceof WebApplicationException) {
 			SimpleResponse response = (SimpleResponse) ((WebApplicationException) cause).getResponse();

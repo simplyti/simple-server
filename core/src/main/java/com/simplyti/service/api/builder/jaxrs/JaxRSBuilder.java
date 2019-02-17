@@ -62,7 +62,7 @@ public class JaxRSBuilder<I,O> extends FinishableApiBuilder<I, O>{
 			}
 		}
 		
-		JaxRSBuilder<Object, Object> jaxrsBuilder = new JaxRSBuilder<Object, Object>(builder, httpMethod, path.toString(), bodyType);
+		JaxRSBuilder<Object, Object> jaxrsBuilder = new JaxRSBuilder<Object, Object>(builder, httpMethod, path, bodyType);
 		Stream.concat(Stream.of(method.getAnnotationsByType(Meta.class)),Stream.of(clazz.getAnnotationsByType(Meta.class)))
 			.forEach(meta->jaxrsBuilder.withMeta(meta.name(), meta.value()));
 		jaxrsBuilder.then(new MethodInvocation(argumentIndexToRestParam.build(),contexArgIndex,method,instance,syncTaskSubmitter));

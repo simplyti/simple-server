@@ -14,6 +14,7 @@ import com.simplyti.service.channel.handler.ClientChannelHandler;
 import com.simplyti.service.channel.handler.inits.ApiRequestHandlerInit;
 import com.simplyti.service.channel.handler.inits.DefaultBackendHandlerInit;
 import com.simplyti.service.channel.handler.inits.FileServerHandlerInit;
+import com.simplyti.service.ssl.SslHandlerFactory;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -22,7 +23,6 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpServerCodec;
-import io.netty.handler.ssl.SslContext;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +37,7 @@ public class DefaultServiceChannelInitializer extends ChannelInboundHandlerAdapt
 	
 	private final ServerConfig serverConfig;
 	
-	private final SslContext sslCtx;
+	private final SslHandlerFactory sslHandlerFactory;
 	
 	private final Service<?> service;
 	
@@ -69,7 +69,7 @@ public class DefaultServiceChannelInitializer extends ChannelInboundHandlerAdapt
 		ChannelPipeline pipeline = channel.pipeline();
 		if(channel instanceof SocketChannel && 
 				((InetSocketAddress)channel.localAddress()).getPort()==serverConfig.securedPort()) {
-			pipeline.addLast("ssl",sslCtx.newHandler(channel.alloc()));
+			pipeline.addLast("ssl",sslHandlerFactory.handler(channel));
 		}
 		
 		if(entryChannelInit.isPresent()) {
