@@ -47,7 +47,7 @@ public class CustomInjectorSource extends AbstractModule implements InjectorSour
 		bind(new TypeLiteral<Map<String,Object>>(){}).toProvider(Maps::newHashMap).in(ScenarioScoped.class);
 		bind(new TypeLiteral<List<Future<DefaultService>>>(){}).toProvider(ArrayList::new).in(ScenarioScoped.class);
 		bind(new TypeLiteral<List<AWSLambda>>(){}).toProvider(ArrayList::new).in(ScenarioScoped.class);
-		bind(KubeClient.class).annotatedWith(Names.named("singleton"))
+		bind(KubeClient.class)
 		.toInstance(KubeClient.builder()
 			.eventLoopGroup(eventLoopGroup)
 			.server("http://localhost:8082")

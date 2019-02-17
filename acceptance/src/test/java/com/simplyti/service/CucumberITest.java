@@ -18,7 +18,6 @@ import io.netty.util.ResourceLeakDetector;
 		features="classpath:features",
 		snippets=SnippetType.CAMELCASE,
 		plugin="pretty"
-		,tags="~@wip"
 		)
 public class CucumberITest {
 	

@@ -332,6 +332,7 @@
 		<module>clients-http</module>
 		<module>clients-k8s</module>
 		<module>gateway</module>
+		<module>discovery-k8s</module>
 		<module>acceptance</module>
 	</modules>
 

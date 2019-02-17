@@ -16,7 +16,8 @@ public class SslContextProvider implements Provider<SslContext>{
 
 	@Override
 	public SslContext get() {
-		return Try.of(()->SslContextBuilder.forServer(keyManagerFactory).build()).get();
+		return Try.of(()->SslContextBuilder.forServer(keyManagerFactory)
+				.build()).get();
 	}
 	
 }

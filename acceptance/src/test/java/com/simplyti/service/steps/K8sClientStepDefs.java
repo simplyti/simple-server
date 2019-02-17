@@ -24,7 +24,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.hamcrest.Matchers;
 
@@ -63,7 +62,6 @@ public class K8sClientStepDefs {
 	private static final String CREATED_NAMESPACES = "_CREATED_NAMESPACES_";
 	
 	@Inject
-	@Named("singleton")
 	private KubeClient kubeClient;
 	
 	@Inject
