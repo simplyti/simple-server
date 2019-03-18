@@ -6,6 +6,7 @@ public class KubeclientBuilder {
 	
 	private EventLoopGroup eventLoopGroup;
 	private String server;
+	private String token;
 	
 	public KubeclientBuilder eventLoopGroup(EventLoopGroup eventLoopGroup) {
 		this.eventLoopGroup = eventLoopGroup;
@@ -17,8 +18,13 @@ public class KubeclientBuilder {
 		return this;
 	}
 	
+	public KubeclientBuilder token(String token) {
+		this.token=token;
+		return this;
+	}
+	
 	public KubeClient build() {
-		return new DefaultKubeClient(eventLoopGroup,server);
+		return new DefaultKubeClient(eventLoopGroup,server,token);
 	}
 
 }

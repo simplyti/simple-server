@@ -10,8 +10,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.Priority;
+import javax.inject.Inject;
 
-import com.google.inject.Inject;
 import com.simplyti.service.api.ApiInvocation;
 import com.simplyti.service.api.DefaultApiInvocationContext;
 import com.simplyti.service.api.filter.FilterChain;

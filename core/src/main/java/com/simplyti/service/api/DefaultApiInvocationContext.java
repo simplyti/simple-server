@@ -30,10 +30,14 @@ import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.Future;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import static io.vavr.control.Try.run;
 
 public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder implements ApiInvocationContext<I,O>, Supplier<I>{
+	
+	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
 	
 	private final ExceptionHandler exceptionHandler;
 	private final ChannelHandlerContext ctx;
@@ -79,7 +83,9 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 					.addListener(this::writeListener);
 		}else {
 			ReferenceCountUtil.release(response);
-			return failure(new ClosedChannelException());
+			tryRelease();
+			log.warn("Cannot write response, channel {} already closed",ctx.channel().remoteAddress());
+			return ctx.channel().eventLoop().newFailedFuture(new ClosedChannelException());
 		}
 	}
 	

@@ -48,6 +48,7 @@
 		<lombok.version>1.18.4</lombok.version>
 
 		<!-- IoC -->
+		<inject.version>1</inject.version>
 		<guice.version>4.2.0</guice.version>
 
 		<!-- Commons -->
@@ -59,7 +60,7 @@
 		<jaxb.version>2.3.1</jaxb.version>
 
 		<!-- Networking -->
-		<netty.version>4.1.32.Final</netty.version>
+		<netty.version>4.1.34.Final</netty.version>
 
 		<!-- JAX-RS -->
 		<jax-rs.version>2.1.1</jax-rs.version>
@@ -150,6 +151,11 @@
 			</dependency>
 
 			<!-- IoC -->
+			<dependency>
+				<groupId>javax.inject</groupId>
+				<artifactId>javax.inject</artifactId>
+				<version>${inject.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>com.google.inject</groupId>
 				<artifactId>guice</artifactId>

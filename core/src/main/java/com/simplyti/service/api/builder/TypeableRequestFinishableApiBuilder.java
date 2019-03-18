@@ -2,7 +2,6 @@ package com.simplyti.service.api.builder;
 
 import java.util.Collection;
 
-import com.google.inject.util.Types;
 import com.jsoniter.spi.TypeLiteral;
 import com.simplyti.service.api.multipart.FileUpload;
 
@@ -10,6 +9,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpMethod;
 
 public class TypeableRequestFinishableApiBuilder extends RawFinishableApiBuilder implements BodyLengthConfigurable<TypeableRequestFinishableApiBuilder>{
+
+	private static final TypeLiteral<ByteBuf> BYTEBUF = new TypeLiteral<ByteBuf>() {};
+	private static final TypeLiteral<Collection<FileUpload>> FILE_UPLOADS = new TypeLiteral<Collection<FileUpload>>() {};
 
 	public TypeableRequestFinishableApiBuilder(ApiBuilder builder, HttpMethod method, String uri) {
 		super(builder, method, uri);
@@ -24,16 +26,13 @@ public class TypeableRequestFinishableApiBuilder extends RawFinishableApiBuilder
 		return new TypedRequestFinishableApiBuilder<>(builder,method,uri,type, maxBodyLength);
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public <O> TypableRequestTypedResponseFinishableApiBuilder<ByteBuf, O> withResponseBodyType(Class<O> responseType) {
-		return new TypableRequestTypedResponseFinishableApiBuilder<>(builder,method,uri,TypeLiteral.create(ByteBuf.class),maxBodyLength);
+		return new TypableRequestTypedResponseFinishableApiBuilder<>(builder,method,uri,BYTEBUF,maxBodyLength);
 	}
 
-	@SuppressWarnings("unchecked")
 	public TypedRequestFinishableApiBuilder<Collection<FileUpload>, Object> asFileUplod() {
-		return new TypedRequestFinishableApiBuilder<>(builder,method,uri,TypeLiteral.create(Types.collectionOf(FileUpload.class)),
-				true, maxBodyLength);
+		return new TypedRequestFinishableApiBuilder<>(builder,method,uri,FILE_UPLOADS, true, maxBodyLength);
 	}
 
 	@Override

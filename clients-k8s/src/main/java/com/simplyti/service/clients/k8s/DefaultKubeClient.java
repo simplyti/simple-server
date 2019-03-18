@@ -63,12 +63,12 @@ public class DefaultKubeClient implements KubeClient {
 	private final HttpClient http;
 
 
-	public DefaultKubeClient(EventLoopGroup eventLoopGroup, String endpoint) {
+	public DefaultKubeClient(EventLoopGroup eventLoopGroup, String endpoint, String token) {
 		this.http = HttpClient.builder()
 				.eventLoopGroup(eventLoopGroup)
 				.withCheckStatusCode()
 				.withEndpoint(apiserver(endpoint))
-				.withBearerAuth(readFile(DEFAULT_TOKEN_FILE))
+				.withBearerAuth(token!=null?token:readFile(DEFAULT_TOKEN_FILE))
 				.build();
 		this.pods = new DefaultPods(eventLoopGroup,http);
 		this.services = new DefaultServices(eventLoopGroup,http);
