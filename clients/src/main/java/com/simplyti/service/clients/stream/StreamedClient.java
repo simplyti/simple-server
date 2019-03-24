@@ -30,7 +30,11 @@ public class StreamedClient<T> {
 
 	private void handleConnection() {
 		if(clientChannel.isSuccess()) {
-			pendingMessages.write(clientChannel.getNow()).addListener(f->pendingDone=true);
+			if(executor.inEventLoop()) {
+				pendingMessages.write(clientChannel.getNow()).addListener(f->pendingDone=true);
+			}else {
+				executor.execute(()->pendingMessages.write(clientChannel.getNow()).addListener(f->pendingDone=true));
+			}
 		}else {
 			pendingMessages.fail(clientChannel.cause());
 			pendingDone=true;
@@ -70,7 +74,7 @@ public class StreamedClient<T> {
 		if(pendingDone) {
 			clientChannel.getNow().writeAndFlush(msg).addListener(f->toPromise(f,promise));
 		}else {
-			pendingMessages.pending(promise,msg);
+			pendingMessages.pending(promise,ReferenceCountUtil.retain(msg));
 		}
 	}
 

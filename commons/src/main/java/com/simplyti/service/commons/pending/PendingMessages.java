@@ -10,9 +10,9 @@ public class PendingMessages {
 	
 	private PendingMessage head;
 	private PendingMessage tail;
-
+	
 	public void pending(Promise<Void> future, Object msg) {
-		PendingMessage message = PendingMessage.newInstance(future,ReferenceCountUtil.retain(msg));
+		PendingMessage message = PendingMessage.newInstance(future,msg);
 		PendingMessage currentTail = tail;
 		if (currentTail == null) {
 			tail = head = message;
@@ -44,12 +44,21 @@ public class PendingMessages {
 	}
 
 	public Future<Void> write(Channel channel) {
+		Promise<Void> promise = channel.newPromise();
+		if(channel.eventLoop().inEventLoop()) {
+			write(channel,promise);
+		}else {
+			channel.eventLoop().execute(()->write(channel,promise));
+		}
+		return promise;
+	}
+
+	private void write(Channel channel, Promise<Void> promise) {
 		if (isEmpty()) {
-			return channel.eventLoop().newSucceededFuture(null);
+			promise.setSuccess(null);
 		}
 		
-		Promise<Void> promise = channel.eventLoop().newPromise();
-		PromiseCombiner combiner = new PromiseCombiner();
+		PromiseCombiner combiner = new PromiseCombiner(channel.eventLoop());
 		PendingMessage write = head;
 		head = tail = null;
 		while (write != null) {
@@ -57,17 +66,21 @@ public class PendingMessages {
 			Object msg = write.msg();
 			Promise<Void> writePromise = write.promise();
 			write.recycle();
-			combiner.add(channel.pipeline().writeAndFlush(msg).addListener(f->{
-				if(f.isSuccess()) {
-					writePromise.setSuccess(null);
-				}else {
-					writePromise.setFailure(f.cause());
-				}
-			}));
+			combiner.add(write(channel,msg,writePromise));
 			write = next;
 		}
 		combiner.finish(promise);
-		return promise;
+	}
+
+	private Future<Void> write(Channel channel, Object msg, Promise<Void> writePromise) {
+		channel.pipeline().writeAndFlush(msg).addListener(f->{
+			if(f.isSuccess()) {
+				writePromise.setSuccess(null);
+			}else {
+				writePromise.setFailure(f.cause());
+			}
+		});
+		return writePromise;
 	}
 
 }

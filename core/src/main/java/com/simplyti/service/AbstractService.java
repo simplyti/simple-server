@@ -53,13 +53,22 @@ public abstract class AbstractService<T extends Service<T>> implements Service<T
 	}
 	
 	public Future<T> start() {
-		Promise<T> startPromise = executor().newPromise();
-		if(serverStartHook.isEmpty()) {
-			start(startPromise);
+		Promise<T> startPromise = startStopLoop.newPromise();
+		if(startStopLoop.inEventLoop()) {
+			return start(startStopLoop,startPromise);
 		}else {
-			executeStartHooks().addListener(f->{
+			startStopLoop.execute(()->start(startStopLoop,startPromise));
+		}
+		return startPromise;
+	}
+	
+	private Future<T> start(EventLoop executor, Promise<T> startPromise) {
+		if(serverStartHook.isEmpty()) {
+			start0(executor,startPromise);
+		}else {
+			executeStartHooks(executor).addListener(f->{
 				if(f.isSuccess()) {
-					start(startPromise);
+					start0(executor,startPromise);
 				}else {
 					stop().addListener(ignore -> startPromise.setFailure(f.cause()));
 				}
@@ -67,18 +76,18 @@ public abstract class AbstractService<T extends Service<T>> implements Service<T
 		}
 		return startPromise;
 	}
-	
-	private Future<Void> executeStartHooks() {
+
+	private Future<Void> executeStartHooks(EventLoop executor) {
 		Promise<Void> hooksPromise = executor().newPromise();
-		PromiseCombiner combiner = new PromiseCombiner();
+		PromiseCombiner combiner = new PromiseCombiner(executor);
 		this.serverStartHook.forEach(hook->combiner.add(hook.executeStart(executor())));
 		combiner.finish(hooksPromise);
 		return hooksPromise;
 	}
 
 	@SuppressWarnings("unchecked")
-	private void start(Promise<T> startPromise) {
-		PromiseCombiner combiner = new PromiseCombiner();
+	private void start0(EventLoop executor,Promise<T> startPromise) {
+		PromiseCombiner combiner = new PromiseCombiner(executor);
 		Promise<Void> bindPromise = executor().newPromise();
 		combiner.add(bind(executor()));
 		combiner.finish(bindPromise);
@@ -94,15 +103,15 @@ public abstract class AbstractService<T extends Service<T>> implements Service<T
 	protected abstract Future<Void> bind(EventLoop executor);
 	
 	public Future<Void> stop() {
-		if(executor().inEventLoop()){
-			return stop0();
+		if(startStopLoop.inEventLoop()){
+			return stop0(startStopLoop);
 		}else{
-			executor().submit(this::stop0);
+			executor().execute(()->stop0(startStopLoop));
 		}
 		return stopFuture;
 	}
 	
-	private Future<Void> stop0() {
+	private Future<Void> stop0(EventLoop executor) {
 		if(this.stopping){
 			return stopFuture;
 		}
@@ -111,7 +120,7 @@ public abstract class AbstractService<T extends Service<T>> implements Service<T
 		Promise<Void> clientsFuture = executor().newPromise();
 		undbind(executor()).addListener(f->closeClients(clientsFuture));
 		Promise<Void> hooksFuture = executor().newPromise();
-		clientsFuture.addListener(f->executeStopHooks(hooksFuture));
+		clientsFuture.addListener(f->executeStopHooks(executor,hooksFuture));
 		hooksFuture.addListener(f->stopLoops());
 		return stopFuture;
 	}
@@ -124,9 +133,9 @@ public abstract class AbstractService<T extends Service<T>> implements Service<T
 		clientChannelGroup.newCloseFuture().addListener(f->clientsFuture.setSuccess(null));
 	}
 	
-	private void executeStopHooks(Promise<Void> hooksFuture) {
+	private void executeStopHooks(EventLoop executor, Promise<Void> hooksFuture) {
 		log.info("Executing stop hooks...");
-		PromiseCombiner combiner = new PromiseCombiner();
+		PromiseCombiner combiner = new PromiseCombiner(executor);
 		this.serverStopHook.forEach(hook->combiner.add(hook.executeStop(executor())));
 		combiner.finish(hooksFuture);
 	}

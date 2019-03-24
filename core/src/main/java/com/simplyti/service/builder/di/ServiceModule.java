@@ -51,7 +51,6 @@ import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;
 
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.handler.ssl.SslContext;
 
 public class ServiceModule extends AbstractModule {
@@ -82,7 +81,6 @@ public class ServiceModule extends AbstractModule {
 			bind(EventLoopGroup.class).toInstance(eventLoopGroup);
 		}
 		
-		bind(new TypeLiteral<Class<? extends ServerSocketChannel>>() {}).toProvider(SererChannelClassProvider.class).in(Singleton.class);
 		bind(EventLoop.class).annotatedWith(StartStopLoop.class).toProvider(StartStopLoopProvider.class).in(Singleton.class);
 		bind(ServerConfig.class).toInstance(config);
 		

@@ -97,7 +97,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 	@Override
 	public Future<Void> executeStart(EventLoop executor) {
 		Promise<Void> promise = executor.newPromise();
-		PromiseCombiner combiner = new PromiseCombiner();
+		PromiseCombiner combiner = new PromiseCombiner(executor);
 		combiner.add(getServices(executor));
 		combiner.add(getIngresses(executor));
 		combiner.add(getEndpoints(executor));
@@ -107,13 +107,13 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 	}
 	
 	@Override
-	public Future<Void> executeStop(EventLoop startStopLoop) {
-		Promise<Void> promise = startStopLoop.newPromise();
-		PromiseCombiner combiner = new PromiseCombiner();
-		combiner.add(stopObserve(observableServices.get(), startStopLoop));
-		combiner.add(stopObserve(observableIngresses.get(), startStopLoop));
-		combiner.add(stopObserve(observableEndpoints.get(), startStopLoop));
-		combiner.add(stopObserve(observableSecrets.get(), startStopLoop));
+	public Future<Void> executeStop(EventLoop executor) {
+		Promise<Void> promise = executor.newPromise();
+		PromiseCombiner combiner = new PromiseCombiner(executor);
+		combiner.add(stopObserve(observableServices.get(), executor));
+		combiner.add(stopObserve(observableIngresses.get(), executor));
+		combiner.add(stopObserve(observableEndpoints.get(), executor));
+		combiner.add(stopObserve(observableSecrets.get(), executor));
 		combiner.finish(promise);
 		return promise;
 	}

@@ -1,5 +1,7 @@
 package com.simplyti.service.clients.k8s.common.impl;
 
+import com.jsoniter.JsonIterator;
+import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.TypeLiteral;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.k8s.K8sAPI;
@@ -9,7 +11,11 @@ import com.simplyti.service.clients.k8s.common.domain.Status;
 import com.simplyti.service.clients.k8s.common.list.KubeList;
 import com.simplyti.service.clients.k8s.common.watch.domain.Event;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.EventLoopGroup;
+import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.util.concurrent.Future;
 
 public class DefaultNamespacedK8sApi<T extends K8sResource> extends DefaultK8sApi<T> implements NamespacedK8sApi<T> {
@@ -54,6 +60,19 @@ public class DefaultNamespacedK8sApi<T extends K8sResource> extends DefaultK8sAp
 		return http.request()
 				.delete(String.format("%s/namespaces/%s/%s/%s",api.path(),namespace,resource,name))
 				.fullResponse(f->response(f.content(), STATUS_TYPE));
+	}
+	
+	
+	protected ByteBuf body(ByteBufAllocator ctx, T resource) {
+		ByteBuf buffer = ctx.buffer();
+		JsonStream.serialize(resource,new ByteBufOutputStream(buffer));
+		return buffer;
+	}
+	
+	protected <O> O response(FullHttpResponse response, Class<O> type) {
+		byte[] data = new byte[response.content().readableBytes()];
+		response.content().readBytes(data);
+		return JsonIterator.deserialize(data,type);
 	}
 	
 	protected String namespace() {

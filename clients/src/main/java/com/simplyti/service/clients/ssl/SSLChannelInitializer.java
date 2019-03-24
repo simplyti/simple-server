@@ -1,6 +1,6 @@
 package com.simplyti.service.clients.ssl;
 
-import com.simplyti.service.clients.Address;
+import com.simplyti.service.clients.Endpoint;
 
 import io.netty.channel.Channel;
 import io.netty.channel.pool.AbstractChannelPoolHandler;
@@ -14,21 +14,24 @@ public class SSLChannelInitializer extends AbstractChannelPoolHandler{
 	
 	private final SslContext sslCtx;
 	private final ChannelPoolHandler nestedInitializer;
-	private final Address address;
+	private final Endpoint endpoint;
 
 	@SneakyThrows
-	public SSLChannelInitializer(ChannelPoolHandler nestedInitializer, Address address) {
-		this.sslCtx = SslContextBuilder
-				.forClient()
-				.trustManager(InsecureTrustManagerFactory.INSTANCE)
-				.build();
+	public SSLChannelInitializer(ChannelPoolHandler nestedInitializer, Endpoint endpoint) {
+		SslContextBuilder builder = SslContextBuilder
+				.forClient();
+		if(endpoint instanceof SSLEndpoint) {
+			SSLEndpoint sslEndpoint = (SSLEndpoint) endpoint;
+			builder.keyManager(sslEndpoint.key(),sslEndpoint.certs());
+		}
+		this.sslCtx = builder.trustManager(InsecureTrustManagerFactory.INSTANCE).build();
 		this.nestedInitializer=nestedInitializer;
-		this.address=address;
+		this.endpoint=endpoint;
 	}
 	
 	@Override
 	public void channelCreated(Channel ch) throws Exception {
-		ch.pipeline().addLast(sslCtx.newHandler(ch.alloc(),address.host(),address.port()));
+		ch.pipeline().addLast(sslCtx.newHandler(ch.alloc(),endpoint.address().host(),endpoint.address().port()));
 		nestedInitializer.channelCreated(ch);
 	}
 	

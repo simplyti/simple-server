@@ -13,15 +13,18 @@ import lombok.experimental.Accessors;
 public class Service extends K8sResource {
 	
 	private final ServiceSpec spec;
+	private final ServiceStatus status;
 
 	@JsonCreator
 	public Service(
 			@JsonProperty("kind") String kind,
 			@JsonProperty("apiVersion") String apiVersion,
 			@JsonProperty("metadata") Metadata metadata,
-			@JsonProperty("spec") ServiceSpec spec) {
+			@JsonProperty("spec") ServiceSpec spec,
+			@JsonProperty("status") ServiceStatus status) {
 		super(kind,apiVersion,metadata);
 		this.spec=spec;
+		this.status=status;
 	}
 
 }

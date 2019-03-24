@@ -31,6 +31,7 @@ public class DefaultSSEStream implements SSEStream {
 	private void updateConnection(Future<? super Void> f, ServerSentEventEncoder serverEventEncoder) {
 		if(f.isSuccess()) {
 			ctx.pipeline().replace(HttpServerCodec.class, "sse-codec", serverEventEncoder);
+			pendingMessages.write(ctx.channel());
 		}else {
 			pendingMessages.fail(f.cause());
 		}

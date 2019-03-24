@@ -1,4 +1,4 @@
-package com.simplyti.service.ssl;
+package com.simplyti.service.commons.ssl;
 
 import java.io.IOException;
 import java.math.BigInteger;

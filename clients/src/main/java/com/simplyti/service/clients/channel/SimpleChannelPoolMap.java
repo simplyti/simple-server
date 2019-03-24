@@ -25,8 +25,7 @@ public class SimpleChannelPoolMap extends AbstractChannelPoolMap<Endpoint, Chann
 		this.bootstrap = new Bootstrap().group(eventLoopGroup)
 				.channelFactory(new ClientChannelFactory(eventLoopGroup))
 				.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
-				.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-				;
+				.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 		this.initializer = poolHandler;
 		this.checker=checker;
 	}
@@ -42,7 +41,7 @@ public class SimpleChannelPoolMap extends AbstractChannelPoolMap<Endpoint, Chann
 	
 	private ChannelPoolHandler handler(Endpoint key) {
 		if(key.schema().ssl()) {
-			return new SSLChannelInitializer(initializer,key.address());
+			return new SSLChannelInitializer(initializer,key);
 		}else {
 			return initializer;
 		}

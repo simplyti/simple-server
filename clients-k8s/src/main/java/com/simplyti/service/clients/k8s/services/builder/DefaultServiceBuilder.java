@@ -28,7 +28,7 @@ public class DefaultServiceBuilder extends AbstractK8sResourceBuilder<ServiceBui
 	@Override
 	protected Service resource(K8sAPI api, Metadata metadata) {
 		return new Service(KIND, api.version(), metadata, ServiceSpec.builder()
-				.ports(ports).build());
+				.ports(ports).build(),null);
 	}
 
 	public DefaultServiceBuilder addPort(ServicePort port) {

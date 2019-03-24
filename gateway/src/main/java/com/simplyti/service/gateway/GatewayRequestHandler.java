@@ -20,6 +20,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.util.ReferenceCountUtil;
+import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.Future;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
@@ -31,14 +32,16 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	private final ServiceDiscovery serviceDiscovery;
 	private final InternalClient client;
 
-	private final PendingMessages pendingMessages = new PendingMessages();
+	private final PendingMessages pendingMessages;
 	private Channel backendChannel;
 	private boolean ignoreNextMessages;
 
 	@Inject
 	public GatewayRequestHandler(InternalClient client, ServiceDiscovery serviceDiscovery) {
+		super(false);
 		this.client = client;
 		this.serviceDiscovery = serviceDiscovery;
+		this.pendingMessages = new PendingMessages();
 	}
 
 	@Override
@@ -65,7 +68,7 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 		}
 		
 		if (backendChannel != null) {
-			backendChannel.writeAndFlush(ReferenceCountUtil.retain(write)).addListener(f->handleWriteFuture(ctx,f));
+			backendChannel.writeAndFlush(write).addListener(f->handleWriteFuture(ctx,f));
 		} else if(!ignoreNextMessages){
 			pendingMessages.pending(ctx.executor().newPromise(), write);
 		}
@@ -82,19 +85,27 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	private void filterRequest(ChannelHandlerContext ctx, BackendService service, HttpRequest request) {
 		Future<Boolean> futureHandled = FilterChain.of(service.filters(),ctx,request).execute();
 		futureHandled.addListener(result->{
-			if(result.isSuccess()) {
-				if(futureHandled.getNow()) {
-					pendingMessages.fail(new RuntimeException("Handled by filter"));
-					this.ignoreNextMessages=true;
-				}else {
-					serviceProceed(ctx,service);
-				}
+			if(ctx.executor().inEventLoop()) {
+				handleFilterResult(ctx,futureHandled,service);
 			}else {
-				ctx.fireExceptionCaught(result.cause());
-				pendingMessages.fail(result.cause());
-				this.ignoreNextMessages=true;
+				ctx.executor().execute(()->handleFilterResult(ctx,futureHandled,service));
 			}
 		});
+	}
+
+	private void handleFilterResult(ChannelHandlerContext ctx, Future<Boolean> futureHandled, BackendService service) {
+		if(futureHandled.isSuccess()) {
+			if(futureHandled.getNow()) {
+				pendingMessages.fail(new RuntimeException("Handled by filter"));
+				this.ignoreNextMessages=true;
+			}else {
+				serviceProceed(ctx,service);
+			}
+		}else {
+			ctx.fireExceptionCaught(futureHandled.cause());
+			pendingMessages.fail(futureHandled.cause());
+			this.ignoreNextMessages=true;
+		}
 	}
 
 	private void serviceProceed(ChannelHandlerContext ctx, BackendService service) {
@@ -120,24 +131,25 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	
 	private void handleBackendChannelFuture(ChannelHandlerContext ctx, Future<Channel> backendChannelFuture,
 			ChannelPool pool, Endpoint endpoint) {
+		if(ctx.executor().inEventLoop()) {
+			handleBackendChannelFuture0(ctx,backendChannelFuture,pool,endpoint);
+		}else {
+			ctx.executor().execute(()->handleBackendChannelFuture0(ctx,backendChannelFuture,pool,endpoint));
+		}
+	}
+	
+	private void handleBackendChannelFuture0(ChannelHandlerContext ctx, Future<Channel> backendChannelFuture,
+			ChannelPool pool, Endpoint endpoint) {
 		if (backendChannelFuture.isSuccess()) {
 			backendChannelFuture.getNow().pipeline().addLast(new BackendProxyHandler(pool, ctx.channel()));
-			if(ctx.executor().inEventLoop()) {
-				handleBackendChannelSuccess(ctx,backendChannelFuture.getNow());
-			}else {
-				ctx.executor().submit(()->handleBackendChannelSuccess(ctx,backendChannelFuture.getNow()));
-			}
+			this.backendChannel=backendChannelFuture.getNow();
+			pendingMessages.write(backendChannel).addListener(f->handleWriteFuture(ctx, f));
 		}else {
 			log.warn("Cannot connect to backend {}: {}", endpoint, backendChannelFuture.cause().toString());
 			ctx.fireExceptionCaught(new ServerErrorException(HttpResponseStatus.BAD_GATEWAY.code()));
 			pendingMessages.fail(backendChannelFuture.cause());
 			ignoreNextMessages=true;
 		}
-	}
-	
-	private void handleBackendChannelSuccess(ChannelHandlerContext ctx,Channel backendChannel) {
-		this.backendChannel=backendChannel;
-		pendingMessages.write(backendChannel).addListener(f->handleWriteFuture(ctx, f));
 	}
 
 	@Override

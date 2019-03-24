@@ -13,6 +13,7 @@ import com.simplyti.service.clients.k8s.services.updater.DefaultServiceUpdater;
 import com.simplyti.service.clients.k8s.services.updater.ServicesUpdater;
 
 import io.netty.channel.EventLoopGroup;
+import io.netty.util.concurrent.Future;
 
 public class DefaultNamespacedServices extends DefaultNamespacedK8sApi<Service> implements NamespacedServices {
 
@@ -29,6 +30,14 @@ public class DefaultNamespacedServices extends DefaultNamespacedK8sApi<Service> 
 	@Override
 	public ServicesUpdater update(String name) {
 		return new DefaultServiceUpdater(http(), api(), namespace(), resource(),name);
+	}
+
+	@Override
+	public Future<Service> updateStatus(Service service) {
+		return http().request()
+				.put(String.format("%s/namespaces/%s/%s/%s/status",api().path(),namespace(),resource(),service.metadata().name()))
+				.body(ctx->body(ctx,service))
+				.fullResponse(f->response(f, Service.class));
 	}
 
 }

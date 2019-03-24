@@ -1,10 +1,9 @@
 package com.simplyti.service.api;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
-
-import com.google.common.collect.Maps;
 
 import io.netty.buffer.DefaultByteBufHolder;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -20,7 +19,7 @@ public class ApiInvocation<I> extends DefaultByteBufHolder {
 	private final HttpHeaders headers;
 	private final FullHttpRequest request;
 	
-	private final Map<String,String> cachedpathParams = Maps.newHashMap();
+	private final Map<String,String> cachedpathParams = new HashMap<>();
 	
 	public ApiInvocation(ApiOperation<I,?> operation,Matcher matcher,Map<String, List<String>> params, FullHttpRequest request) {
 		super(request.content().retain());
