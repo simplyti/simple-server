@@ -1,5 +1,7 @@
 package com.simplyti.service;
 
+import java.util.concurrent.TimeUnit;
+
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.sse.SSEStream;
@@ -14,11 +16,13 @@ public class SSEApi implements ApiProvider{
 		builder.when().get("/sse")
 			.then(ctx->{
 				Promise<Void> sendFuture = ctx.executor().newPromise();
-				PromiseCombiner combiner = new PromiseCombiner();
+				PromiseCombiner combiner = new PromiseCombiner(ctx.channel().eventLoop());
 				SSEStream sse = ctx.sse();
 				combiner.add(sse.send("Hello!"));
-				combiner.add(sse.send("Bye!"));;
-				combiner.finish(sendFuture);
+				ctx.channel().eventLoop().schedule(()->{
+					combiner.add(sse.send("Bye!"));
+					combiner.finish(sendFuture);
+				},200,TimeUnit.MILLISECONDS);
 				sendFuture.addListener(f->ctx.channel().close());
 			});
 	}
