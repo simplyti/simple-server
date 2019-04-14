@@ -27,6 +27,7 @@ import com.simplyti.service.api.health.HealthApi;
 import com.simplyti.service.channel.ClientChannelGroup;
 import com.simplyti.service.channel.DefaultServiceChannelInitializer;
 import com.simplyti.service.channel.EntryChannelInit;
+import com.simplyti.service.channel.ServerChannelFactoryProvider;
 import com.simplyti.service.channel.ServiceChannelInitializer;
 import com.simplyti.service.channel.handler.FileServeHandler;
 import com.simplyti.service.exception.ExceptionHandler;
@@ -49,8 +50,10 @@ import com.simplyti.service.sync.SyncTaskSubmitter;
 import com.simplyti.service.channel.handler.DefaultBackendFullRequestHandler;
 import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;
 
+import io.netty.channel.ChannelFactory;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.ServerChannel;
 import io.netty.handler.ssl.SslContext;
 
 public class ServiceModule extends AbstractModule {
@@ -81,6 +84,7 @@ public class ServiceModule extends AbstractModule {
 			bind(EventLoopGroup.class).toInstance(eventLoopGroup);
 		}
 		
+		bind(new TypeLiteral<ChannelFactory<ServerChannel>>() {}).toProvider(ServerChannelFactoryProvider.class).in(Singleton.class);
 		bind(EventLoop.class).annotatedWith(StartStopLoop.class).toProvider(StartStopLoopProvider.class).in(Singleton.class);
 		bind(ServerConfig.class).toInstance(config);
 		

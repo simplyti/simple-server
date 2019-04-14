@@ -15,6 +15,8 @@ public interface KubeClient {
 	public static KubeclientBuilder builder() {
 		return new KubeclientBuilder();
 	}
+	
+	public NamespacedClient namespace(String name);
 
 	public Pods pods();
 

@@ -1,10 +1,13 @@
 package com.simplyti.service.gateway;
 
+import java.net.InetSocketAddress;
+
 import javax.inject.Inject;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.ServiceUnavailableException;
 
+import com.simplyti.service.ServerConfig;
 import com.simplyti.service.api.filter.FilterChain;
 import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;
 import com.simplyti.service.clients.Endpoint;
@@ -29,18 +32,29 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	
 	private final ServiceDiscovery serviceDiscovery;
 	private final InternalClient client;
+	private final ServerConfig config;
 
 	private final PendingMessages pendingMessages;
+	
+	private boolean frontSsl;
 	private Channel backendChannel;
 	private boolean ignoreNextMessages;
 
+
 	@Inject
-	public GatewayRequestHandler(InternalClient client, ServiceDiscovery serviceDiscovery) {
+	public GatewayRequestHandler(InternalClient client, ServiceDiscovery serviceDiscovery, ServerConfig config) {
 		super(false);
 		this.client = client;
+		this.config=config;
 		this.serviceDiscovery = serviceDiscovery;
 		this.pendingMessages = new PendingMessages();
 	}
+	
+	@Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+		InetSocketAddress localAddress = (InetSocketAddress) ctx.channel().localAddress();
+		this.frontSsl = config.securedPort()==localAddress.getPort();
+    }
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -139,7 +153,7 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	private void handleBackendChannelFuture0(ChannelHandlerContext ctx, Future<Channel> backendChannelFuture,
 			ChannelPool pool, Endpoint endpoint) {
 		if (backendChannelFuture.isSuccess()) {
-			backendChannelFuture.getNow().pipeline().addLast(new BackendProxyHandler(pool, ctx.channel()));
+			backendChannelFuture.getNow().pipeline().addLast(new BackendProxyHandler(pool, ctx.channel(),endpoint,frontSsl));
 			this.backendChannel=backendChannelFuture.getNow();
 			pendingMessages.write(backendChannel).addListener(f->handleWriteFuture(ctx, f));
 		}else {

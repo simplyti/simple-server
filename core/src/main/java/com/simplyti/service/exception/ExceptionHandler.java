@@ -9,6 +9,7 @@ import com.simplyti.service.jaxrs.SimpleResponse;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -23,7 +24,6 @@ public class ExceptionHandler {
 
 	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
 
-	@SuppressWarnings("deprecation")
 	public Future<Void> exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 		if(cause instanceof WebApplicationException) {
 			SimpleResponse response = (SimpleResponse) ((WebApplicationException) cause).getResponse();
@@ -32,6 +32,8 @@ public class ExceptionHandler {
 			return writeResponse(ctx, ((ServiceException) cause).status(),null);
 		} else if (cause instanceof FileNotFoundException) {
 			return writeResponse(ctx, HttpResponseStatus.NOT_FOUND,null);
+		} else if (cause instanceof DecoderException) {
+			return  writeResponse(ctx, HttpResponseStatus.BAD_REQUEST,null);
 		} else {
 			log.error("Error ocurred during service execution", cause);
 			if(ctx.channel().attr(ClientChannelGroup.IN_PROGRESS).get()) {

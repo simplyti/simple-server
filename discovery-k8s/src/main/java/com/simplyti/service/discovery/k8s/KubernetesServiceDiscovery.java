@@ -186,7 +186,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 			Service oldService = services.put(id, service);
 			if(endpoints.containsKey(id)) {
 				Endpoint endpoint = endpoints.get(id);
-				List<Address> addresses = address(endpoint);
+				List<EnpointAddress> addresses = address(endpoint);
 				Map<ServiceKey, List<com.simplyti.service.clients.Endpoint>> oldEndpoints = endpoints(oldService,addresses);
 				Map<ServiceKey, List<com.simplyti.service.clients.Endpoint>> newEndpoints = endpoints(service,addresses);
 				oldEndpoints.forEach((key,edps)->edps.stream().filter(edp->!newEndpoints.containsKey(key) || !newEndpoints.get(key).contains(edp))
@@ -197,7 +197,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		}
 	}
 	
-	private Map<ServiceKey,List<com.simplyti.service.clients.Endpoint>> endpoints(Service service, List<Address> addresses) {
+	private Map<ServiceKey,List<com.simplyti.service.clients.Endpoint>> endpoints(Service service, List<EnpointAddress> addresses) {
 		Map<ServiceKey,List<com.simplyti.service.clients.Endpoint>> mapedServices = Maps.newHashMap();
 		addresses.forEach(address->eachEndpoint(service, address, (edp,host,path)->{
 						ServiceKey key = new ServiceKey(host,null,path);
@@ -268,7 +268,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 					openIdClientSecrets,ingress.metadata().namespace(),
 					ingress.metadata().annotations().get(AUTH_SECRET),
 						new K8sAutodiscoveredOpenIdProviderConfig(ingress.metadata().annotations().get(AUTH_REALM),openIdConfig.callbackUri(),openIdConfig.cipherKey()))));
-		}else {
+		} else {
 			return null;
 		}
 			
@@ -292,21 +292,20 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 				openIdClientSecrets.remove(resourceId(secret.metadata()));
 			}
 		}
-		
 	}
 	
 	private void handleEndpoint(EventType type, Endpoint endpoint) {
 		String id = resourceId(endpoint.metadata());
 		if(type == EventType.ADDED){
 			endpoints.put(id, endpoint);
-			if(endpoints.containsKey(id)) {
+			if(services.containsKey(id)) {
 				 address(endpoints.get(id)).forEach(newAddress->eachEndpoint(id,newAddress,(edp,host,path)->addEndpoint(host,null,path,edp)));
 			}
 		}else if(type == EventType.DELETED) {
 			address(endpoint).forEach(address->eachEndpoint(id,address,(edp,host,path)->deleteEndpoint(host,null,path,edp)));
 		}else if(type == EventType.MODIFIED) {
-			List<Address> oldAddresses = address(endpoints.put(id, endpoint));
-			List<Address> newAddresses = address(endpoint);
+			List<EnpointAddress> oldAddresses = address(endpoints.put(id, endpoint));
+			List<EnpointAddress> newAddresses = address(endpoint);
 			oldAddresses.stream()
 				.filter(address->!newAddresses.contains(address))
 				.forEach(deletedAddress->eachEndpoint(id,deletedAddress,(edp,host,path)->deleteEndpoint(host,null,path,edp)));
@@ -315,33 +314,39 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		}
 	}
 
-	private List<Address> address(Endpoint oldEndpoint) {
+	private List<EnpointAddress> address(Endpoint oldEndpoint) {
 		return MoreObjects.firstNonNull(oldEndpoint.subsets(), Collections.<Subset>emptyList()).stream()
 		.flatMap(subset->subset.ports().stream()
-				.flatMap(port->subset.addresses().stream()
-						.map(address->new Address(address.ip(), port.port()))))
+				.flatMap(port->MoreObjects.firstNonNull(subset.addresses(), Collections.<com.simplyti.service.clients.k8s.endpoints.domain.Address>emptyList()).stream()
+						.map(address->new EnpointAddress(port.name(),new Address(address.ip(), port.port())))))
 		.collect(Collectors.toList());
 	}
 	
-	private void eachEndpoint(String id, Address address,EndpointConsumer consumer) {
+	private void eachEndpoint(String id, EnpointAddress address,EndpointConsumer consumer) {
 		if(services.containsKey(id)) {
 			Service service = services.get(id);
 			eachEndpoint(service,address,consumer);
 		}
 	}
 
-	private void eachEndpoint(Service service, Address address, EndpointConsumer consumer) {
+	private void eachEndpoint(Service service, EnpointAddress address, EndpointConsumer consumer) {
 		ingresses.values().stream()
 		.filter(ingress->sameNamespace(ingress,service))
 		.forEach(ingress->ingress.spec().rules()
 			.forEach(rule->rule.http().paths().stream()
 				.filter(path->isBackend(path, service))
 				.filter(path->isTarget(service,address))
-				.forEach(path->consumer.consume(endpoint(ingress,address), rule.host(),path.path()))));
+				.forEach(path->consumer.consume(endpoint(ingress,address.address()), rule.host(),path.path()))));
 	}
 
-	private boolean isTarget(Service service, Address address) {
-		return service.spec().ports().stream().anyMatch(port->port.targetPort().equals(address.port()));
+	private boolean isTarget(Service service, EnpointAddress address) {
+		return service.spec().ports().stream().anyMatch(port->{
+			if(port.targetPort() instanceof String) {
+				return port.targetPort().equals(address.portName());
+			}else {
+				return port.targetPort().equals(address.address().port());
+			}
+		});
 	}
 
 	private boolean isBackend(IngressPath path, Service service) {

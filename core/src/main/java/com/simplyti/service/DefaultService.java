@@ -6,17 +6,18 @@ import javax.inject.Inject;
 
 import com.simplyti.service.builder.di.StartStopLoop;
 import com.simplyti.service.channel.ClientChannelGroup;
-import com.simplyti.service.channel.ServerSocketChannelFactory;
 import com.simplyti.service.channel.ServiceChannelInitializer;
 import com.simplyti.service.hook.ServerStartHook;
 import com.simplyti.service.hook.ServerStopHook;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.channel.ChannelFactory;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.ServerChannel;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
@@ -37,12 +38,13 @@ public class DefaultService extends AbstractService<DefaultService> implements S
 	@Inject
 	public DefaultService(EventLoopGroup eventLoopGroup,ServiceChannelInitializer serviceChannelInitializer,
 			@StartStopLoop EventLoop startStopLoop, ServerConfig config, ClientChannelGroup clientChannelGroup,
+			ChannelFactory<ServerChannel> channelFactory,
 			Set<ServerStartHook> serverStartHook, Set<ServerStopHook> serverStopHook){
 		super(eventLoopGroup,startStopLoop,clientChannelGroup,serverStartHook,serverStopHook,config);
 		this.config=config;
 		this.serverChannels=new DefaultChannelGroup(startStopLoop);
 		this.bootstrap = new ServerBootstrap().group(startStopLoop, eventLoopGroup)
-				.channelFactory(new ServerSocketChannelFactory(eventLoopGroup))
+				.channelFactory(channelFactory)
 				.option(ChannelOption.SO_BACKLOG, 100000)
 				.option(ChannelOption.SO_REUSEADDR, true)
 				.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)

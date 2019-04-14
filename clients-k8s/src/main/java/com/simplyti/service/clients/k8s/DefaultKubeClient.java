@@ -108,4 +108,9 @@ public class DefaultKubeClient implements KubeClient {
 					.fullResponse(response->response.content().toString(CharsetUtil.UTF_8));
 	}
 
+	@Override
+	public NamespacedClient namespace(String name) {
+		return new DefaultNamespacedClient(name,this);
+	}
+
 }
