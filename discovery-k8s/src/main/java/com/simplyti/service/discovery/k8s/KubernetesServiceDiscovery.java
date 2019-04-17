@@ -340,6 +340,9 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 	}
 
 	private boolean isTarget(Service service, EnpointAddress address) {
+		if(service.spec().ports().size()==1) {
+			return true;
+		}
 		return service.spec().ports().stream().anyMatch(port->{
 			if(port.targetPort() instanceof String) {
 				return port.targetPort().equals(address.portName());
