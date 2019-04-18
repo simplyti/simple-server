@@ -189,7 +189,6 @@ Scenario: Modify endpoint
 	When I update endpoint "service" in namespace "acceptance" setting addresses "${local.address}:8081"
 	Then I check that exist a gateway service with targets "http://${local.address}:8081"
 
-
 Scenario: Modify service
 	When I start a service "#serviceFuture" with options:
 		| option	 			| value |
@@ -201,10 +200,6 @@ Scenario: Modify service
 	And I create a service in namespace "acceptance" with name "service" with port 80 to target 8081
 	And I create an ingress in namespace "acceptance" with name "httpbin", path "/status" and backend service "service:8080"
 	Then I check that exist 1 gateway services
-	And I check that exist a gateway service without targets
-	When I update service "service" in namespace "acceptance" setting port 8080 and target port 8081
-	Then I check that exist a gateway service with targets "http://${local.address}:8081"
-	When I update service "service" in namespace "acceptance" setting port 8080 and target port 8080
 	And I check that exist a gateway service without targets
 	When I update service "service" in namespace "acceptance" setting port 8080 and target port 8081
 	Then I check that exist a gateway service with targets "http://${local.address}:8081"
