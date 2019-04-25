@@ -11,7 +11,7 @@ import com.simplyti.service.clients.channel.monitor.ClientMonitorHandler;
 import com.simplyti.service.clients.channel.monitor.MonitoredHandler;
 import com.simplyti.service.clients.init.ClientRequestChannelInitializer;
 import com.simplyti.service.clients.trace.RequestTracerHandler;
-import com.simplyti.service.commons.Promises;
+import com.simplyti.service.commons.netty.Promises;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;

@@ -1,11 +1,11 @@
 package com.simplyti.service.security.oidc;
 
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-import io.vavr.control.Try;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
@@ -25,7 +25,12 @@ public class OpenIdCallbackConfig {
 		this.callbackUri=callbackUri;
 		
 		byte[] keyBytes = new byte[16];
-        MessageDigest md = Try.of(()->MessageDigest.getInstance("SHA-256")).get();
+        MessageDigest md;
+		try {
+			md = MessageDigest.getInstance("SHA-256");
+		} catch (NoSuchAlgorithmException e) {
+			throw new IllegalStateException(e);
+		}
         md.update(cipherKey.getBytes());
         System.arraycopy(md.digest(), 0, keyBytes, 0, keyBytes.length);
         this.cipherKey = new SecretKeySpec(keyBytes, "AES");

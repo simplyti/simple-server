@@ -2,10 +2,9 @@ package com.simplyti.service.api.builder.jaxrs;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+import java.util.stream.Stream;
 
 import com.fasterxml.classmate.ResolvedType;
-import com.google.common.base.Splitter;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +30,7 @@ public abstract class RestParam {
 			return Boolean.parseBoolean(value);
 		} else if (type.isInstanceOf(List.class)) {
 			ResolvedType itemType = type.typeParametersFor(List.class).get(0);
-			return StreamSupport.stream(Splitter.on(',').split(value).spliterator(), false).map(item -> convert(item, itemType)).collect(Collectors.toList());
+			return Stream.of(value.split(",")).map(item -> convert(item, itemType)).collect(Collectors.toList());
 		} else {
 			return value;
 		}

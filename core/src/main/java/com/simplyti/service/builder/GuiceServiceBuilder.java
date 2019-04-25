@@ -2,6 +2,7 @@ package com.simplyti.service.builder;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -10,7 +11,6 @@ import java.util.stream.Stream;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.Sets;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -25,7 +25,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Log4J2LoggerFactory;
 import io.netty.util.internal.logging.Slf4JLoggerFactory;
-import io.vavr.control.Try;
 
 public class GuiceServiceBuilder<T extends Service<?>> implements ServiceBuilder<T> {
 
@@ -104,7 +103,7 @@ public class GuiceServiceBuilder<T extends Service<?>> implements ServiceBuilder
 	@Override
 	public ServiceBuilder<T> withApi(Class<? extends ApiProvider> apiClass) {
 		if(this.apiClasses==null){
-			this.apiClasses=Sets.newHashSet();
+			this.apiClasses=new HashSet<>();
 		}
 		this.apiClasses.add(apiClass);
 		return this;
@@ -113,7 +112,7 @@ public class GuiceServiceBuilder<T extends Service<?>> implements ServiceBuilder
 	@Override
 	public ServiceBuilder<T> withModule(Module module) {
 		if(this.modules==null) {
-			this.modules=Sets.newHashSet();
+			this.modules=new HashSet<>();
 		}
 		this.modules.add(module);
 		return this;
@@ -121,7 +120,11 @@ public class GuiceServiceBuilder<T extends Service<?>> implements ServiceBuilder
 	
 	@Override
 	public ServiceBuilder<T> withModule(Class<? extends Module> module) {
-		return withModule(Try.of(module::newInstance).get());
+		try {
+			return withModule(module.newInstance());
+		} catch (InstantiationException | IllegalAccessException e) {
+			throw new IllegalArgumentException(e);
+		}
 	}
 
 	@Override

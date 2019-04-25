@@ -1,7 +1,11 @@
 package com.simplyti.service.discovery.k8s.ssl;
 
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +19,6 @@ import com.simplyti.service.ssl.ServerCertificateProvider;
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
-import io.vavr.control.Try;
 
 public class KubernetesCertificateProvider implements ServerCertificateProvider{
 	
@@ -49,11 +52,13 @@ public class KubernetesCertificateProvider implements ServerCertificateProvider{
 	}
 
 	public void addSecret(String secretId, Secret secret) {
-		List<X509Certificate> certificates = CertificateUtils.read(secret.data().get("tls.crt").asString(CharsetUtil.UTF_8));
-		PrivateKey privateKey = Try.of(()->PrivateKeyUtils.read(secret.data().get("tls.key").asString(CharsetUtil.UTF_8)))
-				.onFailure(log::error)
-				.get();
-		secrets.put(secretId, new ServerCertificate(certificates.stream().toArray(X509Certificate[]::new), privateKey));
+		try {
+			PrivateKey privateKey = PrivateKeyUtils.read(secret.data().get("tls.key").asString(CharsetUtil.UTF_8));
+			List<X509Certificate> certificates = CertificateUtils.read(secret.data().get("tls.crt").asString(CharsetUtil.UTF_8));
+			secrets.put(secretId, new ServerCertificate(certificates.stream().toArray(X509Certificate[]::new), privateKey));
+		} catch (CertificateException | InvalidKeySpecException | NoSuchAlgorithmException | IOException e) {
+			log.warn("Cannot create certificate and key",e);
+		}
 	}
 	
 	public void updateSecret(String secretId,Secret secret) {

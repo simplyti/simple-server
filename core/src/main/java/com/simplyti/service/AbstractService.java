@@ -1,8 +1,5 @@
 package com.simplyti.service;
 
-import static io.vavr.control.Try.of;
-import static io.vavr.control.Try.run;
-
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -14,6 +11,7 @@ import com.simplyti.service.hook.ServerStopHook;
 
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.group.ChannelGroupFuture;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.PromiseCombiner;
@@ -22,7 +20,13 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public abstract class AbstractService<T extends Service<T>> implements Service<T> {
 	
-	private final Thread jvmShutdownHook = new Thread(() -> of(this.stop()::await), "server-shutdown-hook");
+	private final Thread jvmShutdownHook = new Thread(() -> {
+		try {
+			this.stop(true).await();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
+	}, "server-shutdown-hook");
 	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
 	
 	private final EventLoopGroup eventLoopGroup;
@@ -103,51 +107,66 @@ public abstract class AbstractService<T extends Service<T>> implements Service<T
 	protected abstract Future<Void> bind(EventLoop executor);
 	
 	public Future<Void> stop() {
+		return stop(false);
+	}
+	
+	public Future<Void> stop(boolean fromHook) {
 		if(startStopLoop.inEventLoop()){
-			return stop0(startStopLoop);
+			return stop0(startStopLoop,fromHook);
 		}else{
-			executor().execute(()->stop0(startStopLoop));
+			executor().execute(()->stop0(startStopLoop,fromHook));
 		}
 		return stopFuture;
 	}
 	
-	private Future<Void> stop0(EventLoop executor) {
+	private Future<Void> stop0(EventLoop executor,boolean fromHook) {
 		if(this.stopping){
 			return stopFuture;
 		}
+		if(!fromHook) {
+			Runtime.getRuntime().removeShutdownHook(jvmShutdownHook);
+		}
 		this.stopping=true;
 		log.info("Stopping server gracefully...");
-		Promise<Void> clientsFuture = executor().newPromise();
-		undbind(executor()).addListener(f->closeClients(clientsFuture));
-		Promise<Void> hooksFuture = executor().newPromise();
-		clientsFuture.addListener(f->executeStopHooks(executor,hooksFuture));
-		hooksFuture.addListener(f->stopLoops());
+		undbind(executor).addListener(f1->closeClients(executor)
+				.addListener(f2->executeStopHooks(executor)
+						.addListener(f3->stopLoops())));
 		return stopFuture;
 	}
 	
 	protected abstract Future<Void> undbind(EventLoop executor);
 
-	private void closeClients(Promise<Void> clientsFuture) {
-		log.info("Active Clients: {}",clientChannelGroup.size());
-		clientChannelGroup.closeIddleChannels();
-		clientChannelGroup.newCloseFuture().addListener(f->clientsFuture.setSuccess(null));
+	private Future<Void> closeClients(EventLoop executor) {
+		if(clientChannelGroup.isEmpty()) {
+			return executor.newSucceededFuture(null);
+		}else {
+			log.info("Active Clients: {}",clientChannelGroup.size());
+			clientChannelGroup.closeIddleChannels();
+			Promise<Void> promise = executor.newPromise();
+			ChannelGroupFuture future = clientChannelGroup.newCloseFuture();
+			future.addListener(f->promise.setSuccess(null));
+			return promise;
+		}
 	}
 	
-	private void executeStopHooks(EventLoop executor, Promise<Void> hooksFuture) {
+	private Future<Void> executeStopHooks(EventLoop executor) {
 		log.info("Executing stop hooks...");
+		if(this.serverStopHook.isEmpty()) {
+			return executor.newSucceededFuture(null);
+		}
+		Promise<Void> promise = executor.newPromise();
 		PromiseCombiner combiner = new PromiseCombiner(executor);
 		this.serverStopHook.forEach(hook->combiner.add(hook.executeStop(executor())));
-		combiner.finish(hooksFuture);
+		combiner.finish(promise);
+		return promise;
 	}
 	
 	private void stopLoops() {
 		log.info("Stopping executors...");
-		run(()->Runtime.getRuntime().removeShutdownHook(jvmShutdownHook));
 		stopFuture.setSuccess(null);
 		if(!config.externalEventLoopGroup()) {
 			eventLoopGroup.shutdownGracefully();
 		}
-		
 		executor().shutdownGracefully();
 	}
 	

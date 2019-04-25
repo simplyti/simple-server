@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.Iterables;
 import com.jsoniter.JsonIterator;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.sse.DefaultSSEStream;
@@ -32,8 +31,6 @@ import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.Future;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
-
-import static io.vavr.control.Try.run;
 
 public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder implements ApiInvocationContext<I,O>, Supplier<I>{
 	
@@ -158,14 +155,23 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 			.map(FileUpload.class::cast)
 			.map(data->new com.simplyti.service.api.multipart.FileUpload(data.content().retain(),data.getFilename()))
 			.collect(Collectors.toList());
-		run(decoder::destroy);
+		try{
+			decoder.destroy();
+		}catch(Throwable e) {
+			log.warn("Cannot destroy multipart decoder: {}",e.getMessage());
+		}
 		return (I) files;
 	}
 
 	@Override
 	public String queryParam(String name) {
 		if(this.msg.params().containsKey(name)) {
-			return Iterables.getFirst(this.msg.params().get(name), null);
+			List<String> params = this.msg.params().get(name);
+			if(params.isEmpty()) {
+				return null;
+			}else {
+				return params.get(0);
+			}
 		}else {
 			return null;
 		}

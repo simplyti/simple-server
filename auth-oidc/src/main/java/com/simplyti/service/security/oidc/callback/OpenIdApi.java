@@ -1,8 +1,13 @@
 package com.simplyti.service.security.oidc.callback;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.inject.Inject;
 
 import com.google.common.base.Joiner;
@@ -29,7 +34,6 @@ import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import io.netty.util.CharsetUtil;
 import io.netty.util.concurrent.Future;
-import io.vavr.control.Try;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor(onConstructor=@__(@Inject))
@@ -45,12 +49,16 @@ public class OpenIdApi implements ApiProvider{
 	public void build(ApiBuilder builder) {
 		builder.when().get(config.callbackUri())
 			.then(ctx->{
-				String state64 = ctx.queryParam("state").replaceAll(" ", "+");
-				Cipher ci = Try.of(()->Cipher.getInstance("AES")).get();
-				Try.run(()->ci.init(Cipher.DECRYPT_MODE, config.cipherKey())).get();
-				byte[] decrypted = Try.<byte[]>of(()->ci.doFinal(Base64.getDecoder().decode(state64))).get();
-				
-				Any state =  JsonIterator.deserialize(decrypted);
+				Any state;
+				try {
+					String state64 = ctx.queryParam("state").replaceAll(" ", "+");
+					Cipher ci = Cipher.getInstance("AES");
+					ci.init(Cipher.DECRYPT_MODE, config.cipherKey());
+					byte[] decrypted = ci.doFinal(Base64.getDecoder().decode(state64));
+					state =  JsonIterator.deserialize(decrypted);
+				} catch (IllegalBlockSizeException | NoSuchAlgorithmException | NoSuchPaddingException | BadPaddingException | InvalidKeyException e) {
+					throw new IllegalStateException(e);
+				}
 				
 				String data = Joiner.on('&').join(
 						Joiner.on('=').join("grant_type", "authorization_code"),

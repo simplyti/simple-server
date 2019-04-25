@@ -43,7 +43,7 @@ services:
     - --initial-cluster-state=new
 
   apiserver:
-    image: gcr.io/google_containers/hyperkube:v1.14.0
+    image: gcr.io/google_containers/hyperkube:v1.14.1
     restart: on-failure
     command:
     - /hyperkube
@@ -61,7 +61,7 @@ services:
     - master:/var/run/kubernetes:rw
     
   controller-manager:
-    image: gcr.io/google_containers/hyperkube:v1.14.0
+    image: gcr.io/google_containers/hyperkube:v1.14.1
     restart: on-failure
     command:
     - /hyperkube

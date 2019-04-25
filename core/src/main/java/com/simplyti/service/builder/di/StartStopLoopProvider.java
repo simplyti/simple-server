@@ -1,8 +1,7 @@
 package com.simplyti.service.builder.di;
 
-import static io.vavr.control.Try.of;
-
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -22,8 +21,12 @@ public class StartStopLoopProvider implements Provider<EventLoop>{
 	}
 	
 	private EventLoopGroup eventLoopGroup(int number) {
-		Constructor<? extends EventLoopGroup> constructor = of(()->eventLoopGroup.getClass().getConstructor(Integer.TYPE)).get();
-		return of(()->constructor.newInstance(number)).get();
+		try {
+			Constructor<? extends EventLoopGroup> constructor = eventLoopGroup.getClass().getConstructor(Integer.TYPE);
+			return constructor.newInstance(number);
+		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 
 }

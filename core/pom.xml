@@ -19,7 +19,7 @@
 		
 		<dependency>
 			<groupId>com.simplyti.cloud</groupId>
-			<artifactId>simple-server-commons</artifactId>
+			<artifactId>simple-server-commons-netty</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 
@@ -61,10 +61,6 @@
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.vavr</groupId>
-			<artifactId>vavr</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml</groupId>

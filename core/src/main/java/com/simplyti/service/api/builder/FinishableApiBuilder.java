@@ -1,12 +1,11 @@
 package com.simplyti.service.api.builder;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.jsoniter.spi.TypeLiteral;
 import com.simplyti.service.api.ApiInvocationContext;
 import com.simplyti.service.api.ApiOperation;
@@ -40,7 +39,7 @@ public abstract class FinishableApiBuilder<I,O> {
 	
 	public FinishableApiBuilder<I,O> withMeta(String name, String value) {
 		if(metadata ==null) {
-			metadata = Maps.newHashMap();
+			metadata = new HashMap<>();
 		}
 		metadata.put(name, value);
 		return this;
@@ -60,7 +59,7 @@ public abstract class FinishableApiBuilder<I,O> {
 		if(metadata==null) {
 			return Collections.emptyMap();
 		}else {
-			return ImmutableMap.<String,String>builder().putAll(metadata).build();
+			return new HashMap<>(metadata);
 		}
 	}
 

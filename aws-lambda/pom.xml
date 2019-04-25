@@ -26,6 +26,11 @@
 			<artifactId>simple-server-core</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>io.vavr</groupId>
+			<artifactId>vavr</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>com.amazonaws</groupId>

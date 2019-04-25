@@ -13,7 +13,7 @@ import java.util.Scanner;
 
 public class CertificateUtils {
 
-	public static List<X509Certificate> read(String value) {
+	public static List<X509Certificate> read(String value) throws CertificateException {
 		List<X509Certificate> certificates = new ArrayList<>();
 		try(Scanner scanner = new Scanner(value)){
 			StringBuilder builder = new StringBuilder();
@@ -32,13 +32,9 @@ public class CertificateUtils {
 		return certificates;
 	}
 	
-	private static X509Certificate buildCertificate(InputStream input) {
-		try {
-			return (X509Certificate) CertificateFactory.getInstance("X.509")
+	private static X509Certificate buildCertificate(InputStream input) throws CertificateException {
+		return (X509Certificate) CertificateFactory.getInstance("X.509")
 					.generateCertificate(input);
-		} catch (CertificateException e) {
-			throw new IllegalArgumentException(e);
-		}
 	}
 
 }

@@ -29,13 +29,11 @@
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt</artifactId>
 		</dependency>
-		
 		<dependency>
 		    <groupId>javax.xml.bind</groupId>
 		    <artifactId>jaxb-api</artifactId>
 		</dependency>
 		
-
 		<!-- Http client -->
 		<dependency>
 			<groupId>com.simplyti.cloud</groupId>

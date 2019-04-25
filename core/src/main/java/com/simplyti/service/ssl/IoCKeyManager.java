@@ -3,6 +3,7 @@ package com.simplyti.service.ssl;
 import java.net.Socket;
 import java.security.Principal;
 import java.security.PrivateKey;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Optional;
 
@@ -23,7 +24,7 @@ public class IoCKeyManager extends X509ExtendedKeyManager {
 	private final Optional<ServerCertificateProvider> certProvider;
 
 	@Inject
-	public IoCKeyManager(Optional<DefaultServerCertificateProvider> defaultProvider, Optional<ServerCertificateProvider> certProvider) {
+	public IoCKeyManager(Optional<DefaultServerCertificateProvider> defaultProvider, Optional<ServerCertificateProvider> certProvider) throws CertificateException {
 		this.defaultProvider = defaultProvider.orElse(new SelfSignedServerCertificateProvider());
 		this.certProvider=certProvider;
 	}

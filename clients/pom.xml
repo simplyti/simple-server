@@ -19,7 +19,7 @@
 		
 		<dependency>
 			<groupId>com.simplyti.cloud</groupId>
-			<artifactId>simple-server-commons</artifactId>
+			<artifactId>simple-server-commons-netty</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

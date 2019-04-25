@@ -1,4 +1,4 @@
-package com.simplyti.service.commons;
+package com.simplyti.service.commons.netty;
 
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;

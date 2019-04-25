@@ -2,7 +2,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>simple-server-discovery-k8s</artifactId>
+	<artifactId>simple-server-commons-netty</artifactId>
 
 	<parent>
 		<groupId>com.simplyti.cloud</groupId>
@@ -16,22 +16,11 @@
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 		</dependency>
-
-		<dependency>
-			<groupId>com.simplyti.cloud</groupId>
-			<artifactId>simple-server-gateway</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.simplyti.cloud</groupId>
-			<artifactId>simple-server-commons</artifactId>
-			<version>${project.version}</version>
-		</dependency>
 		
+		<!-- Netty -->
 		<dependency>
-			<groupId>com.simplyti.cloud</groupId>
-			<artifactId>simple-server-clients-k8s</artifactId>
-			<version>${project.version}</version>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-transport</artifactId>
 		</dependency>
 	</dependencies>
 

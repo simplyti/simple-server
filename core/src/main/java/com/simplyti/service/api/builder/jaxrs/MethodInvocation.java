@@ -8,7 +8,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.fasterxml.classmate.ResolvedType;
-import com.google.common.collect.Iterables;
 import com.simplyti.service.api.ApiInvocationContext;
 import com.simplyti.service.api.DefaultApiInvocationContext;
 import com.simplyti.service.sync.SyncTaskSubmitter;
@@ -84,7 +83,7 @@ public class MethodInvocation implements Consumer<ApiInvocationContext<Object, O
 			ResolvedType itemType = param.getType().typeParametersFor(List.class).get(0);
 			return values.stream().map(value -> RestParam.convert(value, itemType)).collect(Collectors.toList());
 		} else {
-			return RestParam.convert(Iterables.getFirst(values, null), resolvedType);
+			return RestParam.convert(values.get(0), resolvedType);
 		} 
 	}
 

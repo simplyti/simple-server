@@ -1,11 +1,16 @@
 package com.simplyti.service.security.oidc.handler;
 
+import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Map;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -15,7 +20,6 @@ import com.jsoniter.output.JsonStream;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.util.CharsetUtil;
-import io.vavr.control.Try;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
@@ -36,7 +40,12 @@ public class DefaultFullOpenidHandler extends DefaultRedirectableOpenIdHandler i
 		this.clientSecret=clientSecret;
 		
 		byte[] keyBytes = new byte[16];
-        MessageDigest md = Try.of(()->MessageDigest.getInstance("SHA-256")).get();
+        MessageDigest md;
+		try {
+			md = MessageDigest.getInstance("SHA-256");
+		} catch (NoSuchAlgorithmException e) {
+			throw new IllegalStateException(e);
+		}
         md.update(cipherKey.getBytes());
         System.arraycopy(md.digest(), 0, keyBytes, 0, keyBytes.length);
         this.cipherKey = new SecretKeySpec(keyBytes, "AES");
@@ -54,10 +63,14 @@ public class DefaultFullOpenidHandler extends DefaultRedirectableOpenIdHandler i
 		state.put("clientId", clientId());
 		state.put("clientSecret", clientSecret());
 		
-		Cipher ci = Try.of(()->Cipher.getInstance("AES")).get();
-		Try.run(()->ci.init(Cipher.ENCRYPT_MODE, cipherKey)).get();
-		byte[] encripted = Try.<byte[]>of(()->ci.doFinal(JsonStream.serialize(state).getBytes(CharsetUtil.UTF_8))).get();
-		return Base64.getEncoder().encodeToString(encripted);
+		try {
+			Cipher ci = Cipher.getInstance("AES");
+			ci.init(Cipher.ENCRYPT_MODE, cipherKey);
+			byte[] encripted = ci.doFinal(JsonStream.serialize(state).getBytes(CharsetUtil.UTF_8));
+			return Base64.getEncoder().encodeToString(encripted);
+		}catch(InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 
 	protected String tokenEndpoint() {
