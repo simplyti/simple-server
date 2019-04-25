@@ -82,9 +82,11 @@ public class MethodInvocation implements Consumer<ApiInvocationContext<Object, O
 		if (param.getType().isInstanceOf(List.class) && values.size() != 1) {
 			ResolvedType itemType = param.getType().typeParametersFor(List.class).get(0);
 			return values.stream().map(value -> RestParam.convert(value, itemType)).collect(Collectors.toList());
-		} else {
+		} else if(values.size()>0){
 			return RestParam.convert(values.get(0), resolvedType);
-		} 
+		} else {
+			return null;
+		}
 	}
 
 }
