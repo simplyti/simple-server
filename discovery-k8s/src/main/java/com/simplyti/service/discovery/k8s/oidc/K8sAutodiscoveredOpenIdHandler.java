@@ -15,7 +15,7 @@ public class K8sAutodiscoveredOpenIdHandler extends AutodiscoveredOpenIdHandler{
 	public K8sAutodiscoveredOpenIdHandler(HttpClient client, Map<String, OpenIdClientConfig> openIdClientSecrets,String namespace, String authSecret, FullAutodiscoveredOpenIdConfig openId) {
 		super(client, openId);
 		this.openIdClientSecrets=openIdClientSecrets;
-		this.authSecret=String.join(",", namespace,authSecret);
+		this.authSecret=String.join(":", namespace,authSecret);
 	}
 	
 	@Override

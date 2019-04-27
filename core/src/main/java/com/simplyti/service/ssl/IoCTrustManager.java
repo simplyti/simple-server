@@ -19,7 +19,7 @@ public class IoCTrustManager extends X509ExtendedTrustManager {
 	
 	@Override
 	public void checkClientTrusted(X509Certificate[] certificates, String algorithm, SSLEngine engine) throws CertificateException {
-		algorithm.toCharArray();
+		// No-Op
 	}
 
 	@Override

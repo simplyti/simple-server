@@ -36,9 +36,9 @@ public class DefaultServiceDiscovery implements ServiceDiscovery{
 	
 	private Optional<BackendService> backendService(String host, HttpMethod method, String path) {
 		return services.stream()
-		.filter(entry -> entry.method() == method)
-		.filter(entry -> entry.host() == host)
-		.filter(entry -> entry.path() == path)
+		.filter(entry -> entry.method() == null || entry.method().equals(method))
+		.filter(entry -> entry.host() == null || entry.host().equals(host))
+		.filter(entry -> entry.path() == null || entry.path().equals(path))
 		.findFirst();
 	}
 	
