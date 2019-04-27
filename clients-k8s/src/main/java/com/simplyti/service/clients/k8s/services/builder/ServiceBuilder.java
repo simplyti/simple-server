@@ -14,4 +14,6 @@ public interface ServiceBuilder extends K8sResourceBuilder<ServiceBuilder,Servic
 
 	public ServiceBuilder withClusterIp(String string);
 
+	public ServiceBuilder withLoadBalancerIP(String ip);
+
 }

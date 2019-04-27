@@ -61,10 +61,12 @@ public class ServiceModule extends AbstractModule {
 	private final ServerConfig config;
 	private final Collection<Class<? extends ApiProvider>> apiClasses;
 	private final EventLoopGroup eventLoopGroup;
+	private final Collection<ApiProvider> apiProviders;
 
-	public ServiceModule(ServerConfig config, Collection<Class<? extends ApiProvider>> apiClasses, EventLoopGroup eventLoopGroup){
+	public ServiceModule(ServerConfig config, Collection<Class<? extends ApiProvider>> apiClasses, Collection<ApiProvider> apiProviders,  EventLoopGroup eventLoopGroup){
 		this.config=config;
 		this.apiClasses=apiClasses;
+		this.apiProviders=apiProviders;
 		this.eventLoopGroup=eventLoopGroup;
 	}
 
@@ -104,6 +106,7 @@ public class ServiceModule extends AbstractModule {
 		Multibinder<ApiProvider> mangerAPiProviders = Multibinder.newSetBinder(binder(), ApiProvider.class);
 		Stream.concat(apiClasses.stream(), Stream.of(HealthApi.class))
 			.forEach(apiClass->mangerAPiProviders.addBinding().to(apiClass).in(Singleton.class));
+		apiProviders.forEach(provider->mangerAPiProviders.addBinding().toInstance(provider));
 		
 		Multibinder.newSetBinder(binder(), HttpRequetFilter.class);
 		Multibinder.newSetBinder(binder(), OperationInboundFilter.class);

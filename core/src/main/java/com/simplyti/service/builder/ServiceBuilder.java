@@ -13,6 +13,8 @@ public interface ServiceBuilder<T extends Service<?>> {
 	public ServiceBuilder<T> withLog4J2Logger();
 
 	public ServiceBuilder<T> withApi(Class<? extends ApiProvider> apiClass);
+	
+	public ServiceBuilder<T> withApi(ApiProvider provider);
 
 	public ServiceBuilder<T> insecuredPort(int port);
 	

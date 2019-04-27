@@ -8,8 +8,8 @@ import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-import com.google.common.collect.Maps;
 import com.simplyti.service.clients.k8s.secrets.domain.Secret;
 import com.simplyti.service.commons.ssl.CertificateUtils;
 import com.simplyti.service.commons.ssl.PrivateKeyUtils;
@@ -24,8 +24,8 @@ public class KubernetesCertificateProvider implements ServerCertificateProvider{
 	
 	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
 	
-	public final Map<String,SecretName> hostSecret = Maps.newConcurrentMap();
-	public final Map<String,ServerCertificate> secrets = Maps.newConcurrentMap();
+	public final Map<String,SecretName> hostSecret = new ConcurrentHashMap<>();
+	public final Map<String,ServerCertificate> secrets = new ConcurrentHashMap<>();
 
 	@Override
 	public ServerCertificate get(String alias) {

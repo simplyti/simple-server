@@ -9,6 +9,7 @@ public interface EndpointUpdater {
 
 	EndpointSubsetBuilder<? extends EndpointUpdater> addSubset();
 	EndpointSubsetBuilder<? extends EndpointUpdater> setSubset();
+	EndpointUpdater clearSubsets();
 	
 	Future<Endpoint> update();
 

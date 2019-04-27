@@ -35,6 +35,7 @@ public class GuiceServiceBuilder<T extends Service<?>> implements ServiceBuilder
 	
 	private String usingLogger;
 	private Collection<Class<? extends ApiProvider>> apiClasses;
+	private Collection<ApiProvider> apiProviders;
 	private Collection<Module> modules;
 	private Integer insecuredPort;
 	private Integer securedPort;
@@ -52,7 +53,7 @@ public class GuiceServiceBuilder<T extends Service<?>> implements ServiceBuilder
 				serviceClass,
 				MoreObjects.firstNonNull(insecuredPort, DEFAULT_INSECURE_PORT),
 				MoreObjects.firstNonNull(securedPort, DEFAULT_SECURE_PORT),fileServe,eventLoopGroup!=null);
-		ServiceModule coreModule = new ServiceModule(config,MoreObjects.firstNonNull(apiClasses, Collections.emptySet()),eventLoopGroup);
+		ServiceModule coreModule = new ServiceModule(config,MoreObjects.firstNonNull(apiClasses, Collections.emptySet()),MoreObjects.firstNonNull(apiProviders, Collections.emptySet()),eventLoopGroup);
 		Stream<Module> additinalModules = Optional.ofNullable(modules)
 				.map(Collection::stream)
 				.orElse(Stream.<Module>empty());
@@ -106,6 +107,15 @@ public class GuiceServiceBuilder<T extends Service<?>> implements ServiceBuilder
 			this.apiClasses=new HashSet<>();
 		}
 		this.apiClasses.add(apiClass);
+		return this;
+	}
+	
+	@Override
+	public ServiceBuilder<T> withApi(ApiProvider provider) {
+		if(this.apiProviders==null){
+			this.apiProviders=new HashSet<>();
+		}
+		this.apiProviders.add(provider);
 		return this;
 	}
 

@@ -43,6 +43,11 @@ public class AbstractK8sResourceUpdater<T extends K8sResource> {
 		this.patches.add(patch);
 	}
 	
+	protected void setPatch(JsonPatch patch) {
+		this.patches.clear();
+		this.patches.add(patch);
+	}
+	
 	public Future<T> update() {
 		return client.request()
 				.withHeader(HttpHeaderNames.CONTENT_TYPE.toString(),"application/json-patch+json")

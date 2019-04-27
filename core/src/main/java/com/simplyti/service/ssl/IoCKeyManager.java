@@ -14,8 +14,6 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.StandardConstants;
 import javax.net.ssl.X509ExtendedKeyManager;
 
-import com.google.common.base.Predicates;
-
 public class IoCKeyManager extends X509ExtendedKeyManager {
 
 	private static final String DEFAULT = "default";
@@ -65,7 +63,7 @@ public class IoCKeyManager extends X509ExtendedKeyManager {
 	private String retrieveHostName(SSLEngine engine) {
 		ExtendedSSLSession session = (ExtendedSSLSession) engine.getHandshakeSession();
 		return session.getRequestedServerNames().stream()
-			.filter(name->Predicates.equalTo(StandardConstants.SNI_HOST_NAME).apply(name.getType()))
+			.filter(name->StandardConstants.SNI_HOST_NAME == name.getType())
 			.map(SNIHostName.class::cast)
 			.findFirst()
 			.map(name->name.getAsciiName()).orElse(null);

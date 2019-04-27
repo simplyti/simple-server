@@ -41,6 +41,12 @@ public class DefaultEndpointUpdater extends AbstractK8sResourceUpdater<Endpoint>
 		}
 		return this;
 	}
+
+	@Override
+	public EndpointUpdater clearSubsets() {
+		setPatch(JsonPatch.replace("/subsets", Collections.emptyList()));
+		return this;
+	}
 	
 	
 

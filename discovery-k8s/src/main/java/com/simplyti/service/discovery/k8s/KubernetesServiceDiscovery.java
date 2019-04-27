@@ -3,9 +3,11 @@ package com.simplyti.service.discovery.k8s;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -13,7 +15,6 @@ import javax.inject.Inject;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.Maps;
 import com.simplyti.service.api.filter.HttpRequetFilter;
 import com.simplyti.service.clients.Address;
 import com.simplyti.service.clients.http.HttpClient;
@@ -66,13 +67,13 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 	
 	private final KubeClient client;
 	
-	private final Map<String,Service> services = Maps.newHashMap();
+	private final Map<String,Service> services = new HashMap<>();
 	private final AtomicReference<Observable<Service>> observableServices = new AtomicReference<>();
 	
-	private final Map<String,Ingress> ingresses = Maps.newHashMap();
+	private final Map<String,Ingress> ingresses = new HashMap<>();
 	private final AtomicReference<Observable<Ingress>> observableIngresses = new AtomicReference<>();
 	
-	private final Map<String,Endpoint> endpoints = Maps.newHashMap();
+	private final Map<String,Endpoint> endpoints = new HashMap<>();
 	private final AtomicReference<Observable<Endpoint>> observableEndpoints = new AtomicReference<>();
 	
 	private final AtomicReference<Observable<Secret>> observableSecrets = new AtomicReference<>();
@@ -91,7 +92,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		this.eventLoop=eventLoopgroup.next();
 		this.certificateProvider=certificateProvider;
 		this.openIdConfig=openIdConfig;
-		this.openIdClientSecrets=Maps.newConcurrentMap();
+		this.openIdClientSecrets=new ConcurrentHashMap<>();
 	}
 	
 	@Override
@@ -163,7 +164,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		if(eventLoop.inEventLoop()) {
 			consumer.accept(type,service);
 		}else {
-			eventLoop.submit(()->consumer.accept(type,service));
+			eventLoop.execute(()->consumer.accept(type,service));
 		}
 	}
 	
@@ -198,7 +199,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 	}
 	
 	private Map<ServiceKey,List<com.simplyti.service.clients.Endpoint>> endpoints(Service service, List<EnpointAddress> addresses) {
-		Map<ServiceKey,List<com.simplyti.service.clients.Endpoint>> mapedServices = Maps.newHashMap();
+		Map<ServiceKey,List<com.simplyti.service.clients.Endpoint>> mapedServices = new HashMap<>();
 		addresses.forEach(address->eachEndpoint(service, address, (edp,host,path)->{
 						ServiceKey key = new ServiceKey(host,null,path);
 						if(mapedServices.containsKey(key)) {
@@ -275,6 +276,9 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 	}
 
 	private void handleSecret(EventType type, Secret secret) {
+		if(secret.data()==null) {
+			return;
+		}
 		if(secret.data().containsKey("tls.key") && secret.data().containsKey("tls.crt")) {
 			if(type == EventType.ADDED){
 				certificateProvider.addSecret(resourceId(secret.metadata()),secret);

@@ -22,6 +22,7 @@ public class DefaultServiceBuilder extends AbstractK8sResourceBuilder<ServiceBui
 	
 	private ServiceType serviceType;
 	private String clusterIp;
+	private String loadBalancerIP;
 
 	public DefaultServiceBuilder(HttpClient client,K8sAPI api,String namespace, String resource) {
 		super(client,api,namespace,resource,Service.class);
@@ -38,6 +39,7 @@ public class DefaultServiceBuilder extends AbstractK8sResourceBuilder<ServiceBui
 				.selector(selector)
 				.type(serviceType)
 				.clusterIP(clusterIp)
+				.loadBalancerIP(loadBalancerIP)
 				.ports(ports).build(),null);
 	}
 
@@ -61,6 +63,12 @@ public class DefaultServiceBuilder extends AbstractK8sResourceBuilder<ServiceBui
 	@Override
 	public ServiceBuilder withClusterIp(String ip) {
 		this.clusterIp=ip;
+		return this;
+	}
+
+	@Override
+	public ServiceBuilder withLoadBalancerIP(String ip) {
+		this.loadBalancerIP=ip;
 		return this;
 	}
 

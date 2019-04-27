@@ -29,6 +29,18 @@ public class DefaultEndpointSubsetBuilder<T extends SubsetHolder<T>> implements 
 		ports.add(new Port(null, port, null));
 		return this;
 	}
+	
+	@Override
+	public EndpointSubsetBuilder<T> withPort(int port, String name) {
+		ports.add(new Port(name, port, null));
+		return this;
+	}
+	
+	@Override
+	public EndpointSubsetBuilder<T> withPort(int port, String name, String protocol) {
+		ports.add(new Port(name, port, protocol));
+		return this;
+	}
 
 	@Override
 	public T create() {
