@@ -58,42 +58,34 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
-		final Object write;
+		final Object rewritedRequest;
 		if (msg instanceof HttpRequest) {
 			HttpRequest request = (HttpRequest) msg;
 			QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
-			BackendService service = serviceDiscovery.get(request.headers().get(HttpHeaderNames.HOST),request.method(), decoder.path());
+			BackendServiceMatcher service = serviceDiscovery.get(request.headers().get(HttpHeaderNames.HOST),request.method(), decoder.path());
 			if (service == null) {
 				ctx.fireExceptionCaught(new NotFoundException());
 				this.ignoreNextMessages=true;
 				return;
 			} else {
-				write = rewrite(request,service);
-				if(service.filters().isEmpty()) {
-					serviceProceed(ctx,service);
+				rewritedRequest = service.rewrite(request);
+				if(service.get().filters().isEmpty()) {
+					serviceProceed(ctx,service.get());
 				}else {
-					filterRequest(ctx,service,request);
+					filterRequest(ctx,service.get(),request);
 				}
 			}
 		}else {
-			write = msg;
+			rewritedRequest = msg;
 		}
 		
 		if (backendChannel != null) {
-			backendChannel.writeAndFlush(write).addListener(f->handleWriteFuture(ctx,f));
+			backendChannel.writeAndFlush(rewritedRequest).addListener(f->handleWriteFuture(ctx,f));
 		} else if(!ignoreNextMessages){
-			pendingMessages.pending(ctx.executor().newPromise(), write);
+			pendingMessages.pending(ctx.executor().newPromise(), rewritedRequest);
 		}
 	}
 	
-	private HttpRequest rewrite(HttpRequest request, BackendService service) {
-		if(service.rewrite()!=null) {
-			return request.setUri(service.rewrite()+request.uri());
-		}else {
-			return request;
-		}
-	}
-
 	private void filterRequest(ChannelHandlerContext ctx, BackendService service, HttpRequest request) {
 		Future<Boolean> futureHandled = FilterChain.of(service.filters(),ctx,request).execute();
 		futureHandled.addListener(result->{

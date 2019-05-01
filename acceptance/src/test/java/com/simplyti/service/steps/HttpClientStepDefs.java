@@ -52,6 +52,7 @@ import io.netty.util.concurrent.Future;
 import io.vavr.control.Try;
 
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
@@ -396,27 +397,33 @@ public class HttpClientStepDefs {
 		ByteBuf data = objects.get(item);
 		assertThat(data.toString(CharsetUtil.UTF_8),equalTo(expected));
 	}
-
 	
-	@When("^I send message \"([^\"]*)\" to websocket \"([^\"]*)\" getting text stream \"([^\"]*)\" and write \"([^\"]*)\"$")
-	public void iSendAWebsocketTextMessageGettingResponseStreamAs(String msg, String wsKey, String stream,String result) throws Exception {
+	@When("^I connect to websocket \"([^\"]*)\" getting text stream \"([^\"]*)\"$")
+	public void iConnectToWebsocketGettingTextStream(String wsKey, String stream) throws Exception {
 		StringBuilder data = new StringBuilder();
 		scenarioData.put(stream, data);
 		WebSocketClient ws = client.request().withEndpoint(LOCAL_ENDPOINT)
 			.websocket("/",frame->data.append(((TextWebSocketFrame)frame).text()));
 		scenarioData.put(wsKey, ws);
-		scenarioData.put(result, ws.send(msg));
 	}
 	
-	@When("^I send message \"([^\"]*)\" to websocket \"([^\"]*)\" with address \"([^\"]*)\" getting text stream \"([^\"]*)\" and write \"([^\"]*)\"$")
-	public void iSendAWebsocketTextMessageGettingResponseStreamAs(String msg, String wsKey, String endpointUrl, String stream,String result) throws Exception {
+	@When("^I connect to websocket \"([^\"]*)\" getting text stream \"([^\"]*)\" and write \"([^\"]*)\"$")
+	public void iConnectToWebsocketGettingTextStreamAndWrite(String wsKey, String stream, String arg3) throws Exception {
+		StringBuilder data = new StringBuilder();
+		scenarioData.put(stream, data);
+		WebSocketClient ws = client.request().withEndpoint(LOCAL_ENDPOINT)
+			.websocket("/",frame->data.append(((TextWebSocketFrame)frame).text()));
+		scenarioData.put(wsKey, ws);
+	}
+	
+	@When("^I connect to websocket \"([^\"]*)\" with address \"([^\"]*)\" getting text stream \"([^\"]*)\"$")
+	public void iConnectToWebsocketWithAddressGettingTextStream(String wsKey, String endpointUrl, String stream) throws Exception {
 		HttpEndpoint endpoint = HttpEndpoint.of(endpointUrl);
 		StringBuilder data = new StringBuilder();
 		scenarioData.put(stream, data);
 		WebSocketClient ws = client.request().withEndpoint(endpoint)
 			.websocket("/",frame->data.append(((TextWebSocketFrame)frame).text()));
 		scenarioData.put(wsKey, ws);
-		scenarioData.put(result, ws.send(msg));
 	}
 	
 	@Then("^I check that text stream \"([^\"]*)\" is equals to \"([^\"]*)\"$")
@@ -424,6 +431,14 @@ public class HttpClientStepDefs {
 		StringBuilder data = (StringBuilder) scenarioData.get(key);
 		Awaitility.await().until(()->((StringBuilder) scenarioData.get(key)).toString(),equalTo(expected));
 		assertThat(data.toString(),equalTo(expected));
+		data.delete(0, data.length());
+	}
+	
+	@Then("^I check that text stream \"([^\"]*)\" content match with \"([^\"]*)\"$")
+	public void iCheckThatTextStreamContentMatchWith(String key, String regex) throws Exception {
+		StringBuilder data = (StringBuilder) scenarioData.get(key);
+		Awaitility.await().until(()->((StringBuilder) scenarioData.get(key)).toString().matches(regex));
+		assertTrue(data.toString().matches(regex));
 		data.delete(0, data.length());
 	}
 	

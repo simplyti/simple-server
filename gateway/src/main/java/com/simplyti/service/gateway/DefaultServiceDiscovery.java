@@ -17,11 +17,12 @@ public class DefaultServiceDiscovery implements ServiceDiscovery{
 	private final Set<BackendService> services = Sets.newTreeSet();
 
 	@Override
-	public BackendService get(String host, HttpMethod method, String path) {
+	public BackendServiceMatcher get(String host, HttpMethod method, String path) {
 		return services.stream()
 			.filter(entry -> entry.method() == null || entry.method().equals(method))
 			.filter(entry -> entry.host()== null || ( host!=null && entry.host().equals(host)))
-			.filter(entry -> entry.pattern() == null || entry.path().equals(path) || entry.pattern().matcher(path).matches())
+			.map(entry -> new DefaultBackendServiceMatcher(entry,path))
+			.filter(entry -> entry.matches())
 			.findFirst().orElse(null);
 	}
 	
@@ -44,7 +45,6 @@ public class DefaultServiceDiscovery implements ServiceDiscovery{
 	
 	public void addEndpoint(String host, HttpMethod method, String path, Endpoint endpoint) {
 		Optional<BackendService> foundService = backendService(host,method,path);
-		
 		foundService.ifPresent(service->{
 			foundService.get().add(endpoint);
 			log.info("Updated service: {}",foundService.get());

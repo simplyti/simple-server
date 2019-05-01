@@ -15,9 +15,9 @@ services:
     - "2223:443"
     
   ws:
-    image: ksdn117/web-socket-test
+    image: jmalloc/echo-server
     ports:
-    - "8010:8010"
+    - "8010:8080"
 
   socks5:
     image: wernight/dante

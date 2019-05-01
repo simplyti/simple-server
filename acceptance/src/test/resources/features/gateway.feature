@@ -181,13 +181,15 @@ Scenario: Web socket backend
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I create a service with backend "http://127.0.0.1:8010"
-	And I send message "Hello WS!" to websocket "#ws" getting text stream "#stream" and write "#writeFuture"
+	When I connect to websocket "#ws" getting text stream "#stream"
+	Then I check that text stream "#stream" content match with "Request served by .*"
+	When I send message "Hello WS!" to websocket "#ws" getting "#writeFuture"
 	Then I check that "#writeFuture" is success
-	And I check that text stream "#stream" is equals to "Server received from client: Hello WS!"
+	And I check that text stream "#stream" is equals to "Hello WS!"
 	When I send message "Bye WS!" to websocket "#ws" getting "#writeFuture"
 	Then I check that "#writeFuture" is success
-	And I check that text stream "#stream" is equals to "Server received from client: Bye WS!"
-	
+	And I check that text stream "#stream" is equals to "Bye WS!"
+
 Scenario: Web socket service connection error
 	When I start a service "#serviceFuture" with options:
 		| option	 			| value |
@@ -196,7 +198,8 @@ Scenario: Web socket service connection error
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I create a service with backend "http://127.0.0.1:9090"
-	And I send message "Hello WS!" to websocket "#ws" getting text stream "#stream" and write "#writeFuture"
+	When I connect to websocket "#ws" getting text stream "#stream"
+	When I send message "Hello WS!" to websocket "#ws" getting "#writeFuture"
 	Then I check that "#writeFuture" is failure
 
 Scenario: Web socket service bad handshake
@@ -207,6 +210,27 @@ Scenario: Web socket service bad handshake
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I create a service with backend "http://127.0.0.1:8081"
-	And I send message "Hello WS!" to websocket "#ws" getting text stream "#stream" and write "#writeFuture"
+	When I connect to websocket "#ws" getting text stream "#stream"
+	When I send message "Hello WS!" to websocket "#ws" getting "#writeFuture"
 	Then I check that "#writeFuture" is failure
 	
+Scenario: Path based routing
+	When I start a service "#serviceFuture" with options:
+		| option	 			| value |
+		| withApi			| com.simplyti.service.APITest |
+		| insecuredPort		| 9090	|
+		| securedPort		| 9091	|
+		| withLog4J2Logger	|		|
+	When I start a service "#gatewayFuture" with options:
+		| option	 			| value |
+		| withModule			| com.simplyti.service.gateway.GatewayModule |
+		| withModule			| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| withLog4J2Logger	|		|
+	Then I check that "#gatewayFuture" is success
+	When I create a service with path "/status" and backend "http://127.0.0.1:8081"
+	And I create a service with path "/responsecode" and backend "http://127.0.0.1:9090"
+	And I send a "GET /status/200" getting "#response"
+	Then I check that "#response" has status code 200
+	When I send a "GET /responsecode/204" getting "#response"
+	Then I check that "#response" has status code 204
+		

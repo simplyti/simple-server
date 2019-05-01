@@ -62,6 +62,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 	private static final String AUTH_TYPE = "ingress.kubernetes.io/auth-type";
 	private static final String AUTH_REALM = "ingress.kubernetes.io/auth-realm";
 	private static final String AUTH_SECRET = "ingress.kubernetes.io/auth-secret";
+	private static final String REWRITE_ANN = "ingress.kubernetes.io/rewrite-target";
 
 	private final EventLoop eventLoop;
 	
@@ -223,7 +224,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 						.add(host,Joiner.on(':').join(ingress.metadata().namespace(),tls.secretName()))));
 			
 			ingress.spec().rules().stream().flatMap(rule->rule.http().paths().stream()
-					.map(path->new BackendService(rule.host(), null, path.path(),rewrite(),securiFilters(ingress),
+					.map(path->new BackendService(rule.host(), null, path.path(),rewrite(ingress),securiFilters(ingress),
 							endpoints(ingress.metadata().namespace(),ingress,path.backend()))))
 			.forEach(this::addService);
 		}else if(type == EventType.DELETED) {
@@ -233,7 +234,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 				.forEach(tls->tls.hosts().stream().forEach(certificateProvider::remove));
 			
 			oldIngress.spec().rules().stream().flatMap(rule->rule.http().paths().stream()
-					.map(path->new BackendService(rule.host(), null, path.path(),rewrite(), null,null)))
+					.map(path->new BackendService(rule.host(), null, path.path(),null, null,null)))
 			.forEach(this::removeService);
 		} else if(type == EventType.MODIFIED) {
 			Ingress oldIngress = ingresses.put(id, ingress);
@@ -246,10 +247,11 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 			.forEach(tls->tls.hosts().stream().forEach(certificateProvider::remove));
 			
 			List<BackendService> oldBackends = oldIngress.spec().rules().stream().flatMap(rule->rule.http().paths().stream()
-					.map(path->new BackendService(rule.host(), null, path.path(),rewrite(), null, endpoints(ingress.metadata().namespace(),ingress,path.backend()))))
+					.map(path->new BackendService(rule.host(), null, path.path(),null, null, endpoints(ingress.metadata().namespace(),ingress,path.backend()))))
 					.collect(Collectors.toList());
 			List<BackendService> newBackends = ingress.spec().rules().stream().flatMap(rule->rule.http().paths().stream()
-					.map(path->new BackendService(rule.host(), null, path.path(),rewrite(), null, endpoints(ingress.metadata().namespace(),ingress,path.backend()))))
+					.map(path->new BackendService(rule.host(), null, path.path(),rewrite(ingress), securiFilters(ingress), 
+							endpoints(ingress.metadata().namespace(),ingress,path.backend()))))
 					.collect(Collectors.toList());
 			
 			oldBackends.stream().filter(backend->!newBackends.contains(backend))
@@ -259,8 +261,12 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		}
 	}
 	
-	private String rewrite() {
-		return null;
+	private String rewrite(Ingress ingress) {
+		if(containsAnnotation(ingress,REWRITE_ANN)) {
+			return ingress.metadata().annotations().get(REWRITE_ANN);
+		} else {
+			return null;
+		}
 	}
 
 	private Set<HttpRequetFilter> securiFilters(Ingress ingress) {

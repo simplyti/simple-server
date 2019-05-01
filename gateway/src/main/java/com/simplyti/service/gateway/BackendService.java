@@ -37,9 +37,11 @@ public class BackendService implements Comparable<BackendService>{
 	private final String rewrite;
 	private final Set<HttpRequetFilter> filters;
 	private final Pattern pattern;
+	private final PathPattern pathPattern;
 	private final int literalCount;
 	
 	private ServiceBalancer loadBalander;
+
 
 	public BackendService(String host, HttpMethod method, String path, String rewrite, Set<HttpRequetFilter> filters, Collection<Endpoint> endpoints) {
 		this.loadBalander = new RoundRobinLoadBalancer(endpoints);
@@ -49,15 +51,17 @@ public class BackendService implements Comparable<BackendService>{
 		this.rewrite=rewrite;
 		this.filters=MoreObjects.firstNonNull(filters, Collections.emptySet());
 		if(path==null) {
+			this.pathPattern=null;
 			this.pattern = null;
 			literalCount=0;
 		}else {
 			PathPattern thePattern = PathPattern.build(path);
 			if(thePattern.pathParamNameToGroup().isEmpty()) {
-				PathPattern pathPattern = PathPattern.build(path.replaceAll("/+$",  StringUtil.EMPTY_STRING)+"/{any:.*}");
-				this.pattern = pathPattern.pattern();
-				this.literalCount = pathPattern.literalCount();
+				this.pathPattern = null;
+				this.pattern = Pattern.compile(path.replaceAll("/+$",  StringUtil.EMPTY_STRING)+"/?(.*)");
+				this.literalCount = 1;
 			}else {
+				this.pathPattern = thePattern;
 				this.pattern = thePattern.pattern();
 				this.literalCount = thePattern.literalCount();
 			}
