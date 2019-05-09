@@ -216,15 +216,15 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 
 	private void handleIngress(EventType type, Ingress ingress) {
 		String id = resourceId(ingress.metadata());
+		boolean tlsEnabled = ingress.spec().tls()!=null;
 		if(type == EventType.ADDED){
 			ingresses.put(id, ingress);
-			
 			MoreObjects.firstNonNull(ingress.spec().tls(), Collections.<IngressTls>emptyList()).stream()
 				.forEach(tls->tls.hosts().stream().forEach(host->certificateProvider
 						.add(host,Joiner.on(':').join(ingress.metadata().namespace(),tls.secretName()))));
 			
 			ingress.spec().rules().stream().flatMap(rule->rule.http().paths().stream()
-					.map(path->new BackendService(rule.host(), null, path.path(),rewrite(ingress),securiFilters(ingress),
+					.map(path->new BackendService(rule.host(), null, path.path(),rewrite(ingress),tlsEnabled,securiFilters(ingress),
 							endpoints(ingress.metadata().namespace(),ingress,path.backend()))))
 			.forEach(this::addService);
 		}else if(type == EventType.DELETED) {
@@ -234,7 +234,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 				.forEach(tls->tls.hosts().stream().forEach(certificateProvider::remove));
 			
 			oldIngress.spec().rules().stream().flatMap(rule->rule.http().paths().stream()
-					.map(path->new BackendService(rule.host(), null, path.path(),null, null,null)))
+					.map(path->new BackendService(rule.host(), null, path.path(),null,tlsEnabled, null,null)))
 			.forEach(this::removeService);
 		} else if(type == EventType.MODIFIED) {
 			Ingress oldIngress = ingresses.put(id, ingress);
@@ -247,10 +247,10 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 			.forEach(tls->tls.hosts().stream().forEach(certificateProvider::remove));
 			
 			List<BackendService> oldBackends = oldIngress.spec().rules().stream().flatMap(rule->rule.http().paths().stream()
-					.map(path->new BackendService(rule.host(), null, path.path(),null, null, endpoints(ingress.metadata().namespace(),ingress,path.backend()))))
+					.map(path->new BackendService(rule.host(), null, path.path(),null, tlsEnabled, null, endpoints(ingress.metadata().namespace(),ingress,path.backend()))))
 					.collect(Collectors.toList());
 			List<BackendService> newBackends = ingress.spec().rules().stream().flatMap(rule->rule.http().paths().stream()
-					.map(path->new BackendService(rule.host(), null, path.path(),rewrite(ingress), securiFilters(ingress), 
+					.map(path->new BackendService(rule.host(), null, path.path(),rewrite(ingress),tlsEnabled,  securiFilters(ingress), 
 							endpoints(ingress.metadata().namespace(),ingress,path.backend()))))
 					.collect(Collectors.toList());
 			

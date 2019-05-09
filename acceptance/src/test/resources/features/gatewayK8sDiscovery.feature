@@ -263,6 +263,25 @@ Scenario: Ingress TLS
 	And I check that "#response" is equals to ""
 	And I check that server certificate has name "CN=httpbin.org"
 	
+Scenario: Ingress TLS should redirect to HTTPS when request to insecure port
+	Given a key pair "#keypair" with algorithm "RSA" and bits 1024
+    And a certificate "#cert" autosigned with key "#keypair" with common name "httpbin.org"
+	When I start a service "#serviceFuture" with options:
+		| option	 			| value |
+		| withModule			| com.simplyti.service.gateway.GatewayModule |
+		| withModule			| com.simplyti.service.discovery.k8s.KubernetesServiceDiscoveryModule(http://localhost:8082) |
+		| withLog4J2Logger	|		|
+	Then I check that "#serviceFuture" is success
+	When I create a server certificate secret in namespace "acceptance" with name "httpbin-tls", key "#keypair" and cert "#cert"
+	When I create an endpoint in namespace "acceptance" with name "service" and address "${local.address}:8081"
+	And I create a service in namespace "acceptance" with name "service" with port 8080 to target 8081
+	And I create an ingress in namespace "acceptance" with name "httpbin", host "httpbin.local", tls secret "httpbin-tls" and backend service "service:8080"
+	Then I check that exist 1 gateway services
+	And I check that exist a gateway service with targets "http://${local.address}:8081"
+	When I send a "GET /status/200" with header "host" with value "httpbin.local" getting "#response"
+	Then I check that "#response" has status code 308
+	And I check that "#response" contains header "location" equals to "https://httpbin.local"
+	
 Scenario: Delete TLS secret
 	Given a key pair "#keypair" with algorithm "RSA" and bits 1024
     And a certificate "#cert" autosigned with key "#keypair" with common name "httpbin.org"

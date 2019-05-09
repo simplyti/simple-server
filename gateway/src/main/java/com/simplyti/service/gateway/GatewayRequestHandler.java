@@ -15,12 +15,16 @@ import com.simplyti.service.clients.InternalClient;
 import com.simplyti.service.commons.netty.pending.PendingMessages;
 import com.simplyti.service.gateway.handler.BackendProxyHandler;
 
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.pool.ChannelPool;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.util.concurrent.Future;
 import io.netty.util.internal.logging.InternalLogger;
@@ -51,12 +55,6 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	}
 	
 	@Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-		InetSocketAddress localAddress = (InetSocketAddress) ctx.channel().localAddress();
-		this.frontSsl = config.securedPort()==localAddress.getPort();
-    }
-
-	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
 		final Object rewritedRequest;
 		if (msg instanceof HttpRequest) {
@@ -67,7 +65,13 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 				ctx.fireExceptionCaught(new NotFoundException());
 				this.ignoreNextMessages=true;
 				return;
-			} else {
+			}else {
+				if(service.get().tlsEnabled() && !frontSsl) {
+					if(handleSslRedirect(ctx,request,service.get())) {
+						this.ignoreNextMessages=true;
+						return;
+					}
+				}
 				rewritedRequest = service.rewrite(request);
 				if(service.get().filters().isEmpty()) {
 					serviceProceed(ctx,service.get());
@@ -83,6 +87,21 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 			backendChannel.writeAndFlush(rewritedRequest).addListener(f->handleWriteFuture(ctx,f));
 		} else if(!ignoreNextMessages){
 			pendingMessages.pending(ctx.executor().newPromise(), rewritedRequest);
+		}
+	}
+	
+	private boolean handleSslRedirect(ChannelHandlerContext ctx, HttpRequest request,BackendService service) {
+		FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.PERMANENT_REDIRECT,
+				Unpooled.EMPTY_BUFFER);
+		String host = request.headers().get(HttpHeaderNames.HOST);
+		if(host!=null) {
+			String[] hostPort = host.split(":");
+			response.headers().set(HttpHeaderNames.LOCATION,"https://"+hostPort[0]);
+			response.headers().set(HttpHeaderNames.CONTENT_LENGTH, 0);
+			ctx.writeAndFlush(response).addListener(f->handleWriteFuture(ctx,f));
+			return true;
+		}else {
+			return false;
 		}
 	}
 	
@@ -159,6 +178,8 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	@Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
 		ctx.channel().config().setAutoRead(false);
+		InetSocketAddress localAddress = (InetSocketAddress) ctx.channel().localAddress();
+		this.frontSsl = config.securedPort()==localAddress.getPort();
     }
 	
 	@Override

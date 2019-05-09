@@ -39,16 +39,17 @@ public class BackendService implements Comparable<BackendService>{
 	private final Pattern pattern;
 	private final PathPattern pathPattern;
 	private final int literalCount;
+	private final boolean tlsEnabled;
 	
 	private ServiceBalancer loadBalander;
 
-
-	public BackendService(String host, HttpMethod method, String path, String rewrite, Set<HttpRequetFilter> filters, Collection<Endpoint> endpoints) {
+	public BackendService(String host, HttpMethod method, String path, String rewrite, boolean tlsEnabled, Set<HttpRequetFilter> filters, Collection<Endpoint> endpoints) {
 		this.loadBalander = new RoundRobinLoadBalancer(endpoints);
 		this.host=host;
 		this.method=method;
 		this.path=path;
 		this.rewrite=rewrite;
+		this.tlsEnabled=tlsEnabled;
 		this.filters=MoreObjects.firstNonNull(filters, Collections.emptySet());
 		if(path==null) {
 			this.pathPattern=null;
@@ -59,7 +60,7 @@ public class BackendService implements Comparable<BackendService>{
 			if(thePattern.pathParamNameToGroup().isEmpty()) {
 				this.pathPattern = null;
 				this.pattern = Pattern.compile(path.replaceAll("/+$",  StringUtil.EMPTY_STRING)+"/?(.*)");
-				this.literalCount = 1;
+				this.literalCount = thePattern.literalCount();
 			}else {
 				this.pathPattern = thePattern;
 				this.pattern = thePattern.pattern();
@@ -153,6 +154,10 @@ public class BackendService implements Comparable<BackendService>{
 
 	public Set<HttpRequetFilter> filters() {
 		return filters;
+	}
+
+	public boolean tlsEnabled() {
+		return tlsEnabled;
 	}
 
 }

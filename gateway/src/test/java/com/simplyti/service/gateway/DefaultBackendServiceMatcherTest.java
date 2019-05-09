@@ -27,6 +27,11 @@ public class DefaultBackendServiceMatcherTest {
 			{ "/myservice", "/", "/myservice/resource" , "/resource" },
 			{ "/myservice", "/", "/myservice/resource/" , "/resource/" },
 			{ "/getstatus/{status}", "/status", "/getstatus/200" , "/status/200" },
+			{ null, "/app/res", "/" , "/app/res" },
+			{ null, "/app/res", "/subresource" , "/app/res/subresource" },
+			{ null, "/app/res/", "/" , "/app/res/" },
+			{ null, "/app/res/", "/3" , "/app/res/3" },
+			{ "/static", "/other/static", "/static/file.js" , "/other/static/file.js" },
 			});
 	}
 
@@ -44,7 +49,7 @@ public class DefaultBackendServiceMatcherTest {
 
 	@Test
 	public void test() {
-		BackendService service = new BackendService(null, null, servicePath, rewrite, null, Collections.emptyList());
+		BackendService service = new BackendService(null, null, servicePath, rewrite, false, null, Collections.emptyList());
 		HttpRequest httpRrequest = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, request);
 
 		BackendServiceMatcher matcher = new DefaultBackendServiceMatcher(service, httpRrequest.uri());
