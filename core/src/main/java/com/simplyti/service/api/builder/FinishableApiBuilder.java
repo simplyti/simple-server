@@ -47,7 +47,7 @@ public abstract class FinishableApiBuilder<I,O> {
 	
 	public void then(Consumer<ApiInvocationContext<I,O>> consumer) {
 		PathPattern pathPattern = PathPattern.build(uri);
-		builder.add(new ApiOperation<I,O>(method, pathPattern.pattern(), pathPattern.pathParamNameToGroup(),consumer,requestType,pathPattern.literalCount(),
+		builder.add(new ApiOperation<I,O>(method, pathPattern,consumer,requestType,pathPattern.literalCount(),
 				multipart,noNegative(maxBodyLength,DEFAULT_MAX_BODY),metadata()));
 	}
 	

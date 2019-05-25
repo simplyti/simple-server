@@ -125,6 +125,10 @@ public class APITest implements ApiProvider{
 			ctx.send(response);
 		});
 		
+		builder.when().get("/user/{id}")
+		.withMeta("serviceId", "GetUser")
+		.then(ctx->ctx.send("Hello user "+ctx.pathParam("id")));
+		
 		builder.when().delete("/delete")
 			.then(ctx->ctx.send("Bye!"));
 		

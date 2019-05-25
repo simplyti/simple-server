@@ -15,8 +15,10 @@ public class PathPattern {
 	private final Pattern pattern;
 	private final Map<String, Integer> pathParamNameToGroup;
 	private final int literalCount;
+	private final String template;
 
-	public PathPattern(Pattern pattern, Map<String, Integer> pathParamNameToGroup, int literalCount) {
+	public PathPattern(String template, Pattern pattern, Map<String, Integer> pathParamNameToGroup, int literalCount) {
+		this.template=template;
 		this.pattern=pattern;
 		this.pathParamNameToGroup=pathParamNameToGroup;
 		this.literalCount=literalCount;
@@ -24,6 +26,10 @@ public class PathPattern {
 	
 	public Pattern pattern() {
 		return pattern;
+	}
+	
+	public String template() {
+		return template;
 	}
 	
 	public Map<String, Integer> pathParamNameToGroup() {
@@ -49,7 +55,7 @@ public class PathPattern {
 		pathTemplateBuilder.append("/?$").insert(0, "^/");
 		Map<String, Integer> pathParamNameToGroup = pathParamNameToGroupBuilder.build();
 		
-		return new PathPattern(Pattern.compile(pathTemplateBuilder.toString()),pathParamNameToGroup,literalCharsCount.get());
+		return new PathPattern(uri,Pattern.compile(pathTemplateBuilder.toString()),pathParamNameToGroup,literalCharsCount.get());
 	}
 	
 	private static void process(Character character, StringBuilder pathTemplateBuilder,
