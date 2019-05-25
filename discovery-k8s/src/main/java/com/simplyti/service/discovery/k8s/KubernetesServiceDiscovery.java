@@ -98,13 +98,30 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 	
 	@Override
 	public Future<Void> executeStart(EventLoop executor) {
-		Promise<Void> promise = executor.newPromise();
+		Promise<Void> listPromise = executor.newPromise();
 		PromiseCombiner combiner = new PromiseCombiner(executor);
-		combiner.add(getServices(executor));
-		combiner.add(getIngresses(executor));
-		combiner.add(getEndpoints(executor));
-		combiner.add(getSecrets(executor));
-		combiner.finish(promise);
+		AtomicReference<String> servicesResourceVersion = new AtomicReference<>();
+		AtomicReference<String> ingressesResourceVersion = new AtomicReference<>();
+		AtomicReference<String> endpointsResourceVersion = new AtomicReference<>();
+		AtomicReference<String> secretsResourceVersion = new AtomicReference<>();
+		
+		combiner.add(list(executor, client.services(), servicesResourceVersion, this::handleService));
+		combiner.add(list(executor, client.ingresses(), ingressesResourceVersion, this::handleIngress));
+		combiner.add(list(executor, client.endpoints(), endpointsResourceVersion, this::handleEndpoint));
+		combiner.add(list(executor, client.secrets(), secretsResourceVersion, this::handleSecret));
+		combiner.finish(listPromise);
+		Promise<Void> promise = executor.newPromise();
+		listPromise.addListener(f->{
+			if(f.isSuccess()) {
+				watch(client.services(),servicesResourceVersion.get(),this::handleService);
+				watch(client.ingresses(),ingressesResourceVersion.get(),this::handleIngress);
+				watch(client.endpoints(),endpointsResourceVersion.get(),this::handleEndpoint);
+				watch(client.secrets(),secretsResourceVersion.get(),this::handleSecret);
+				promise.setSuccess(null);
+			}else {
+				promise.setFailure(f.cause());
+			}
+		});
 		return promise;
 	}
 	
@@ -129,30 +146,13 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		return promise;
 	}
 
-	private Future<Void> getServices(EventLoop executor) {
-		return listAndWatch(executor, client.services(),observableServices, this::handleService);
-	}
-	
-	private Future<Void> getIngresses(EventLoop executor) {
-		return listAndWatch(executor, client.ingresses(), observableIngresses, this::handleIngress);
-	}
-	
-	private Future<Void> getEndpoints(EventLoop executor) {
-		return listAndWatch(executor, client.endpoints(), observableEndpoints, this::handleEndpoint);
-	}
-	
-	private Future<Void> getSecrets(EventLoop executor) {
-		return listAndWatch(executor, client.secrets(), observableSecrets, this::handleSecret);
-	}
-	
-	private <T extends K8sResource> Future<Void> listAndWatch(EventLoop executor, K8sApi<T> api, 
-			AtomicReference<Observable<T>> observableRef, EventConsumer<T> consumer) {
+	private <T extends K8sResource> Future<Void> list(EventLoop executor, K8sApi<T> api,AtomicReference<String> resourceVersion, EventConsumer<T> consumer) {
 		Promise<Void> promise = executor.newPromise();
 		Future<KubeList<T>> future = api.list();
 		future.addListener(f->{
 			if(f.isSuccess()) {
 				future.getNow().items().forEach(service->handle(EventType.ADDED, service,consumer));
-				observableRef.set(api.watch(future.getNow().metadata().resourceVersion()).on(event->handle(event.type(),event.object(),consumer)));
+				resourceVersion.set(future.getNow().metadata().resourceVersion());
 				promise.setSuccess(null);
 			}else {
 				promise.setFailure(f.cause());
@@ -160,7 +160,11 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		});
 		return promise;
 	}
-
+	
+	private <T extends K8sResource> void watch(K8sApi<T> api, String resourceVersion, EventConsumer<T> consumer) {
+		api.watch(resourceVersion).on(event->handle(event.type(),event.object(),consumer));
+	}
+	
 	private <T extends K8sResource> void handle(EventType type, T service, EventConsumer<T> consumer) {
 		if(eventLoop.inEventLoop()) {
 			consumer.accept(type,service);
