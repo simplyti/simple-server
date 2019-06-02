@@ -15,6 +15,10 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.DefaultHttpContent;
+import io.netty.handler.codec.http.DefaultHttpHeaders;
+import io.netty.handler.codec.http.DefaultHttpResponse;
+import io.netty.handler.codec.http.DefaultLastHttpContent;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -37,6 +41,24 @@ public class APITest implements ApiProvider{
 		
 		builder.when().post("/echo")
 			.then(ctx->ctx.send(ctx.body().copy()));
+		
+		builder.when().post("/echo/{id}")
+			.then(ctx->ctx.send(ctx.body().copy()));
+		
+		builder.when().post("/echo/buffered")
+		.then(ctx->{
+			ctx.send( new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, new DefaultHttpHeaders()
+					.set(HttpHeaderNames.CONTENT_LENGTH,ctx.body().readableBytes())));
+			while(ctx.body().isReadable()) {
+				ByteBuf content = ctx.body().readSlice(Math.min(1024, ctx.body().readableBytes())).copy();
+				if(ctx.body().isReadable()) {
+					ctx.send(new DefaultHttpContent(content));
+				}else {
+					ctx.send(new DefaultLastHttpContent(content));
+				}
+			}
+			
+		});
 		
 		builder.when().get("/close")
 			.then(ctx->ctx.close());

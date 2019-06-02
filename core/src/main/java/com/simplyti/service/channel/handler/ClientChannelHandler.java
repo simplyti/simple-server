@@ -91,7 +91,7 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 		if(future.isSuccess()) {
 			if(!future.getNow()) {
 				serviceProceed(ctx,request);
-				readPending.forEach(msg->ctx.fireChannelRead(msg));
+				readPending.forEach(msg->ctx.fireChannelRead(msg.msg()));
 			}else {
 				readPending.release();
 			}
@@ -134,7 +134,7 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 			this.writePending=new PendingMessages();
 			futureHandled.addListener(f->handleResponseFilter(futureHandled,ctx,response,promise));
 		}else if(writePending!=null) {
-			this.writePending.pending(msg);
+			this.writePending.pending(msg,promise);
 		}else {
 			responseProceed(ctx,msg,promise);
 		}
@@ -154,7 +154,7 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 			log.warn("Error executing response filters: {}",future.cause().getMessage());
 		}
 		responseProceed(ctx,response,promise);
-		writePending.forEach(msg->responseProceed(ctx,msg,promise));
+		writePending.forEach(msg->responseProceed(ctx,msg.msg(),msg.promise()));
 		if(flushed) {
 			ctx.flush();
 		}

@@ -2,15 +2,20 @@ package com.simplyti.service.channel.pending;
 
 import java.util.function.Consumer;
 
+import io.netty.channel.ChannelPromise;
 import io.netty.util.ReferenceCountUtil;
 
 public class PendingMessages {
 	
 	private PendingMessage head;
 	private PendingMessage tail;
-
+	
 	public void pending(Object msg) {
-		PendingMessage message = new PendingMessage(msg);
+		pending(msg,null);
+	}
+
+	public void pending(Object msg, ChannelPromise promise) {
+		PendingMessage message = new PendingMessage(msg,promise);
 		PendingMessage currentTail = tail;
 		if (currentTail == null) {
 			tail = head = message;
@@ -30,14 +35,13 @@ public class PendingMessages {
 		}
 	}
 
-	public void forEach(Consumer<Object> consumer) {
-		PendingMessage write = head;
+	public void forEach(Consumer<PendingMessage> consumer) {
+		PendingMessage message = head;
 		head = tail = null;
-		while (write != null) {
-			PendingMessage next = write.next();
-			Object msg = write.msg();
-			consumer.accept(msg);
-			write = next;
+		while (message != null) {
+			PendingMessage next = message.next();
+			consumer.accept(message);
+			message = next;
 		}
 	}
 

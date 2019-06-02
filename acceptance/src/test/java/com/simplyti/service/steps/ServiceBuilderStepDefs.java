@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -368,8 +369,26 @@ public class ServiceBuilderStepDefs {
 		HttpHeaders headers = new DefaultHttpHeaders().add(HttpHeaderNames.COOKIE, cookies);
 		scenarioData.put(resultKey, send(null,method,path,null,headers).get());
 	}
-
 	
+	@When("^I send a \"([^\\s]*) ([^\"]*)\" with (\\d+) bytes random body getting \"([^\"]*)\"$")
+	public void iSendAWithBytesRandomBodyGetting(String method, String path, int size, String resultKey) throws Exception {
+		String body = random(size);
+		scenarioData.put(resultKey, send(null,method,path,body,null).get());
+	}
+	
+	private String random(int targetStringLength) {
+		int leftLimit = 97; // letter 'a'
+	    int rightLimit = 122; // letter 'z'
+	    Random random = new Random();
+	    StringBuilder buffer = new StringBuilder(targetStringLength);
+	    for (int i = 0; i < targetStringLength; i++) {
+	        int randomLimitedInt = leftLimit + (int) 
+	          (random.nextFloat() * (rightLimit - leftLimit + 1));
+	        buffer.append((char) randomLimitedInt);
+	    }
+	    return buffer.toString();
+	}
+
 	@When("^I send a \"([^\\s]*) ([^\"]*)\" with body \"([^\"]*)\" getting \"([^\"]*)\"$")
 	public void iSendAWithBodyGetting(String method, String path,String body, String resultKey) throws Exception {
 		scenarioData.put(resultKey, send(null,method,path,body,null).get());

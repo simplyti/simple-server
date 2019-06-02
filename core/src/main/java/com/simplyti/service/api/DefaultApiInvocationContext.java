@@ -20,7 +20,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DefaultByteBufHolder;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.multipart.FileUpload;
 import io.netty.handler.codec.http.multipart.HttpPostMultipartRequestDecoder;
@@ -103,7 +103,7 @@ public class DefaultApiInvocationContext<I,O>  extends DefaultByteBufHolder impl
 	}
 	
 	@SuppressWarnings("unchecked")
-	public Future<Void> send(FullHttpResponse response) {
+	public Future<Void> send(HttpObject response) {
 		if(response==null) {
 			return send((O) response);
 		}

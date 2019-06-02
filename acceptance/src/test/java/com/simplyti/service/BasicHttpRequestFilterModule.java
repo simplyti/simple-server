@@ -19,7 +19,8 @@ public class BasicHttpRequestFilterModule extends AbstractModule implements Http
 
 	@Override
 	public void execute(FilterContext<HttpRequest> context) {
-		if(context.object().uri().equals("/hello/bad")){
+		if(context.object().uri().equals("/hello/bad") ||
+				context.object().uri().equals("/echo/bad")){
 			context.fail(new BadRequestException());
 		}else {
 			context.done();

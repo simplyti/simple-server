@@ -25,7 +25,8 @@ public class AsyncHttpRequestFilterModule extends AbstractModule implements Http
 	}
 
 	private void doAsync(FilterContext<HttpRequest> context) {
-		if(context.object().uri().equals("/hello/bad")){
+		if(context.object().uri().equals("/hello/bad") ||
+				context.object().uri().equals("/echo/bad")){
 			context.fail(new BadRequestException());
 		}else {
 			context.done();
