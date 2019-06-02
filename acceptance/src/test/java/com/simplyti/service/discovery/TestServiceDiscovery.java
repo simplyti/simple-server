@@ -6,7 +6,7 @@ import java.util.Set;
 import javax.inject.Inject;
 
 import com.google.inject.Injector;
-import com.simplyti.service.api.filter.HttpRequetFilter;
+import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.gateway.BackendService;
 import com.simplyti.service.gateway.DefaultServiceDiscovery;
@@ -35,7 +35,7 @@ public class TestServiceDiscovery extends DefaultServiceDiscovery {
 		this.addService(new BackendService(host, method, path,rewrite, false,null, endpoint==null?null:Collections.singleton(endpoint)));
 	}
 	
-	public void addService(String host, HttpMethod method, String path,String rewrite, Set<HttpRequetFilter> security, Endpoint endpoint) {
+	public void addService(String host, HttpMethod method, String path,String rewrite, Set<HttpRequestFilter> security, Endpoint endpoint) {
 		this.addService(new BackendService(host, method, path, rewrite, false,security, endpoint==null?null:Collections.singleton(endpoint)));
 	}
 

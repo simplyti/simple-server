@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 import com.google.common.base.MoreObjects;
 import com.simplyti.service.api.builder.PathPattern;
-import com.simplyti.service.api.filter.HttpRequetFilter;
+import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.gateway.balancer.RoundRobinLoadBalancer;
 import com.simplyti.service.gateway.balancer.ServiceBalancer;
@@ -35,7 +35,7 @@ public class BackendService implements Comparable<BackendService>{
 	private final HttpMethod method;
 	private final String path;
 	private final String rewrite;
-	private final Set<HttpRequetFilter> filters;
+	private final Set<HttpRequestFilter> filters;
 	private final Pattern pattern;
 	private final PathPattern pathPattern;
 	private final int literalCount;
@@ -43,7 +43,7 @@ public class BackendService implements Comparable<BackendService>{
 	
 	private ServiceBalancer loadBalander;
 
-	public BackendService(String host, HttpMethod method, String path, String rewrite, boolean tlsEnabled, Set<HttpRequetFilter> filters, Collection<Endpoint> endpoints) {
+	public BackendService(String host, HttpMethod method, String path, String rewrite, boolean tlsEnabled, Set<HttpRequestFilter> filters, Collection<Endpoint> endpoints) {
 		this.loadBalander = new RoundRobinLoadBalancer(endpoints);
 		this.host=host;
 		this.method=method;
@@ -152,7 +152,7 @@ public class BackendService implements Comparable<BackendService>{
 		log.info("Cleared service endpoints");
 	}
 
-	public Set<HttpRequetFilter> filters() {
+	public Set<HttpRequestFilter> filters() {
 		return filters;
 	}
 

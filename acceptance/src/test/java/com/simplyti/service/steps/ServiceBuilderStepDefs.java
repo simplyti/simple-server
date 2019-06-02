@@ -213,6 +213,8 @@ public class ServiceBuilderStepDefs {
 				builder.securedPort(Integer.parseInt(option.get("value")));
 			}else if(option.get("option").equals("withApi")) {
 				builder.withApi((Class<? extends ApiProvider>)Try.of(()->Class.forName(option.get("value"))).get());
+			}else if(option.get("option").equals("verbose")) {
+				builder.verbose();
 			}else if(option.get("option").equals("withModule")) {
 				String value = option.get("value");
 				if(value.startsWith("#")) {

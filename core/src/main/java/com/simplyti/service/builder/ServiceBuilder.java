@@ -34,4 +34,6 @@ public interface ServiceBuilder<T extends Service<?>> {
 
 	public ServiceBuilder<T> eventLoopGroup(EventLoopGroup eventLoopGroup);
 
+	public ServiceBuilder<T> verbose();
+
 }

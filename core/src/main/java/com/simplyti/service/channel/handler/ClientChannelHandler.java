@@ -9,11 +9,13 @@ import javax.ws.rs.NotFoundException;
 
 import com.simplyti.service.Service;
 import com.simplyti.service.api.filter.FilterChain;
-import com.simplyti.service.api.filter.HttpRequetFilter;
+import com.simplyti.service.api.filter.HttpRequestFilter;
+import com.simplyti.service.api.filter.HttpResponseFilter;
 import com.simplyti.service.channel.ClientChannelGroup;
 import com.simplyti.service.channel.handler.inits.ApiRequestHandlerInit;
 import com.simplyti.service.channel.handler.inits.DefaultBackendHandlerInit;
 import com.simplyti.service.channel.handler.inits.FileServerHandlerInit;
+import com.simplyti.service.channel.pending.PendingMessages;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
@@ -43,20 +45,27 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 	private final FileServerHandlerInit fileServerHandlerInit;
 	private final DefaultBackendHandlerInit defaultBackendRequestHandlerInit;
 	
-	private final Set<HttpRequetFilter> filters;
+	private final Set<HttpRequestFilter> requestFilters;
+	private final Set<HttpResponseFilter> responseFilters;
 
 	private boolean upgrading;
+
+	private PendingMessages readPending;
+	
+	private PendingMessages writePending;
+	private boolean flushed;
 
 	public ClientChannelHandler(Service<?> service,
 			ApiRequestHandlerInit apiRequestHandlerInit,
 			FileServerHandlerInit fileServerHandlerInit,
 			DefaultBackendHandlerInit defaultBackendRequestHandlerInit,
-			Set<HttpRequetFilter> filters) {
+			Set<HttpRequestFilter> requestFilters,Set<HttpResponseFilter> responseFilters) {
 		this.service=service;
 		this.apiRequestHandlerInit=apiRequestHandlerInit;
 		this.fileServerHandlerInit=fileServerHandlerInit;
 		this.defaultBackendRequestHandlerInit=defaultBackendRequestHandlerInit;
-		this.filters=filters;
+		this.requestFilters=requestFilters;
+		this.responseFilters=responseFilters;
 	}
 	
 	@Override
@@ -64,25 +73,35 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 		if(msg instanceof HttpRequest) {
 			ctx.channel().attr(ClientChannelGroup.IN_PROGRESS).set(true);
 			HttpRequest request = (HttpRequest) msg;
-			if(filters.isEmpty()) {
+			if(requestFilters.isEmpty()) {
 				serviceProceed(ctx,request);
 			}else {
-				Future<Boolean> futureHandled = FilterChain.of(filters, ctx, request).execute();
-				futureHandled.addListener(result->{
-					if(result.isSuccess()) {
-						if(!futureHandled.getNow()) {
-							serviceProceed(ctx,request);
-						}
-					}else {
-						ctx.fireExceptionCaught(result.cause());
-					}
-				});
+				Future<Boolean> futureHandled = FilterChain.of(requestFilters, ctx, request).execute();
+				this.readPending=new PendingMessages();
+				futureHandled.addListener(f->handleRequestFilter(futureHandled,ctx,request));
 			}
+		}else if(readPending!=null) {
+			this.readPending.pending(msg);
 		}else {
 			ctx.fireChannelRead(msg);
 		}
 	}
 	
+	private void handleRequestFilter(Future<Boolean> future, ChannelHandlerContext ctx, HttpRequest request) {
+		if(future.isSuccess()) {
+			if(!future.getNow()) {
+				serviceProceed(ctx,request);
+				readPending.forEach(msg->ctx.fireChannelRead(msg));
+			}else {
+				readPending.release();
+			}
+		}else {
+			readPending.release();
+			ctx.fireExceptionCaught(future.cause());
+		}
+		readPending=null;
+	}
+
 	private void serviceProceed(ChannelHandlerContext ctx, HttpRequest request) {
 		List<String> added;
 		if(request.decoderResult().isFailure()) {
@@ -107,6 +126,42 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 
 	@Override
 	public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+		if(responseFilters.isEmpty()) {
+			responseProceed(ctx,msg,promise);
+		}else if(msg instanceof HttpResponse) {
+			HttpResponse response = (HttpResponse) msg;
+			Future<Boolean> futureHandled = FilterChain.of(responseFilters, ctx, response).execute();
+			this.writePending=new PendingMessages();
+			futureHandled.addListener(f->handleResponseFilter(futureHandled,ctx,response,promise));
+		}else if(writePending!=null) {
+			this.writePending.pending(msg);
+		}else {
+			responseProceed(ctx,msg,promise);
+		}
+	}
+	
+	@Override
+    public void flush(ChannelHandlerContext ctx) throws Exception {
+		if(writePending==null) {
+			ctx.flush();
+		} else {
+			this.flushed=true;
+		}
+    }
+	
+	private void handleResponseFilter(Future<Boolean> future, ChannelHandlerContext ctx, HttpResponse response, ChannelPromise promise) {
+		if(!future.isSuccess()) {
+			log.warn("Error executing response filters: {}",future.cause().getMessage());
+		}
+		responseProceed(ctx,response,promise);
+		writePending.forEach(msg->responseProceed(ctx,msg,promise));
+		if(flushed) {
+			ctx.flush();
+		}
+		writePending=null;
+	}
+
+	private void responseProceed(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
 		if(msg instanceof HttpResponse && "Upgrade".equalsIgnoreCase(((HttpResponse) msg).headers().get(HttpHeaderNames.CONNECTION))) {
 			this.upgrading=true;
 		}

@@ -42,6 +42,9 @@ public class GuiceServiceBuilder<T extends Service<?>> implements ServiceBuilder
 
 	private FileServeConfiguration fileServe;
 	private EventLoopGroup eventLoopGroup;
+	
+	private boolean verbose;
+	
 
 	public GuiceServiceBuilder(Class<T> serviceClass) {
 		this.serviceClass=serviceClass;
@@ -52,7 +55,8 @@ public class GuiceServiceBuilder<T extends Service<?>> implements ServiceBuilder
 		ServerConfig config = new ServerConfig(
 				serviceClass,
 				MoreObjects.firstNonNull(insecuredPort, DEFAULT_INSECURE_PORT),
-				MoreObjects.firstNonNull(securedPort, DEFAULT_SECURE_PORT),fileServe,eventLoopGroup!=null);
+				MoreObjects.firstNonNull(securedPort, DEFAULT_SECURE_PORT),fileServe,eventLoopGroup!=null,
+				verbose);
 		ServiceModule coreModule = new ServiceModule(config,MoreObjects.firstNonNull(apiClasses, Collections.emptySet()),MoreObjects.firstNonNull(apiProviders, Collections.emptySet()),eventLoopGroup);
 		Stream<Module> additinalModules = Optional.ofNullable(modules)
 				.map(Collection::stream)
@@ -146,6 +150,12 @@ public class GuiceServiceBuilder<T extends Service<?>> implements ServiceBuilder
 	@Override
 	public ServiceBuilder<T> eventLoopGroup(EventLoopGroup eventLoopGroup) {
 		this.eventLoopGroup=eventLoopGroup;
+		return this;
+	}
+
+	@Override
+	public ServiceBuilder<T> verbose() {
+		this.verbose=true;
 		return this;
 	}
 

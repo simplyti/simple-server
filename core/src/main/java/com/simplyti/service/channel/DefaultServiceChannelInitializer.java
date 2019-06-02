@@ -8,7 +8,8 @@ import javax.inject.Inject;
 
 import com.simplyti.service.ServerConfig;
 import com.simplyti.service.Service;
-import com.simplyti.service.api.filter.HttpRequetFilter;
+import com.simplyti.service.api.filter.HttpRequestFilter;
+import com.simplyti.service.api.filter.HttpResponseFilter;
 import com.simplyti.service.channel.handler.ApiExceptionHandler;
 import com.simplyti.service.channel.handler.ClientChannelHandler;
 import com.simplyti.service.channel.handler.inits.ApiRequestHandlerInit;
@@ -23,6 +24,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +50,8 @@ public class DefaultServiceChannelInitializer extends ChannelInboundHandlerAdapt
 	private final FileServerHandlerInit fileServerHandlerInit;
 	private final DefaultBackendHandlerInit defaultBackendFullRequestHandlerInit;
 	
-	private final Set<HttpRequetFilter> filters;
+	private final Set<HttpRequestFilter> requestFilters;
+	private final Set<HttpResponseFilter> responseFilters;
 	
 	private final Optional<EntryChannelInit> entryChannelInit;
 	
@@ -72,13 +76,17 @@ public class DefaultServiceChannelInitializer extends ChannelInboundHandlerAdapt
 			pipeline.addLast("ssl",sslHandlerFactory.handler(channel));
 		}
 		
+		if(serverConfig.verbose()) {
+			pipeline.addLast(new LoggingHandler(LogLevel.INFO));
+		}
+		
 		if(entryChannelInit.isPresent()) {
 			entryChannelInit.get().init(pipeline);
 		}else {
 			pipeline.addLast(new HttpServerCodec());
 		}
 		
-		pipeline.addLast(ClientChannelHandler.NAME, new ClientChannelHandler(service,apiRequestHandlerInit,fileServerHandlerInit,defaultBackendFullRequestHandlerInit,filters));
+		pipeline.addLast(ClientChannelHandler.NAME, new ClientChannelHandler(service,apiRequestHandlerInit,fileServerHandlerInit,defaultBackendFullRequestHandlerInit,requestFilters,responseFilters));
 		pipeline.addLast(apiExceptionHandler);
 	}
 

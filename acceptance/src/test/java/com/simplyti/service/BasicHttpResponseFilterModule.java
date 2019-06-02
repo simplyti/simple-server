@@ -6,20 +6,19 @@ import com.google.inject.multibindings.Multibinder;
 import com.simplyti.service.api.filter.FilterContext;
 import com.simplyti.service.api.filter.HttpResponseFilter;
 
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpResponse;
 
-public class HttpResponseFilterModule extends AbstractModule implements HttpResponseFilter {
+public class BasicHttpResponseFilterModule extends AbstractModule implements HttpResponseFilter {
 
 	@Override
 	protected void configure() {
 		Multibinder<HttpResponseFilter> fulters = Multibinder.newSetBinder(binder(), HttpResponseFilter.class);
-		fulters.addBinding().to(HttpResponseFilterModule.class).in(Singleton.class);
+		fulters.addBinding().to(BasicHttpResponseFilterModule.class).in(Singleton.class);
 	}
 
 	@Override
-	public void execute(FilterContext<FullHttpResponse> context) {
-		context.object().headers().set(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN,"*");
+	public void execute(FilterContext<HttpResponse> context) {
+		context.object().headers().set("x-filter","hello");
 		context.done();
 		
 	}
