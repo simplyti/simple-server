@@ -6,9 +6,21 @@ import com.simplyti.service.clients.proxy.Proxy.ProxyType;
 public class ProxiedEndpointBuilder {
 
 	private final Endpoint target;
+	private String username;
+	private String password;
 
 	public ProxiedEndpointBuilder(Endpoint target) {
 		this.target=target;
+	}
+	
+	public ProxiedEndpointBuilder withUsername(String username) {
+		this.username=username;
+		return this;
+	}
+	
+	public ProxiedEndpointBuilder withPassword(String password) {
+		this.password=password;
+		return this;
 	}
 
 	public ProxiedEndpoint throughSocks5(String host, int port) {
@@ -20,7 +32,7 @@ public class ProxiedEndpointBuilder {
 	}
 	
 	public ProxiedEndpoint through(String host, int port, ProxyType type) {
-		return new ProxiedEndpoint(target.schema(),target.address(),new Proxy(host, port,type));
+		return new ProxiedEndpoint(target.schema(),target.address(),new Proxy(host, port, type, username, password));
 	}
 
 }

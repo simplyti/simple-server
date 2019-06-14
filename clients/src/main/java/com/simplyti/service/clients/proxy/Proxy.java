@@ -16,10 +16,18 @@ public class Proxy {
 
 	private final Address address;
 	private final ProxyType type;
+	private final String username;
+	private final String password;
 	
 	public Proxy(String host,int port,ProxyType type) {
+		this(host,port,type,null,null);
+	}
+	
+	public Proxy(String host,int port,ProxyType type, String username, String password) {
 		this.address=new Address(host, port);
 		this.type=type;
+		this.username=username;
+		this.password=password;
 	}
 
 }

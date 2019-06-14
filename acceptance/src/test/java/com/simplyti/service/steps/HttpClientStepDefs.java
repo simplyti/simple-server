@@ -21,6 +21,7 @@ import com.simplyti.service.clients.http.request.StreamedHttpRequest;
 import com.simplyti.service.clients.http.sse.ServerEvent;
 import com.simplyti.service.clients.http.ws.WebSocketClient;
 import com.simplyti.service.clients.proxy.ProxiedEndpoint;
+import com.simplyti.service.clients.proxy.ProxiedEndpointBuilder;
 import com.simplyti.service.clients.proxy.Proxy;
 import com.simplyti.service.clients.proxy.Proxy.ProxyType;
 import com.simplyti.service.clients.trace.RequestTracer;
@@ -330,24 +331,39 @@ public class HttpClientStepDefs {
 	    scenarioData.put(key, proxy);
 	}
 	
+	@When("^I get url \"([^\"]*)\" through proxy \"([^\"]*)\" with username \"([^\"]*)\" and password \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	public void iGetUrlThroughProxyWithUsernameAndPasswordGettingResponse(String endpointUrl, String proxyKey, String username, String password, String resultKey) throws Exception {
+		Proxy proxy = (Proxy) scenarioData.get(proxyKey);
+		HttpEndpoint target = HttpEndpoint.of(endpointUrl);
+		ProxiedEndpoint endpoint = proxy(proxy,target,username,password);
+		Future<FullHttpResponse> response = sutClient.request().withEndpoint(endpoint).get(target.path()).fullResponse();
+		scenarioData.put(resultKey, response);
+	}
+
+	
 	@When("^I get url \"([^\"]*)\" through proxy \"([^\"]*)\" getting response \"([^\"]*)\"$")
 	public void iPostUrlWithDataThroughProxyGettingResponse(String endpointUrl, String proxyKey, String resultKey) throws Exception {
 		Proxy proxy = (Proxy) scenarioData.get(proxyKey);
 		HttpEndpoint target = HttpEndpoint.of(endpointUrl);
-		ProxiedEndpoint endpoint;
-		switch(proxy.type()) {
-		case SOCKS5:
-			endpoint = ProxiedEndpoint.of(target).throughSocks5(proxy.address().host(), proxy.address().port());
-			break;
-		case HTTP:
-		default:
-			endpoint = ProxiedEndpoint.of(target).throughHTTP(proxy.address().host(), proxy.address().port());
-			break;
-		}
+		ProxiedEndpoint endpoint = proxy(proxy,target,null,null);
 		Future<FullHttpResponse> response = sutClient.request().withEndpoint(endpoint).get(target.path()).fullResponse();
 		scenarioData.put(resultKey, response);
 	}
 	
+	private ProxiedEndpoint proxy(Proxy proxy,Endpoint target, String username, String password) {
+		ProxiedEndpointBuilder builder = ProxiedEndpoint.of(target);
+		if(username!=null && password!=null){
+			builder.withUsername(username).withPassword(password);
+		}
+		switch(proxy.type()) {
+		case SOCKS5:
+			return builder.throughSocks5(proxy.address().host(), proxy.address().port());
+		case HTTP:
+		default:
+			return builder.throughHTTP(proxy.address().host(), proxy.address().port());
+		}
+	}
+
 	@Then("^I get url \"([^\"]*)\" getting http objects \"([^\"]*)\"$")
 	public void iGetUrlGettingHttpResponse(String endpointUrl, String resultKey) throws Exception {
 		HttpEndpoint endpoint = HttpEndpoint.of(endpointUrl);

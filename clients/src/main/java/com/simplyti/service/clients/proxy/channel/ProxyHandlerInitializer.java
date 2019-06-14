@@ -33,11 +33,20 @@ public class ProxyHandlerInitializer extends ChannelInitializer<Channel>{
 	private ProxyHandler proxyHandler() {
 		switch(proxy.type()) {
 		case SOCKS5:
-			return new Socks5ProxyHandler(new InetSocketAddress(proxy.address().host(), proxy.address().port()));
+			if(proxy.username()!=null && proxy.password()!=null) {
+				return new Socks5ProxyHandler(new InetSocketAddress(proxy.address().host(), proxy.address().port()),
+						proxy.username(),proxy.password());
+			}else {
+				return new Socks5ProxyHandler(new InetSocketAddress(proxy.address().host(), proxy.address().port()));
+			}
 		case HTTP:
 		default:
-			return new HttpProxyHandler(new InetSocketAddress(proxy.address().host(), proxy.address().port()));
-		
+			if(proxy.username()!=null && proxy.password()!=null) {
+				return new HttpProxyHandler(new InetSocketAddress(proxy.address().host(), proxy.address().port()),
+						proxy.username(),proxy.password());
+			}else {
+				return new HttpProxyHandler(new InetSocketAddress(proxy.address().host(), proxy.address().port()));
+			}
 		}
 	}
 
