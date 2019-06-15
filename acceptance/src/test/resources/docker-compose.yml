@@ -24,6 +24,11 @@ services:
     ports:
     - "1080:1080"
     
+  socks5auth:
+    build: ./danteAuth
+    ports:
+    - "1081:1080"
+    
   http:
     image: minimum2scp/squid
     ports:
