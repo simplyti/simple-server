@@ -25,6 +25,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Future;
@@ -48,12 +49,15 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 	private final Set<HttpRequestFilter> requestFilters;
 	private final Set<HttpResponseFilter> responseFilters;
 
+	private boolean expectedContinue;
+	private boolean isContinuing;
 	private boolean upgrading;
 
 	private PendingMessages readPending;
 	
 	private PendingMessages writePending;
 	private boolean flushed;
+
 
 	public ClientChannelHandler(Service<?> service,
 			ApiRequestHandlerInit apiRequestHandlerInit,
@@ -73,6 +77,7 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 		if(msg instanceof HttpRequest) {
 			ctx.channel().attr(ClientChannelGroup.IN_PROGRESS).set(true);
 			HttpRequest request = (HttpRequest) msg;
+			this.expectedContinue=HttpUtil.is100ContinueExpected(request);
 			if(requestFilters.isEmpty()) {
 				serviceProceed(ctx,request);
 			}else {
@@ -162,26 +167,32 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 	}
 
 	private void responseProceed(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
-		if(msg instanceof HttpResponse && "Upgrade".equalsIgnoreCase(((HttpResponse) msg).headers().get(HttpHeaderNames.CONNECTION))) {
+		if(expectedContinue && isContinue(msg)) {
+			this.isContinuing=true;
+		} else if(msg instanceof HttpResponse && "Upgrade".equalsIgnoreCase(((HttpResponse) msg).headers().get(HttpHeaderNames.CONNECTION))) {
 			this.upgrading=true;
 		}
 		
-		if(!isContinue(msg) && msg instanceof LastHttpContent) {
-			if(!upgrading) {
-				currentHandlers.forEach(handler->ctx.pipeline().remove(handler));
-				currentHandlers.clear();
+		if(msg instanceof LastHttpContent) {
+			if(isContinuing) {
+				isContinuing=false;
+			}else {
+				if(!upgrading) {
+					currentHandlers.forEach(handler->ctx.pipeline().remove(handler));
+					currentHandlers.clear();
+				}
+				promise.addListener(f->{
+					if(upgrading) {
+						ctx.pipeline().remove(HttpServerCodec.class);
+						ctx.pipeline().remove(this);
+					}
+					ctx.channel().attr(ClientChannelGroup.IN_PROGRESS).set(false);
+					if(service.stopping()){
+						log.info("Server is stopping, close channel");
+						ctx.channel().close();
+					}
+				});
 			}
-			promise.addListener(f->{
-				if(upgrading) {
-					ctx.pipeline().remove(HttpServerCodec.class);
-					ctx.pipeline().remove(this);
-				}
-				ctx.channel().attr(ClientChannelGroup.IN_PROGRESS).set(false);
-				if(service.stopping()){
-					log.info("Server is stopping, close channel");
-					ctx.channel().close();
-				}
-			});
 		}
 		ctx.write(msg, promise);
 	}

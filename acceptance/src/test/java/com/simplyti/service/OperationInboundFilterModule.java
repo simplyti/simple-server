@@ -11,7 +11,7 @@ import com.simplyti.service.exception.UnauthorizedException;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 
-public class OperationInboundFilterModule  extends AbstractModule implements OperationInboundFilter {
+public class OperationInboundFilterModule extends AbstractModule implements OperationInboundFilter {
 
 	@Override
 	protected void configure() {
@@ -21,7 +21,7 @@ public class OperationInboundFilterModule  extends AbstractModule implements Ope
 	}
 
 	@Override
-	public void execute(FilterContext<ApiInvocation<?>> context) {
+	public void execute(FilterContext<ApiInvocation> context) {
 		String authorization = context.object().headers().get(HttpHeaderNames.AUTHORIZATION);
 		if(authorization==null) {
 			context.fail(new UnauthorizedException());

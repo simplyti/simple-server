@@ -22,5 +22,9 @@ public class RawFinishableApiBuilder extends FinishableApiBuilder<ByteBuf,Object
 	public <O> TypedResponseFinishableApiBuilder<ByteBuf, O> withResponseBodyType(Class<O> responseType) {
 		return withResponseBodyType(TypeLiteral.create(responseType));
 	}
+	
+	public <O> StreamedApiBuilder streamedInput() {
+		return new StreamedApiBuilder(builder,method,uri);
+	}
 
 }

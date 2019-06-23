@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Priority;
 import javax.inject.Inject;
 
-import com.simplyti.service.api.ApiInvocation;
+import com.simplyti.service.api.FullApiInvocation;
 import com.simplyti.service.api.DefaultApiInvocationContext;
 import com.simplyti.service.api.filter.FilterChain;
 import com.simplyti.service.api.filter.OperationInboundFilter;
@@ -26,7 +26,7 @@ import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Future;
 
 @Sharable
-public class ApiInvocationHandler extends SimpleChannelInboundHandler<ApiInvocation<?>> {
+public class ApiInvocationHandler extends SimpleChannelInboundHandler<FullApiInvocation<?>> {
 	
 	private static final Comparator<Object> PRIORITY_ANN_ORDER = (o1,o2)-> {
 		Integer o1Priority = Optional.ofNullable(o1.getClass().getAnnotation(Priority.class))
@@ -55,12 +55,12 @@ public class ApiInvocationHandler extends SimpleChannelInboundHandler<ApiInvocat
 	}
 	
 	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, ApiInvocation<?> msg) throws Exception {
+	protected void channelRead0(ChannelHandlerContext ctx, FullApiInvocation<?> msg) throws Exception {
 		invoke(ctx,msg);
 	}
 
 	@SuppressWarnings({ "rawtypes" })
-	private <I,O> void invoke(ChannelHandlerContext ctx, ApiInvocation msg) {
+	private <I,O> void invoke(ChannelHandlerContext ctx, FullApiInvocation msg) {
 		if(filters.isEmpty()) {
 			serviceProceed(ctx,msg);
 		}else {
@@ -78,7 +78,7 @@ public class ApiInvocationHandler extends SimpleChannelInboundHandler<ApiInvocat
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private <I,O> void serviceProceed(ChannelHandlerContext ctx,ApiInvocation msg) {
+	private <I,O> void serviceProceed(ChannelHandlerContext ctx,FullApiInvocation msg) {
 		DefaultApiInvocationContext<I, O> context = context(ctx,msg);
 		try{
 			msg.operation().handler().accept(ReferenceCountUtil.retain(context));
@@ -89,8 +89,8 @@ public class ApiInvocationHandler extends SimpleChannelInboundHandler<ApiInvocat
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private <I,O> DefaultApiInvocationContext<I,O> context(ChannelHandlerContext ctx, ApiInvocation msg) {
-		return new DefaultApiInvocationContext<I,O>(ctx,msg,exceptionHandler,serverEventEncoder,syncTaskSubmitter);
+	private <I,O> DefaultApiInvocationContext<I,O> context(ChannelHandlerContext ctx, FullApiInvocation msg) {
+		return new DefaultApiInvocationContext<I,O>(ctx,msg.matcher(),msg,exceptionHandler,serverEventEncoder,syncTaskSubmitter);
 	}
 
 }

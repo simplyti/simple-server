@@ -15,7 +15,7 @@ import com.simplyti.service.sync.SyncTaskSubmitter;
 
 public class ApiBuilder {
 
-	private final List<ApiOperation<?,?>> operations;
+	private final List<ApiOperation<?,?,?>> operations;
 	private final Injector injector;
 	private final SyncTaskSubmitter syncTaskSubmitter;
 	
@@ -30,11 +30,11 @@ public class ApiBuilder {
 		return new MethodApiBuilder(this);
 	}
 
-	public void add(ApiOperation<?,?> operation) {
+	public void add(ApiOperation<?,?,?> operation) {
 		this.operations.add(operation);
 	}
 
-	public List<ApiOperation<?,?>> get() {
+	public List<ApiOperation<?,?,?>> get() {
 		return operations;
 	}
 

@@ -9,20 +9,22 @@ import com.simplyti.service.api.builder.PathPattern;
 
 import io.netty.handler.codec.http.HttpMethod;
 
-public class ApiOperation<I,O> {
+public class ApiOperation<I,O,C extends APIContext<O>> {
 	
 	private final HttpMethod method;
 	private final PathPattern pathPattern;
-	private final Consumer<ApiInvocationContext<I,O>> handler;
+	private final Consumer<C> handler;
 	private final TypeLiteral<I> requestType;
 	private final int literalChars;
 	private final boolean multipart;
 	private final int maxBodyLength;
 	private final Map<String,String> metadata;
+	private final boolean streamedRequest;
 	
 	public ApiOperation(HttpMethod method, PathPattern pathPattern,
-			Consumer<ApiInvocationContext<I,O>> handler, TypeLiteral<I> requestType, int literalChars,
-			boolean multipart, int maxBodyLength, Map<String,String> metadata) {
+			Consumer<C> handler, TypeLiteral<I> requestType, int literalChars,
+			boolean multipart, int maxBodyLength, Map<String,String> metadata,
+			boolean streamedRequest) {
 		this.method=method;
 		this.pathPattern=pathPattern;
 		this.handler=handler;
@@ -31,6 +33,7 @@ public class ApiOperation<I,O> {
 		this.multipart=multipart;
 		this.maxBodyLength=maxBodyLength;
 		this.metadata=metadata;
+		this.streamedRequest=streamedRequest;
 	}
 	
 	public HttpMethod method() {
@@ -45,7 +48,7 @@ public class ApiOperation<I,O> {
 		return pathPattern;
 	}
 
-	public Consumer<ApiInvocationContext<I,O>> handler() {
+	public Consumer<C> handler() {
 		return handler;
 	}
 
@@ -71,6 +74,10 @@ public class ApiOperation<I,O> {
 	
 	public Object meta(String name){
 		return this.metadata.get(name);
+	}
+
+	public boolean isStreamed() {
+		return this.streamedRequest;
 	}
 
 }

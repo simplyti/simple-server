@@ -16,12 +16,12 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 
 public class ApiResolver {
 	
-	private final Collection<ApiOperation<?,?>> operations;
+	private final Collection<ApiOperation<?,?,?>> operations;
 	
 	@Inject
 	public ApiResolver(Set<ApiProvider> apis, ApiBuilder builder){
 		apis.forEach(api->api.build(builder));
-		List<ApiOperation<?, ?>> builderOperations = builder.get();
+		List<ApiOperation<?, ?,?>> builderOperations = builder.get();
 		Collections.sort(builderOperations,RestOperationComparator.INSTANCE);
 		this.operations=Collections.unmodifiableCollection(builderOperations);
 	}

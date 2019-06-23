@@ -1,9 +1,6 @@
 package com.simplyti.service.gateway;
 
-import java.util.Map;
 import java.util.regex.Matcher;
-
-import com.google.common.collect.Iterables;
 
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.util.internal.StringUtil;
@@ -37,22 +34,16 @@ public class DefaultBackendServiceMatcher implements BackendServiceMatcher {
 		if(service.rewrite()==null) {
 			return request;
 		} else if(service.pathPattern()!=null || service.pattern()!=null) {
-			final String newpath;
-			if(service.pathPattern()!=null) {
-				Map<String, Integer> pathToGroup = service.pathPattern().pathParamNameToGroup();
-				newpath=service.rewrite()+"/"+this.matcher.group(Iterables.get(pathToGroup.values(), 0));
-			}else {
-				newpath=service.rewrite().replaceAll("/$", StringUtil.EMPTY_STRING)+"/"+this.matcher.group(1);
-			}
+			final String newpath = service.rewrite().doRewrite(matcher, service.pathPattern());
 			return request.setUri(newpath);
 		}else {
 			String root;
 			String resource;
 			if(request.uri().equals("/")) {
-				root = service.rewrite();
+				root = service.rewrite().rewrite();
 				resource = "";
 			}else {
-				root = service.rewrite().replaceAll("/$", StringUtil.EMPTY_STRING);
+				root = service.rewrite().rewrite().replaceAll("/$", StringUtil.EMPTY_STRING);
 				resource =request.uri();
 			}
 			return request.setUri(root+resource);

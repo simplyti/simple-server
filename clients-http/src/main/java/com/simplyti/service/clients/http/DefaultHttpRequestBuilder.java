@@ -74,47 +74,35 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 
 	@Override
 	public FinishableHttpRequest get(String uri) {
-		ClientConfig config = config();
-		headers.add(HttpHeaderNames.HOST,config.endpoint().address().host());
 		FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri, Unpooled.EMPTY_BUFFER, headers,EmptyHttpHeaders.INSTANCE);
-		return new DefaultFinishableHttpRequest(client,checkStatusCode,request,config);
+		return new DefaultFinishableHttpRequest(client,checkStatusCode,request,config());
 	}
 	
 	@Override
 	public FinishableHttpRequest delete(String uri) {
-		ClientConfig config = config();
-		headers.add(HttpHeaderNames.HOST,config.endpoint().address().host());
 		FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.DELETE, uri, Unpooled.EMPTY_BUFFER, headers,EmptyHttpHeaders.INSTANCE);
-		return new DefaultFinishableHttpRequest(client,checkStatusCode,request,config);
+		return new DefaultFinishableHttpRequest(client,checkStatusCode,request,config());
 	}
 
 	@Override
 	public FinishableBodyHttpRequest post(String uri) {
-		ClientConfig config = config();
-		headers.add(HttpHeaderNames.HOST,config.endpoint().address().host());
-		return new DefaultFinishableBodyHttpRequest(client,checkStatusCode,HttpMethod.POST,uri,headers,config);
+		return new DefaultFinishableBodyHttpRequest(client,checkStatusCode,HttpMethod.POST,uri,headers,config());
 	}
 	
 	@Override
 	public FinishableBodyHttpRequest put(String uri) {
-		ClientConfig config = config();
-		headers.add(HttpHeaderNames.HOST,config.endpoint().address().host());
-		return new DefaultFinishableBodyHttpRequest(client,checkStatusCode,HttpMethod.PUT,uri,headers,config);
+		return new DefaultFinishableBodyHttpRequest(client,checkStatusCode,HttpMethod.PUT,uri,headers,config());
 	}
 	
 	@Override
 	public FinishableBodyHttpRequest patch(String uri) {
-		ClientConfig config = config();
-		headers.add(HttpHeaderNames.HOST,config.endpoint().address().host());
-		return new DefaultFinishableBodyHttpRequest(client,checkStatusCode,HttpMethod.PATCH,uri,headers,config);
+		return new DefaultFinishableBodyHttpRequest(client,checkStatusCode,HttpMethod.PATCH,uri,headers,config());
 	}
 	
 	@Override
 	public FinishableHttpRequest options(String uri) {
-		ClientConfig config = config();
-		headers.add(HttpHeaderNames.HOST,config.endpoint().address().host());
 		FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.OPTIONS, uri, Unpooled.EMPTY_BUFFER, headers,EmptyHttpHeaders.INSTANCE);
-		return new DefaultFinishableHttpRequest(client,checkStatusCode,request,config);
+		return new DefaultFinishableHttpRequest(client,checkStatusCode,request,config());
 	}
 
 	@Override

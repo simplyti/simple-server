@@ -2,8 +2,7 @@ package com.simplyti.service.channel.handler;
 
 import java.util.List;
 
-
-import com.simplyti.service.api.ApiInvocation;
+import com.simplyti.service.api.FullApiInvocation;
 import com.simplyti.service.api.ApiMacher;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -18,10 +17,10 @@ public class ApiInvocationDecoder extends MessageToMessageDecoder<FullHttpReques
 		this.apiMacher=apiMacher;
 	}
 	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes"})
 	@Override
 	protected void decode(ChannelHandlerContext ctx, FullHttpRequest msg, List<Object> out) throws Exception {
-		out.add(new ApiInvocation(apiMacher.operation(),apiMacher.matcher(),apiMacher.parameters(),msg));
+		out.add(new FullApiInvocation(apiMacher,msg));
 	}
 
 }

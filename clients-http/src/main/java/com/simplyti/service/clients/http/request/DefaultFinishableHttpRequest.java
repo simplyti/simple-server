@@ -12,6 +12,7 @@ public class DefaultFinishableHttpRequest extends AbstractFinishableHttpRequest 
 	public DefaultFinishableHttpRequest(InternalClient client, boolean checkStatusCode, FullHttpRequest request, ClientConfig config) {
 		super(client,checkStatusCode,config);
 		this.request = request;
+		setHostHeader(request);
 	}
 
 	@Override

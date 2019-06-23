@@ -22,8 +22,8 @@ public class TracingModule extends AbstractModule implements OperationInboundFil
 	}
 
 	@Override
-	public void execute(FilterContext<ApiInvocation<?>> context) {
-		ApiOperation<?, ?> operation = context.object().operation();
+	public void execute(FilterContext<ApiInvocation> context) {
+		ApiOperation<?, ?, ?> operation = context.object().operation();
 		log.info("[{}] {} {}",operation.meta("serviceId"), operation.method(),operation.pathPattern().template());
 		context.done();
 	}

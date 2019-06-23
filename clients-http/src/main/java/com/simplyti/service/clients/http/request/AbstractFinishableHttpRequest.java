@@ -18,7 +18,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpObject;
+import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.QueryStringEncoder;
 import io.netty.util.concurrent.Future;
 
@@ -35,6 +37,12 @@ public abstract class AbstractFinishableHttpRequest implements FinishableHttpReq
 		this.config=config;
 		this.checkStatusCode=checkStatusCode;
 		this.params=new HashMap<>();
+	}
+	
+	protected void setHostHeader(HttpRequest request) {
+		if(!request.headers().contains(HttpHeaderNames.HOST)) {
+			request.headers().set(HttpHeaderNames.HOST,config.endpoint().address().host());
+		}
 	}
 	
 	@Override

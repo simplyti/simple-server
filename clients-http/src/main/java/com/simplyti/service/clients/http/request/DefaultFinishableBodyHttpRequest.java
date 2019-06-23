@@ -46,6 +46,7 @@ public class DefaultFinishableBodyHttpRequest extends AbstractFinishableHttpRequ
 			body = Unpooled.EMPTY_BUFFER;
 		}
 		FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, method, uri,body,headers,EmptyHttpHeaders.INSTANCE);
+		setHostHeader(request);
 		request.headers().set(HttpHeaderNames.CONTENT_LENGTH,body.readableBytes());
 		return request;
 	}

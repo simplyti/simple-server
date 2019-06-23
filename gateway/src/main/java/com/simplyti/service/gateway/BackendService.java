@@ -34,7 +34,7 @@ public class BackendService implements Comparable<BackendService>{
 	private final String host;
 	private final HttpMethod method;
 	private final String path;
-	private final String rewrite;
+	private final Rewrite rewrite;
 	private final Set<HttpRequestFilter> filters;
 	private final Pattern pattern;
 	private final PathPattern pathPattern;
@@ -48,7 +48,7 @@ public class BackendService implements Comparable<BackendService>{
 		this.host=host;
 		this.method=method;
 		this.path=path;
-		this.rewrite=rewrite;
+		this.rewrite=rewrite==null?null:new Rewrite(rewrite);
 		this.tlsEnabled=tlsEnabled;
 		this.filters=MoreObjects.firstNonNull(filters, Collections.emptySet());
 		if(path==null) {

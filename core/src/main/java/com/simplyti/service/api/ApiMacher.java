@@ -9,11 +9,11 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class ApiMacher {
 	
-	private final ApiOperation<?,?> operation;
+	private final ApiOperation<?,?,?> operation;
 	private final Matcher matcher;
 	private final Map<String,List<String>> parameters;
 	
-	public ApiOperation<?,?> operation() {
+	public ApiOperation<?,?,?> operation() {
 		return operation;
 	}
 	

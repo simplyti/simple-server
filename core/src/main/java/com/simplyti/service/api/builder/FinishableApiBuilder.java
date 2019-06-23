@@ -45,10 +45,10 @@ public abstract class FinishableApiBuilder<I,O> {
 		return this;
 	}
 	
-	public void then(Consumer<ApiInvocationContext<I,O>> consumer) {
+	public void then(Consumer<ApiInvocationContext<I, O>> consumer) {
 		PathPattern pathPattern = PathPattern.build(uri);
-		builder.add(new ApiOperation<I,O>(method, pathPattern,consumer,requestType,pathPattern.literalCount(),
-				multipart,noNegative(maxBodyLength,DEFAULT_MAX_BODY),metadata()));
+		builder.add(new ApiOperation<I,O,ApiInvocationContext<I, O>>(method, pathPattern,consumer,requestType,pathPattern.literalCount(),
+				multipart,noNegative(maxBodyLength,DEFAULT_MAX_BODY),metadata(),false));
 	}
 	
 	public void thenFuture(Function<ApiInvocationContext<I,O>,Future<O>> futureFunction) {

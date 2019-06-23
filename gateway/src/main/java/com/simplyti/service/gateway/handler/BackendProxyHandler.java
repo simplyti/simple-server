@@ -13,6 +13,7 @@ import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpScheme;
 import io.netty.handler.codec.http.LastHttpContent;
 
@@ -24,13 +25,16 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 	private final Channel frontendChannel;
 	private final ChannelPool backendChannelPool;
 	private final boolean frontSsl;
+	private final boolean isContinueExpected;
 	
 	private boolean upgrading;
+	private boolean isContinuing;
 	
-	public BackendProxyHandler(ChannelPool backendChannelPool, Channel frontendChannel, Endpoint endpoint, boolean frontSsl) {
+	public BackendProxyHandler(ChannelPool backendChannelPool, Channel frontendChannel, Endpoint endpoint, boolean isContinueExpected, boolean frontSsl) {
 		this.frontendChannel = frontendChannel;
 		this.backendChannelPool = backendChannelPool;
 		this.frontSsl=frontSsl;
+		this.isContinueExpected=isContinueExpected;
 	}
 	
 	@Override
@@ -64,14 +68,26 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 			}
 		});
 		
+		if(isContinueExpected && isContinue(msg)) {
+			this.isContinuing=true;
+		}
+		
 		if(msg instanceof HttpResponse && "Upgrade".equalsIgnoreCase(((HttpResponse) msg).headers().get(HttpHeaderNames.CONNECTION))) {
 			this.upgrading=true;
-		}else if(upgrading && msg instanceof LastHttpContent) {
+		} else if(upgrading && msg instanceof LastHttpContent) {
 			ctx.pipeline().remove(HttpClientCodec.class);
-		}else if(msg instanceof LastHttpContent) {
-			ctx.pipeline().remove(this);
-			backendChannelPool.release(ctx.channel());
+		} else if(msg instanceof LastHttpContent) {
+			if (isContinuing) {
+				isContinuing=false;
+			}else {
+				ctx.pipeline().remove(this);
+				backendChannelPool.release(ctx.channel());
+			}
 		}
+	}
+
+	private boolean isContinue(Object msg) {
+		return msg instanceof HttpResponse && ((HttpResponse) msg).status().equals(HttpResponseStatus.CONTINUE);
 	}
 	
 }

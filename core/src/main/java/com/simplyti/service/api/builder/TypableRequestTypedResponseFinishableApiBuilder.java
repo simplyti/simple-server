@@ -15,5 +15,9 @@ public class TypableRequestTypedResponseFinishableApiBuilder<I, O> extends Typed
 	public <II> TypedRequestResponseFinishableApiBuilder<II,O> withRequestBodyType(Class<II> requestType) {
 		return new TypedRequestResponseFinishableApiBuilder<>(builder,method,uri,TypeLiteral.create(requestType),maxBodyLength);
 	}
+
+	public <OO> TypedResponseStreamedApiBuilder<OO> streamedInput() {
+		return new TypedResponseStreamedApiBuilder<>(builder,method,uri);
+	}
 	
 }

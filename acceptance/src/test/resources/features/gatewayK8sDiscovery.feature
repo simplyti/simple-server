@@ -359,3 +359,19 @@ Scenario: Ingress rewrite
 	And I check that exist a gateway service with targets "http://${local.address}:8081"
 	When I send a "GET /httpbinstatus/200" getting "#response"
 	Then I check that "#response" has status code 200
+	
+Scenario: Ingress rewrite with path params
+	When I start a service "#serviceFuture" with options:
+		| option	 			| value |
+		| withModule			| com.simplyti.service.gateway.GatewayModule |
+		| withModule			| com.simplyti.service.discovery.k8s.KubernetesServiceDiscoveryModule(http://localhost:8082) |
+		| withLog4J2Logger	|		|
+	Then I check that "#serviceFuture" is success
+	When I create an endpoint in namespace "acceptance" with name "service" and address "${local.address}:8081"
+	And I create an ingress in namespace "acceptance" with name "httpbin", path "/httpbinstatus/{status}/get", backend service "service:8080" and annotations
+		| ingress.kubernetes.io/rewrite-target | /status/{status} |
+	And I create a service in namespace "acceptance" with name "service" with port 8080 to target 8081
+	Then I check that exist 1 gateway services
+	And I check that exist a gateway service with targets "http://${local.address}:8081"
+	When I send a "GET /httpbinstatus/200/get" getting "#response"
+	Then I check that "#response" has status code 200

@@ -24,6 +24,7 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.util.concurrent.Future;
@@ -74,7 +75,7 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 				}
 				rewritedRequest = service.rewrite(request);
 				if(service.get().filters().isEmpty()) {
-					serviceProceed(ctx,service.get());
+					serviceProceed(ctx,service.get(),HttpUtil.is100ContinueExpected(request));
 				}else {
 					filterRequest(ctx,service.get(),request);
 				}
@@ -109,20 +110,20 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 		Future<Boolean> futureHandled = FilterChain.of(service.filters(),ctx,request).execute();
 		futureHandled.addListener(result->{
 			if(ctx.executor().inEventLoop()) {
-				handleFilterResult(ctx,futureHandled,service);
+				handleFilterResult(ctx,futureHandled,service,HttpUtil.is100ContinueExpected(request));
 			}else {
-				ctx.executor().execute(()->handleFilterResult(ctx,futureHandled,service));
+				ctx.executor().execute(()->handleFilterResult(ctx,futureHandled,service,HttpUtil.is100ContinueExpected(request)));
 			}
 		});
 	}
 
-	private void handleFilterResult(ChannelHandlerContext ctx, Future<Boolean> futureHandled, BackendService service) {
+	private void handleFilterResult(ChannelHandlerContext ctx, Future<Boolean> futureHandled, BackendService service, boolean isContinueExpected) {
 		if(futureHandled.isSuccess()) {
 			if(futureHandled.getNow()) {
 				pendingMessages.fail(new RuntimeException("Handled by filter"));
 				this.ignoreNextMessages=true;
 			}else {
-				serviceProceed(ctx,service);
+				serviceProceed(ctx,service,isContinueExpected);
 			}
 		}else {
 			ctx.fireExceptionCaught(futureHandled.cause());
@@ -131,40 +132,40 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 		}
 	}
 
-	private void serviceProceed(ChannelHandlerContext ctx, BackendService service) {
+	private void serviceProceed(ChannelHandlerContext ctx, BackendService service,boolean isContinueExpected) {
 		Endpoint endpoint = service.loadBalander().next();
 		if (endpoint == null) {
 			ctx.fireExceptionCaught(new ServiceUnavailableException());
 			pendingMessages.fail(new RuntimeException("No endpoints"));
 			this.ignoreNextMessages=true;
 		} else {
-			connectToEndpoint(ctx, endpoint);
+			connectToEndpoint(ctx, endpoint,isContinueExpected);
 		}
 	}
 
-	private void connectToEndpoint(ChannelHandlerContext ctx, Endpoint endpoint) {
+	private void connectToEndpoint(ChannelHandlerContext ctx, Endpoint endpoint, boolean isContinueExpected) {
 		ChannelPool pool = client.pool(endpoint);
 		Future<Channel> channelFuture = pool.acquire();
 		if (channelFuture.isDone()) {
-			handleBackendChannelFuture(ctx, channelFuture, pool, endpoint);
+			handleBackendChannelFuture(ctx, channelFuture, pool, endpoint, isContinueExpected);
 		} else {
-			channelFuture.addListener(f -> handleBackendChannelFuture(ctx, channelFuture, pool, endpoint));
+			channelFuture.addListener(f -> handleBackendChannelFuture(ctx, channelFuture, pool, endpoint, isContinueExpected));
 		}
 	}
 	
 	private void handleBackendChannelFuture(ChannelHandlerContext ctx, Future<Channel> backendChannelFuture,
-			ChannelPool pool, Endpoint endpoint) {
+			ChannelPool pool, Endpoint endpoint, boolean isContinueExpected) {
 		if(ctx.executor().inEventLoop()) {
-			handleBackendChannelFuture0(ctx,backendChannelFuture,pool,endpoint);
+			handleBackendChannelFuture0(ctx,backendChannelFuture,pool,endpoint, isContinueExpected);
 		}else {
-			ctx.executor().execute(()->handleBackendChannelFuture0(ctx,backendChannelFuture,pool,endpoint));
+			ctx.executor().execute(()->handleBackendChannelFuture0(ctx,backendChannelFuture,pool,endpoint,isContinueExpected));
 		}
 	}
 	
 	private void handleBackendChannelFuture0(ChannelHandlerContext ctx, Future<Channel> backendChannelFuture,
-			ChannelPool pool, Endpoint endpoint) {
+			ChannelPool pool, Endpoint endpoint, boolean isContinueExpected) {
 		if (backendChannelFuture.isSuccess()) {
-			backendChannelFuture.getNow().pipeline().addLast(new BackendProxyHandler(pool, ctx.channel(),endpoint,frontSsl));
+			backendChannelFuture.getNow().pipeline().addLast(new BackendProxyHandler(pool, ctx.channel(),endpoint,isContinueExpected,frontSsl));
 			this.backendChannel=backendChannelFuture.getNow();
 			pendingMessages.write(backendChannel).addListener(f->handleWriteFuture(ctx, f));
 		}else {

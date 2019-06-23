@@ -10,7 +10,7 @@ import com.simplyti.service.security.oidc.handler.OpenIdHandler;
 
 import io.netty.handler.codec.http.HttpRequest;
 
-public class OpenIdOperationFilter extends AbstractOpenIdFilter<ApiInvocation<?>> implements OperationInboundFilter{
+public class OpenIdOperationFilter extends AbstractOpenIdFilter<ApiInvocation> implements OperationInboundFilter{
 	
 	@Inject
 	public OpenIdOperationFilter(OpenIdHandler oidcConfig) {
@@ -18,7 +18,7 @@ public class OpenIdOperationFilter extends AbstractOpenIdFilter<ApiInvocation<?>
 	}
 
 	@Override
-	public void execute(FilterContext<ApiInvocation<?>> context) {
+	public void execute(FilterContext<ApiInvocation> context) {
 		if(!isEnabled(context)) {
 			context.done();
 		}else {
@@ -26,13 +26,13 @@ public class OpenIdOperationFilter extends AbstractOpenIdFilter<ApiInvocation<?>
 		}
 	}
 
-	private boolean isEnabled(FilterContext<ApiInvocation<?>> context) {
+	private boolean isEnabled(FilterContext<ApiInvocation> context) {
 		Object oidc = context.object().operation().meta(OpenIdModule.META_ATT);
 		return oidc!=null && oidc instanceof String && Boolean.parseBoolean((String) oidc);
 	}
 
 	@Override
-	protected HttpRequest request(FilterContext<ApiInvocation<?>> context) {
+	protected HttpRequest request(FilterContext<ApiInvocation> context) {
 		return context.object().request();
 	}
 
