@@ -12,9 +12,7 @@ import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.simplyti.service.api.filter.HttpResponseFilter;
 import com.simplyti.service.channel.handler.ApiExceptionHandler;
 import com.simplyti.service.channel.handler.ClientChannelHandler;
-import com.simplyti.service.channel.handler.inits.ApiRequestHandlerInit;
-import com.simplyti.service.channel.handler.inits.DefaultBackendHandlerInit;
-import com.simplyti.service.channel.handler.inits.FileServerHandlerInit;
+import com.simplyti.service.channel.handler.inits.HandlerInit;
 import com.simplyti.service.ssl.SslHandlerFactory;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -46,9 +44,7 @@ public class DefaultServiceChannelInitializer extends ChannelInboundHandlerAdapt
 	
 	private final ApiExceptionHandler apiExceptionHandler;
 	
-	private final ApiRequestHandlerInit apiRequestHandlerInit;
-	private final FileServerHandlerInit fileServerHandlerInit;
-	private final DefaultBackendHandlerInit defaultBackendFullRequestHandlerInit;
+	private final Set<HandlerInit> handlers;
 	
 	private final Set<HttpRequestFilter> requestFilters;
 	private final Set<HttpResponseFilter> responseFilters;
@@ -86,7 +82,7 @@ public class DefaultServiceChannelInitializer extends ChannelInboundHandlerAdapt
 			pipeline.addLast(new HttpServerCodec());
 		}
 		
-		pipeline.addLast(ClientChannelHandler.NAME, new ClientChannelHandler(service,apiRequestHandlerInit,fileServerHandlerInit,defaultBackendFullRequestHandlerInit,requestFilters,responseFilters));
+		pipeline.addLast(ClientChannelHandler.NAME, new ClientChannelHandler(service,handlers,requestFilters,responseFilters));
 		pipeline.addLast(apiExceptionHandler);
 	}
 

@@ -3,6 +3,7 @@ package com.simplyti.service.channel.handler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
@@ -12,10 +13,9 @@ import com.simplyti.service.api.filter.FilterChain;
 import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.simplyti.service.api.filter.HttpResponseFilter;
 import com.simplyti.service.channel.ClientChannelGroup;
-import com.simplyti.service.channel.handler.inits.ApiRequestHandlerInit;
-import com.simplyti.service.channel.handler.inits.DefaultBackendHandlerInit;
-import com.simplyti.service.channel.handler.inits.FileServerHandlerInit;
+import com.simplyti.service.channel.handler.inits.HandlerInit;
 import com.simplyti.service.channel.pending.PendingMessages;
+import com.simplyti.service.priority.Priorized;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
@@ -41,13 +41,11 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 	private final Service<?> service;
 	
 	private final List<String> currentHandlers = new ArrayList<>();
-
-	private final ApiRequestHandlerInit apiRequestHandlerInit;
-	private final FileServerHandlerInit fileServerHandlerInit;
-	private final DefaultBackendHandlerInit defaultBackendRequestHandlerInit;
 	
 	private final Set<HttpRequestFilter> requestFilters;
 	private final Set<HttpResponseFilter> responseFilters;
+	
+	private final List<HandlerInit> handlers;
 
 	private boolean expectedContinue;
 	private boolean isContinuing;
@@ -60,14 +58,10 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 
 
 	public ClientChannelHandler(Service<?> service,
-			ApiRequestHandlerInit apiRequestHandlerInit,
-			FileServerHandlerInit fileServerHandlerInit,
-			DefaultBackendHandlerInit defaultBackendRequestHandlerInit,
+			Set<HandlerInit> handlers,
 			Set<HttpRequestFilter> requestFilters,Set<HttpResponseFilter> responseFilters) {
 		this.service=service;
-		this.apiRequestHandlerInit=apiRequestHandlerInit;
-		this.fileServerHandlerInit=fileServerHandlerInit;
-		this.defaultBackendRequestHandlerInit=defaultBackendRequestHandlerInit;
+		this.handlers=handlers.stream().sorted(Priorized.PRIORITY_ANN_ORDER).collect(Collectors.toList());
 		this.requestFilters=requestFilters;
 		this.responseFilters=responseFilters;
 	}
@@ -108,17 +102,17 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 	}
 
 	private void serviceProceed(ChannelHandlerContext ctx, HttpRequest request) {
-		List<String> added;
 		if(request.decoderResult().isFailure()) {
 			ReferenceCountUtil.release(request);
 			ctx.fireExceptionCaught(new BadRequestException());
-		}else if((added=fileServerHandlerInit.canHandle(ctx,request,NAME))!=null){
-			handle(ctx,request,added);
-		} else if ((added=apiRequestHandlerInit.canHandle(ctx,request,NAME)) !=null) {
-			handle(ctx,request,added);
-		}else if((added=defaultBackendRequestHandlerInit.canHandle(ctx,request,NAME))!=null) {
-			handle(ctx,request,added);
-		} else {
+		}else {
+			for(HandlerInit init:handlers) {
+				List<String> addedHandlers = init.canHandle(ctx,request,NAME);
+				if(addedHandlers!=null) {
+					handle(ctx,request,addedHandlers);
+					return;
+				}
+			}
 			ReferenceCountUtil.release(request);
 			ctx.fireExceptionCaught(new NotFoundException());
 		}

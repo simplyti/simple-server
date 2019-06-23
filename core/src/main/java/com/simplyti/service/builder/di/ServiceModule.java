@@ -30,6 +30,10 @@ import com.simplyti.service.channel.EntryChannelInit;
 import com.simplyti.service.channel.ServerChannelFactoryProvider;
 import com.simplyti.service.channel.ServiceChannelInitializer;
 import com.simplyti.service.channel.handler.FileServeHandler;
+import com.simplyti.service.channel.handler.inits.ApiRequestHandlerInit;
+import com.simplyti.service.channel.handler.inits.DefaultBackendHandlerInit;
+import com.simplyti.service.channel.handler.inits.FileServerHandlerInit;
+import com.simplyti.service.channel.handler.inits.HandlerInit;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.hook.ServerStartHook;
 import com.simplyti.service.hook.ServerStopHook;
@@ -72,45 +76,48 @@ public class ServiceModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
+		bind(ServerConfig.class).toInstance(config);
 		bind(new TypeLiteral<Service<?>>() {}).to(config.serviceClass()).in(Singleton.class);
+		
+		bindEventLoop();
+		bind(EventLoop.class).annotatedWith(StartStopLoop.class).toProvider(StartStopLoopProvider.class).in(Singleton.class);
+		
+		bind(new TypeLiteral<ChannelFactory<ServerChannel>>() {}).toProvider(ServerChannelFactoryProvider.class).in(Singleton.class);
 		bind(ClientChannelGroup.class).in(Singleton.class);
 		
+		// Channel Initialized
+		bind(ServiceChannelInitializer.class).to(DefaultServiceChannelInitializer.class).in(Singleton.class);
 		OptionalBinder.newOptionalBinder(binder(), EntryChannelInit.class);
 		
+		
+		// Default Handler
+		Multibinder.newSetBinder(binder(), HandlerInit.class).addBinding().to(DefaultBackendHandlerInit.class).in(Singleton.class);
 		OptionalBinder.newOptionalBinder(binder(), DefaultBackendFullRequestHandler.class);
 		OptionalBinder.newOptionalBinder(binder(), DefaultBackendRequestHandler.class);
 		
-		if(eventLoopGroup==null) {
-			bind(EventLoopGroup.class).toProvider(EventLoopGroupProvider.class).in(Singleton.class);
-		} else {
-			bind(EventLoopGroup.class).toInstance(eventLoopGroup);
-		}
+		// File server
+		bindFileServer();
 		
-		bind(new TypeLiteral<ChannelFactory<ServerChannel>>() {}).toProvider(ServerChannelFactoryProvider.class).in(Singleton.class);
-		bind(EventLoop.class).annotatedWith(StartStopLoop.class).toProvider(StartStopLoopProvider.class).in(Singleton.class);
-		bind(ServerConfig.class).toInstance(config);
-		
-		bind(ServiceChannelInitializer.class).to(DefaultServiceChannelInitializer.class).in(Singleton.class);
-		
-		OptionalBinder.newOptionalBinder(binder(), FileServeHandler.class);
-		if(config.fileServe()!=null) {
-			bind(FileServeHandler.class).in(Singleton.class);
-		}
-		
+		// SSE Encoder
 		bind(ServerSentEventEncoder.class).in(Singleton.class);
+		
+		// Exception Handler
 		bind(ExceptionHandler.class).in(Singleton.class);
 		
+		// Sync operations
 		bind(ExecutorService.class).toProvider(ExecutorServiceProvider.class).in(Singleton.class);
 		bind(SyncTaskSubmitter.class).to(DefaultSyncTaskSubmitter.class).in(Singleton.class);
 	
-		Multibinder<ApiProvider> mangerAPiProviders = Multibinder.newSetBinder(binder(), ApiProvider.class);
-		Stream.concat(apiClasses.stream(), Stream.of(HealthApi.class))
-			.forEach(apiClass->mangerAPiProviders.addBinding().to(apiClass).in(Singleton.class));
-		apiProviders.forEach(provider->mangerAPiProviders.addBinding().toInstance(provider));
+		// APIs
+		Multibinder.newSetBinder(binder(), HandlerInit.class).addBinding().to(ApiRequestHandlerInit.class).in(Singleton.class);
+		bindApis(Multibinder.newSetBinder(binder(), ApiProvider.class));
 		
+		// Filters
 		Multibinder.newSetBinder(binder(), HttpRequestFilter.class);
 		Multibinder.newSetBinder(binder(), OperationInboundFilter.class);
 		Multibinder.newSetBinder(binder(), HttpResponseFilter.class);
+		
+		// Start-Stop Hooks
 		Multibinder.newSetBinder(binder(), ServerStartHook.class);
 		Multibinder.newSetBinder(binder(), ServerStopHook.class);
 		
@@ -128,7 +135,26 @@ public class ServiceModule extends AbstractModule {
 		
 		OptionalBinder.newOptionalBinder(binder(), DefaultServerCertificateProvider.class);
 		OptionalBinder.newOptionalBinder(binder(), ServerCertificateProvider.class);
-		
+	}
+
+	private void bindFileServer() {
+		if(config.fileServe()!=null) {
+			Multibinder.newSetBinder(binder(), HandlerInit.class).addBinding().to(FileServerHandlerInit.class).in(Singleton.class);
+			bind(FileServeHandler.class).in(Singleton.class);
+		}
+	}
+
+	private void bindEventLoop() {
+		if(eventLoopGroup==null) {
+			bind(EventLoopGroup.class).toProvider(EventLoopGroupProvider.class).in(Singleton.class);
+		} else {
+			bind(EventLoopGroup.class).toInstance(eventLoopGroup);
+		}
+	}
+
+	private void bindApis(Multibinder<ApiProvider> apiBinder) {
+		apiProviders.forEach(provider->apiBinder.addBinding().toInstance(provider));
+		Stream.concat(apiClasses.stream(), Stream.of(HealthApi.class)).forEach(apiClass->apiBinder.addBinding().to(apiClass).in(Singleton.class));
 	}
 
 }

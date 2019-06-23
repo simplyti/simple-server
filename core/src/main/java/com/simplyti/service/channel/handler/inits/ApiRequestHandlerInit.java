@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Map.Entry;
 
+import javax.annotation.Priority;
 import javax.inject.Inject;
 
 import com.google.common.collect.Maps;
@@ -24,6 +25,7 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import lombok.RequiredArgsConstructor;
 
+@Priority(1)
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class ApiRequestHandlerInit extends HandlerInit {
 	
