@@ -1,23 +1,18 @@
-package com.simplyti.service.builder;
+package com.simplyti.service;
+
+import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import com.google.common.base.MoreObjects;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.simplyti.service.Service;
-import com.simplyti.service.ServerConfig;
 import com.simplyti.service.api.builder.ApiProvider;
-import com.simplyti.service.builder.di.ServiceModule;
+import com.simplyti.service.builder.ServiceBuilder;
 import com.simplyti.service.fileserver.DirectoryResolver;
 import com.simplyti.service.fileserver.FileServeConfiguration;
 
@@ -26,7 +21,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Log4J2LoggerFactory;
 import io.netty.util.internal.logging.Slf4JLoggerFactory;
 
-public class GuiceServiceBuilder<T extends Service<?>> implements ServiceBuilder<T> {
+public abstract class AbstractServiceBuilder<T extends Service<?>> implements ServiceBuilder<T>{
 
 	private static final int DEFAULT_INSECURE_PORT = 8080;
 	private static final int DEFAULT_SECURE_PORT = 8443;
@@ -45,26 +40,29 @@ public class GuiceServiceBuilder<T extends Service<?>> implements ServiceBuilder
 	
 	private boolean verbose;
 	
-
-	public GuiceServiceBuilder(Class<T> serviceClass) {
+	public AbstractServiceBuilder(Class<T> serviceClass) {
 		this.serviceClass=serviceClass;
 	}
 
 	@Override
 	public T build() {
 		ServerConfig config = new ServerConfig(
-				serviceClass,
 				MoreObjects.firstNonNull(insecuredPort, DEFAULT_INSECURE_PORT),
 				MoreObjects.firstNonNull(securedPort, DEFAULT_SECURE_PORT),fileServe,eventLoopGroup!=null,
 				verbose);
-		ServiceModule coreModule = new ServiceModule(config,MoreObjects.firstNonNull(apiClasses, Collections.emptySet()),MoreObjects.firstNonNull(apiProviders, Collections.emptySet()),eventLoopGroup);
+		
 		Stream<Module> additinalModules = Optional.ofNullable(modules)
 				.map(Collection::stream)
 				.orElse(Stream.<Module>empty());
-		Injector injector = Guice.createInjector(Stream.concat(additinalModules, Stream.of(coreModule)).collect(Collectors.toList()));
-		return injector.getInstance(serviceClass);
+		
+		return build0(config,serviceClass,additinalModules,
+				MoreObjects.firstNonNull(apiClasses, Collections.emptySet()),
+				MoreObjects.firstNonNull(apiProviders, Collections.emptySet()),
+				eventLoopGroup);
 	}
 	
+	protected abstract T build0(ServerConfig config, Class<T> serviceClass, Stream<Module> additinalModules, Collection<Class<? extends ApiProvider>> apiClasses, Collection<ApiProvider> apiProviders,  EventLoopGroup eventLoopGroup);
+
 	@Override
 	public ServiceBuilder<T> insecuredPort(int port) {
 		this.insecuredPort=port;

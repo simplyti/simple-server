@@ -9,7 +9,7 @@ import javax.net.ssl.TrustManagerFactorySpi;
 public class IoCTrustManagerFactory extends TrustManagerFactory {
 
 	@Inject
-	protected IoCTrustManagerFactory(TrustManagerFactorySpi spi, Provider provider) {
+	public IoCTrustManagerFactory(TrustManagerFactorySpi spi, Provider provider) {
 		super(spi, provider, provider.getName());
 	}
 

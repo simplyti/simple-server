@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 
-import com.simplyti.service.Service;
+import com.simplyti.service.StartStopMonitor;
 import com.simplyti.service.api.filter.FilterChain;
 import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.simplyti.service.api.filter.HttpResponseFilter;
@@ -38,7 +38,7 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 
 	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
 
-	private final Service<?> service;
+	private final StartStopMonitor startStopMonitor;
 	
 	private final List<String> currentHandlers = new ArrayList<>();
 	
@@ -57,10 +57,10 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 	private boolean flushed;
 
 
-	public ClientChannelHandler(Service<?> service,
+	public ClientChannelHandler(StartStopMonitor startStopMonitor,
 			Set<HandlerInit> handlers,
 			Set<HttpRequestFilter> requestFilters,Set<HttpResponseFilter> responseFilters) {
-		this.service=service;
+		this.startStopMonitor=startStopMonitor;
 		this.handlers=handlers.stream().sorted(Priorized.PRIORITY_ANN_ORDER).collect(Collectors.toList());
 		this.requestFilters=requestFilters;
 		this.responseFilters=responseFilters;
@@ -181,7 +181,7 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 						ctx.pipeline().remove(this);
 					}
 					ctx.channel().attr(ClientChannelGroup.IN_PROGRESS).set(false);
-					if(service.stopping()){
+					if(startStopMonitor.isStoping()){
 						log.info("Server is stopping, close channel");
 						ctx.channel().close();
 					}

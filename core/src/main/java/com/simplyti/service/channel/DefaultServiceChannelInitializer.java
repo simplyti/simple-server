@@ -7,7 +7,7 @@ import java.util.Set;
 import javax.inject.Inject;
 
 import com.simplyti.service.ServerConfig;
-import com.simplyti.service.Service;
+import com.simplyti.service.StartStopMonitor;
 import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.simplyti.service.api.filter.HttpResponseFilter;
 import com.simplyti.service.channel.handler.ApiExceptionHandler;
@@ -40,7 +40,7 @@ public class DefaultServiceChannelInitializer extends ChannelInboundHandlerAdapt
 	
 	private final SslHandlerFactory sslHandlerFactory;
 	
-	private final Service<?> service;
+	private final StartStopMonitor startStopMonitor;
 	
 	private final ApiExceptionHandler apiExceptionHandler;
 	
@@ -82,7 +82,7 @@ public class DefaultServiceChannelInitializer extends ChannelInboundHandlerAdapt
 			pipeline.addLast(new HttpServerCodec());
 		}
 		
-		pipeline.addLast(ClientChannelHandler.NAME, new ClientChannelHandler(service,handlers,requestFilters,responseFilters));
+		pipeline.addLast(ClientChannelHandler.NAME, new ClientChannelHandler(startStopMonitor,handlers,requestFilters,responseFilters));
 		pipeline.addLast(apiExceptionHandler);
 	}
 

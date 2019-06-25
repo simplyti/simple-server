@@ -37,11 +37,10 @@ public abstract class AbstractService<T extends Service<T>> implements Service<T
 	private final Set<ServerStopHook> serverStopHook;
 	private final ServerConfig config;
 	
-	private boolean stopping;
-	
+	private final StartStopMonitor startStopMonitor;
 	
 	@Inject
-	public AbstractService(EventLoopGroup eventLoopGroup,
+	public AbstractService(EventLoopGroup eventLoopGroup, StartStopMonitor startStopMonitor,
 			@StartStopLoop EventLoop startStopLoop, ClientChannelGroup clientChannelGroup,
 			Set<ServerStartHook> serverStartHook,
 			Set<ServerStopHook> serverStopHook,
@@ -49,6 +48,7 @@ public abstract class AbstractService<T extends Service<T>> implements Service<T
 		Runtime.getRuntime().addShutdownHook(jvmShutdownHook);
 		this.eventLoopGroup=eventLoopGroup;
 		this.startStopLoop=startStopLoop;
+		this.startStopMonitor=startStopMonitor;
 		this.stopFuture=startStopLoop.newPromise();
 		this.clientChannelGroup=clientChannelGroup;
 		this.serverStartHook=serverStartHook;
@@ -120,13 +120,13 @@ public abstract class AbstractService<T extends Service<T>> implements Service<T
 	}
 	
 	private Future<Void> stop0(EventLoop executor,boolean fromHook) {
-		if(this.stopping){
+		if(this.startStopMonitor.isStoping()){
 			return stopFuture;
 		}
 		if(!fromHook) {
 			Runtime.getRuntime().removeShutdownHook(jvmShutdownHook);
 		}
-		this.stopping=true;
+		this.startStopMonitor.stop();
 		log.info("Stopping server gracefully...");
 		undbind(executor).addListener(f1->closeClients(executor)
 				.addListener(f2->executeStopHooks(executor)
@@ -174,11 +174,6 @@ public abstract class AbstractService<T extends Service<T>> implements Service<T
 		return stopFuture;
 	}
 
-	@Override
-	public boolean stopping() {
-		return stopping;
-	}
-	
 	@Override
 	public EventLoop executor() {
 		return startStopLoop;

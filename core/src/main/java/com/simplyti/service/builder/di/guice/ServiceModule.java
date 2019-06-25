@@ -1,4 +1,4 @@
-package com.simplyti.service.builder.di;
+package com.simplyti.service.builder.di.guice;
 
 import java.security.Provider;
 import java.util.Collection;
@@ -17,13 +17,19 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
-import com.simplyti.service.Service;
+import com.simplyti.service.DefaultStartStopMonitor;
 import com.simplyti.service.ServerConfig;
+import com.simplyti.service.StartStopMonitor;
 import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.simplyti.service.api.filter.HttpResponseFilter;
 import com.simplyti.service.api.filter.OperationInboundFilter;
 import com.simplyti.service.api.health.HealthApi;
+import com.simplyti.service.builder.di.EventLoopGroupProvider;
+import com.simplyti.service.builder.di.ExecutorServiceProvider;
+import com.simplyti.service.builder.di.SslContextProvider;
+import com.simplyti.service.builder.di.StartStopLoop;
+import com.simplyti.service.builder.di.StartStopLoopProvider;
 import com.simplyti.service.channel.ClientChannelGroup;
 import com.simplyti.service.channel.DefaultServiceChannelInitializer;
 import com.simplyti.service.channel.EntryChannelInit;
@@ -77,10 +83,10 @@ public class ServiceModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(ServerConfig.class).toInstance(config);
-		bind(new TypeLiteral<Service<?>>() {}).to(config.serviceClass()).in(Singleton.class);
 		
 		bindEventLoop();
 		bind(EventLoop.class).annotatedWith(StartStopLoop.class).toProvider(StartStopLoopProvider.class).in(Singleton.class);
+		bind(StartStopMonitor.class).to(DefaultStartStopMonitor.class).in(Singleton.class);
 		
 		bind(new TypeLiteral<ChannelFactory<ServerChannel>>() {}).toProvider(ServerChannelFactoryProvider.class).in(Singleton.class);
 		bind(ClientChannelGroup.class).in(Singleton.class);

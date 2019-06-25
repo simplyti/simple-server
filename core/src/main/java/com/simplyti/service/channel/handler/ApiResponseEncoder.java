@@ -3,8 +3,6 @@ package com.simplyti.service.channel.handler;
 import java.nio.CharBuffer;
 import java.util.List;
 
-import javax.inject.Inject;
-
 import com.jsoniter.output.JsonStream;
 import com.simplyti.service.api.ApiResponse;
 
@@ -23,10 +21,8 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
-import lombok.RequiredArgsConstructor;
 
 @Sharable
-@RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class ApiResponseEncoder extends MessageToMessageEncoder<ApiResponse> {
 	
 	@Override

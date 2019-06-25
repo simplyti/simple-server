@@ -10,6 +10,7 @@ import javax.inject.Inject;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.simplyti.service.AbstractService;
 import com.simplyti.service.ServerConfig;
+import com.simplyti.service.StartStopMonitor;
 import com.simplyti.service.builder.di.StartStopLoop;
 import com.simplyti.service.channel.ClientChannelGroup;
 import com.simplyti.service.hook.ServerStartHook;
@@ -25,11 +26,11 @@ public class AWSLambdaService extends AbstractService<AWSLambdaService>{
 	private final LambdaChannelPool embededChannelPool;
 	
 	@Inject
-	public AWSLambdaService(EventLoopGroup eventLoopGroup,
+	public AWSLambdaService(EventLoopGroup eventLoopGroup, StartStopMonitor startStopMonitor,
 			@StartStopLoop EventLoop startStopLoop, ClientChannelGroup clientChannelGroup,
 			Set<ServerStartHook> serverStartHook,Set<ServerStopHook> serverStopHook,
 			LambdaChannelPool embededChannelPool, ServerConfig config){
-		super(eventLoopGroup,startStopLoop,clientChannelGroup,serverStartHook,serverStopHook,config);
+		super(eventLoopGroup,startStopMonitor,startStopLoop,clientChannelGroup,serverStartHook,serverStopHook,config);
 		this.embededChannelPool=embededChannelPool;
 	}
 

@@ -36,11 +36,11 @@ public class DefaultService extends AbstractService<DefaultService> implements S
 	private final ChannelGroup serverChannels;
 	
 	@Inject
-	public DefaultService(EventLoopGroup eventLoopGroup,ServiceChannelInitializer serviceChannelInitializer,
+	public DefaultService(EventLoopGroup eventLoopGroup, StartStopMonitor startStopMonitor, ServiceChannelInitializer serviceChannelInitializer,
 			@StartStopLoop EventLoop startStopLoop, ServerConfig config, ClientChannelGroup clientChannelGroup,
 			ChannelFactory<ServerChannel> channelFactory,
 			Set<ServerStartHook> serverStartHook, Set<ServerStopHook> serverStopHook){
-		super(eventLoopGroup,startStopLoop,clientChannelGroup,serverStartHook,serverStopHook,config);
+		super(eventLoopGroup,startStopMonitor,startStopLoop,clientChannelGroup,serverStartHook,serverStopHook,config);
 		this.config=config;
 		this.serverChannels=new DefaultChannelGroup(startStopLoop);
 		this.bootstrap = new ServerBootstrap().group(startStopLoop, eventLoopGroup)
