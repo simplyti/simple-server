@@ -35,7 +35,7 @@ public class HttpClientBuilder extends ClientBuilder<HttpClientBuilder>{
 	}
 
 	public HttpClientBuilder withBearerAuth(String bearerAuth) {
-		this.authHeader=bearerAuth;
+		this.authHeader="Bearer " + bearerAuth;
 		return this;
 	}
 	
