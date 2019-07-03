@@ -26,7 +26,6 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
-import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.util.concurrent.Future;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
@@ -60,8 +59,7 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 		final Object rewritedRequest;
 		if (msg instanceof HttpRequest) {
 			HttpRequest request = (HttpRequest) msg;
-			QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
-			BackendServiceMatcher service = serviceDiscovery.get(request.headers().get(HttpHeaderNames.HOST),request.method(), decoder.path());
+			BackendServiceMatcher service = serviceDiscovery.get(request.headers().get(HttpHeaderNames.HOST),request.method(), path(request.uri()));
 			if (service == null) {
 				ctx.fireExceptionCaught(new NotFoundException());
 				this.ignoreNextMessages=true;
@@ -91,6 +89,15 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 		}
 	}
 	
+	private String path(String uri) {
+		int queryDelimiter = uri.indexOf('?');
+		if(queryDelimiter==-1) {
+			return uri;
+		}else {
+			return uri.substring(0,queryDelimiter);
+		}
+	}
+
 	private boolean handleSslRedirect(ChannelHandlerContext ctx, HttpRequest request,BackendService service) {
 		FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.PERMANENT_REDIRECT,
 				Unpooled.EMPTY_BUFFER);
