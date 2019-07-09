@@ -26,7 +26,8 @@ public class Rewrite {
 			}
 			return rewrited;
 		}else {
-			return rewrite.replaceAll("/$", StringUtil.EMPTY_STRING)+"/"+matcher.group(1);
+			String group =matcher.group(1);
+			return rewrite.replaceAll("/$", StringUtil.EMPTY_STRING)+(group.isEmpty()?group:"/"+group);
 		}
 	}
 

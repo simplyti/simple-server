@@ -9,15 +9,27 @@ public class DefaultBackendServiceMatcher implements BackendServiceMatcher {
 
 	private final Matcher matcher;
 	private final BackendService service;
+	private final String query;
 
-	public DefaultBackendServiceMatcher(BackendService service, String path) {
+	public DefaultBackendServiceMatcher(BackendService service, String uri) {
 		this.service=service;
 		if(service.pattern()!=null) {
+			String path;
+			int queryDelimiter = uri.indexOf('?');
+			if(queryDelimiter==-1) {
+				path=uri;
+				query=StringUtil.EMPTY_STRING;
+			}else {
+				path = uri.substring(0,queryDelimiter);
+				query=uri.substring(queryDelimiter);
+			}
 			this.matcher=service.pattern().matcher(path);
 		}else {
 			this.matcher=null;
+			this.query=null;
 		}
 	}
+	
 
 	@Override
 	public boolean matches() {
@@ -35,7 +47,7 @@ public class DefaultBackendServiceMatcher implements BackendServiceMatcher {
 			return request;
 		} else if(service.pathPattern()!=null || service.pattern()!=null) {
 			final String newpath = service.rewrite().doRewrite(matcher, service.pathPattern());
-			return request.setUri(newpath);
+			return request.setUri(newpath+query);
 		}else {
 			String root;
 			String resource;

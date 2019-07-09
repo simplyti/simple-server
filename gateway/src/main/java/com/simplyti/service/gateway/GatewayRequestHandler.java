@@ -59,7 +59,7 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 		final Object rewritedRequest;
 		if (msg instanceof HttpRequest) {
 			HttpRequest request = (HttpRequest) msg;
-			BackendServiceMatcher service = serviceDiscovery.get(request.headers().get(HttpHeaderNames.HOST),request.method(), path(request.uri()));
+			BackendServiceMatcher service = serviceDiscovery.get(request.headers().get(HttpHeaderNames.HOST),request.method(), request.uri());
 			if (service == null) {
 				ctx.fireExceptionCaught(new NotFoundException());
 				this.ignoreNextMessages=true;
@@ -89,15 +89,6 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 		}
 	}
 	
-	private String path(String uri) {
-		int queryDelimiter = uri.indexOf('?');
-		if(queryDelimiter==-1) {
-			return uri;
-		}else {
-			return uri.substring(0,queryDelimiter);
-		}
-	}
-
 	private boolean handleSslRedirect(ChannelHandlerContext ctx, HttpRequest request,BackendService service) {
 		FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.PERMANENT_REDIRECT,
 				Unpooled.EMPTY_BUFFER);
