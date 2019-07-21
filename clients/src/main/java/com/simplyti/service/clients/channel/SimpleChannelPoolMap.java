@@ -38,7 +38,7 @@ public class SimpleChannelPoolMap extends AbstractChannelPoolMap<Endpoint, Chann
 
 	@Override
 	protected ChannelPool newPool(Endpoint key) {
-		if(pool.poolSize()!=null) {
+		if(pool!=null && pool.poolSize()!=null) {
 			return newFixedPool(key,pool.poolSize());
 		}else {
 			return newSimplePool(key);
