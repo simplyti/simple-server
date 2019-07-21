@@ -10,5 +10,6 @@ import lombok.experimental.Accessors;
 public class PoolConfig {
 
 	private final long maxIdle;
+	private final Integer poolSize;
 
 }

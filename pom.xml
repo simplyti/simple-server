@@ -61,7 +61,7 @@
 		<jaxb.version>2.3.1</jaxb.version>
 
 		<!-- Networking -->
-		<netty.version>4.1.36.Final</netty.version>
+		<netty.version>4.1.37.Final</netty.version>
 
 		<!-- JAX-RS -->
 		<jax-rs.version>2.1.1</jax-rs.version>

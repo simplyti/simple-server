@@ -23,6 +23,7 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<HttpObject>
 	@Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		clientChannel.setFailure(new ClosedChannelException());
+		clientChannel.release();
     }
 
 	@Override

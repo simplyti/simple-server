@@ -52,7 +52,7 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler, Chan
 		this.allChannels=new DefaultChannelGroup(channelGroupsEventLoop);
 		this.activeChannels=new DefaultChannelGroup(channelGroupsEventLoop);
 		this.iddleChannels=new DefaultChannelGroup(channelGroupsEventLoop);
-		this.channelPoolMap = new SimpleChannelPoolMap(eventLoopGroup, new MonitoredHandler(this, poolHandler), this);
+		this.channelPoolMap = new SimpleChannelPoolMap(eventLoopGroup, new MonitoredHandler(this, poolHandler), this, poolConfig);
 		this.poolConfig = poolConfig;
 	}
 	
@@ -111,7 +111,10 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler, Chan
 	public <T> Future<T> channel(ClientRequestChannelInitializer<T> initializer, Object message, ClientConfig config) {
 		EventLoop eventLoop = eventLoopGroup.next();
 		Promise<T> resultPromise = eventLoop.newPromise();
-		
+		return channel(initializer, message,config,resultPromise);
+	}
+
+	public <T> Future<T> channel(ClientRequestChannelInitializer<T> initializer, Object message, ClientConfig config, Promise<T> resultPromise) {
 		Future<ClientRequestChannel<T>> clientFuture = this.channel(config,initializer, resultPromise);
 		if(clientFuture.isDone()) {
 			if(clientFuture.isSuccess()) {

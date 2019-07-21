@@ -30,6 +30,7 @@ public class FullHttpResponseHandler<T> extends HttpObjectAggregator {
 	@Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		clientChannel.setFailure(new ClosedChannelException());
+		clientChannel.release();
     }
 
 	@Override
@@ -65,6 +66,7 @@ public class FullHttpResponseHandler<T> extends HttpObjectAggregator {
 	@Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		clientChannel.setFailure(cause);
+		clientChannel.release();
     }
 	
 }
