@@ -13,6 +13,7 @@ import com.simplyti.service.api.FullApiInvocation;
 import com.simplyti.service.api.DefaultApiInvocationContext;
 import com.simplyti.service.api.filter.FilterChain;
 import com.simplyti.service.api.filter.OperationInboundFilter;
+import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.priority.Priorized;
 import com.simplyti.service.sse.ServerSentEventEncoder;
@@ -30,14 +31,16 @@ public class ApiInvocationHandler extends SimpleChannelInboundHandler<FullApiInv
 	private final ExceptionHandler exceptionHandler;
 	private final ServerSentEventEncoder serverEventEncoder;
 	private final SyncTaskSubmitter syncTaskSubmitter;
+	private final Json json;
 	
 	@Inject
 	public ApiInvocationHandler(Set<OperationInboundFilter> filters, ExceptionHandler exceptionHandler, ServerSentEventEncoder serverEventEncoder,
-			SyncTaskSubmitter syncTaskSubmitter) {
+			SyncTaskSubmitter syncTaskSubmitter, Json json) {
 		this.filters=filters.stream().sorted(Priorized.PRIORITY_ANN_ORDER).collect(Collectors.toList());
 		this.exceptionHandler=exceptionHandler;
 		this.serverEventEncoder=serverEventEncoder;
 		this.syncTaskSubmitter=syncTaskSubmitter;
+		this.json=json;
 	}
 	
 	@Override
@@ -76,7 +79,7 @@ public class ApiInvocationHandler extends SimpleChannelInboundHandler<FullApiInv
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private <I,O> DefaultApiInvocationContext<I,O> context(ChannelHandlerContext ctx, FullApiInvocation msg) {
-		return new DefaultApiInvocationContext<I,O>(ctx,msg.matcher(),msg,exceptionHandler,serverEventEncoder,syncTaskSubmitter);
+		return new DefaultApiInvocationContext<I,O>(ctx,msg.matcher(),msg,exceptionHandler,serverEventEncoder,syncTaskSubmitter,json);
 	}
 
 }

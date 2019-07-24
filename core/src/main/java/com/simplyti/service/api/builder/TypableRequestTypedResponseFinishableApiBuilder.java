@@ -1,6 +1,6 @@
 package com.simplyti.service.api.builder;
 
-import com.jsoniter.spi.TypeLiteral;
+import com.simplyti.service.api.serializer.json.TypeLiteral;
 
 import io.netty.handler.codec.http.HttpMethod;
 
@@ -11,7 +11,6 @@ public class TypableRequestTypedResponseFinishableApiBuilder<I, O> extends Typed
 		super(builder, method, uri, requestType,maxBodyLength);
 	}
 
-	@SuppressWarnings("unchecked")
 	public <II> TypedRequestResponseFinishableApiBuilder<II,O> withRequestBodyType(Class<II> requestType) {
 		return new TypedRequestResponseFinishableApiBuilder<>(builder,method,uri,TypeLiteral.create(requestType),maxBodyLength);
 	}

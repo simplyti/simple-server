@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.util.Modules;
 import com.simplyti.service.AbstractServiceBuilder;
 import com.simplyti.service.ServerConfig;
 import com.simplyti.service.Service;
@@ -26,7 +27,7 @@ public class GuiceServiceBuilder<T extends Service<?>> extends AbstractServiceBu
 			Collection<Class<? extends ApiProvider>> apiClasses, Collection<ApiProvider> apiProviders,
 			EventLoopGroup eventLoopGroup) {
 		ServiceModule coreModule = new ServiceModule(config,apiClasses,apiProviders,eventLoopGroup);
-		Injector injector = Guice.createInjector(Stream.concat(additinalModules, Stream.of(coreModule)).collect(Collectors.toList()));
+		Injector injector = Guice.createInjector(Modules.override(coreModule).with(additinalModules.collect(Collectors.toList())));
 		return injector.getInstance(serviceClass);
 	}
 	

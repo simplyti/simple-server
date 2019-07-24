@@ -212,7 +212,10 @@ Scenario: Conflictive resource path when invoking with trailing slash
 	Then I check that "#response" is equals to "This is the resource list"
 	
 Scenario: Error encoding json object
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with options:
+		| option	 	| value |
+		| withApi		| com.simplyti.service.APITest		|
+		| withModule	| com.simplyti.service.JsonWroteErrorModule	|
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /json/serialize/error" getting "#response"
 	And I check that "#response" has status code 500

@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>com.simplyti.cloud</groupId>
 		<artifactId>simple-server</artifactId>
-		<version>0.0.2-SNAPSHOT</version>
+		<version>0.0.3-SNAPSHOT</version>
 	</parent>
 
 	<build>
@@ -216,6 +216,11 @@
 		<dependency>
 			<groupId>com.simplyti.cloud</groupId>
 			<artifactId>simple-server-aws-lambda</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.simplyti.cloud</groupId>
+			<artifactId>simple-server-serializer-jsoniter</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

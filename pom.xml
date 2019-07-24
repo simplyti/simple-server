@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.simplyti.cloud</groupId>
 	<artifactId>simple-server</artifactId>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>0.0.3-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>Simple server</name>
@@ -68,6 +68,7 @@
 
 		<!-- Json -->
 		<jsoniter.version>0.9.23</jsoniter.version>
+		<dsljson.version>1.9.3</dsljson.version>
 		
 		<!-- JWT -->
 		<jjwt.version>0.9.1</jjwt.version>
@@ -206,6 +207,11 @@
 			</dependency>
 			<dependency>
 				<groupId>io.netty</groupId>
+				<artifactId>netty-buffer</artifactId>
+				<version>${netty.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.netty</groupId>
 				<artifactId>netty-transport-native-epoll</artifactId>
 				<version>${netty.version}</version>
 				<classifier>linux-x86_64</classifier>
@@ -278,6 +284,11 @@
 				<groupId>com.jsoniter</groupId>
 				<artifactId>jsoniter</artifactId>
 				<version>${jsoniter.version}</version>
+			</dependency>
+			<dependency>
+			    <groupId>com.dslplatform</groupId>
+			    <artifactId>dsl-json-java8</artifactId>
+			    <version>${dsljson.version}</version>
 			</dependency>
 
 			<!-- JWT -->
@@ -357,6 +368,9 @@
 	<modules>
 		<module>commons</module>
 		<module>commons-netty</module>
+		<module>serializer-json</module>
+		<module>serializer-dsljson</module>
+		<module>serializer-jsoniter</module>
 		<module>core</module>
 		<module>aws-lambda</module>
 		<module>auth-oidc</module>

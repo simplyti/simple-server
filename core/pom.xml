@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>com.simplyti.cloud</groupId>
 		<artifactId>simple-server</artifactId>
-		<version>0.0.2-SNAPSHOT</version>
+		<version>0.0.3-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
@@ -20,6 +20,11 @@
 		<dependency>
 			<groupId>com.simplyti.cloud</groupId>
 			<artifactId>simple-server-commons-netty</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.simplyti.cloud</groupId>
+			<artifactId>simple-server-serializer-dsljson</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 
@@ -80,12 +85,6 @@
 		<dependency>
 		    <groupId>javax.activation</groupId>
 		    <artifactId>activation</artifactId>
-		</dependency>
-
-		<!-- Json -->
-		<dependency>
-			<groupId>com.jsoniter</groupId>
-			<artifactId>jsoniter</artifactId>
 		</dependency>
 	</dependencies>
 

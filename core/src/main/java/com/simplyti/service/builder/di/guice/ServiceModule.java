@@ -43,6 +43,7 @@ import com.simplyti.service.channel.handler.inits.HandlerInit;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.hook.ServerStartHook;
 import com.simplyti.service.hook.ServerStopHook;
+import com.simplyti.service.serializer.json.DslJsonModule;
 import com.simplyti.service.sse.ServerSentEventEncoder;
 import com.simplyti.service.ssl.DefaultServerCertificateProvider;
 import com.simplyti.service.ssl.DefaultSslHandlerFactory;
@@ -82,6 +83,7 @@ public class ServiceModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
+		install(new DslJsonModule());
 		bind(ServerConfig.class).toInstance(config);
 		
 		bindEventLoop();

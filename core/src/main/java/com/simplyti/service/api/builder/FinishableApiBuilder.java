@@ -6,9 +6,9 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import com.jsoniter.spi.TypeLiteral;
 import com.simplyti.service.api.ApiInvocationContext;
 import com.simplyti.service.api.ApiOperation;
+import com.simplyti.service.api.serializer.json.TypeLiteral;
 
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.util.concurrent.Future;

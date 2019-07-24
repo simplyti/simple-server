@@ -9,6 +9,7 @@ import javax.inject.Inject;
 
 import com.simplyti.service.DefaultService;
 import com.simplyti.service.Service;
+import com.simplyti.service.serializer.json.JsoniterModule;
 
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.When;
@@ -86,6 +87,7 @@ public class OpenIdStepDefs {
 		Future<DefaultService> service = Service.builder()
 			    .securedPort(port)
 			    .disableInsecurePort()
+			    .withModule(new JsoniterModule())
 			    .withModule(new FakeOpenIdApi(key,"/auth",tokenEndpoint,0,0))
 			    	.build().start().await();
 		 services.add(service);
@@ -97,6 +99,7 @@ public class OpenIdStepDefs {
 		Future<DefaultService> service = Service.builder()
 			    .securedPort(port)
 			    .disableInsecurePort()
+			    .withModule(new JsoniterModule())
 			    .withModule(new FakeOpenIdApi(key,authEndpoint,tokenEndpoint,0,0))
 			    	.build().start().await();
 		 services.add(service);
@@ -108,6 +111,7 @@ public class OpenIdStepDefs {
 		Future<DefaultService> service = Service.builder()
 			    .securedPort(port)
 			    .disableInsecurePort()
+			    .withModule(new JsoniterModule())
 			    .withModule(new FakeOpenIdApi(key,authEndpoint,"/token",wellKnownDelay,0))
 			    	.build().start().await();
 		 services.add(service);
@@ -119,6 +123,7 @@ public class OpenIdStepDefs {
 		Future<DefaultService> service = Service.builder()
 			    .securedPort(port)
 			    .disableInsecurePort()
+			    .withModule(new JsoniterModule())
 			    .withModule(new FakeOpenIdApi(key,authEndpoint,tokenEndpoint,0,jwksDelay))
 			    	.build().start().await();
 		 services.add(service);

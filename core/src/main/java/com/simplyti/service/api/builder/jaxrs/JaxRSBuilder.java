@@ -16,10 +16,10 @@ import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.TypeResolver;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
-import com.jsoniter.spi.TypeLiteral;
 import com.simplyti.service.api.APIContext;
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.FinishableApiBuilder;
+import com.simplyti.service.api.serializer.json.TypeLiteral;
 import com.simplyti.service.meta.Meta;
 import com.simplyti.service.sync.SyncTaskSubmitter;
 
@@ -28,14 +28,12 @@ import io.netty.util.internal.StringUtil;
 
 public class JaxRSBuilder<I,O> extends FinishableApiBuilder<I, O>{
 
-	@SuppressWarnings("unchecked")
 	private static final TypeLiteral<Object> VOID_TYPE = TypeLiteral.create(Void.class);
 
 	private JaxRSBuilder(ApiBuilder builder, HttpMethod method, String uri, TypeLiteral<I> requestType) {
 		super(builder, method, uri, requestType, false, -1);
 	}
 
-	@SuppressWarnings("unchecked")
 	public static void build(ApiBuilder builder, Class<?> clazz, Method method, Object instance, SyncTaskSubmitter syncTaskSubmitter) {
 		String path = path(clazz,method);
 		HttpMethod httpMethod = method(method);

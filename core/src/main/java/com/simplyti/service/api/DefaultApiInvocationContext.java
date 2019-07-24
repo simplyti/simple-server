@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.jsoniter.JsonIterator;
+import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.sse.DefaultSSEStream;
 import com.simplyti.service.sse.SSEStream;
@@ -33,19 +33,23 @@ public class DefaultApiInvocationContext<I,O> extends AbstractApiInvocationConte
 	private final FullApiInvocation<I> msg;
 	private final Supplier<I> cachedRequestBody;
 	private final ServerSentEventEncoder serverSentEventEncoder;
+	private final Json json;
 	
 	private boolean released = false ;
 	
 	private final ByteBuf data;
+
 	
 	public DefaultApiInvocationContext(ChannelHandlerContext ctx, ApiMacher matcher, FullApiInvocation<I> msg, 
-			ExceptionHandler exceptionHandler, ServerSentEventEncoder serverSentEventEncoder, SyncTaskSubmitter syncTaskSubmitter) {
+			ExceptionHandler exceptionHandler, ServerSentEventEncoder serverSentEventEncoder, SyncTaskSubmitter syncTaskSubmitter,
+			Json json) {
 		super(ctx,matcher,msg,exceptionHandler,syncTaskSubmitter);
 		this.data=msg.content();
 		this.ctx=ctx;
 		this.msg=msg;
 		this.cachedRequestBody=Suppliers.memoize(this);
 		this.serverSentEventEncoder=serverSentEventEncoder;
+		this.json=json;
 	}
 	
 	@Override
@@ -83,9 +87,7 @@ public class DefaultApiInvocationContext<I,O> extends AbstractApiInvocationConte
 		} else if(msg.operation().isMultipart()){
 			result = decodeMultipart();
 		} else{
-			byte[] data = new byte[content().readableBytes()];
-			content().readBytes(data);
-			result = JsonIterator.deserialize(data).as(msg.operation().requestType());
+			result = json.deserialize(content(),msg.operation().requestType());
 			release0();
 		}
 		return result;

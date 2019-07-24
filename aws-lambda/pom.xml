@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>com.simplyti.cloud</groupId>
 		<artifactId>simple-server</artifactId>
-		<version>0.0.2-SNAPSHOT</version>
+		<version>0.0.3-SNAPSHOT</version>
 	</parent>
 
 	<properties>
@@ -31,6 +31,11 @@
 			<groupId>io.vavr</groupId>
 			<artifactId>vavr</artifactId>
 		</dependency>
+		<dependency>
+		    <groupId>com.jsoniter</groupId>
+		    <artifactId>jsoniter</artifactId>
+		</dependency>
+
 
 		<dependency>
 			<groupId>com.amazonaws</groupId>

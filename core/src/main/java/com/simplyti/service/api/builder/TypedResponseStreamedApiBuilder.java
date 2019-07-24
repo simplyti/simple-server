@@ -6,15 +6,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import com.jsoniter.spi.TypeLiteral;
 import com.simplyti.service.api.ApiOperation;
 import com.simplyti.service.api.StreamedApiInvocationContext;
+import com.simplyti.service.api.serializer.json.TypeLiteral;
 
 import io.netty.handler.codec.http.HttpMethod;
 
 public class TypedResponseStreamedApiBuilder<O> {
 
-	private static final TypeLiteral<Void> VOID = null;
+	private static final TypeLiteral<Void> VOID = TypeLiteral.create(Void.class);
 	
 	private final ApiBuilder builder;
 	private final HttpMethod method;

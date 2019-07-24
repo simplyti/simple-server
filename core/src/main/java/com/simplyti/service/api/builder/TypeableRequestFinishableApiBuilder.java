@@ -2,7 +2,7 @@ package com.simplyti.service.api.builder;
 
 import java.util.Collection;
 
-import com.jsoniter.spi.TypeLiteral;
+import com.simplyti.service.api.serializer.json.TypeLiteral;
 import com.simplyti.service.api.multipart.FileUpload;
 
 import io.netty.buffer.ByteBuf;
@@ -10,14 +10,13 @@ import io.netty.handler.codec.http.HttpMethod;
 
 public class TypeableRequestFinishableApiBuilder extends RawFinishableApiBuilder implements BodyLengthConfigurable<TypeableRequestFinishableApiBuilder>{
 
-	private static final TypeLiteral<ByteBuf> BYTEBUF = new TypeLiteral<ByteBuf>() {};
+	private static final TypeLiteral<ByteBuf> BYTEBUF = TypeLiteral.create(ByteBuf.class);
 	private static final TypeLiteral<Collection<FileUpload>> FILE_UPLOADS = new TypeLiteral<Collection<FileUpload>>() {};
 
 	public TypeableRequestFinishableApiBuilder(ApiBuilder builder, HttpMethod method, String uri) {
 		super(builder, method, uri);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public <T> TypedRequestFinishableApiBuilder<T,Object> withRequestBodyType(Class<T> clazz) {
 		return withRequestBodyType(TypeLiteral.create(clazz));
 	}

@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
-import com.jsoniter.spi.TypeLiteral;
+import com.simplyti.service.api.serializer.json.TypeLiteral;
 import com.simplyti.service.api.builder.PathPattern;
 
 import io.netty.handler.codec.http.HttpMethod;

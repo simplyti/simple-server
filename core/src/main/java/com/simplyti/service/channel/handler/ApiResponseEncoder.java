@@ -3,11 +3,12 @@ package com.simplyti.service.channel.handler;
 import java.nio.CharBuffer;
 import java.util.List;
 
-import com.jsoniter.output.JsonStream;
+import javax.inject.Inject;
+
 import com.simplyti.service.api.ApiResponse;
+import com.simplyti.service.api.serializer.json.Json;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -21,9 +22,13 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
+import lombok.AllArgsConstructor;
 
 @Sharable
+@AllArgsConstructor(onConstructor=@__(@Inject))
 public class ApiResponseEncoder extends MessageToMessageEncoder<ApiResponse> {
+	
+	private final Json json;
 	
 	@Override
 	protected void encode(ChannelHandlerContext ctx, ApiResponse msg, List<Object> out) throws Exception {
@@ -37,7 +42,7 @@ public class ApiResponseEncoder extends MessageToMessageEncoder<ApiResponse> {
 		}else{
 			ByteBuf buffer = ctx.alloc().buffer();
 			try {
-				JsonStream.serialize(msg.response(), new ByteBufOutputStream(buffer));
+				json.serialize(msg.response(), buffer);
 				out.add(buildHttpResponse(buffer, HttpResponseStatus.OK,msg,HttpHeaderValues.APPLICATION_JSON));
 			} catch (Throwable error) {
 				buffer.release();

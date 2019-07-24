@@ -1,6 +1,6 @@
 package com.simplyti.service.api.builder;
 
-import com.jsoniter.spi.TypeLiteral;
+import com.simplyti.service.api.serializer.json.TypeLiteral;
 
 import io.netty.handler.codec.http.HttpMethod;
 

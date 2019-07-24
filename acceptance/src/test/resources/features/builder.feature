@@ -30,3 +30,15 @@ Scenario: I specify multiple apis
 	Then I check that "#response" is equals to "Hello!"
 	When I send a "GET /other/hello" getting "#response"
 	Then I check that "#response" is equals to "Hello!"
+	
+Scenario: I can use differend json module
+	When I start a service "#serviceFuture" with options:
+		| option	 	| value |
+		| withApi		| com.simplyti.service.APITest		|
+		| withApi		| com.simplyti.service.OtherAPITest	|
+		| withModule	| com.simplyti.service.serializer.json.JsoniterModule |
+	Then I check that "#serviceFuture" is success
+	When I send a "GET /hello" getting "#response"
+	Then I check that "#response" is equals to "Hello!"
+	When I send a "GET /other/hello" getting "#response"
+	Then I check that "#response" is equals to "Hello!"
