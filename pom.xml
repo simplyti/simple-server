@@ -69,6 +69,7 @@
 		<!-- Json -->
 		<jsoniter.version>0.9.23</jsoniter.version>
 		<dsljson.version>1.9.3</dsljson.version>
+		<jackson.json>2.9.9</jackson.json>
 		
 		<!-- JWT -->
 		<jjwt.version>0.9.1</jjwt.version>
@@ -290,6 +291,11 @@
 			    <artifactId>dsl-json-java8</artifactId>
 			    <version>${dsljson.version}</version>
 			</dependency>
+			<dependency>
+			    <groupId>com.fasterxml.jackson.core</groupId>
+			    <artifactId>jackson-databind</artifactId>
+			    <version>${jackson.json}</version>
+			</dependency>
 
 			<!-- JWT -->
 			<dependency>
@@ -371,6 +377,7 @@
 		<module>serializer-json</module>
 		<module>serializer-dsljson</module>
 		<module>serializer-jsoniter</module>
+		<module>serializer-jackson</module>
 		<module>core</module>
 		<module>aws-lambda</module>
 		<module>auth-oidc</module>

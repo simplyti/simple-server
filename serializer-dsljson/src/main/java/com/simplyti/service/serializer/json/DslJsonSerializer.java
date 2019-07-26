@@ -16,6 +16,7 @@ import com.simplyti.service.api.serializer.json.TypeLiteral;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
+import io.netty.util.CharsetUtil;
 import lombok.SneakyThrows;
 
 public class DslJsonSerializer implements Json {
@@ -50,6 +51,19 @@ public class DslJsonSerializer implements Json {
 	@SneakyThrows
 	public <T> T deserialize(byte[] data, Class<T> clazz) {
 		return dslJson.deserialize(clazz, new ByteArrayInputStream(data));
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	@SneakyThrows
+	public <T> T deserialize(byte[] data, TypeLiteral<T> type) {
+		return (T) dslJson.deserialize(type.getType(), new ByteArrayInputStream(data));
+	}
+	
+	@Override
+	@SneakyThrows
+	public <T> T deserialize(String content, Class<T> clazz) {
+		return dslJson.deserialize(clazz, new ByteArrayInputStream(content.getBytes(CharsetUtil.UTF_8)));
 	}
 
 	@Override

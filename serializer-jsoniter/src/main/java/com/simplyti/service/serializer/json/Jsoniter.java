@@ -27,12 +27,23 @@ public class Jsoniter implements Json {
 	public <T> T deserialize(byte[] data, Class<T> clazz) {
 		return JsonIterator.deserialize(data, clazz);
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T deserialize(byte[] data, TypeLiteral<T> type) {
+		return (T) JsonIterator.deserialize(data, create(type.getType()));
+	}
 
 	@Override
 	public <T> T deserialize(ByteBuf content, Class<T> clazz) {
 		byte[] data = new byte[content.readableBytes()];
 		content.readBytes(data);
 		return (T) JsonIterator.deserialize(data,clazz);
+	}
+	
+	@Override
+	public <T> T deserialize(String content, Class<T> clazz) {
+		return JsonIterator.deserialize(content, clazz);
 	}
 
 	@Override
@@ -52,6 +63,5 @@ public class Jsoniter implements Json {
 	public String serializeAsString(Object obj, Charset charset) {
 		return JsonStream.serialize(obj);
 	}
-
 
 }
