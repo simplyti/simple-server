@@ -4,9 +4,9 @@ import java.security.Key;
 
 import javax.inject.Singleton;
 
+import com.dslplatform.json.Configuration;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-import com.jsoniter.spi.JsoniterSpi;
 import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.api.filter.OperationInboundFilter;
 import com.simplyti.service.clients.http.HttpClient;
@@ -20,11 +20,10 @@ import com.simplyti.service.security.oidc.handler.AutodiscoveredOpenIdHandler;
 import com.simplyti.service.security.oidc.handler.DefaultFullOpenidHandler;
 import com.simplyti.service.security.oidc.handler.DefaultOpenIdHandler;
 import com.simplyti.service.security.oidc.handler.DefaultRedirectableOpenIdHandler;
-import com.simplyti.service.security.oidc.handler.FullOpenidHandler;
+import com.simplyti.service.security.oidc.handler.FullOpenidHandlerConfig;
 import com.simplyti.service.security.oidc.handler.OpenIdHandler;
 import com.simplyti.service.security.oidc.handler.RedirectableOpenIdHandler;
-import com.simplyti.service.security.oidc.jwk.JsonWebKey;
-import com.simplyti.service.security.oidc.jwk.JsonWebKeyDecoder;
+import com.simplyti.service.security.oidc.jwk.JsonWebKeyConfiguration;
 
 public class OpenIdModule extends AbstractModule {
 	
@@ -32,53 +31,53 @@ public class OpenIdModule extends AbstractModule {
 	
 	private final OpenIdHandler openidProvider;
 	private final RedirectableOpenIdHandler redirectableOpenidProvider;
-	private final FullOpenidHandler fullOpenidProvider;
-	private final FullAutodiscoveredOpenIdConfig fullAutodiscoveredOpenId;
-	private final AutodiscoveredOpenIdConfig autodiscoveredOpenId;
+	private final FullOpenidHandlerConfig fullOpenidProviderConfig;
+	private final FullAutodiscoveredOpenIdConfig fullAutodiscoveredOpenIdConfig;
+	private final AutodiscoveredOpenIdConfig autodiscoveredOpenIdConfig;
 	
 	public OpenIdModule(Key key, String authorizationEndpoint, String tokenEndpoint, String callbackUri, String clientId, String clientSecret,String cipherKey) {
 		this.openidProvider=null;
 		this.redirectableOpenidProvider=null;
-		this.fullOpenidProvider=new DefaultFullOpenidHandler(key,authorizationEndpoint,tokenEndpoint,callbackUri,clientId,clientSecret,cipherKey);
-		this.fullAutodiscoveredOpenId=null;
-		this.autodiscoveredOpenId=null;
+		this.fullOpenidProviderConfig=new FullOpenidHandlerConfig(key,authorizationEndpoint,tokenEndpoint,callbackUri,clientId,clientSecret,cipherKey);
+		this.fullAutodiscoveredOpenIdConfig=null;
+		this.autodiscoveredOpenIdConfig=null;
 	}
 	
 	public OpenIdModule(Key key, String authorizationEndpoint, String callbackUri, String clientId) {
 		this.openidProvider=null;
 		this.redirectableOpenidProvider=new DefaultRedirectableOpenIdHandler(key,authorizationEndpoint,callbackUri,clientId);
-		this.fullOpenidProvider=null;
-		this.fullAutodiscoveredOpenId=null;
-		this.autodiscoveredOpenId=null;
+		this.fullOpenidProviderConfig=null;
+		this.fullAutodiscoveredOpenIdConfig=null;
+		this.autodiscoveredOpenIdConfig=null;
 	}
 	
 	public OpenIdModule(Key key) {
 		this.openidProvider=new DefaultOpenIdHandler(key);
 		this.redirectableOpenidProvider=null;
-		this.fullOpenidProvider=null;
-		this.fullAutodiscoveredOpenId=null;
-		this.autodiscoveredOpenId=null;
+		this.fullOpenidProviderConfig=null;
+		this.fullAutodiscoveredOpenIdConfig=null;
+		this.autodiscoveredOpenIdConfig=null;
 	}
 	
 	public OpenIdModule(String openIdProvider,String callbackUri, String clientId, String clientSecret,String cipherKey) {
 		this.openidProvider=null;
 		this.redirectableOpenidProvider=null;
-		this.fullOpenidProvider=null;
-		this.fullAutodiscoveredOpenId=new DefaultFullAutodiscoveredOpenIdConfig(openIdProvider,callbackUri,clientId,clientId,cipherKey);
-		this.autodiscoveredOpenId=null;
+		this.fullOpenidProviderConfig=null;
+		this.fullAutodiscoveredOpenIdConfig=new DefaultFullAutodiscoveredOpenIdConfig(openIdProvider,callbackUri,clientId,clientId,cipherKey);
+		this.autodiscoveredOpenIdConfig=null;
 	}
 
 	public OpenIdModule(String callbackUri, String cipherKey) {
 		this.openidProvider=null;
 		this.redirectableOpenidProvider=null;
-		this.fullOpenidProvider=null;
-		this.fullAutodiscoveredOpenId=null;
-		this.autodiscoveredOpenId= new DefaultAutodiscoveredOpenIdConfig(callbackUri,cipherKey);
+		this.fullOpenidProviderConfig=null;
+		this.fullAutodiscoveredOpenIdConfig=null;
+		this.autodiscoveredOpenIdConfig= new DefaultAutodiscoveredOpenIdConfig(callbackUri,cipherKey);
 	}
 
 	@Override
 	public void configure() {
-		JsoniterSpi.registerTypeDecoder(JsonWebKey.class, new JsonWebKeyDecoder());
+		Multibinder.newSetBinder(binder(), Configuration.class).addBinding().to(JsonWebKeyConfiguration.class).in(Singleton.class);
 		
 		if(openidProvider!=null) {
 			Multibinder.newSetBinder(binder(), OperationInboundFilter.class).addBinding().to(OpenIdOperationFilter.class).in(Singleton.class);
@@ -86,24 +85,25 @@ public class OpenIdModule extends AbstractModule {
 		}else if(redirectableOpenidProvider!=null) {
 			Multibinder.newSetBinder(binder(), OperationInboundFilter.class).addBinding().to(OpenIdOperationFilter.class).in(Singleton.class);
 			bind(OpenIdHandler.class).toInstance(redirectableOpenidProvider);
-		}else if(fullOpenidProvider!=null){
+		}else if(fullOpenidProviderConfig!=null){
 			Multibinder.newSetBinder(binder(), OperationInboundFilter.class).addBinding().to(OpenIdOperationFilter.class).in(Singleton.class);
-			bind(OpenIdHandler.class).toInstance(fullOpenidProvider);
+			bind(FullOpenidHandlerConfig.class).toInstance(fullOpenidProviderConfig);
+			bind(OpenIdHandler.class).to(DefaultFullOpenidHandler.class);
 			bind(HttpClient.class).toProvider(HttpClientProvider.class).in(Singleton.class);
-			bind(OpenIdCallbackConfig.class).toInstance(new OpenIdCallbackConfig(fullOpenidProvider.callbackUri(),fullOpenidProvider.cipherKey()));
+			bind(OpenIdCallbackConfig.class).toInstance(new OpenIdCallbackConfig(fullOpenidProviderConfig.callbackUri(),fullOpenidProviderConfig.cipherKey()));
 			Multibinder.newSetBinder(binder(), ApiProvider.class).addBinding().to(OpenIdApi.class).in(Singleton.class);
-		}else if (fullAutodiscoveredOpenId!=null){
+		}else if (fullAutodiscoveredOpenIdConfig!=null){
 			Multibinder.newSetBinder(binder(), OperationInboundFilter.class).addBinding().to(OpenIdOperationFilter.class).in(Singleton.class);
 			bind(OpenIdHandler.class).to(AutodiscoveredOpenIdHandler.class);
 			bind(HttpClient.class).toProvider(HttpClientProvider.class).in(Singleton.class);
-			bind(OpenIdCallbackConfig.class).toInstance(new OpenIdCallbackConfig(fullAutodiscoveredOpenId.callbackUri(),fullAutodiscoveredOpenId.cipherKey()));
+			bind(OpenIdCallbackConfig.class).toInstance(new OpenIdCallbackConfig(fullAutodiscoveredOpenIdConfig.callbackUri(),fullAutodiscoveredOpenIdConfig.cipherKey()));
 			Multibinder.newSetBinder(binder(), ApiProvider.class).addBinding().to(OpenIdApi.class).in(Singleton.class);
-			bind(FullAutodiscoveredOpenIdConfig.class).toInstance(fullAutodiscoveredOpenId);
+			bind(FullAutodiscoveredOpenIdConfig.class).toInstance(fullAutodiscoveredOpenIdConfig);
 		}else {
 			bind(HttpClient.class).toProvider(HttpClientProvider.class).in(Singleton.class);
-			bind(OpenIdCallbackConfig.class).toInstance(new OpenIdCallbackConfig(autodiscoveredOpenId.callbackUri(),autodiscoveredOpenId.cipherKey()));
+			bind(OpenIdCallbackConfig.class).toInstance(new OpenIdCallbackConfig(autodiscoveredOpenIdConfig.callbackUri(),autodiscoveredOpenIdConfig.cipherKey()));
 			Multibinder.newSetBinder(binder(), ApiProvider.class).addBinding().to(OpenIdApi.class).in(Singleton.class);
-			bind(AutodiscoveredOpenIdConfig.class).toInstance(autodiscoveredOpenId);
+			bind(AutodiscoveredOpenIdConfig.class).toInstance(autodiscoveredOpenIdConfig);
 		}
 	}
 

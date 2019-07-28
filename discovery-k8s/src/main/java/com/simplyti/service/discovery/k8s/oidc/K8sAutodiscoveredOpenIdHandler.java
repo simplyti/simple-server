@@ -2,6 +2,7 @@ package com.simplyti.service.discovery.k8s.oidc;
 
 import java.util.Map;
 
+import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.security.oidc.config.OpenIdClientConfig;
 import com.simplyti.service.security.oidc.config.auto.FullAutodiscoveredOpenIdConfig;
@@ -12,8 +13,8 @@ public class K8sAutodiscoveredOpenIdHandler extends AutodiscoveredOpenIdHandler{
 	private final Map<String, OpenIdClientConfig> openIdClientSecrets;
 	private final String authSecret;
 
-	public K8sAutodiscoveredOpenIdHandler(HttpClient client, Map<String, OpenIdClientConfig> openIdClientSecrets,String namespace, String authSecret, FullAutodiscoveredOpenIdConfig openId) {
-		super(client, openId);
+	public K8sAutodiscoveredOpenIdHandler(HttpClient client, Map<String, OpenIdClientConfig> openIdClientSecrets,String namespace, String authSecret, FullAutodiscoveredOpenIdConfig openId, Json json) {
+		super(client, openId, json);
 		this.openIdClientSecrets=openIdClientSecrets;
 		this.authSecret=String.join(":", namespace,authSecret);
 	}

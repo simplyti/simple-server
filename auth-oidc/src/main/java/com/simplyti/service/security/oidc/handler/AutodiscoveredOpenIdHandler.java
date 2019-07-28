@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import com.jsoniter.JsonIterator;
+import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
@@ -17,58 +17,54 @@ import com.simplyti.service.security.oidc.jwk.JsonWebKeys;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwsHeader;
-import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.util.concurrent.Future;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public class AutodiscoveredOpenIdHandler extends DefaultFullOpenidHandler implements FullOpenidHandler{
 	
+	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
+	
 	private OpenIdWellKnownConfiguration oidc;
 	private JsonWebKeys keys;
+	private final Json json;
 	
 	@Inject
-	public AutodiscoveredOpenIdHandler(HttpClient client,FullAutodiscoveredOpenIdConfig openId) {
-		super(null,null,null,openId.callbackUri(),openId.clientId(),openId.clientSecret(),openId.cipherKey());
+	public AutodiscoveredOpenIdHandler(HttpClient client,FullAutodiscoveredOpenIdConfig openId, Json json) {
+		super(new FullOpenidHandlerConfig(null,null,null,openId.callbackUri(),openId.clientId(),openId.clientSecret(),openId.cipherKey()),json);
 		getWellKnownConfiguration(client,openId.endpoint());
+		this.json=json;
 	}
 
 	private void getWellKnownConfiguration(HttpClient client, Endpoint endpoint) {
-		Future<FullHttpResponse> futureResponse = client.request()
+		Future<OpenIdWellKnownConfiguration> futureResponse = client.request()
 				.withEndpoint(endpoint)
 				.withCheckStatusCode()
 				.get("/.well-known/openid-configuration")
-				.fullResponse();
+				.fullResponse(response->json.deserialize(response.content(), OpenIdWellKnownConfiguration.class));
 			futureResponse.addListener(f->{
 				if(f.isSuccess()) {
-					FullHttpResponse response = futureResponse.getNow();
-					byte[] data = new byte[response.content().readableBytes()];
-					response.content().readBytes(data);
-					response.release();
-					this.oidc = JsonIterator.deserialize(data, OpenIdWellKnownConfiguration.class);
+					this.oidc = futureResponse.getNow();
 					getJwsKey(client);
 				} else {
-					// TODO: retry?
+					log.warn(f.cause());
 				}
 			});
 	}
 	
 	private void getJwsKey(HttpClient client) {
-		HttpEndpoint endpoint = HttpEndpoint.of(oidc.jwsUri());
-		Future<FullHttpResponse> futureResponse = client.request()
+		HttpEndpoint endpoint = HttpEndpoint.of(oidc.jwks_uri());
+		Future<JsonWebKeys> futureResponse = client.request()
 			.withEndpoint(endpoint )
 			.withCheckStatusCode()
 			.get(endpoint.path())
-			.fullResponse();
+			.fullResponse(response->json.deserialize(response.content(), JsonWebKeys.class));
 		futureResponse.addListener(f->{
 			if(f.isSuccess()) {
-				FullHttpResponse response = futureResponse.getNow();
-				byte[] data = new byte[response.content().readableBytes()];
-				response.content().readBytes(data);
-				response.release();
-				this.keys = JsonIterator.deserialize(data, JsonWebKeys.class);
-				keys.keys();
+				this.keys = futureResponse.getNow();
 			} else {
-				// TODO: retry?
+				log.warn(f.cause());
 			}
 		});
 	}
@@ -83,11 +79,11 @@ public class AutodiscoveredOpenIdHandler extends DefaultFullOpenidHandler implem
 	}
 	
 	protected String authorizationEndpoint() {
-		return oidc.authorizationEndpoint();
+		return oidc.authorization_endpoint();
 	}
 	
 	protected String tokenEndpoint() {
-		return oidc.tokenEndpoint();
+		return oidc.token_endpoint();
 	}
 
 	@Override

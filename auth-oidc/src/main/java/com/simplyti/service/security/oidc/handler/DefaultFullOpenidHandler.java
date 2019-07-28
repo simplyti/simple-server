@@ -1,7 +1,6 @@
 package com.simplyti.service.security.oidc.handler;
 
 import java.security.InvalidKeyException;
-import java.security.Key;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
@@ -13,13 +12,13 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import javax.inject.Inject;
 
 import com.google.common.collect.Maps;
-import com.jsoniter.output.JsonStream;
+import com.simplyti.service.api.serializer.json.Json;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
-import io.netty.util.CharsetUtil;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
@@ -32,12 +31,15 @@ public class DefaultFullOpenidHandler extends DefaultRedirectableOpenIdHandler i
 	private final String clientSecret;
 	@Getter
 	private final SecretKey cipherKey;
+	
+	private final Json json;
 
-	public DefaultFullOpenidHandler(Key key, String authorizationEndpoint, String tokenEndpoint, String callbackUri, String clientId, String clientSecret,
-			String cipherKey) {
-		super(key, authorizationEndpoint, callbackUri, clientId);
-		this.tokenEndpoint=tokenEndpoint;
-		this.clientSecret=clientSecret;
+	@Inject
+	public DefaultFullOpenidHandler(FullOpenidHandlerConfig config,Json json) {
+		super(config.key(), config.authorizationEndpoint(), config.callbackUri(), config.clientId());
+		this.tokenEndpoint=config.tokenEndpoint();
+		this.clientSecret=config.clientSecret();
+		this.json=json;
 		
 		byte[] keyBytes = new byte[16];
         MessageDigest md;
@@ -46,7 +48,7 @@ public class DefaultFullOpenidHandler extends DefaultRedirectableOpenIdHandler i
 		} catch (NoSuchAlgorithmException e) {
 			throw new IllegalStateException(e);
 		}
-        md.update(cipherKey.getBytes());
+        md.update(config.cipherKey().getBytes());
         System.arraycopy(md.digest(), 0, keyBytes, 0, keyBytes.length);
         this.cipherKey = new SecretKeySpec(keyBytes, "AES");
 	}
@@ -66,7 +68,7 @@ public class DefaultFullOpenidHandler extends DefaultRedirectableOpenIdHandler i
 		try {
 			Cipher ci = Cipher.getInstance("AES");
 			ci.init(Cipher.ENCRYPT_MODE, cipherKey);
-			byte[] encripted = ci.doFinal(JsonStream.serialize(state).getBytes(CharsetUtil.UTF_8));
+			byte[] encripted = ci.doFinal(json.serialize(state));
 			return Base64.getEncoder().encodeToString(encripted);
 		}catch(InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
 			throw new IllegalStateException(e);

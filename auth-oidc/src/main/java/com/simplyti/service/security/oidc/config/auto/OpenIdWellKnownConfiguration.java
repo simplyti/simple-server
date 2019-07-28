@@ -1,7 +1,6 @@
 package com.simplyti.service.security.oidc.config.auto;
 
-import com.jsoniter.annotation.JsonCreator;
-import com.jsoniter.annotation.JsonProperty;
+import com.dslplatform.json.CompiledJson;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -10,18 +9,18 @@ import lombok.experimental.Accessors;
 @Accessors(fluent=true)
 public class OpenIdWellKnownConfiguration {
 	
-	private final String tokenEndpoint;
-	private final String authorizationEndpoint;
-	private final String jwsUri;
+	private final String token_endpoint;
+	private final String authorization_endpoint;
+	private final String jwks_uri;
 
-	@JsonCreator
+	@CompiledJson
 	public OpenIdWellKnownConfiguration(
-			@JsonProperty("token_endpoint") String tokenEndpoint,
-			@JsonProperty("authorization_endpoint") String authorizationEndpoint,
-			@JsonProperty("jwks_uri") String jwsUri) {
-		this.tokenEndpoint=tokenEndpoint;
-		this.authorizationEndpoint=authorizationEndpoint;
-		this.jwsUri=jwsUri;
+			String token_endpoint,
+			String authorization_endpoint,
+			String jwks_uri) {
+		this.token_endpoint=token_endpoint;
+		this.authorization_endpoint=authorization_endpoint;
+		this.jwks_uri=jwks_uri;
 	}
 
 }

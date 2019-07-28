@@ -16,6 +16,7 @@ import javax.inject.Inject;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.simplyti.service.api.filter.HttpRequestFilter;
+import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.clients.Address;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
@@ -84,16 +85,18 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 	
 	private final AutodiscoveredOpenIdConfig openIdConfig;
 	private final Map<String,OpenIdClientConfig> openIdClientSecrets;
+	private final Json json;
 	
 	@Inject
 	public KubernetesServiceDiscovery(EventLoopGroup eventLoopgroup,KubeClient client, HttpClient http, KubernetesCertificateProvider certificateProvider,
-			AutodiscoveredOpenIdConfig openIdConfig) {
+			AutodiscoveredOpenIdConfig openIdConfig, Json json) {
 		this.client=client;
 		this.http=http;
 		this.eventLoop=eventLoopgroup.next();
 		this.certificateProvider=certificateProvider;
 		this.openIdConfig=openIdConfig;
 		this.openIdClientSecrets=new ConcurrentHashMap<>();
+		this.json=json;
 	}
 	
 	@Override
@@ -278,7 +281,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 			return Collections.singleton(new OpenIdRequestFilter(new K8sAutodiscoveredOpenIdHandler(http,
 					openIdClientSecrets,ingress.metadata().namespace(),
 					ingress.metadata().annotations().get(AUTH_SECRET),
-						new K8sAutodiscoveredOpenIdProviderConfig(ingress.metadata().annotations().get(AUTH_REALM),openIdConfig.callbackUri(),openIdConfig.cipherKey()))));
+						new K8sAutodiscoveredOpenIdProviderConfig(ingress.metadata().annotations().get(AUTH_REALM),openIdConfig.callbackUri(),openIdConfig.cipherKey()),json)));
 		} else {
 			return null;
 		}

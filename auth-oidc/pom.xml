@@ -40,12 +40,6 @@
 			<artifactId>simple-server-clients-http</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
-		<!-- Json -->
-		<dependency>
-			<groupId>com.jsoniter</groupId>
-			<artifactId>jsoniter</artifactId>
-		</dependency>
 	</dependencies>
 
 </project>

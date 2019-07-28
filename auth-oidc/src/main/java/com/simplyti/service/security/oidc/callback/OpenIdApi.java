@@ -11,10 +11,9 @@ import javax.crypto.NoSuchPaddingException;
 import javax.inject.Inject;
 
 import com.google.common.base.Joiner;
-import com.jsoniter.JsonIterator;
-import com.jsoniter.any.Any;
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.ApiProvider;
+import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.security.oidc.OpenIdCallbackConfig;
@@ -44,18 +43,20 @@ public class OpenIdApi implements ApiProvider{
 	private final OpenIdCallbackConfig config;
 	
 	private final HttpClient httpClient;
+	
+	private final Json json;
 
 	@Override
 	public void build(ApiBuilder builder) {
 		builder.when().get(config.callbackUri())
 			.then(ctx->{
-				Any state;
+				State state;
 				try {
 					String state64 = ctx.queryParam("state").replaceAll(" ", "+");
 					Cipher ci = Cipher.getInstance("AES");
 					ci.init(Cipher.DECRYPT_MODE, config.cipherKey());
 					byte[] decrypted = ci.doFinal(Base64.getDecoder().decode(state64));
-					state =  JsonIterator.deserialize(decrypted);
+					state =  json.deserialize(decrypted,State.class);
 				} catch (IllegalBlockSizeException | NoSuchAlgorithmException | NoSuchPaddingException | BadPaddingException | InvalidKeyException e) {
 					throw new IllegalStateException(e);
 				}
@@ -63,11 +64,11 @@ public class OpenIdApi implements ApiProvider{
 				String data = Joiner.on('&').join(
 						Joiner.on('=').join("grant_type", "authorization_code"),
 						Joiner.on('=').join("code", ctx.queryParam("code")),
-						Joiner.on('=').join("client_id", state.get("clientId")),
-						Joiner.on('=').join("client_secret", state.get("clientSecret")),
-						Joiner.on('=').join("redirect_uri", state.get("redirectUri")));
+						Joiner.on('=').join("client_id", state.clientId()),
+						Joiner.on('=').join("client_secret", state.clientSecret()),
+						Joiner.on('=').join("redirect_uri", state.redirectUri()));
 				
-				HttpEndpoint tokenEndpoint = HttpEndpoint.of(state.get("tokenEndpoint").toString());
+				HttpEndpoint tokenEndpoint = HttpEndpoint.of(state.tokenEndpoint().toString());
 				FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, tokenEndpoint.path(),Unpooled.wrappedBuffer(data.getBytes(CharsetUtil.UTF_8)));
 				request.headers().set(HttpHeaderNames.HOST,tokenEndpoint.address().host());
 				request.headers().set(HttpHeaderNames.CONTENT_TYPE,HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED);
@@ -79,15 +80,13 @@ public class OpenIdApi implements ApiProvider{
 				
 				result.addListener(f->{
 						if(f.isSuccess()) {
-							byte[] responseBytes = new byte[result.getNow().content().readableBytes()];
-							result.getNow().content().readBytes(responseBytes);
+							Token token = json.deserialize(result.getNow().content(),Token.class);
 							result.getNow().release();
-							Any token = JsonIterator.deserialize(responseBytes);
 
 							FullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.FOUND);
 							resp.headers().set(HttpHeaderNames.SET_COOKIE, ServerCookieEncoder.LAX.encode(
-									cookie(token.get("id_token").toString(),token.get("expires_in").toInt())));
-							resp.headers().set(HttpHeaderNames.LOCATION,state.get("redirectUri").toString());
+									cookie(token.id_token(),token.expires_in())));
+							resp.headers().set(HttpHeaderNames.LOCATION,state.redirectUri());
 							resp.headers().set(HttpHeaderNames.CONTENT_LENGTH,0);
 							ctx.send(resp);
 						}else {
