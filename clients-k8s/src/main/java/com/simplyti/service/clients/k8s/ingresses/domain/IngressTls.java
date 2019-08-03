@@ -2,8 +2,7 @@ package com.simplyti.service.clients.k8s.ingresses.domain;
 
 import java.util.List;
 
-import com.jsoniter.annotation.JsonCreator;
-import com.jsoniter.annotation.JsonProperty;
+import com.dslplatform.json.CompiledJson;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -15,10 +14,10 @@ public class IngressTls {
 	private final List<String> hosts;
 	private final String secretName;
 
-	@JsonCreator
+	@CompiledJson
 	public IngressTls(
-			@JsonProperty("hosts") List<String> hosts,
-			@JsonProperty("secretName ") String secretName) {
+			List<String> hosts,
+			String secretName) {
 		this.hosts=hosts;
 		this.secretName=secretName;
 	}

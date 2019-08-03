@@ -5,9 +5,9 @@ import java.io.FileReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Base64;
+import java.util.Collections;
 
-import com.jsoniter.spi.JsoniterSpi;
+import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.clients.Address;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.http.HttpClient;
@@ -16,17 +16,19 @@ import com.simplyti.service.clients.k8s.endpoints.DefaultEndpoints;
 import com.simplyti.service.clients.k8s.endpoints.Endpoints;
 import com.simplyti.service.clients.k8s.ingresses.DefaultIngresses;
 import com.simplyti.service.clients.k8s.ingresses.Ingresses;
+import com.simplyti.service.clients.k8s.jobs.DefaultJobs;
+import com.simplyti.service.clients.k8s.jobs.Jobs;
 import com.simplyti.service.clients.k8s.namespaces.DefaultNamespaces;
 import com.simplyti.service.clients.k8s.namespaces.Namespaces;
 import com.simplyti.service.clients.k8s.pods.DefaultPods;
 import com.simplyti.service.clients.k8s.pods.Pods;
 import com.simplyti.service.clients.k8s.secrets.DefaultSecrets;
 import com.simplyti.service.clients.k8s.secrets.Secrets;
-import com.simplyti.service.clients.k8s.secrets.domain.SecretData;
 import com.simplyti.service.clients.k8s.serviceaccounts.DefaultServiceAccounts;
 import com.simplyti.service.clients.k8s.serviceaccounts.ServiceAccounts;
 import com.simplyti.service.clients.k8s.services.DefaultServices;
 import com.simplyti.service.clients.k8s.services.Services;
+import com.simplyti.service.serializer.json.DslJsonSerializer;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.util.CharsetUtil;
@@ -41,6 +43,9 @@ public class DefaultKubeClient implements KubeClient {
 
 	@Getter
 	private final Pods pods;
+	
+	@Getter
+	private final Jobs jobs;
 	
 	@Getter
 	private final Services services;
@@ -70,16 +75,15 @@ public class DefaultKubeClient implements KubeClient {
 				.withEndpoint(apiserver(endpoint))
 				.withBearerAuth(token!=null?token:readFile(DEFAULT_TOKEN_FILE))
 				.build();
-		this.pods = new DefaultPods(eventLoopGroup,http);
-		this.services = new DefaultServices(eventLoopGroup,http);
-		this.ingresses = new DefaultIngresses(eventLoopGroup,http);
-		this.endpoints = new DefaultEndpoints(eventLoopGroup,http);
-		this.secrets = new DefaultSecrets(eventLoopGroup,http);
-		this.serviceAccounts = new DefaultServiceAccounts(eventLoopGroup,http);
-		this.namespaces = new DefaultNamespaces(eventLoopGroup,http);
-		
-		JsoniterSpi.registerTypeEncoder(SecretData.class, (value,stream)->stream.writeVal(Base64.getEncoder().encodeToString(SecretData.class.cast(value).getData())));
-		JsoniterSpi.registerTypeDecoder(SecretData.class, iter->SecretData.of(Base64.getDecoder().decode(iter.readString().getBytes(CharsetUtil.UTF_8))));
+		Json json = new DslJsonSerializer(Collections.singleton(new K8sDomainConfiguration()));
+		this.pods = new DefaultPods(eventLoopGroup,http,json);
+		this.jobs = new DefaultJobs(eventLoopGroup,http,json);
+		this.services = new DefaultServices(eventLoopGroup,http,json);
+		this.ingresses = new DefaultIngresses(eventLoopGroup,http,json);
+		this.endpoints = new DefaultEndpoints(eventLoopGroup,http,json);
+		this.secrets = new DefaultSecrets(eventLoopGroup,http,json);
+		this.serviceAccounts = new DefaultServiceAccounts(eventLoopGroup,http,json);
+		this.namespaces = new DefaultNamespaces(eventLoopGroup,http,json);
 	}
 
 	private String readFile(String fileName) {

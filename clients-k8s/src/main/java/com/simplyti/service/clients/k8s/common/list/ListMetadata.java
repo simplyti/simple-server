@@ -1,7 +1,6 @@
 package com.simplyti.service.clients.k8s.common.list;
 
-import com.jsoniter.annotation.JsonCreator;
-import com.jsoniter.annotation.JsonProperty;
+import com.dslplatform.json.CompiledJson;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -12,9 +11,8 @@ public class ListMetadata {
 	
 	private final String resourceVersion;
 	
-	@JsonCreator
-	public ListMetadata(
-			@JsonProperty("resourceVersion") String resourceVersion){
+	@CompiledJson
+	public ListMetadata(String resourceVersion){
 		this.resourceVersion=resourceVersion;
 	}
 

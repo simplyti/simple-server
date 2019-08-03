@@ -1,7 +1,7 @@
 package com.simplyti.service.clients.k8s.common.impl;
 
-import com.jsoniter.JsonIterator;
-import com.jsoniter.spi.TypeLiteral;
+import com.simplyti.service.api.serializer.json.Json;
+import com.simplyti.service.api.serializer.json.TypeLiteral;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.k8s.K8sAPI;
 import com.simplyti.service.clients.k8s.common.K8sApi;
@@ -18,15 +18,17 @@ public class DefaultK8sApi<T extends K8sResource> implements K8sApi<T> {
 	
 	private final EventLoopGroup eventLoopGroup;
 	private final HttpClient http;
+	private final Json json;
 	private final K8sAPI api;
 	private final String resource;
 	
 	private final TypeLiteral<KubeList<T>> listType;
 	private final TypeLiteral<Event<T>> eventType;
 
-	public DefaultK8sApi(EventLoopGroup eventLoopGroup, HttpClient http, K8sAPI api,String resource,TypeLiteral<KubeList<T>> listType,
+	public DefaultK8sApi(EventLoopGroup eventLoopGroup, HttpClient http, Json json, K8sAPI api,String resource,TypeLiteral<KubeList<T>> listType,
 			TypeLiteral<Event<T>> eventType) {
 		this.http=http;
+		this.json=json;
 		this.api=api;
 		this.resource=resource;
 		this.listType=listType;
@@ -57,24 +59,24 @@ public class DefaultK8sApi<T extends K8sResource> implements K8sApi<T> {
 				.get(String.format("%s/%s", api.path(),resource))
 				.param("watch")
 				.param("resourceVersion",observable.index())
-				.stream(EventStreamHandler.NAME,new EventStreamHandler<>(observable,eventType));
+				.stream(EventStreamHandler.NAME,new EventStreamHandler<>(json,observable,eventType));
 		future.addListener(f->watch(observable));
 	}
 
 	protected <O> O response(ByteBuf content, TypeLiteral<O> type) {
-		byte[] data = new byte[content.readableBytes()];
-		content.readBytes(data);
-		return JsonIterator.deserialize(data,type);
+		return json.deserialize(content,type);
 	}
 	
 	protected <O> O response(ByteBuf content, Class<O> type) {
-		byte[] data = new byte[content.readableBytes()];
-		content.readBytes(data);
-		return JsonIterator.deserialize(data,type);
+		return json.deserialize(content,type);
 	}
 	
 	protected HttpClient http() {
 		return http;
+	}
+	
+	protected Json json() {
+		return json;
 	}
 	
 	protected K8sAPI api() {

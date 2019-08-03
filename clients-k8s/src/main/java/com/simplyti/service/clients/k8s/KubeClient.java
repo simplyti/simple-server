@@ -2,6 +2,7 @@ package com.simplyti.service.clients.k8s;
 
 import com.simplyti.service.clients.k8s.endpoints.Endpoints;
 import com.simplyti.service.clients.k8s.ingresses.Ingresses;
+import com.simplyti.service.clients.k8s.jobs.Jobs;
 import com.simplyti.service.clients.k8s.namespaces.Namespaces;
 import com.simplyti.service.clients.k8s.pods.Pods;
 import com.simplyti.service.clients.k8s.secrets.Secrets;
@@ -19,6 +20,8 @@ public interface KubeClient {
 	public NamespacedClient namespace(String name);
 
 	public Pods pods();
+	
+	public Jobs jobs();
 
 	public Services services();
 

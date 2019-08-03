@@ -1,7 +1,6 @@
 package com.simplyti.service.clients.k8s.endpoints.domain;
 
-import com.jsoniter.annotation.JsonCreator;
-import com.jsoniter.annotation.JsonProperty;
+import com.dslplatform.json.CompiledJson;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -14,11 +13,11 @@ public class Port {
 	private final Integer port;
 	private final String protocol;
 	
-	@JsonCreator
+	@CompiledJson
 	public Port(
-			@JsonProperty("name")String name,
-			@JsonProperty("port")Integer port,
-			@JsonProperty("protocol")String protocol) {
+			String name,
+			Integer port,
+			String protocol) {
 		this.name=name;
 		this.port=port;
 		this.protocol=protocol;

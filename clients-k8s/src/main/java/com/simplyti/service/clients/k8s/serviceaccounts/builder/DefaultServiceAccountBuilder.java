@@ -1,5 +1,6 @@
 package com.simplyti.service.clients.k8s.serviceaccounts.builder;
 
+import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.k8s.K8sAPI;
 import com.simplyti.service.clients.k8s.common.Metadata;
@@ -10,8 +11,8 @@ public class DefaultServiceAccountBuilder extends AbstractK8sResourceBuilder<Ser
 
 	public static final String KIND = "ServiceAccount";
 	
-	public DefaultServiceAccountBuilder(HttpClient client, K8sAPI api,String namespace, String resource) {
-		super(client,api,namespace,resource,ServiceAccount.class);
+	public DefaultServiceAccountBuilder(HttpClient client,Json json, K8sAPI api,String namespace, String resource) {
+		super(client,json,api,namespace,resource,ServiceAccount.class);
 	}
 
 	@Override

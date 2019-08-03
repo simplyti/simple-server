@@ -1,7 +1,6 @@
 package com.simplyti.service.clients.k8s.services.domain;
 
-import com.jsoniter.annotation.JsonCreator;
-import com.jsoniter.annotation.JsonProperty;
+import com.dslplatform.json.CompiledJson;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -14,9 +13,8 @@ public class ServiceStatus {
 	
 	private final ServiceLoadBalancer loadBalancer;
 
-	@JsonCreator
-	public ServiceStatus(
-			@JsonProperty("loadBalancer") ServiceLoadBalancer loadBalancer) {
+	@CompiledJson
+	public ServiceStatus(ServiceLoadBalancer loadBalancer) {
 		this.loadBalancer=loadBalancer;
 	}
 

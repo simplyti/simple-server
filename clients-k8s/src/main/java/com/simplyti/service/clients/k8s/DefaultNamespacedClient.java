@@ -1,6 +1,8 @@
 package com.simplyti.service.clients.k8s;
 
 import com.simplyti.service.clients.k8s.endpoints.NamespacedEndpoints;
+import com.simplyti.service.clients.k8s.jobs.NamespacedJobs;
+import com.simplyti.service.clients.k8s.pods.NamespacedPods;
 import com.simplyti.service.clients.k8s.services.NamespacedServices;
 
 public class DefaultNamespacedClient implements NamespacedClient {
@@ -21,6 +23,16 @@ public class DefaultNamespacedClient implements NamespacedClient {
 	@Override
 	public NamespacedEndpoints endpoints() {
 		return client.endpoints().namespace(namespace);
+	}
+
+	@Override
+	public NamespacedPods pods() {
+		return client.pods().namespace(namespace);
+	}
+
+	@Override
+	public NamespacedJobs jobs() {
+		return client.jobs().namespace(namespace);
 	}
 
 }

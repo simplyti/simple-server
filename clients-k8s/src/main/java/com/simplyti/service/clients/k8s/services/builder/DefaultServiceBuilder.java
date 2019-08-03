@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.k8s.K8sAPI;
 import com.simplyti.service.clients.k8s.common.Metadata;
@@ -24,8 +25,8 @@ public class DefaultServiceBuilder extends AbstractK8sResourceBuilder<ServiceBui
 	private String clusterIp;
 	private String loadBalancerIP;
 
-	public DefaultServiceBuilder(HttpClient client,K8sAPI api,String namespace, String resource) {
-		super(client,api,namespace,resource,Service.class);
+	public DefaultServiceBuilder(HttpClient client,Json json, K8sAPI api,String namespace, String resource) {
+		super(client,json,api,namespace,resource,Service.class);
 	}
 
 	@Override

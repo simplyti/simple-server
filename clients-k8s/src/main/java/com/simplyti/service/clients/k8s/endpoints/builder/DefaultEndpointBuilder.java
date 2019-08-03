@@ -3,6 +3,7 @@ package com.simplyti.service.clients.k8s.endpoints.builder;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.k8s.K8sAPI;
 import com.simplyti.service.clients.k8s.common.Metadata;
@@ -16,8 +17,8 @@ public class DefaultEndpointBuilder extends AbstractK8sResourceBuilder<EndpointB
 	
 	private List<Subset> subsets = new ArrayList<>();
 	
-	public DefaultEndpointBuilder(HttpClient client, K8sAPI api, String namespace, String resource) {
-		super(client, api, namespace, resource, Endpoint.class);
+	public DefaultEndpointBuilder(HttpClient client,Json json, K8sAPI api, String namespace, String resource) {
+		super(client, json, api, namespace, resource, Endpoint.class);
 	}
 
 	@Override

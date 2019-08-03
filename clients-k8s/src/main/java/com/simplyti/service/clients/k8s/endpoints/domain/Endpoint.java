@@ -1,10 +1,8 @@
 package com.simplyti.service.clients.k8s.endpoints.domain;
 
 import java.util.Collection;
-import java.util.List;
 
-import com.jsoniter.annotation.JsonCreator;
-import com.jsoniter.annotation.JsonProperty;
+import com.dslplatform.json.CompiledJson;
 import com.simplyti.service.clients.k8s.common.K8sResource;
 import com.simplyti.service.clients.k8s.common.Metadata;
 
@@ -17,12 +15,12 @@ public class Endpoint extends K8sResource {
 	
 	private final Collection<Subset> subsets;
 	
-	@JsonCreator
+	@CompiledJson
 	public Endpoint(
-			@JsonProperty("kind") String kind,
-			@JsonProperty("apiVersion") String apiVersion,
-			@JsonProperty("metadata") Metadata metadata,
-			@JsonProperty("subsets") List<Subset> subsets) {
+			String kind,
+			String apiVersion,
+			Metadata metadata,
+			Collection<Subset> subsets) {
 		super(kind,apiVersion,metadata);
 		this.subsets=subsets;
 	}

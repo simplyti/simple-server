@@ -3,9 +3,7 @@ package com.simplyti.service.clients.k8s.common;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-import com.jsoniter.annotation.JsonCreator;
-import com.jsoniter.annotation.JsonProperty;
-import com.simplyti.service.clients.k8s.json.coder.LocalDateTimeDecoder;
+import com.dslplatform.json.CompiledJson;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -26,17 +24,17 @@ public class Metadata {
 	private final Map<String,String> labels;
 	private final Map<String,String> annotations;
 	
-	@JsonCreator
+	@CompiledJson
 	public Metadata(
-			@JsonProperty("name") String name,
-			@JsonProperty("generateName") String generateName,
-			@JsonProperty("namespace") String namespace,
-			@JsonProperty("selfLink") String selfLink,
-			@JsonProperty("uid") String uid,
-			@JsonProperty("resourceVersion") String resourceVersion,
-			@JsonProperty(value="creationTimestamp",decoder=LocalDateTimeDecoder.class) LocalDateTime creationTimestamp,
-			@JsonProperty("labels") Map<String,String> labels,
-			@JsonProperty("annotations")  Map<String,String> annotations){
+			String name,
+			String generateName,
+			String namespace,
+			String selfLink,
+			String uid,
+			String resourceVersion,
+			LocalDateTime creationTimestamp,
+			Map<String,String> labels,
+			Map<String,String> annotations){
 		this.name=name;
 		this.generateName=generateName;
 		this.namespace=namespace;

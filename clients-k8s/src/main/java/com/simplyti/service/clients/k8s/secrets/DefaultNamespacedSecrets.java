@@ -1,6 +1,7 @@
 package com.simplyti.service.clients.k8s.secrets;
 
-import com.jsoniter.spi.TypeLiteral;
+import com.simplyti.service.api.serializer.json.Json;
+import com.simplyti.service.api.serializer.json.TypeLiteral;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.k8s.K8sAPI;
 import com.simplyti.service.clients.k8s.common.impl.DefaultNamespacedK8sApi;
@@ -14,14 +15,14 @@ import io.netty.channel.EventLoopGroup;
 
 public class DefaultNamespacedSecrets extends DefaultNamespacedK8sApi<Secret> implements NamespacedSecrets {
 
-	public DefaultNamespacedSecrets(EventLoopGroup eventLoopGroup,HttpClient http, K8sAPI api, String resource, TypeLiteral<KubeList<Secret>> listType, 
+	public DefaultNamespacedSecrets(EventLoopGroup eventLoopGroup,HttpClient http,Json json, K8sAPI api, String resource, TypeLiteral<KubeList<Secret>> listType, 
 			TypeLiteral<Event<Secret>> eventType, String namespace) {
-		super(eventLoopGroup,http,api,namespace,resource,Secret.class,listType,eventType);
+		super(eventLoopGroup,http,json,api,namespace,resource,Secret.class,listType,eventType);
 	}
 
 	@Override
 	public SecretBuilder builder() {
-		return new DefaultSecretBuilder(http(), api(), namespace(), resource());
+		return new DefaultSecretBuilder(http(),json(), api(), namespace(), resource());
 	}
 
 

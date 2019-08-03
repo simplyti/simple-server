@@ -8,6 +8,7 @@ import lombok.experimental.Accessors;
 public enum K8sAPI {
 	
 	V1("api","v1"),
+	BATCH1("apis","batch/v1"),
 	BETA1("apis","extensions/v1beta1");
 	
 	private final String api;

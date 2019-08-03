@@ -1,6 +1,7 @@
 package com.simplyti.service.clients.k8s.ingresses;
 
-import com.jsoniter.spi.TypeLiteral;
+import com.simplyti.service.api.serializer.json.Json;
+import com.simplyti.service.api.serializer.json.TypeLiteral;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.k8s.K8sAPI;
 import com.simplyti.service.clients.k8s.common.impl.DefaultK8sApi;
@@ -18,18 +19,18 @@ public class DefaultIngresses extends DefaultK8sApi<Ingress> implements Ingresse
 	private static final TypeLiteral<KubeList<Ingress>> LIST_TYPE = new TypeLiteral<KubeList<Ingress>>() {};
 	private static final TypeLiteral<Event<Ingress>> EVENT_TYPE = new TypeLiteral<Event<Ingress>>() {};
 
-	public DefaultIngresses(EventLoopGroup eventLoopGroup, HttpClient http) {
-		super(eventLoopGroup,http,K8sAPI.BETA1, RESOURCE,LIST_TYPE,EVENT_TYPE);
+	public DefaultIngresses(EventLoopGroup eventLoopGroup, HttpClient http, Json json) {
+		super(eventLoopGroup,http,json,K8sAPI.BETA1, RESOURCE,LIST_TYPE,EVENT_TYPE);
 	}
 
 	@Override
 	public NamespacedIngresses namespace(String namespace) {
-		return new DefaultNamespacedIngresses(eventLoopGroup(),http(),K8sAPI.BETA1,RESOURCE,LIST_TYPE,EVENT_TYPE,namespace);
+		return new DefaultNamespacedIngresses(eventLoopGroup(),http(),json(),K8sAPI.BETA1,RESOURCE,LIST_TYPE,EVENT_TYPE,namespace);
 	}
 
 	@Override
 	public IngressBuilder builder(String namespace) {
-		return new DefaultIngressBuilder(http(),K8sAPI.BETA1,namespace,RESOURCE);
+		return new DefaultIngressBuilder(http(),json(),K8sAPI.BETA1,namespace,RESOURCE);
 	}
 
 }

@@ -1,7 +1,6 @@
 package com.simplyti.service.clients.k8s.ingresses.domain;
 
-import com.jsoniter.annotation.JsonCreator;
-import com.jsoniter.annotation.JsonProperty;
+import com.dslplatform.json.CompiledJson;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -13,10 +12,10 @@ public class IngressRule {
 	private final String host;
 	private final IngressHttp http;
 	
-	@JsonCreator
+	@CompiledJson
 	public IngressRule(
-			@JsonProperty("host") String host,
-			@JsonProperty("http") IngressHttp http) {
+			String host,
+			IngressHttp http) {
 		this.host=host;
 		this.http=http;
 	}

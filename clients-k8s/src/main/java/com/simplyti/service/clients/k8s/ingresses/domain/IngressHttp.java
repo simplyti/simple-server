@@ -2,8 +2,7 @@ package com.simplyti.service.clients.k8s.ingresses.domain;
 
 import java.util.List;
 
-import com.jsoniter.annotation.JsonCreator;
-import com.jsoniter.annotation.JsonProperty;
+import com.dslplatform.json.CompiledJson;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -14,9 +13,8 @@ public class IngressHttp {
 	
 private final List<IngressPath> paths;
 	
-	@JsonCreator
-	public IngressHttp(
-			@JsonProperty("paths") List<IngressPath> paths) {
+	@CompiledJson
+	public IngressHttp(List<IngressPath> paths) {
 		this.paths=paths;
 	}
 

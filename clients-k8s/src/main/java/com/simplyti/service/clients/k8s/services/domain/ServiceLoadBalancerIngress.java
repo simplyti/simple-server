@@ -1,7 +1,6 @@
 package com.simplyti.service.clients.k8s.services.domain;
 
-import com.jsoniter.annotation.JsonCreator;
-import com.jsoniter.annotation.JsonProperty;
+import com.dslplatform.json.CompiledJson;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -15,10 +14,10 @@ public class ServiceLoadBalancerIngress {
 	private final String ip;
 	private final String hostname;
 
-	@JsonCreator
+	@CompiledJson
 	public ServiceLoadBalancerIngress(
-			@JsonProperty("ip") String ip,
-			@JsonProperty("hostname") String hostname) {
+			String ip,
+			String hostname) {
 		this.ip=ip;
 		this.hostname=hostname;
 	}

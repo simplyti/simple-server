@@ -3,8 +3,7 @@ package com.simplyti.service.clients.k8s.namespaces.builder;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.jsoniter.JsonIterator;
-import com.jsoniter.output.JsonStream;
+import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.k8s.K8sAPI;
 import com.simplyti.service.clients.k8s.common.Metadata;
@@ -12,7 +11,6 @@ import com.simplyti.service.clients.k8s.namespaces.domain.Namespace;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.ByteBufOutputStream;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.util.concurrent.Future;
 
@@ -21,14 +19,17 @@ public class DefaultNamespacesBuilder implements NamespacesBuilder {
 	private static final String KIND = "Namespace";
 	
 	private final HttpClient client;
+	private final Json json;
 	private final K8sAPI api;
 	
 	private String name;
 	private Map<String,String> annotations;
 
 
-	public DefaultNamespacesBuilder(HttpClient client, K8sAPI api) {
+
+	public DefaultNamespacesBuilder(HttpClient client, Json json, K8sAPI api) {
 		this.client=client;
+		this.json=json;
 		this.api=api;
 	}
 
@@ -57,16 +58,14 @@ public class DefaultNamespacesBuilder implements NamespacesBuilder {
 	
 	private ByteBuf body(ByteBufAllocator ctx) {
 		ByteBuf buffer = ctx.buffer();
-		JsonStream.serialize(new Namespace(KIND,api.version(),Metadata.builder()
+		json.serialize(new Namespace(KIND,api.version(),Metadata.builder()
 				.name(name)
-				.build()),new ByteBufOutputStream(buffer));
+				.build()),buffer);
 		return buffer;
 	}
 	
 	private Namespace response(FullHttpResponse response) {
-		byte[] data = new byte[response.content().readableBytes()];
-		response.content().readBytes(data);
-		return JsonIterator.deserialize(data,Namespace.class);
+		return json.deserialize(response.content(),Namespace.class);
 	}
 
 }

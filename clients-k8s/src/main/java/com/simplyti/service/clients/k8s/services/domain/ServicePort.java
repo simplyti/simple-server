@@ -1,8 +1,8 @@
 package com.simplyti.service.clients.k8s.services.domain;
 
-
-import com.jsoniter.annotation.JsonCreator;
-import com.jsoniter.annotation.JsonProperty;
+import com.dslplatform.json.CompiledJson;
+import com.dslplatform.json.JsonAttribute;
+import com.simplyti.service.clients.k8s.json.coder.PortConverter;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -18,12 +18,12 @@ public class ServicePort {
 	private final ServiceProtocol protocol;
 	private final Object targetPort;
 	
-	@JsonCreator
+	@CompiledJson
 	public ServicePort(
-			@JsonProperty("name") String name,
-			@JsonProperty("port") Integer port,
-			@JsonProperty("protocol") ServiceProtocol protocol,
-			@JsonProperty("targetPort") Object targetPort) {
+			String name,
+			Integer port,
+			ServiceProtocol protocol,
+			@JsonAttribute(converter=PortConverter.class) Object targetPort) {
 		this.name=name;
 		this.port=port;
 		this.protocol=protocol;

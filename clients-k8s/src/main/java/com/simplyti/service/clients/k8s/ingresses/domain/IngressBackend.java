@@ -1,7 +1,8 @@
 package com.simplyti.service.clients.k8s.ingresses.domain;
 
-import com.jsoniter.annotation.JsonCreator;
-import com.jsoniter.annotation.JsonProperty;
+import com.dslplatform.json.CompiledJson;
+import com.dslplatform.json.JsonAttribute;
+import com.simplyti.service.clients.k8s.json.coder.PortConverter;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -13,10 +14,10 @@ public class IngressBackend {
 	private final String serviceName;
 	private final Object servicePort;
 	
-	@JsonCreator
+	@CompiledJson
 	public IngressBackend(
-			@JsonProperty("serviceName") String serviceName,
-			@JsonProperty("servicePort") Object servicePort) {
+			String serviceName,
+			@JsonAttribute(converter=PortConverter.class) Object servicePort) {
 		this.serviceName=serviceName;
 		this.servicePort=servicePort;
 	}

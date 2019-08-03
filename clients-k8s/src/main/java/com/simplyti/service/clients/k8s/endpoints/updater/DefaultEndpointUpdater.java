@@ -2,6 +2,7 @@ package com.simplyti.service.clients.k8s.endpoints.updater;
 
 import java.util.Collections;
 
+import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.k8s.K8sAPI;
 import com.simplyti.service.clients.k8s.common.updater.AbstractK8sResourceUpdater;
@@ -16,8 +17,8 @@ public class DefaultEndpointUpdater extends AbstractK8sResourceUpdater<Endpoint>
 
 	private boolean adding;
 
-	public DefaultEndpointUpdater(HttpClient client, K8sAPI api, String namespace, String resource, String name) {
-		super(client, api, namespace, resource, name, Endpoint.class);
+	public DefaultEndpointUpdater(HttpClient client,Json json, K8sAPI api, String namespace, String resource, String name) {
+		super(client,json, api, namespace, resource, name, Endpoint.class);
 	}
 	
 	@Override

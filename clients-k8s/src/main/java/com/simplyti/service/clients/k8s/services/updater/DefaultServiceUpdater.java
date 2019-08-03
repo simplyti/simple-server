@@ -2,6 +2,7 @@ package com.simplyti.service.clients.k8s.services.updater;
 
 import java.util.Collections;
 
+import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.k8s.K8sAPI;
 import com.simplyti.service.clients.k8s.common.updater.AbstractK8sResourceUpdater;
@@ -17,8 +18,8 @@ public class DefaultServiceUpdater extends AbstractK8sResourceUpdater<Service> i
 
 	private boolean adding;
 
-	public DefaultServiceUpdater(HttpClient client, K8sAPI api, String namespace, String resource, String name) {
-		super(client, api, namespace, resource, name, Service.class);
+	public DefaultServiceUpdater(HttpClient client, Json json, K8sAPI api, String namespace, String resource, String name) {
+		super(client,json, api, namespace, resource, name, Service.class);
 	}
 
 	@Override

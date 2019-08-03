@@ -3,8 +3,7 @@ package com.simplyti.service.clients.k8s.services.domain;
 import java.util.List;
 import java.util.Map;
 
-import com.jsoniter.annotation.JsonCreator;
-import com.jsoniter.annotation.JsonProperty;
+import com.dslplatform.json.CompiledJson;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -21,13 +20,13 @@ public class ServiceSpec {
 	private final Map<String,String> selector;
 	private final ServiceType type;
 	
-	@JsonCreator
+	@CompiledJson
 	public ServiceSpec(
-			@JsonProperty("clusterIP") String clusterIP,
-			@JsonProperty("loadBalancerIP") String loadBalancerIP,
-			@JsonProperty("ports") List<ServicePort> ports,
-			@JsonProperty("selector") Map<String,String> selector,
-			@JsonProperty("type") ServiceType type) {
+			String clusterIP,
+			String loadBalancerIP,
+			List<ServicePort> ports,
+			Map<String,String> selector,
+			ServiceType type) {
 		this.clusterIP=clusterIP;
 		this.loadBalancerIP=loadBalancerIP;
 		this.ports=ports;

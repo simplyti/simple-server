@@ -1,6 +1,7 @@
 package com.simplyti.service.clients.k8s.services;
 
-import com.jsoniter.spi.TypeLiteral;
+import com.simplyti.service.api.serializer.json.Json;
+import com.simplyti.service.api.serializer.json.TypeLiteral;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.k8s.K8sAPI;
 import com.simplyti.service.clients.k8s.common.impl.DefaultNamespacedK8sApi;
@@ -17,19 +18,19 @@ import io.netty.util.concurrent.Future;
 
 public class DefaultNamespacedServices extends DefaultNamespacedK8sApi<Service> implements NamespacedServices {
 
-	public DefaultNamespacedServices(EventLoopGroup eventLoopGroup,HttpClient http, K8sAPI api, String resource,TypeLiteral<KubeList<Service>> listType,
+	public DefaultNamespacedServices(EventLoopGroup eventLoopGroup,HttpClient http,Json json, K8sAPI api, String resource,TypeLiteral<KubeList<Service>> listType,
 			TypeLiteral<Event<Service>> eventType, String namespace) {
-		super(eventLoopGroup,http,api,namespace,resource,Service.class,listType,eventType);
+		super(eventLoopGroup,http,json,api,namespace,resource,Service.class,listType,eventType);
 	}
 
 	@Override
 	public ServiceBuilder builder() {
-		return new DefaultServiceBuilder(http(), api(), namespace(), resource());
+		return new DefaultServiceBuilder(http(),json(), api(), namespace(), resource());
 	}
 
 	@Override
 	public ServicesUpdater update(String name) {
-		return new DefaultServiceUpdater(http(), api(), namespace(), resource(),name);
+		return new DefaultServiceUpdater(http(),json(), api(), namespace(), resource(),name);
 	}
 
 	@Override

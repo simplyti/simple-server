@@ -1,7 +1,6 @@
 package com.simplyti.service.clients.k8s.services.domain;
 
-import com.jsoniter.annotation.JsonCreator;
-import com.jsoniter.annotation.JsonProperty;
+import com.dslplatform.json.CompiledJson;
 import com.simplyti.service.clients.k8s.common.K8sResource;
 import com.simplyti.service.clients.k8s.common.Metadata;
 
@@ -15,13 +14,13 @@ public class Service extends K8sResource {
 	private final ServiceSpec spec;
 	private final ServiceStatus status;
 
-	@JsonCreator
+	@CompiledJson
 	public Service(
-			@JsonProperty("kind") String kind,
-			@JsonProperty("apiVersion") String apiVersion,
-			@JsonProperty("metadata") Metadata metadata,
-			@JsonProperty("spec") ServiceSpec spec,
-			@JsonProperty("status") ServiceStatus status) {
+			String kind,
+			String apiVersion,
+			Metadata metadata,
+			ServiceSpec spec,
+			ServiceStatus status) {
 		super(kind,apiVersion,metadata);
 		this.spec=spec;
 		this.status=status;

@@ -3,6 +3,7 @@ package com.simplyti.service.clients.k8s.ingresses.builder;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.k8s.K8sAPI;
 import com.simplyti.service.clients.k8s.common.Metadata;
@@ -20,8 +21,8 @@ public class DefaultIngressBuilder extends AbstractK8sResourceBuilder<IngressBui
 	private List<IngressRule> rules;
 	private List<IngressTls> tlss;
 
-	public DefaultIngressBuilder(HttpClient client,K8sAPI api,String namespace, String resource) {
-		super(client,api,namespace,resource,Ingress.class);
+	public DefaultIngressBuilder(HttpClient client,Json json, K8sAPI api,String namespace, String resource) {
+		super(client,json,api,namespace,resource,Ingress.class);
 	}
 
 	@Override

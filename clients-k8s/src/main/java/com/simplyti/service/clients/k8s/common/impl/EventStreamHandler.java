@@ -1,7 +1,7 @@
 package com.simplyti.service.clients.k8s.common.impl;
 
-import com.jsoniter.JsonIterator;
-import com.jsoniter.spi.TypeLiteral;
+import com.simplyti.service.api.serializer.json.Json;
+import com.simplyti.service.api.serializer.json.TypeLiteral;
 import com.simplyti.service.clients.k8s.common.K8sResource;
 import com.simplyti.service.clients.k8s.common.watch.Observable;
 import com.simplyti.service.clients.k8s.common.watch.domain.Event;
@@ -15,11 +15,14 @@ public class EventStreamHandler<T extends K8sResource> extends SimpleChannelInbo
 	
 	public static final String NAME = "evt-handler";
 	
+	private final Json json;
+	
 	private final Observable<T> observable;
 	private final TypeLiteral<Event<T>> eventType;
 
 
-	public EventStreamHandler(Observable<T> observable, TypeLiteral<Event<T>> eventType) {
+	public EventStreamHandler(Json json,Observable<T> observable, TypeLiteral<Event<T>> eventType) {
+		this.json=json;
 		this.observable=observable;
 		this.eventType=eventType;
 	}
@@ -36,9 +39,7 @@ public class EventStreamHandler<T extends K8sResource> extends SimpleChannelInbo
 	}
 	
 	protected Event<T> response(ByteBuf content) {
-		byte[] data = new byte[content.readableBytes()];
-		content.readBytes(data);
-		return JsonIterator.deserialize(data,eventType);
+		return json.deserialize(content,eventType);
 	}
 
 }
