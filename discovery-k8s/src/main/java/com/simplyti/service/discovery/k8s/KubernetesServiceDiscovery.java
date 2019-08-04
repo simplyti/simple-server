@@ -154,9 +154,11 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		Future<KubeList<T>> future = api.list();
 		future.addListener(f->{
 			if(f.isSuccess()) {
-				future.getNow().items().forEach(service->handle(EventType.ADDED, service,consumer));
-				resourceVersion.set(future.getNow().metadata().resourceVersion());
-				promise.setSuccess(null);
+				if(executor.inEventLoop()) {
+					handleList(executor,promise,resourceVersion,future.getNow(),consumer);
+				}else {
+					executor.submit(()->handleList(executor,promise,resourceVersion,future.getNow(),consumer));
+				}
 			}else {
 				promise.setFailure(f.cause());
 			}
@@ -164,22 +166,31 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		return promise;
 	}
 	
+	private <T extends K8sResource> void handleList(EventLoop executor, Promise<Void> promise, AtomicReference<String> resourceVersion, KubeList<T> list, EventConsumer<T> consumer) {
+		PromiseCombiner combiner = new PromiseCombiner(executor);
+		list.items().forEach(service->combiner.add(handle(executor, EventType.ADDED, service,consumer)));
+		resourceVersion.set(list.metadata().resourceVersion());
+		combiner.finish(promise);
+	}
+
 	private <T extends K8sResource> Observable<T> watch(K8sApi<T> api, String resourceVersion, EventConsumer<T> consumer) {
-		return api.watch(resourceVersion).on(event->handle(event.type(),event.object(),consumer));
+		return api.watch(resourceVersion).on(event->handle(eventLoop, event.type(),event.object(),consumer));
 	}
 	
-	private <T extends K8sResource> void handle(EventType type, T service, EventConsumer<T> consumer) {
+	private <T extends K8sResource> Future<Void> handle(EventLoop executor, EventType type, T service, EventConsumer<T> consumer) {
 		if(type == EventType.ERROR) {
-			return;
+			return executor.newSucceededFuture(null);
 		}
-		if(eventLoop.inEventLoop()) {
-			consumer.accept(type,service);
+		Promise<Void> promise = executor.newPromise();
+		if(executor.inEventLoop()) {
+			consumer.accept(type,service,promise);
 		}else {
-			eventLoop.execute(()->consumer.accept(type,service));
+			executor.execute(()->consumer.accept(type,service,promise));
 		}
+		return promise;
 	}
 	
-	private void handleService(EventType type, Service service) {
+	private Future<Void> handleService(EventType type, Service service, Promise<Void> promise) {
 		String id = resourceId(service.metadata());
 		if(type == EventType.ADDED){
 			services.put(id, service);
@@ -207,6 +218,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 						.forEach(edp->addEndpoint(key.host(), key.method(), key.path(), edp)));
 			}
 		}
+		return promise.setSuccess(null);
 	}
 	
 	private Map<ServiceKey,List<com.simplyti.service.clients.Endpoint>> endpoints(Service service, List<EnpointAddress> addresses) {
@@ -224,7 +236,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		return mapedServices;
 	}
 
-	private void handleIngress(EventType type, Ingress ingress) {
+	private Future<Void> handleIngress(EventType type, Ingress ingress, Promise<Void> promise) {
 		String id = resourceId(ingress.metadata());
 		boolean tlsEnabled = ingress.spec().tls()!=null;
 		if(type == EventType.ADDED){
@@ -269,6 +281,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 			newBackends.stream().filter(backend->!oldBackends.contains(backend))
 				.forEach(this::addService);
 		}
+		return promise.setSuccess(null);
 	}
 	
 	private String rewrite(Ingress ingress) {
@@ -291,9 +304,9 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 			
 	}
 
-	private void handleSecret(EventType type, Secret secret) {
+	private Future<Void> handleSecret(EventType type, Secret secret, Promise<Void> promise) {
 		if(secret.data()==null) {
-			return;
+			return promise.setSuccess(null);
 		}
 		if(secret.data().containsKey("tls.key") && secret.data().containsKey("tls.crt")) {
 			if(type == EventType.ADDED){
@@ -312,9 +325,10 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 				openIdClientSecrets.remove(resourceId(secret.metadata()));
 			}
 		}
+		return promise.setSuccess(null);
 	}
 	
-	private void handleEndpoint(EventType type, Endpoint endpoint) {
+	private Future<Void> handleEndpoint(EventType type, Endpoint endpoint, Promise<Void> promise) {
 		String id = resourceId(endpoint.metadata());
 		if(type == EventType.ADDED){
 			endpoints.put(id, endpoint);
@@ -332,6 +346,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 			newAddresses.stream().filter(address->!oldAddresses.contains(address))
 				.forEach(newAddress->eachEndpoint(id,newAddress,(edp,host,path)->addEndpoint(host,null,path,edp)));
 		}
+		return promise.setSuccess(null);
 	}
 
 	private List<EnpointAddress> address(Endpoint oldEndpoint) {
