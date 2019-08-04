@@ -7,15 +7,13 @@ import lombok.experimental.Accessors;
 
 @Getter
 @Accessors(fluent=true)
-public class ContainerStatus {
+public class ContainerStateTerminated {
 	
-	private final Boolean ready;
-	private final ContainerState state;
-
+	private final int exitCode;
+	
 	@CompiledJson
-	public ContainerStatus(Boolean ready,ContainerState state) {
-		this.ready=ready;
-		this.state=state;
+	public ContainerStateTerminated(int exitCode) {
+		this.exitCode=exitCode;
 	}
 
 }

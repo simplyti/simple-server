@@ -169,6 +169,9 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 	}
 	
 	private <T extends K8sResource> void handle(EventType type, T service, EventConsumer<T> consumer) {
+		if(type == EventType.ERROR) {
+			return;
+		}
 		if(eventLoop.inEventLoop()) {
 			consumer.accept(type,service);
 		}else {

@@ -12,6 +12,7 @@ import com.simplyti.service.clients.k8s.pods.domain.Container;
 import com.simplyti.service.clients.k8s.pods.domain.ImagePullSecret;
 import com.simplyti.service.clients.k8s.pods.domain.Pod;
 import com.simplyti.service.clients.k8s.pods.domain.PodSpec;
+import com.simplyti.service.clients.k8s.pods.domain.RestartPolicy;
 
 public class DefaultPodBuilder extends AbstractK8sResourceBuilder<PodBuilder,Pod> implements PodBuilder, ContainerHolder {
 	
@@ -19,6 +20,7 @@ public class DefaultPodBuilder extends AbstractK8sResourceBuilder<PodBuilder,Pod
 	
 	private List<Container> containers;
 	private List<ImagePullSecret> imagePullSecrets;
+	private RestartPolicy restartPolicy;
 	
 	public DefaultPodBuilder(HttpClient client,Json json,K8sAPI api,String namespace, String resource) {
 		super(client,json,api,namespace,resource,Pod.class);
@@ -26,7 +28,13 @@ public class DefaultPodBuilder extends AbstractK8sResourceBuilder<PodBuilder,Pod
 
 	@Override
 	protected Pod resource(K8sAPI api, Metadata metadata) {
-		return new Pod(KIND, api.version(), metadata, new PodSpec(containers,null,imagePullSecrets),null);
+		return new Pod(KIND, api.version(), metadata, new PodSpec(containers,restartPolicy,imagePullSecrets),null);
+	}
+	
+	@Override
+	public PodBuilder withRestartPolicy(RestartPolicy restartPolicy) {
+		this.restartPolicy=restartPolicy;
+		return this;
 	}
 
 	@Override

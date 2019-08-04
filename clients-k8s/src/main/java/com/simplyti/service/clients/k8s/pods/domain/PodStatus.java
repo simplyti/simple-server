@@ -12,14 +12,17 @@ import lombok.experimental.Accessors;
 public class PodStatus {
 	
 	private final String podIP;
-	private List<ContainerStatus> containerStatuses;
+	private final List<ContainerStatus> containerStatuses;
+	private final PodPhase phase;
 
 	@CompiledJson
 	public PodStatus(
 			String podIP,
-			List<ContainerStatus> containerStatuses) {
+			List<ContainerStatus> containerStatuses,
+			PodPhase phase) {
 		this.podIP=podIP;
 		this.containerStatuses=containerStatuses;
+		this.phase=phase;
 	}
 
 }
