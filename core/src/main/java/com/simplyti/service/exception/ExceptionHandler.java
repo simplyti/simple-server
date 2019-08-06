@@ -22,7 +22,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public class ExceptionHandler {
 
-	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
+	private static final InternalLogger log = InternalLoggerFactory.getInstance(ExceptionHandler.class);
 
 	public Future<Void> exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 		if(cause instanceof WebApplicationException) {

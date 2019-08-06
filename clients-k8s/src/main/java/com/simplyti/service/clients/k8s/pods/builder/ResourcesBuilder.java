@@ -1,9 +1,9 @@
 package com.simplyti.service.clients.k8s.pods.builder;
 
-public interface ResourcesBuilder {
+public interface ResourcesBuilder<T> {
 
-	ResourcesSpecBuilder request();
-	ResourcesSpecBuilder limit();
-	ContainerBuilder<?> build();
+	ResourcesSpecBuilder<T> request();
+	ResourcesSpecBuilder<T> limit();
+	ContainerBuilder<T> build();
 
 }

@@ -8,10 +8,12 @@ public interface ContainerBuilder<T> {
 	ContainerBuilder<T> withImage(String string);
 	
 	ContainerBuilder<T> withCommand(String... command);
+	
+	EnvironmentBuilder<T> withEnvironment();
 
 	ReadinessProbeBuilder withReadinessProbe();
 
-	ResourcesBuilder withResources();
+	ResourcesBuilder<T> withResources();
 	
 	T build();
 

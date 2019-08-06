@@ -27,7 +27,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public class DefaultApiInvocationContext<I,O> extends AbstractApiInvocationContext<O>  implements ApiInvocationContext<I,O>, Supplier<I>, ByteBufHolder{
 	
-	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
+	private static final InternalLogger log = InternalLoggerFactory.getInstance(DefaultApiInvocationContext.class);
 	
 	private final ChannelHandlerContext ctx;
 	private final FullApiInvocation<I> msg;
@@ -38,7 +38,6 @@ public class DefaultApiInvocationContext<I,O> extends AbstractApiInvocationConte
 	private boolean released = false ;
 	
 	private final ByteBuf data;
-
 	
 	public DefaultApiInvocationContext(ChannelHandlerContext ctx, ApiMacher matcher, FullApiInvocation<I> msg, 
 			ExceptionHandler exceptionHandler, ServerSentEventEncoder serverSentEventEncoder, SyncTaskSubmitter syncTaskSubmitter,

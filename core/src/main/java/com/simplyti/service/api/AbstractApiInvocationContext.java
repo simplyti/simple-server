@@ -23,7 +23,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public abstract class AbstractApiInvocationContext<O> implements APIContext<O> {
 	
-	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
+	private static final InternalLogger log = InternalLoggerFactory.getInstance(AbstractApiInvocationContext.class);
 	
 	private final ChannelHandlerContext ctx;
 	private final boolean isKeepAlive;

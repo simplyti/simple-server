@@ -1,10 +1,10 @@
 package com.simplyti.service.clients.k8s.pods.builder;
 
 
-public interface ResourcesSpecBuilder {
+public interface ResourcesSpecBuilder<T> {
 
-	ResourcesSpecBuilder memmory(String mem);
-	ResourcesSpecBuilder cpu(String cpu);
-	ResourcesBuilder build();
+	ResourcesSpecBuilder<T> memmory(String mem);
+	ResourcesSpecBuilder<T> cpu(String cpu);
+	ResourcesBuilder<T> build();
 
 }

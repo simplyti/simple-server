@@ -5,9 +5,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.NotFoundException;
-
 import com.simplyti.service.StartStopMonitor;
 import com.simplyti.service.api.filter.FilterChain;
 import com.simplyti.service.api.filter.HttpRequestFilter;
@@ -15,6 +12,8 @@ import com.simplyti.service.api.filter.HttpResponseFilter;
 import com.simplyti.service.channel.ClientChannelGroup;
 import com.simplyti.service.channel.handler.inits.HandlerInit;
 import com.simplyti.service.channel.pending.PendingMessages;
+import com.simplyti.service.exception.BadRequestException;
+import com.simplyti.service.exception.NotFoundException;
 import com.simplyti.service.priority.Priorized;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -34,9 +33,9 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public class ClientChannelHandler extends ChannelDuplexHandler {
 	
+	private static final InternalLogger log = InternalLoggerFactory.getInstance(ClientChannelHandler.class);
+	
 	public static final String NAME = "request-hander";
-
-	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
 
 	private final StartStopMonitor startStopMonitor;
 	
