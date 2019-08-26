@@ -13,7 +13,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public class TracingModule extends AbstractModule implements OperationInboundFilter {
 	
-	InternalLogger log = InternalLoggerFactory.getInstance(getClass());
+	private static final InternalLogger log = InternalLoggerFactory.getInstance(TracingModule.class);
 	
 	@Override
 	protected void configure() {

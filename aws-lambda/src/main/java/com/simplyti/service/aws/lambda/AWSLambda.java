@@ -6,8 +6,8 @@ import java.io.OutputStream;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
-import com.simplyti.service.Service;
-import com.simplyti.service.builder.ServiceBuilder;
+import com.simplyti.service.builder.di.guice.GuiceService;
+import com.simplyti.service.builder.di.guice.ServiceBuilder;
 
 import io.vavr.control.Try;
 
@@ -16,7 +16,7 @@ public abstract class AWSLambda implements RequestStreamHandler {
 	private final AWSLambdaService service;
 
 	public AWSLambda() {
-		ServiceBuilder<AWSLambdaService> builder = Service.builder(AWSLambdaService.class)
+		ServiceBuilder<AWSLambdaService> builder = GuiceService.builder(AWSLambdaService.class)
 			.withModule(AWSLambdaModule.class);
 		this.service = Try.of(build(builder).start()::get).get();
 	}

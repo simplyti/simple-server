@@ -1,14 +1,16 @@
 package com.simplyti.service.channel.handler.inits;
 
+import java.util.AbstractMap;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map.Entry;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
 
-import com.google.common.collect.Maps;
 import com.simplyti.service.channel.handler.FileServeHandler;
+import com.simplyti.service.channel.handler.ServerHeadersHandler;
 
 import io.netty.channel.ChannelHandler;
 import io.netty.handler.codec.http.HttpRequest;
@@ -20,11 +22,13 @@ import lombok.RequiredArgsConstructor;
 public class FileServerHandlerInit extends HandlerInit{
 	
 	private final FileServeHandler fileServeHandler;
+	private final ServerHeadersHandler serverHeadersHandler;
 
 	private Deque<Entry<String, ChannelHandler>> handlers() {
 		Deque<Entry<String, ChannelHandler>> handlers = new LinkedList<>();
-		handlers.add(Maps.immutableEntry("chunk-write", new ChunkedWriteHandler()));
-		handlers.add(Maps.immutableEntry("file-server",fileServeHandler));
+		handlers.add(new AbstractMap.SimpleEntry<>("chunk-write", new ChunkedWriteHandler()));
+		handlers.add(new SimpleImmutableEntry<>("server-headers",serverHeadersHandler));
+		handlers.add(new AbstractMap.SimpleEntry<>("file-server",fileServeHandler));
 		return handlers;
 	}
 

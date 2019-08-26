@@ -27,7 +27,7 @@ public abstract class AbstractService<T extends Service<T>> implements Service<T
 			Thread.currentThread().interrupt();
 		}
 	}, "server-shutdown-hook");
-	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
+	private static final InternalLogger log = InternalLoggerFactory.getInstance(AbstractService.class);
 	
 	private final EventLoopGroup eventLoopGroup;
 	private final EventLoop startStopLoop;

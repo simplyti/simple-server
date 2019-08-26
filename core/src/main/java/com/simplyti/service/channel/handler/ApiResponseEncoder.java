@@ -39,7 +39,7 @@ public class ApiResponseEncoder extends MessageToMessageEncoder<ApiResponse> {
 					HttpHeaderValues.TEXT_PLAIN));
 		} else if(msg.response() instanceof ByteBuf){
 			out.add(buildHttpResponse((ByteBuf) msg.response(), HttpResponseStatus.OK,msg,null));
-		}else{
+		} else{
 			ByteBuf buffer = ctx.alloc().buffer();
 			try {
 				json.serialize(msg.response(), buffer);

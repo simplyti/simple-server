@@ -24,14 +24,14 @@ import javax.inject.Inject;
 import javax.security.cert.X509Certificate;
 
 import org.apache.commons.io.FileUtils;
+import org.awaitility.Awaitility;
 
 import com.google.inject.Module;
-import com.jayway.awaitility.Awaitility;
 import com.simplyti.service.DefaultService;
-import com.simplyti.service.Service;
 import com.simplyti.service.TestServerStopHookModule;
 import com.simplyti.service.api.builder.ApiProvider;
-import com.simplyti.service.builder.ServiceBuilder;
+import com.simplyti.service.builder.di.guice.GuiceService;
+import com.simplyti.service.builder.di.guice.GuiceServiceBuilder;
 import com.simplyti.service.client.SimpleHttpClient;
 import com.simplyti.service.client.SimpleHttpResponse;
 import com.simplyti.service.clients.http.exception.HttpException;
@@ -87,7 +87,7 @@ public class ServiceBuilderStepDefs {
 	
 	@When("^I start a service \"([^\"]*)\" with API \"([^\"]*)\"$")
 	public void iStartAServiceWithAPI(String key, Class<?extends ApiProvider> api) throws Exception {
-		Future<DefaultService> futureService = Service.builder()
+		Future<DefaultService> futureService = GuiceService.builder()
 			.withLog4J2Logger()
 			.withApi(api)
 			.build().start();
@@ -97,7 +97,7 @@ public class ServiceBuilderStepDefs {
 	
 	@When("^I start a service \"([^\"]*)\"$")
 	public void iStartAService(String key) throws Exception {
-		Future<DefaultService> futureService = Service.builder()
+		Future<DefaultService> futureService = GuiceService.builder()
 				.withLog4J2Logger()
 				.build().start();
 		services.add(futureService);
@@ -106,7 +106,7 @@ public class ServiceBuilderStepDefs {
 	
 	@When("^I start a service \"([^\"]*)\" with module \"([^\"]*)\"$")
 	public void iStartAServiceWithModule(String key, Class<? extends Module> module) throws Exception {
-		Future<DefaultService> futureService = Service.builder()
+		Future<DefaultService> futureService = GuiceService.builder()
 				.withLog4J2Logger()
 				.withModule(module)
 				.build().start();
@@ -153,7 +153,7 @@ public class ServiceBuilderStepDefs {
 	@When("^I start a service \"([^\"]*)\" with file serve \"([^\"]*)\" on \"([^\"]*)\"$")
 	public void iStartAServiceWithFileServeOn(String key, String directory, String path) throws Exception {
 		String thedir = directory.replaceAll("#tempdir", tempDir);
-		Future<DefaultService> futureService = Service.builder()
+		Future<DefaultService> futureService = GuiceService.builder()
 				.withLog4J2Logger()
 				.fileServe(path,thedir)
 				.build().start();
@@ -164,7 +164,7 @@ public class ServiceBuilderStepDefs {
 	@When("^I start a service \"([^\"]*)\" with file serve \"([^\"]*)\" on \"([^\"]*)\" and API \"([^\"]*)\"$")
 	public void iStartAServiceWithFileServeOnAndAPI(String key, String directory, String path, Class<?extends ApiProvider> api) throws Exception {
 		String thedir = directory.replaceAll("#tempdir", tempDir);
-		Future<DefaultService> futureService = Service.builder()
+		Future<DefaultService> futureService = GuiceService.builder()
 				.withLog4J2Logger()
 				.fileServe(path,thedir)
 				.withApi(api)
@@ -204,7 +204,7 @@ public class ServiceBuilderStepDefs {
 	@SuppressWarnings("unchecked")
 	@When("^I start a service \"([^\"]*)\" with options:$")
 	public void iStartAServiceWithOptions(String key, List<Map<String, String>> options) {
-		ServiceBuilder<DefaultService> builder = Service.builder();
+		GuiceServiceBuilder<DefaultService> builder = GuiceService.builder();
 		options.forEach(option->{
 			if(option.get("option").equals("withLog4J2Logger")) {
 				builder.withLog4J2Logger();

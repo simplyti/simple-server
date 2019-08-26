@@ -15,7 +15,6 @@ public class ClientRequestChannel<T> implements Channel {
 	private final Channel channel;
 	
 	private final Promise<T> resultPromise;
-	
 	private final ChannelPool pool;
 
 	public ClientRequestChannel(ChannelPool pool, Channel channel, Promise<T> resultPromise) {
@@ -53,6 +52,10 @@ public class ClientRequestChannel<T> implements Channel {
 
 	public Throwable cause() {
 		return resultPromise.cause();
+	}
+	
+	public Promise<T> resultPromise(){
+		return resultPromise;
 	}
 
 }

@@ -8,21 +8,21 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.ws.rs.HttpMethod;
 
-import com.google.inject.Injector;
 import com.simplyti.service.api.ApiOperation;
+import com.simplyti.service.api.builder.di.InstanceProvider;
 import com.simplyti.service.api.builder.jaxrs.JaxRSBuilder;
 import com.simplyti.service.sync.SyncTaskSubmitter;
 
 public class ApiBuilder {
 
 	private final List<ApiOperation<?,?,?>> operations;
-	private final Injector injector;
+	private final InstanceProvider instanceProvider;
 	private final SyncTaskSubmitter syncTaskSubmitter;
 	
 	@Inject
-	public ApiBuilder(Injector injector,SyncTaskSubmitter syncTaskSubmitter){
+	public ApiBuilder(InstanceProvider instanceProvider,SyncTaskSubmitter syncTaskSubmitter){
 		operations = new ArrayList<>();
-		this.injector=injector;
+		this.instanceProvider=instanceProvider;
 		this.syncTaskSubmitter=syncTaskSubmitter;
 	}
 
@@ -38,14 +38,20 @@ public class ApiBuilder {
 		return operations;
 	}
 
-	public void usingJaxRSContract(Class<?> clazz) {
+	public ApiBuilder usingJaxRSContract(Class<?> clazz) {
 		Stream.of(clazz.getDeclaredMethods())
 		.filter(method -> Stream.of(method.getAnnotations()).anyMatch(ann -> ann.annotationType().isAnnotationPresent(HttpMethod.class)))
 		.forEach(method -> buildRestOperation(clazz, method));
+		return this;
 	}
 
 	private void buildRestOperation(Class<?> clazz, Method method) {
-		JaxRSBuilder.build(this, clazz, method, injector.getInstance(clazz),syncTaskSubmitter);
+		Object instance = instanceProvider.get(clazz);
+		if(instance==null) {
+			throw new IllegalArgumentException("No instance of "+clazz+" was provided");
+		}else {
+			JaxRSBuilder.build(this, clazz, method, instanceProvider.get(clazz),syncTaskSubmitter);
+		}
 	}
 
 }

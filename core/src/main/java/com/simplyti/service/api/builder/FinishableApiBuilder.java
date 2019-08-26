@@ -10,6 +10,7 @@ import com.simplyti.service.api.ApiInvocationContext;
 import com.simplyti.service.api.ApiOperation;
 import com.simplyti.service.api.serializer.json.TypeLiteral;
 
+import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.util.concurrent.Future;
 
@@ -53,6 +54,13 @@ public abstract class FinishableApiBuilder<I,O> {
 	
 	public void thenFuture(Function<ApiInvocationContext<I,O>,Future<O>> futureFunction) {
 		then(new InvocationFutureHandle<I,O>(futureFunction));
+	}
+	
+	public void thenFutureHttp(Function<ApiInvocationContext<I,FullHttpResponse>,Future<FullHttpResponse>> futureFunction) {
+		Consumer<ApiInvocationContext<I, FullHttpResponse>> consumer = new InvocationHttpFutureHandle<I,FullHttpResponse>(futureFunction);
+		PathPattern pathPattern = PathPattern.build(uri);
+		builder.add(new ApiOperation<I,FullHttpResponse,ApiInvocationContext<I, FullHttpResponse>>(method, pathPattern,consumer,requestType,pathPattern.literalCount(),
+				multipart,noNegative(maxBodyLength,DEFAULT_MAX_BODY),metadata(),false));
 	}
 	
 	private Map<String,String> metadata() {

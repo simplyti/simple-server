@@ -29,7 +29,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public class DefaultService extends AbstractService<DefaultService> implements Service<DefaultService>{
 	
-	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
+	private static final InternalLogger log = InternalLoggerFactory.getInstance(DefaultService.class);
 	
 	private final ServerBootstrap bootstrap;
 	private final ServerConfig config;

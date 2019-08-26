@@ -1,7 +1,5 @@
 package com.simplyti.service.api.serializer.json;
 
-import static com.google.inject.internal.MoreTypes.canonicalize;
-
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
@@ -31,7 +29,7 @@ public class TypeLiteral<T> {
 	      throw new RuntimeException("Missing type parameter.");
 	    }
 	    ParameterizedType parameterized = (ParameterizedType) superclass;
-	    return canonicalize(parameterized.getActualTypeArguments()[0]);
-	  }
-
+	    return parameterized.getActualTypeArguments()[0];
+	}
+	
 }

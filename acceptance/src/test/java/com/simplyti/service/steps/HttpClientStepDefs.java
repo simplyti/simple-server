@@ -9,7 +9,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import com.jayway.awaitility.Awaitility;
+import org.awaitility.Awaitility;
+
 import com.jsoniter.JsonIterator;
 import com.jsoniter.any.Any;
 import com.simplyti.service.client.tracer.SimpleRequestTracer;

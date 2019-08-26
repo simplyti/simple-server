@@ -1,18 +1,16 @@
 package com.simplyti.service.clients;
 
 
-public class ClientBuilder<B extends ClientBuilder<B>> {
+public class ClientBuilder<B extends ClientBuilder<B>> implements PoolConfigAware {
 	
 	protected PoolConfig poolConfig;
 	
-	public ClientPoolConfigBuilder<B> withPool() {
-		return new ClientPoolConfigBuilder<>(this);
+	public ClientPoolConfigBuilder<ClientBuilder<B>> withPool() {
+		return new ClientPoolConfigBuilder<>(this,this);
 	}
 
-	@SuppressWarnings("unchecked")
-	public B poolConfig(PoolConfig poolConfig) {
+	public void poolConfig(PoolConfig poolConfig) {
 		this.poolConfig=poolConfig;
-		return (B) this;
 	}
 
 }

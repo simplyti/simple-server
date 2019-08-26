@@ -2,13 +2,15 @@ package com.simplyti.service.clients;
 
 import java.util.concurrent.TimeUnit;
 
-public class ClientPoolConfigBuilder<B extends ClientBuilder<B>> {
+public class ClientPoolConfigBuilder<B> {
 
-	private final ClientBuilder<B> builder;
+	private final B parent;
+	private final PoolConfigAware builder;
 	private Long maxIdle;
 	private Integer size;
 	
-	public ClientPoolConfigBuilder(ClientBuilder<B> builder) {
+	public ClientPoolConfigBuilder(B parent, PoolConfigAware builder) {
+		this.parent=parent;
 		this.builder=builder;
 	}
 
@@ -18,7 +20,8 @@ public class ClientPoolConfigBuilder<B extends ClientBuilder<B>> {
 	}
 
 	public B end() {
-		return builder.poolConfig(new PoolConfig(maxIdle==null?-1:maxIdle,size));
+		builder.poolConfig(new PoolConfig(maxIdle==null?-1:maxIdle,size));
+		return parent;
 	}
 
 	public ClientPoolConfigBuilder<B> size(int size) {

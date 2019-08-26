@@ -32,7 +32,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	
-	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
+	private static final InternalLogger log = InternalLoggerFactory.getInstance(GatewayRequestHandler.class);
 	
 	private final ServiceDiscovery serviceDiscovery;
 	private final InternalClient client;

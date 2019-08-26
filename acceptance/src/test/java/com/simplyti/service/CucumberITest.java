@@ -3,10 +3,9 @@ package com.simplyti.service;
 import java.io.IOException;
 import java.net.Socket;
 
+import org.awaitility.Awaitility;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
-
-import com.jayway.awaitility.Awaitility;
 
 import cucumber.api.CucumberOptions;
 import cucumber.api.SnippetType;

@@ -36,7 +36,7 @@ Scenario: I can use differend json module
 		| option	 	| value |
 		| withApi		| com.simplyti.service.APITest		|
 		| withApi		| com.simplyti.service.OtherAPITest	|
-		| withModule	| com.simplyti.service.serializer.json.JsoniterModule |
+		| withModule	| com.simplyti.service.steps.JsoniterModule |
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /hello" getting "#response"
 	Then I check that "#response" is equals to "Hello!"

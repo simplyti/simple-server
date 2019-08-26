@@ -16,7 +16,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public class DefaultObservable<T extends K8sResource> implements Observable<T> {
 	
-	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
+	private static final InternalLogger log = InternalLoggerFactory.getInstance(DefaultObservable.class);
 	
 	private final EventLoop executor;
 	private final List<Observer<T>> observers;

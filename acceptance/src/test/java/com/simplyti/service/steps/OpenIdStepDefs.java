@@ -2,14 +2,16 @@ package com.simplyti.service.steps;
 
 import java.security.Key;
 import java.security.SecureRandom;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
 
 import com.simplyti.service.DefaultService;
-import com.simplyti.service.Service;
-import com.simplyti.service.serializer.json.JsoniterModule;
+import com.simplyti.service.api.serializer.json.Json;
+import com.simplyti.service.builder.di.guice.GuiceService;
+import com.simplyti.service.serializer.json.DslJsonSerializer;
 
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.When;
@@ -36,7 +38,7 @@ public class OpenIdStepDefs {
 	
 	@Given("^a selfsigned certificate \"([^\"]*)\"$")
 	public void aSelfsignedCertificate(String key) throws Exception {
-		SelfSignedCertificate cert = Try.of(()->new SelfSignedCertificate("simplyti.com",new SecureRandom(),512)).get();
+		SelfSignedCertificate cert = Try.of(()->new SelfSignedCertificate("simplyti.com",new SecureRandom(),2048)).get();
         scenarioData.put(key, cert);
 	}
 	
@@ -52,18 +54,22 @@ public class OpenIdStepDefs {
 	
 	@Given("^a valid JWT token \"([^\"]*)\" signed with alg \"([^\"]*)\" with key \"([^\"]*)\"$")
 	public void aValidJWTTokenSignedWithAlgWithKey(String tokenKey, SignatureAlgorithm alg, String keyKey) throws Exception {
+		Json json = new DslJsonSerializer(Collections.emptySet());
 		String token = Jwts.builder()
 				  .setSubject("Pepe")
-				  .signWith(alg, (Key) scenarioData.get(keyKey))
+				  .signWith((Key) scenarioData.get(keyKey),alg)
+				  .serializeToJsonWith(json::serialize)
 				  .compact();
 		scenarioData.put(tokenKey, token);
 	}
 	
 	@Given("^an invalid JWT token \"([^\"]*)\" signed with alg \"([^\"]*)\"$")
 	public void aInvalidJWTTokenSignedWithAlg(String tokenKey, SignatureAlgorithm alg) throws Exception {
+		Json json = new DslJsonSerializer(Collections.emptySet());
 		String token = Jwts.builder()
 				  .setSubject("Pepe")
-				  .signWith(alg, MacProvider.generateKey())
+				  .signWith(MacProvider.generateKey(),alg)
+				  .serializeToJsonWith(json::serialize)
 				  .compact();
 		scenarioData.put(tokenKey, token);
 	}
@@ -84,11 +90,11 @@ public class OpenIdStepDefs {
 	@Given("^an openid provider listening in port (\\d+) with sign certificate \"([^\"]*)\" and token endpoint \"([^\"]*)\"$")
 	public void anOpenidProviderListeningInPortWithSignCertificateAndTokenEndpoint(int port, String keyKey,String tokenEndpoint) throws Exception {
 		SelfSignedCertificate key = (SelfSignedCertificate) scenarioData.get(keyKey);
-		Future<DefaultService> service = Service.builder()
+		Future<DefaultService> service = GuiceService.builder()
 			    .securedPort(port)
 			    .disableInsecurePort()
 			    .withModule(new JsoniterModule())
-			    .withModule(new FakeOpenIdApi(key,"/auth",tokenEndpoint,0,0))
+			    .withModule(new FakeOpenIdModule(key,"/auth",tokenEndpoint,0,0))
 			    	.build().start().await();
 		 services.add(service);
 	}
@@ -96,11 +102,11 @@ public class OpenIdStepDefs {
 	@Given("^an openid provider listening in port (\\d+) with sign certificate \"([^\"]*)\", authorization endpoint \"([^\"]*)\" and token endpoint \"([^\"]*)\"$")
 	public void anOpenidProviderListeningInPortWithSignCertificateAuthorizationEndpointTokenEndpoint(int port, String keyKey,String authEndpoint,String tokenEndpoint) throws Exception {
 		SelfSignedCertificate key = (SelfSignedCertificate) scenarioData.get(keyKey);
-		Future<DefaultService> service = Service.builder()
+		Future<DefaultService> service = GuiceService.builder()
 			    .securedPort(port)
 			    .disableInsecurePort()
 			    .withModule(new JsoniterModule())
-			    .withModule(new FakeOpenIdApi(key,authEndpoint,tokenEndpoint,0,0))
+			    .withModule(new FakeOpenIdModule(key,authEndpoint,tokenEndpoint,0,0))
 			    	.build().start().await();
 		 services.add(service);
 	}
@@ -108,11 +114,11 @@ public class OpenIdStepDefs {
 	@Given("^an openid provider listening in port (\\d+) with sign certificate \"([^\"]*)\", authorization endpoint \"([^\"]*)\" and well-known service with (\\d+)ms of delay$")
 	public void anOpenidProviderListeningInPortWithSignCertificateAuthorizationEndpointMsOfDelay(int port, String keyKey,String authEndpoint, int wellKnownDelay) throws Exception {
 		SelfSignedCertificate key = (SelfSignedCertificate) scenarioData.get(keyKey);
-		Future<DefaultService> service = Service.builder()
+		Future<DefaultService> service = GuiceService.builder()
 			    .securedPort(port)
 			    .disableInsecurePort()
 			    .withModule(new JsoniterModule())
-			    .withModule(new FakeOpenIdApi(key,authEndpoint,"/token",wellKnownDelay,0))
+			    .withModule(new FakeOpenIdModule(key,authEndpoint,"/token",wellKnownDelay,0))
 			    	.build().start().await();
 		 services.add(service);
 	}
@@ -120,11 +126,11 @@ public class OpenIdStepDefs {
 	@Given("^an openid provider listening in port (\\d+) with sign certificate \"([^\"]*)\", authorization endpoint \"([^\"]*)\", token endpoint \"([^\"]*)\" and jwks service with (\\d+)ms of delay$")
 	public void anOpenidProviderListeningInPortWithSignCertificateAuthorizationEndpointAndTokenEndpointWithMsOfDelay(int port, String keyKey,String authEndpoint,String tokenEndpoint, int jwksDelay) throws Exception {
 		SelfSignedCertificate key = (SelfSignedCertificate) scenarioData.get(keyKey);
-		Future<DefaultService> service = Service.builder()
+		Future<DefaultService> service = GuiceService.builder()
 			    .securedPort(port)
 			    .disableInsecurePort()
 			    .withModule(new JsoniterModule())
-			    .withModule(new FakeOpenIdApi(key,authEndpoint,tokenEndpoint,0,jwksDelay))
+			    .withModule(new FakeOpenIdModule(key,authEndpoint,tokenEndpoint,0,jwksDelay))
 			    	.build().start().await();
 		 services.add(service);
 	}

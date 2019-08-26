@@ -22,8 +22,9 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.awaitility.Awaitility;
+
 import com.google.common.base.Splitter;
-import com.jayway.awaitility.Awaitility;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.any.Any;
 import com.simplyti.service.clients.Endpoint;

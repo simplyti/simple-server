@@ -10,7 +10,7 @@ import com.simplyti.service.ServerConfig;
 import com.simplyti.service.StartStopMonitor;
 import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.simplyti.service.api.filter.HttpResponseFilter;
-import com.simplyti.service.channel.handler.ApiExceptionHandler;
+import com.simplyti.service.channel.handler.ChannelExceptionHandler;
 import com.simplyti.service.channel.handler.ClientChannelHandler;
 import com.simplyti.service.channel.handler.inits.HandlerInit;
 import com.simplyti.service.ssl.SslHandlerFactory;
@@ -32,7 +32,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class DefaultServiceChannelInitializer extends ChannelInboundHandlerAdapter implements ServiceChannelInitializer  {
 
-	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
+	private static final InternalLogger log = InternalLoggerFactory.getInstance(DefaultServiceChannelInitializer.class);
 	
 	private final ClientChannelGroup clientChannelGroup;
 	
@@ -42,7 +42,7 @@ public class DefaultServiceChannelInitializer extends ChannelInboundHandlerAdapt
 	
 	private final StartStopMonitor startStopMonitor;
 	
-	private final ApiExceptionHandler apiExceptionHandler;
+	private final ChannelExceptionHandler channelExceptionHandler;
 	
 	private final Set<HandlerInit> handlers;
 	
@@ -83,7 +83,7 @@ public class DefaultServiceChannelInitializer extends ChannelInboundHandlerAdapt
 		}
 		
 		pipeline.addLast(ClientChannelHandler.NAME, new ClientChannelHandler(startStopMonitor,handlers,requestFilters,responseFilters));
-		pipeline.addLast(apiExceptionHandler);
+		pipeline.addLast(channelExceptionHandler);
 	}
 
 }

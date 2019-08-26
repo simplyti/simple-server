@@ -1,5 +1,6 @@
 package com.simplyti.service.security.oidc.filter;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -9,6 +10,8 @@ import javax.ws.rs.ServiceUnavailableException;
 
 import com.simplyti.service.api.filter.Filter;
 import com.simplyti.service.api.filter.FilterContext;
+import com.simplyti.service.api.serializer.json.Json;
+import com.simplyti.service.api.serializer.json.TypeLiteral;
 import com.simplyti.service.security.oidc.callback.OpenIdApi;
 import com.simplyti.service.security.oidc.config.auto.AutodiscoveryOpenIdIncompleteException;
 import com.simplyti.service.security.oidc.handler.OpenIdHandler;
@@ -17,7 +20,7 @@ import com.simplyti.service.security.oidc.handler.RedirectableOpenIdHandler;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureException;
+import io.jsonwebtoken.security.SignatureException;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
@@ -31,10 +34,13 @@ import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 public abstract class AbstractOpenIdFilter<T> implements Filter<T>{
 	
 	private static final String BEARER_PREFIX = "Bearer";
+	private static final TypeLiteral<Map<String, ?>> CLAIMS = new TypeLiteral<Map<String,?>>(){};
 	
 	private final OpenIdHandler oidcConfig;
+	private final Json json;
 	
-	public AbstractOpenIdFilter(OpenIdHandler oidcConfig) {
+	public AbstractOpenIdFilter(Json json, OpenIdHandler oidcConfig) {
+		this.json=json;
 		this.oidcConfig=oidcConfig;
 	}
 	
@@ -72,7 +78,9 @@ public abstract class AbstractOpenIdFilter<T> implements Filter<T>{
 
 	private void checkToken(FilterContext<?> context, HttpRequest request, String token) {
 		try{
-			Jwts.parser().setSigningKeyResolver(oidcConfig).parseClaimsJws(token);
+			Jwts.parser().setSigningKeyResolver(oidcConfig)
+				.deserializeJsonWith(data->json.deserialize(data, CLAIMS))
+				.parseClaimsJws(token);
 			request.headers().set(HttpHeaderNames.AUTHORIZATION,BEARER_PREFIX+" "+token);
 			context.done();
 		} catch (SignatureException| MalformedJwtException e) {

@@ -58,7 +58,6 @@ public class FileServe {
         HttpUtil.setContentLength(response, fileLength);
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, mimeTypesMap.getContentType(file.getPath()));
         ZonedDateTime now = LocalDateTime.now().atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneId.of("GMT"));
-		response.headers().set(HttpHeaderNames.DATE, dateFormatter.format(now));
         response.headers().set(HttpHeaderNames.EXPIRES, dateFormatter.format(now.plusSeconds(HTTP_CACHE_SECONDS)));
         response.headers().set(HttpHeaderNames.CACHE_CONTROL, "private, max-age=" + HTTP_CACHE_SECONDS);
         ZonedDateTime lastModified = ZonedDateTime.ofInstant(Instant.ofEpochMilli(file.lastModified()), ZoneId.of("GMT"));

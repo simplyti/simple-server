@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>com.simplyti.cloud</groupId>
 		<artifactId>simple-server</artifactId>
-		<version>0.0.3-SNAPSHOT</version>
+		<version>0.0.4-SNAPSHOT</version>
 	</parent>
 
 	<properties>
@@ -23,7 +23,7 @@
 		
 		<dependency>
 			<groupId>com.simplyti.cloud</groupId>
-			<artifactId>simple-server-core</artifactId>
+			<artifactId>simple-server-di-guice</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		

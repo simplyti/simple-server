@@ -1,6 +1,5 @@
 package com.simplyti.service.steps;
 
-import static com.jayway.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -25,10 +24,10 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import org.awaitility.Awaitility;
 import org.hamcrest.Matchers;
 
 import com.google.common.collect.Iterables;
-import com.jayway.awaitility.Awaitility;
 import com.simplyti.service.clients.k8s.KubeClient;
 import com.simplyti.service.clients.k8s.common.domain.Status;
 import com.simplyti.service.clients.k8s.common.list.KubeList;
@@ -100,7 +99,7 @@ public class K8sClientStepDefs {
 			List<String> namespaces = ((List<String>)scenarioData.get(CREATED_NAMESPACES));
 			namespaces.forEach(kubeClient.namespaces()::delete);
 			
-			await().pollInterval(1, TimeUnit.SECONDS).atMost(2,TimeUnit.MINUTES)
+			Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(2,TimeUnit.MINUTES)
 				.until(()->kubeClient.namespaces().list().await().getNow().items().stream()
 						.noneMatch(namespace->namespaces.contains(namespace.metadata().name())));
 		}

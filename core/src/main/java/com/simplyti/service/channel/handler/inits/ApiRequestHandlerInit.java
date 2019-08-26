@@ -4,16 +4,17 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Map.Entry;
+import java.util.AbstractMap.SimpleImmutableEntry;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
 
-import com.google.common.collect.Maps;
 import com.simplyti.service.api.ApiMacher;
 import com.simplyti.service.api.ApiResolver;
 import com.simplyti.service.channel.handler.ApiInvocationDecoder;
 import com.simplyti.service.channel.handler.ApiInvocationHandler;
 import com.simplyti.service.channel.handler.ApiResponseEncoder;
+import com.simplyti.service.channel.handler.ServerHeadersHandler;
 import com.simplyti.service.channel.handler.StreamedApiInvocationHandler;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.sync.SyncTaskSubmitter;
@@ -37,20 +38,24 @@ public class ApiRequestHandlerInit extends HandlerInit {
 	private final ExceptionHandler exceptionHandler;
 	private final SyncTaskSubmitter syncTaskSubmitter;
 	
+	private final ServerHeadersHandler serverHeadersHandler;
+	
 	private Deque<Entry<String, ChannelHandler>> handlers(ApiMacher apiMacher) {
 		if(apiMacher.operation().isStreamed()) {
 			Deque<Entry<String, ChannelHandler>> handlers = new LinkedList<>();
-			handlers.add(Maps.immutableEntry("api-encoder",apiResponseEncoder));
-			handlers.add(Maps.immutableEntry("chunk-write", new ChunkedWriteHandler()));
-			handlers.add(Maps.immutableEntry("api-decoder",new StreamedApiInvocationHandler(apiMacher,exceptionHandler,syncTaskSubmitter)));
+			handlers.add(new SimpleImmutableEntry<>("server-headers",serverHeadersHandler));
+			handlers.add(new SimpleImmutableEntry<>("api-encoder",apiResponseEncoder));
+			handlers.add(new SimpleImmutableEntry<>("chunk-write", new ChunkedWriteHandler()));
+			handlers.add(new SimpleImmutableEntry<>("api-handler",new StreamedApiInvocationHandler(apiMacher,exceptionHandler,syncTaskSubmitter)));
 			return handlers;
 		}else {
 			Deque<Entry<String, ChannelHandler>> handlers = new LinkedList<>();
-			handlers.add(Maps.immutableEntry("aggregator", new HttpObjectAggregator(apiMacher.operation().maxBodyLength())));
-			handlers.add(Maps.immutableEntry("api-encoder",apiResponseEncoder));
-			handlers.add(Maps.immutableEntry("api-decoder",new ApiInvocationDecoder(apiMacher)));
-			handlers.add(Maps.immutableEntry("chunk-write", new ChunkedWriteHandler()));
-			handlers.add(Maps.immutableEntry("api-handler",apiInvocationHandler));
+			handlers.add(new SimpleImmutableEntry<>("aggregator", new HttpObjectAggregator(apiMacher.operation().maxBodyLength())));
+			handlers.add(new SimpleImmutableEntry<>("server-headers",serverHeadersHandler));
+			handlers.add(new SimpleImmutableEntry<>("api-encoder",apiResponseEncoder));
+			handlers.add(new SimpleImmutableEntry<>("api-decoder",new ApiInvocationDecoder(apiMacher)));
+			handlers.add(new SimpleImmutableEntry<>("chunk-write", new ChunkedWriteHandler()));
+			handlers.add(new SimpleImmutableEntry<>("api-handler",apiInvocationHandler));
 			return handlers;
 		}
 	}

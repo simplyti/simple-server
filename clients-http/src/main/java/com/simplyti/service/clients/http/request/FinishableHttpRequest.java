@@ -5,12 +5,12 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.simplyti.service.clients.http.sse.ServerEvent;
+import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpObject;
-import io.netty.util.concurrent.Future;
 
 public interface FinishableHttpRequest {
 

@@ -24,7 +24,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public class AutodiscoveredOpenIdHandler extends DefaultFullOpenidHandler implements FullOpenidHandler{
 	
-	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
+	private static final InternalLogger log = InternalLoggerFactory.getInstance(AutodiscoveredOpenIdHandler.class);
 	
 	private OpenIdWellKnownConfiguration oidc;
 	private JsonWebKeys keys;

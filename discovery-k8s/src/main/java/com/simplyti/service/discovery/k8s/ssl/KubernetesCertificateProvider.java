@@ -22,7 +22,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public class KubernetesCertificateProvider implements ServerCertificateProvider{
 	
-	private final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
+	private static final InternalLogger log = InternalLoggerFactory.getInstance(KubernetesCertificateProvider.class);
 	
 	public final Map<String,SecretName> hostSecret = new ConcurrentHashMap<>();
 	public final Map<String,ServerCertificate> secrets = new ConcurrentHashMap<>();

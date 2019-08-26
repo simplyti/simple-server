@@ -12,6 +12,7 @@ import com.simplyti.service.clients.channel.monitor.MonitoredHandler;
 import com.simplyti.service.clients.init.ClientRequestChannelInitializer;
 import com.simplyti.service.clients.trace.RequestTracerHandler;
 import com.simplyti.service.commons.netty.Promises;
+import com.simplyti.util.concurrent.DefaultFuture;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -41,11 +42,6 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler, Chan
 
 	private PoolConfig poolConfig;
 	
-	public InternalClient(EventLoopGroup eventLoopGroup, ChannelPoolHandler poolHandler) {
-		this(eventLoopGroup,poolHandler,null);
-	}
-
-
 	public InternalClient(EventLoopGroup eventLoopGroup, ChannelPoolHandler poolHandler, PoolConfig poolConfig) {
 		this.eventLoopGroup = eventLoopGroup;
 		EventLoop channelGroupsEventLoop = eventLoopGroup.next();
@@ -74,21 +70,22 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler, Chan
 	@Override
 	public Future<Boolean> isHealthy(Channel ch) {
 		EventLoop loop = ch.eventLoop();
-		if(ch.isActive()) {
-			final Instant lastUsage = ch.attr(LAST_USAGE).getAndSet(Instant.now());
-			if(poolConfig==null || poolConfig.maxIdle() <0 || lastUsage == null) {
-				return loop.newSucceededFuture(Boolean.TRUE);
-			}else {
-				long iddleTime = ChronoUnit.SECONDS.between(lastUsage, Instant.now());
-				if(iddleTime<=this.poolConfig.maxIdle() ) {
-					return loop.newSucceededFuture(Boolean.TRUE);
-				}else {
-					return loop.newSucceededFuture(Boolean.FALSE);
-				}
-			}
-		}else {
+		if(!ch.isActive()) {
 			return loop.newSucceededFuture(Boolean.FALSE);
 		}
+		
+		final Instant lastUsage = ch.attr(LAST_USAGE).getAndSet(Instant.now());
+		if(poolConfig==null || poolConfig.maxIdle() <0 || lastUsage == null) {
+			return loop.newSucceededFuture(Boolean.TRUE);
+		}
+		
+		long iddleTime = ChronoUnit.SECONDS.between(lastUsage, Instant.now());
+		if(iddleTime>this.poolConfig.maxIdle() ) {
+			return loop.newSucceededFuture(Boolean.FALSE);
+			
+		}
+		
+		return loop.newSucceededFuture(Boolean.TRUE);
 	}
 
 	public void created(Channel ch) {
@@ -108,19 +105,20 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler, Chan
 		return allChannels.size();
 	}
 
-	public <T> Future<T> channel(ClientRequestChannelInitializer<T> initializer, Object message, ClientConfig config) {
+	public <T> com.simplyti.util.concurrent.Future<T> channel(ClientRequestChannelInitializer<T> initializer, Object message, ClientConfig config) {
 		EventLoop eventLoop = eventLoopGroup.next();
 		Promise<T> resultPromise = eventLoop.newPromise();
-		return channel(initializer, message,config,resultPromise);
+		return channel(initializer, message,config,eventLoop,resultPromise);
 	}
 
-	public <T> Future<T> channel(ClientRequestChannelInitializer<T> initializer, Object message, ClientConfig config, Promise<T> resultPromise) {
+	public <T> com.simplyti.util.concurrent.Future<T> channel(ClientRequestChannelInitializer<T> initializer, Object message, ClientConfig config, EventLoop eventLoop, Promise<T> resultPromise) {
 		Future<ClientRequestChannel<T>> clientFuture = this.channel(config,initializer, resultPromise);
+		DefaultFuture<T> future = new DefaultFuture<>(resultPromise,eventLoop);
 		if(clientFuture.isDone()) {
 			if(clientFuture.isSuccess()) {
 				clientFuture.getNow().writeAndFlush(message).addListener(write->handleWriteFuture(clientFuture.getNow(),write,config.timeoutMillis()));
 			}else {
-				return resultPromise.setFailure(clientFuture.cause());
+				resultPromise.setFailure(clientFuture.cause());
 			}
 		}else {
 			clientFuture.addListener(f->{
@@ -131,10 +129,10 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler, Chan
 				}
 			});
 		}
-		return resultPromise;
+		return future;
 	}
 
-	public void handleWriteFuture(ClientRequestChannel<?> channel, Future<?> future, long timeoutMillis) {
+	public <T> void handleWriteFuture(ClientRequestChannel<?> channel, Future<?> future, long timeoutMillis) {
 		if (!future.isSuccess()) {
 			if(channel.eventLoop().inEventLoop()) {
 				channel.setFailure(future.cause());

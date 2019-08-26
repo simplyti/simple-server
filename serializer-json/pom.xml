@@ -8,17 +8,13 @@
 	<parent>
 		<groupId>com.simplyti.cloud</groupId>
 		<artifactId>simple-server</artifactId>
-		<version>0.0.3-SNAPSHOT</version>
+		<version>0.0.4-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-buffer</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.google.inject</groupId>
-			<artifactId>guice</artifactId>
 		</dependency>
 	</dependencies>
 </project>

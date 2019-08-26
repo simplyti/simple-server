@@ -32,8 +32,8 @@ public class FileServeHandler extends SimpleChannelInboundHandler<HttpRequest> {
 	
 	@Inject
 	public FileServeHandler(ServerConfig config,FileServe fileServer) {
-		this.pattern=config.fileServe().pattern();
-		this.directoryResolver=config.fileServe().directoryResolver();
+		this.pattern=config.fileServer().pattern();
+		this.directoryResolver=config.fileServer().directoryResolver();
 		this.fileServer=fileServer;
 	}
 

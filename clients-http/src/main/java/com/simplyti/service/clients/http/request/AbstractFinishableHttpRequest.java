@@ -13,6 +13,7 @@ import com.simplyti.service.clients.http.handler.HttpResponseHandler;
 import com.simplyti.service.clients.http.handler.ServerEventResponseHandler;
 import com.simplyti.service.clients.http.handler.StreamResponseHandler;
 import com.simplyti.service.clients.http.sse.ServerEvent;
+import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
@@ -22,7 +23,6 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.QueryStringEncoder;
-import io.netty.util.concurrent.Future;
 
 public abstract class AbstractFinishableHttpRequest implements FinishableHttpRequest {
 	

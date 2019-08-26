@@ -294,7 +294,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 
 	private Set<HttpRequestFilter> securiFilters(Ingress ingress) {
 		if(annIsEquals(ingress,AUTH_TYPE,"oidc") && containsAnnotation(ingress,AUTH_REALM) && containsAnnotation(ingress,AUTH_SECRET)) {
-			return Collections.singleton(new OpenIdRequestFilter(new K8sAutodiscoveredOpenIdHandler(http,
+			return Collections.singleton(new OpenIdRequestFilter(json,new K8sAutodiscoveredOpenIdHandler(http,
 					openIdClientSecrets,ingress.metadata().namespace(),
 					ingress.metadata().annotations().get(AUTH_SECRET),
 						new K8sAutodiscoveredOpenIdProviderConfig(ingress.metadata().annotations().get(AUTH_REALM),openIdConfig.callbackUri(),openIdConfig.cipherKey()),json)));
