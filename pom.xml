@@ -421,8 +421,6 @@
 		<module>clients</module>
 		<module>clients-http</module>
 		<module>clients-k8s</module>
-		<module>clients-smtp</module>
-		<module>clients-postgres</module>
 		<module>gateway</module>
 		<module>gateway-guice</module>
 		<module>gateway-dagger</module>
