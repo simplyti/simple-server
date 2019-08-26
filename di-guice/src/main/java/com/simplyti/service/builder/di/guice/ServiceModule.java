@@ -22,7 +22,6 @@ import com.simplyti.service.ServerConfig;
 import com.simplyti.service.StartStopMonitor;
 import com.simplyti.service.api.ApiResolver;
 import com.simplyti.service.api.DefaultApiResolver;
-import com.simplyti.service.api.api.ApiApi;
 import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.api.builder.di.InstanceProvider;
 import com.simplyti.service.api.filter.HttpRequestFilter;
@@ -171,7 +170,7 @@ public class ServiceModule extends AbstractModule {
 
 	private void bindApis(Multibinder<ApiProvider> apiBinder) {
 		apiProviders.forEach(provider->apiBinder.addBinding().toInstance(provider));
-		Stream.concat(apiClasses.stream(), Stream.of(HealthApi.class,ApiApi.class)).forEach(apiClass->apiBinder.addBinding().to(apiClass).in(Singleton.class));
+		Stream.concat(apiClasses.stream(), Stream.of(HealthApi.class)).forEach(apiClass->apiBinder.addBinding().to(apiClass).in(Singleton.class));
 	}
 
 }

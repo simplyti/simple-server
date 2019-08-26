@@ -2,12 +2,10 @@ package com.simplyti.service.builder.di.dagger;
 
 import java.util.Set;
 
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import com.simplyti.service.api.ApiResolver;
 import com.simplyti.service.api.DefaultApiResolver;
-import com.simplyti.service.api.api.ApiApi;
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.api.builder.di.InstanceProvider;
@@ -64,12 +62,6 @@ public class ApiServer {
 		return new HealthApi();
 	}
 	
-	@Provides
-	@IntoSet
-	public ApiProvider api(Provider<ApiResolver> resolver) {
-		return new ApiApi(resolver);
-	}
-
 	@Provides
 	@Singleton
 	public ApiBuilder apiBuilder(InstanceProvider instanceProvider, SyncTaskSubmitter syncTaskSubmitter) {
