@@ -42,7 +42,7 @@ public class FileServer {
 	public Set<HandlerInit> apiRequestHandlerInit( ServerHeadersHandler serverHeadersHandler,
 			ServerConfig config,FileServe fileServer) {
 		if(config.fileServer()!=null) {
-			return Collections.singleton(new FileServerHandlerInit(new FileServeHandler(config, fileServer),serverHeadersHandler));
+			return Collections.singleton(new FileServerHandlerInit(new FileServeHandler(config, fileServer),serverHeadersHandler,config));
 		}else {
 			return Collections.emptySet();
 		}

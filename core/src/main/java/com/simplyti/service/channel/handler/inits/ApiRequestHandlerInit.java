@@ -1,10 +1,6 @@
 package com.simplyti.service.channel.handler.inits;
 
-import java.util.Deque;
-import java.util.LinkedList;
 import java.util.Optional;
-import java.util.Map.Entry;
-import java.util.AbstractMap.SimpleImmutableEntry;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
@@ -19,49 +15,58 @@ import com.simplyti.service.channel.handler.StreamedApiInvocationHandler;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.sync.SyncTaskSubmitter;
 
-import io.netty.channel.ChannelHandler;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.stream.ChunkedWriteHandler;
-import lombok.RequiredArgsConstructor;
 
 @Priority(1)
-@RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class ApiRequestHandlerInit extends HandlerInit {
 	
 	private final ApiResolver managerApiResolver;
 	
-	private final ApiResponseEncoder apiResponseEncoder;
-	private final ApiInvocationHandler apiInvocationHandler;
 	
 	private final ExceptionHandler exceptionHandler;
 	private final SyncTaskSubmitter syncTaskSubmitter;
 	
-	private final ServerHeadersHandler serverHeadersHandler;
+	private final ChannelHandlerEntry apiResponseEncoder;
+	private final ChannelHandlerEntry serverHeadersHandler;
+	private final ChannelHandlerEntry apiInvocationHandler;
 	
-	private Deque<Entry<String, ChannelHandler>> handlers(ApiMacher apiMacher) {
+	@Inject
+	public ApiRequestHandlerInit(ApiResolver managerApiResolver,ApiResponseEncoder apiResponseEncoder,
+			ApiInvocationHandler apiInvocationHandler, ExceptionHandler exceptionHandler,
+			SyncTaskSubmitter syncTaskSubmitter, ServerHeadersHandler serverHeadersHandler) {
+		this.managerApiResolver=managerApiResolver;
+		this.exceptionHandler=exceptionHandler;
+		this.syncTaskSubmitter=syncTaskSubmitter;
+		this.serverHeadersHandler=new ChannelHandlerEntry("server-headers",serverHeadersHandler);
+		this.apiResponseEncoder=new ChannelHandlerEntry("api-encoder",apiResponseEncoder);
+		this.apiInvocationHandler=new ChannelHandlerEntry("api-handler",apiInvocationHandler);
+	}
+	
+	private ChannelHandlerEntry[] handlers(ApiMacher apiMacher) {
 		if(apiMacher.operation().isStreamed()) {
-			Deque<Entry<String, ChannelHandler>> handlers = new LinkedList<>();
-			handlers.add(new SimpleImmutableEntry<>("server-headers",serverHeadersHandler));
-			handlers.add(new SimpleImmutableEntry<>("api-encoder",apiResponseEncoder));
-			handlers.add(new SimpleImmutableEntry<>("chunk-write", new ChunkedWriteHandler()));
-			handlers.add(new SimpleImmutableEntry<>("api-handler",new StreamedApiInvocationHandler(apiMacher,exceptionHandler,syncTaskSubmitter)));
-			return handlers;
+			return new ChannelHandlerEntry[] {
+					this.serverHeadersHandler,
+					apiResponseEncoder,
+					new ChannelHandlerEntry("chunk-write", new ChunkedWriteHandler()),
+					new ChannelHandlerEntry("api-handler",new StreamedApiInvocationHandler(apiMacher,exceptionHandler,syncTaskSubmitter))
+			};
 		}else {
-			Deque<Entry<String, ChannelHandler>> handlers = new LinkedList<>();
-			handlers.add(new SimpleImmutableEntry<>("aggregator", new HttpObjectAggregator(apiMacher.operation().maxBodyLength())));
-			handlers.add(new SimpleImmutableEntry<>("server-headers",serverHeadersHandler));
-			handlers.add(new SimpleImmutableEntry<>("api-encoder",apiResponseEncoder));
-			handlers.add(new SimpleImmutableEntry<>("api-decoder",new ApiInvocationDecoder(apiMacher)));
-			handlers.add(new SimpleImmutableEntry<>("chunk-write", new ChunkedWriteHandler()));
-			handlers.add(new SimpleImmutableEntry<>("api-handler",apiInvocationHandler));
-			return handlers;
+			return new ChannelHandlerEntry[] {
+					new ChannelHandlerEntry("aggregator", new HttpObjectAggregator(apiMacher.operation().maxBodyLength())),
+					serverHeadersHandler,
+					apiResponseEncoder,
+					new ChannelHandlerEntry("api-decoder",new ApiInvocationDecoder(apiMacher)),
+					new ChannelHandlerEntry("chunk-write", new ChunkedWriteHandler()),
+					apiInvocationHandler
+			};
 		}
 	}
 
 	@Override
-	protected Deque<Entry<String, ChannelHandler>> canHandle0(HttpRequest request) {
+	protected ChannelHandlerEntry[] canHandle0(HttpRequest request) {
 		QueryStringDecoder queryStringDecoder = new QueryStringDecoder(request.uri());
 		Optional<ApiMacher> operation = managerApiResolver.getOperationFor(request.method(),queryStringDecoder);
 		if(operation.isPresent()) {

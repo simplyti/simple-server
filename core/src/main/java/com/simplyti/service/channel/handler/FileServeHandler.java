@@ -52,8 +52,4 @@ public class FileServeHandler extends SimpleChannelInboundHandler<HttpRequest> {
 		fileServer.serve(path, ctx.channel(), request);
 	}
 
-	public boolean matchRequest(HttpRequest request) {
-		return pattern.matcher(request.uri()).matches();
-	}
-
 }
