@@ -27,7 +27,6 @@ public class DefaultBackendHandlerInit extends HandlerInit{
 	
 	private ChannelHandlerEntry[] handlers(DefaultBackendRequestHandler handler) {
 		return new ChannelHandlerEntry[]{ 
-				new ChannelHandlerEntry("aggregator", new HttpObjectAggregator(10000000)),
 				new ChannelHandlerEntry("default-notfound", handler)};
 	}
 
