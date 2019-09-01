@@ -7,6 +7,8 @@ import com.google.common.collect.Sets;
 import com.simplyti.service.clients.Endpoint;
 
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.util.concurrent.EventExecutor;
+import io.netty.util.concurrent.Future;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
@@ -17,13 +19,13 @@ public class DefaultServiceDiscovery implements ServiceDiscovery{
 	private final Set<BackendService> services = Sets.newTreeSet();
 
 	@Override
-	public BackendServiceMatcher get(String host, HttpMethod method, String path) {
-		return services.stream()
+	public Future<BackendServiceMatcher> get(String host, HttpMethod method, String path,EventExecutor eventLoop) {
+		return eventLoop.newSucceededFuture(services.stream()
 			.filter(entry -> entry.method() == null || entry.method().equals(method))
 			.filter(entry -> entry.host()== null || ( host!=null && entry.host().equals(host)))
 			.map(entry -> new DefaultBackendServiceMatcher(entry,path))
 			.filter(entry -> entry.matches())
-			.findFirst().orElse(null);
+			.findFirst().orElse(null));
 	}
 	
 	protected void clear(String host, HttpMethod method, String path) {

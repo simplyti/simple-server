@@ -56,39 +56,57 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
-		final Object rewritedRequest;
 		if (msg instanceof HttpRequest) {
 			HttpRequest request = (HttpRequest) msg;
-			BackendServiceMatcher service = serviceDiscovery.get(request.headers().get(HttpHeaderNames.HOST),request.method(), request.uri());
-			if (service == null) {
-				ctx.fireExceptionCaught(new NotFoundException());
-				this.ignoreNextMessages=true;
-				return;
+			Future<BackendServiceMatcher> backendFuture = serviceDiscovery.get(request.headers().get(HttpHeaderNames.HOST),request.method(), request.uri(),ctx.executor());
+			if(backendFuture.isDone()) {
+				handleBackendMatch(backendFuture,ctx,request);
 			}else {
-				if(service.get().tlsEnabled() && !frontSsl) {
-					if(handleSslRedirect(ctx,request,service.get())) {
-						this.ignoreNextMessages=true;
-						return;
-					}
-				}
-				rewritedRequest = service.rewrite(request);
-				if(service.get().filters().isEmpty()) {
-					serviceProceed(ctx,service.get(),HttpUtil.is100ContinueExpected(request));
-				}else {
-					filterRequest(ctx,service.get(),request);
-				}
+				backendFuture.addListener(f->{
+					handleBackendMatch(backendFuture,ctx,request);
+				});
 			}
-		}else {
-			rewritedRequest = msg;
 		}
 		
 		if (backendChannel != null) {
-			backendChannel.writeAndFlush(rewritedRequest).addListener(f->handleWriteFuture(ctx,f));
+			backendChannel.writeAndFlush(msg).addListener(f->handleWriteFuture(ctx,f));
 		} else if(!ignoreNextMessages){
-			pendingMessages.pending(ctx.executor().newPromise(), rewritedRequest);
+			pendingMessages.pending(ctx.executor().newPromise(), msg);
 		}
 	}
 	
+	private void handleBackendMatch(Future<BackendServiceMatcher> backendFuture, ChannelHandlerContext ctx, HttpRequest request) {
+		if(!backendFuture.isSuccess()) {
+			ctx.fireExceptionCaught(backendFuture.cause());
+			pendingMessages.fail(backendFuture.cause());
+			this.ignoreNextMessages=true;
+			return;
+		}
+		
+		BackendServiceMatcher service = backendFuture.getNow();
+		
+		if (service == null) {
+			Throwable cause = new NotFoundException();
+			ctx.fireExceptionCaught(cause);
+			pendingMessages.fail(cause);
+			this.ignoreNextMessages=true;
+			return;
+		}else {
+			if(service.get().tlsEnabled() && !frontSsl) {
+				if(handleSslRedirect(ctx,request,service.get())) {
+					pendingMessages.fail(new RuntimeException("Redirected"));
+					this.ignoreNextMessages=true;
+					return;
+				}
+			}
+			if(service.get().filters().isEmpty()) {
+				serviceProceed(ctx,service,HttpUtil.is100ContinueExpected(request));
+			}else {
+				filterRequest(ctx,service,request);
+			}
+		}
+	}
+
 	private boolean handleSslRedirect(ChannelHandlerContext ctx, HttpRequest request,BackendService service) {
 		FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.PERMANENT_REDIRECT,
 				Unpooled.EMPTY_BUFFER);
@@ -104,8 +122,8 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 		}
 	}
 	
-	private void filterRequest(ChannelHandlerContext ctx, BackendService service, HttpRequest request) {
-		Future<Boolean> futureHandled = FilterChain.of(service.filters(),ctx,request).execute();
+	private void filterRequest(ChannelHandlerContext ctx, BackendServiceMatcher service, HttpRequest request) {
+		Future<Boolean> futureHandled = FilterChain.of(service.get().filters(),ctx,request).execute();
 		futureHandled.addListener(result->{
 			if(ctx.executor().inEventLoop()) {
 				handleFilterResult(ctx,futureHandled,service,HttpUtil.is100ContinueExpected(request));
@@ -115,7 +133,7 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 		});
 	}
 
-	private void handleFilterResult(ChannelHandlerContext ctx, Future<Boolean> futureHandled, BackendService service, boolean isContinueExpected) {
+	private void handleFilterResult(ChannelHandlerContext ctx, Future<Boolean> futureHandled, BackendServiceMatcher service, boolean isContinueExpected) {
 		if(futureHandled.isSuccess()) {
 			if(futureHandled.getNow()) {
 				pendingMessages.fail(new RuntimeException("Handled by filter"));
@@ -130,40 +148,40 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 		}
 	}
 
-	private void serviceProceed(ChannelHandlerContext ctx, BackendService service,boolean isContinueExpected) {
-		Endpoint endpoint = service.loadBalander().next();
+	private void serviceProceed(ChannelHandlerContext ctx, BackendServiceMatcher service,boolean isContinueExpected) {
+		Endpoint endpoint = service.get().loadBalander().next();
 		if (endpoint == null) {
 			ctx.fireExceptionCaught(new ServiceUnavailableException());
 			pendingMessages.fail(new RuntimeException("No endpoints"));
 			this.ignoreNextMessages=true;
 		} else {
-			connectToEndpoint(ctx, endpoint,isContinueExpected);
+			connectToEndpoint(ctx, endpoint,isContinueExpected,service);
 		}
 	}
 
-	private void connectToEndpoint(ChannelHandlerContext ctx, Endpoint endpoint, boolean isContinueExpected) {
+	private void connectToEndpoint(ChannelHandlerContext ctx, Endpoint endpoint, boolean isContinueExpected, BackendServiceMatcher serviceMatch) {
 		ChannelPool pool = client.pool(endpoint);
 		Future<Channel> channelFuture = pool.acquire();
 		if (channelFuture.isDone()) {
-			handleBackendChannelFuture(ctx, channelFuture, pool, endpoint, isContinueExpected);
+			handleBackendChannelFuture(ctx, channelFuture, pool, endpoint, isContinueExpected, serviceMatch);
 		} else {
-			channelFuture.addListener(f -> handleBackendChannelFuture(ctx, channelFuture, pool, endpoint, isContinueExpected));
+			channelFuture.addListener(f -> handleBackendChannelFuture(ctx, channelFuture, pool, endpoint, isContinueExpected, serviceMatch));
 		}
 	}
 	
 	private void handleBackendChannelFuture(ChannelHandlerContext ctx, Future<Channel> backendChannelFuture,
-			ChannelPool pool, Endpoint endpoint, boolean isContinueExpected) {
+			ChannelPool pool, Endpoint endpoint, boolean isContinueExpected, BackendServiceMatcher serviceMatch) {
 		if(ctx.executor().inEventLoop()) {
-			handleBackendChannelFuture0(ctx,backendChannelFuture,pool,endpoint, isContinueExpected);
+			handleBackendChannelFuture0(ctx,backendChannelFuture,pool,endpoint, isContinueExpected, serviceMatch);
 		}else {
-			ctx.executor().execute(()->handleBackendChannelFuture0(ctx,backendChannelFuture,pool,endpoint,isContinueExpected));
+			ctx.executor().execute(()->handleBackendChannelFuture0(ctx,backendChannelFuture,pool,endpoint,isContinueExpected, serviceMatch));
 		}
 	}
 	
 	private void handleBackendChannelFuture0(ChannelHandlerContext ctx, Future<Channel> backendChannelFuture,
-			ChannelPool pool, Endpoint endpoint, boolean isContinueExpected) {
+			ChannelPool pool, Endpoint endpoint, boolean isContinueExpected, BackendServiceMatcher serviceMatch) {
 		if (backendChannelFuture.isSuccess()) {
-			backendChannelFuture.getNow().pipeline().addLast(new BackendProxyHandler(pool, ctx.channel(),endpoint,isContinueExpected,frontSsl));
+			backendChannelFuture.getNow().pipeline().addLast(new BackendProxyHandler(pool, ctx.channel(),endpoint,isContinueExpected,frontSsl,serviceMatch));
 			this.backendChannel=backendChannelFuture.getNow();
 			pendingMessages.write(backendChannel).addListener(f->handleWriteFuture(ctx, f));
 		}else {

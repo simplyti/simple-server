@@ -3,6 +3,7 @@ package com.simplyti.service.gateway.handler;
 import java.net.InetSocketAddress;
 
 import com.simplyti.service.clients.Endpoint;
+import com.simplyti.service.gateway.BackendServiceMatcher;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
@@ -26,15 +27,18 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 	private final ChannelPool backendChannelPool;
 	private final boolean frontSsl;
 	private final boolean isContinueExpected;
+	private final BackendServiceMatcher serviceMatch;
 	
 	private boolean upgrading;
 	private boolean isContinuing;
 	
-	public BackendProxyHandler(ChannelPool backendChannelPool, Channel frontendChannel, Endpoint endpoint, boolean isContinueExpected, boolean frontSsl) {
+	
+	public BackendProxyHandler(ChannelPool backendChannelPool, Channel frontendChannel, Endpoint endpoint, boolean isContinueExpected, boolean frontSsl, BackendServiceMatcher serviceMatch) {
 		this.frontendChannel = frontendChannel;
 		this.backendChannelPool = backendChannelPool;
 		this.frontSsl=frontSsl;
 		this.isContinueExpected=isContinueExpected;
+		this.serviceMatch=serviceMatch;
 	}
 	
 	@Override
@@ -54,6 +58,7 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
         	InetSocketAddress inetSocket = (InetSocketAddress) frontendChannel.remoteAddress();
         	((HttpRequest) msg).headers().set(X_FORWARDED_FOR,inetSocket.getHostString());
         	((HttpRequest) msg).headers().set(X_FORWARDED_PROTO,frontSsl?HttpScheme.HTTPS.name():HttpScheme.HTTP.name());
+        	msg = serviceMatch.rewrite((HttpRequest) msg);
         }
         ctx.write(msg, promise);
     }
