@@ -71,6 +71,12 @@ public class JacksonJson implements Json {
 	public <T> T deserialize(String content, Class<T> clazz) {
 		return mapper.readValue(content, clazz);
 	}
+	
+	@Override
+	@SneakyThrows
+	public <T> T deserialize(String content, TypeLiteral<T> type) {
+		return mapper.readValue(content, new TypeReferenceLiteral<T>(type.getType()));
+	}
 
 	@Override
 	@SneakyThrows

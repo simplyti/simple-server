@@ -65,6 +65,13 @@ public class DslJsonSerializer implements Json {
 	public <T> T deserialize(String content, Class<T> clazz) {
 		return dslJson.deserialize(clazz, new ByteArrayInputStream(content.getBytes(CharsetUtil.UTF_8)));
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	@SneakyThrows
+	public <T> T deserialize(String content, TypeLiteral<T> type) {
+		return (T) dslJson.deserialize(type.getType(), new ByteArrayInputStream(content.getBytes(CharsetUtil.UTF_8)));
+	}
 
 	@Override
 	@SneakyThrows

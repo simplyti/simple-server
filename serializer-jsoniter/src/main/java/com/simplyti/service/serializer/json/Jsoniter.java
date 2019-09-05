@@ -45,6 +45,12 @@ public class Jsoniter implements Json {
 	public <T> T deserialize(String content, Class<T> clazz) {
 		return JsonIterator.deserialize(content, clazz);
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T deserialize(String content, TypeLiteral<T> type) {
+		return (T) JsonIterator.deserialize(content, create(type.getType()));
+	}
 
 	@Override
 	public void serialize(Object obj, ByteBuf buffer) {
