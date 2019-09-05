@@ -32,7 +32,9 @@ public class ApiResponseEncoder extends MessageToMessageEncoder<ApiResponse> {
 	
 	@Override
 	protected void encode(ChannelHandlerContext ctx, ApiResponse msg, List<Object> out) throws Exception {
-		if(msg.response()==null){
+		if(msg.response() == null && msg.notFoundOnNull()) {
+			out.add(buildHttpResponse(Unpooled.EMPTY_BUFFER, HttpResponseStatus.NOT_FOUND,msg,null));
+		} else if(msg.response()==null){
 			out.add(buildHttpResponse(Unpooled.EMPTY_BUFFER, HttpResponseStatus.NO_CONTENT,msg,null));
 		} else if(msg.response() instanceof CharSequence){
 			out.add(buildHttpResponse(ByteBufUtil.encodeString(ctx.alloc(), CharBuffer.wrap((CharSequence)msg.response()), CharsetUtil.UTF_8), HttpResponseStatus.OK,msg,

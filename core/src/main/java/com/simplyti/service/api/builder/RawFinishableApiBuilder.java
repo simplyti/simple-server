@@ -10,7 +10,7 @@ public class RawFinishableApiBuilder extends FinishableApiBuilder<ByteBuf,Object
 	private static final TypeLiteral<ByteBuf> RAW_TYPE = TypeLiteral.create(ByteBuf.class);
 	
 	public RawFinishableApiBuilder(ApiBuilder builder, HttpMethod method, String uri) {
-		super(builder, method, uri, RAW_TYPE, false, -1);
+		super(builder, method, uri, RAW_TYPE, false, -1, false);
 	}
 
 	public <O> TypedResponseFinishableApiBuilder<ByteBuf, O> withResponseBodyType(TypeLiteral<O> responseType) {

@@ -13,7 +13,7 @@ public class TypedRequestFinishableApiBuilder<I,O> extends FinishableApiBuilder<
 	}
 
 	public TypedRequestFinishableApiBuilder(ApiBuilder builder, HttpMethod method, String uri,TypeLiteral<I> requestType, boolean multipart, int maxBodyLength) {
-		super(builder, method, uri, requestType,multipart,maxBodyLength);
+		super(builder, method, uri, requestType,multipart,maxBodyLength,false);
 		this.requestType=requestType;
 	}
 

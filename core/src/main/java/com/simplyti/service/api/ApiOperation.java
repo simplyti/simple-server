@@ -20,11 +20,12 @@ public class ApiOperation<I,O,C extends APIContext<O>> {
 	private final int maxBodyLength;
 	private final Map<String,String> metadata;
 	private final boolean streamedRequest;
+	private final boolean notFoundOnNull;
 	
 	public ApiOperation(HttpMethod method, PathPattern pathPattern,
 			Consumer<C> handler, TypeLiteral<I> requestType, int literalChars,
 			boolean multipart, int maxBodyLength, Map<String,String> metadata,
-			boolean streamedRequest) {
+			boolean streamedRequest, boolean notFoundOnNull) {
 		this.method=method;
 		this.pathPattern=pathPattern;
 		this.handler=handler;
@@ -34,6 +35,7 @@ public class ApiOperation<I,O,C extends APIContext<O>> {
 		this.maxBodyLength=maxBodyLength;
 		this.metadata=metadata;
 		this.streamedRequest=streamedRequest;
+		this.notFoundOnNull=notFoundOnNull;
 	}
 	
 	public HttpMethod method() {
@@ -78,6 +80,10 @@ public class ApiOperation<I,O,C extends APIContext<O>> {
 
 	public boolean isStreamed() {
 		return this.streamedRequest;
+	}
+
+	public boolean notFoundOnNull() {
+		return notFoundOnNull;
 	}
 
 }

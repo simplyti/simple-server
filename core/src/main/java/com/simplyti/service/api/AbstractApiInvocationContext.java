@@ -50,7 +50,7 @@ public abstract class AbstractApiInvocationContext<O> implements APIContext<O> {
 	public Future<Void> send(O response) {
 		tryRelease();
 		if(ctx.channel().isActive()) {
-			return ctx.writeAndFlush(new ApiResponse(response,isKeepAlive))
+			return ctx.writeAndFlush(new ApiResponse(response,isKeepAlive,matcher.operation().notFoundOnNull()))
 					.addListener(this::writeListener);
 		}else {
 			ReferenceCountUtil.release(response);

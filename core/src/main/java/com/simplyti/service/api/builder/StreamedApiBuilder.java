@@ -30,7 +30,7 @@ public class StreamedApiBuilder {
 	public void then(Consumer<StreamedApiInvocationContext<Object>> consumer) {
 		PathPattern pathPattern = PathPattern.build(uri);
 		builder.add(new ApiOperation<Void,Object,StreamedApiInvocationContext<Object>>(method, pathPattern,consumer,VOID,pathPattern.literalCount(),
-				false,0,metadata(),true));
+				false,0,metadata(),true,false));
 	}
 
 	public <O> TypedResponseStreamedApiBuilder<O> withResponseBodyType(Class<O> responseType) {

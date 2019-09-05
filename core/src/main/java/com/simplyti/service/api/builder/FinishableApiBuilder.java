@@ -24,18 +24,20 @@ public abstract class FinishableApiBuilder<I,O> {
 	protected final TypeLiteral<I> requestType;
 	protected final boolean multipart;
 	
+	protected boolean notFoundOnNull;
 	protected int maxBodyLength;
 	
 	private Map<String, String> metadata;
 	
 	public FinishableApiBuilder(ApiBuilder builder, HttpMethod method, String uri, TypeLiteral<I> requestType, boolean multipart,
-			int maxBodyLength) {
+			int maxBodyLength, boolean notFoundOnNull) {
 		this.builder=builder;
 		this.method=method;
 		this.uri=uri;
 		this.requestType=requestType;
 		this.multipart=multipart;
 		this.maxBodyLength=maxBodyLength;
+		this.notFoundOnNull=notFoundOnNull;
 	}
 	
 	public FinishableApiBuilder<I,O> withMeta(String name, String value) {
@@ -49,7 +51,7 @@ public abstract class FinishableApiBuilder<I,O> {
 	public void then(Consumer<ApiInvocationContext<I, O>> consumer) {
 		PathPattern pathPattern = PathPattern.build(uri);
 		builder.add(new ApiOperation<I,O,ApiInvocationContext<I, O>>(method, pathPattern,consumer,requestType,pathPattern.literalCount(),
-				multipart,noNegative(maxBodyLength,DEFAULT_MAX_BODY),metadata(),false));
+				multipart,noNegative(maxBodyLength,DEFAULT_MAX_BODY),metadata(),false,notFoundOnNull));
 	}
 	
 	public void thenFuture(Function<ApiInvocationContext<I,O>,Future<O>> futureFunction) {
@@ -60,7 +62,7 @@ public abstract class FinishableApiBuilder<I,O> {
 		Consumer<ApiInvocationContext<I, FullHttpResponse>> consumer = new InvocationHttpFutureHandle<I,FullHttpResponse>(futureFunction);
 		PathPattern pathPattern = PathPattern.build(uri);
 		builder.add(new ApiOperation<I,FullHttpResponse,ApiInvocationContext<I, FullHttpResponse>>(method, pathPattern,consumer,requestType,pathPattern.literalCount(),
-				multipart,noNegative(maxBodyLength,DEFAULT_MAX_BODY),metadata(),false));
+				multipart,noNegative(maxBodyLength,DEFAULT_MAX_BODY),metadata(),false,notFoundOnNull));
 	}
 	
 	private Map<String,String> metadata() {
@@ -77,6 +79,11 @@ public abstract class FinishableApiBuilder<I,O> {
 		}else {
 			return value;
 		}
+	}
+	
+	public FinishableApiBuilder<I,O> withNotFoundOnNull() {
+		this.notFoundOnNull=true;
+		return this;
 	}
 	
 

@@ -8,7 +8,7 @@ public class TypedResponseFinishableApiBuilder<I, O> extends FinishableApiBuilde
 
 	public TypedResponseFinishableApiBuilder(ApiBuilder builder, HttpMethod method, String uri, TypeLiteral<I> requestType,
 			int maxBodyLength) {
-		super(builder, method, uri, requestType, false, maxBodyLength);
+		super(builder, method, uri, requestType, false, maxBodyLength,false);
 	}
 
 

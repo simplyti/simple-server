@@ -7,6 +7,7 @@ public class ApiResponse {
 	
 	private final Object response;
 	private final boolean keepAlive;
+	private final boolean notFoundOnNull;
 
 	public Object response() {
 		return response;
@@ -14,6 +15,10 @@ public class ApiResponse {
 	
 	public boolean isKeepAlive() {
 		return keepAlive;
+	}
+
+	public boolean notFoundOnNull() {
+		return notFoundOnNull;
 	}
 	
 }
