@@ -5,7 +5,7 @@ public class ClientBuilder<B extends ClientBuilder<B>> implements PoolConfigAwar
 	
 	protected PoolConfig poolConfig;
 	
-	public ClientPoolConfigBuilder<ClientBuilder<B>> withPool() {
+	public ClientPoolConfigBuilder<B> withPool() {
 		return new ClientPoolConfigBuilder<>(this,this);
 	}
 
