@@ -53,20 +53,27 @@ public abstract class AbstractApiInvocationContext<O> implements APIContext<O> {
 			return ctx.writeAndFlush(new ApiResponse(response,isKeepAlive,matcher.operation().notFoundOnNull()))
 					.addListener(this::writeListener);
 		}else {
-			ReferenceCountUtil.release(response);
-			tryRelease();
-			log.warn("Cannot write response, channel {} already closed",ctx.channel().remoteAddress());
-			return ctx.channel().eventLoop().newFailedFuture(new ClosedChannelException());
+			return closed(response);
 		}
 	}
 	
+	private Future<Void> closed(Object response) {
+		ReferenceCountUtil.release(response);
+		tryRelease();
+		log.warn("Cannot write response, channel {} already closed",ctx.channel().remoteAddress());
+		return ctx.channel().eventLoop().newFailedFuture(new ClosedChannelException());
+	}
+
 	@SuppressWarnings("unchecked")
 	public Future<Void> send(HttpObject response) {
 		if(response==null) {
 			return send((O) response);
+		}else if(ctx.channel().isActive()) {
+			return ctx.writeAndFlush(response)
+					.addListener(this::writeListener);
+		}else {
+			return closed(response);
 		}
-		return ctx.writeAndFlush(response)
-			.addListener(this::writeListener);
 	}
 	
 	@Override
