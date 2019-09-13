@@ -123,7 +123,7 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	}
 	
 	private void filterRequest(ChannelHandlerContext ctx, BackendServiceMatcher service, HttpRequest request) {
-		Future<Boolean> futureHandled = FilterChain.of(service.get().filters(),ctx,request).execute();
+		Future<Boolean> futureHandled = FilterChain.of(service.get().filters(),ctx,service.rewrite(request)).execute();
 		futureHandled.addListener(result->{
 			if(ctx.executor().inEventLoop()) {
 				handleFilterResult(ctx,futureHandled,service,HttpUtil.is100ContinueExpected(request));

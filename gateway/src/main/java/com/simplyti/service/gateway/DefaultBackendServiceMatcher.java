@@ -10,6 +10,7 @@ public class DefaultBackendServiceMatcher implements BackendServiceMatcher {
 	private final Matcher matcher;
 	private final BackendService service;
 	private final String query;
+	private boolean rewritten;
 
 	public DefaultBackendServiceMatcher(BackendService service, String uri) {
 		this.service=service;
@@ -43,6 +44,10 @@ public class DefaultBackendServiceMatcher implements BackendServiceMatcher {
 
 	@Override
 	public HttpRequest rewrite(HttpRequest request) {
+		if(rewritten) {
+			return request;
+		}
+		rewritten = true;
 		if(service.rewrite()==null) {
 			return request;
 		} else if(service.pathPattern()!=null || service.pattern()!=null) {
