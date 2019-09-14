@@ -28,6 +28,7 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 	private final boolean frontSsl;
 	private final boolean isContinueExpected;
 	private final BackendServiceMatcher serviceMatch;
+	private final Endpoint endpoint;
 	
 	private boolean upgrading;
 	private boolean isContinuing;
@@ -39,6 +40,7 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 		this.frontSsl=frontSsl;
 		this.isContinueExpected=isContinueExpected;
 		this.serviceMatch=serviceMatch;
+		this.endpoint=endpoint;
 	}
 	
 	@Override
@@ -56,6 +58,7 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         if(msg instanceof HttpRequest) {
         	InetSocketAddress inetSocket = (InetSocketAddress) frontendChannel.remoteAddress();
+        	((HttpRequest) msg).headers().set(HttpHeaderNames.HOST,endpoint.address().host());
         	((HttpRequest) msg).headers().set(X_FORWARDED_FOR,inetSocket.getHostString());
         	((HttpRequest) msg).headers().set(X_FORWARDED_PROTO,frontSsl?HttpScheme.HTTPS.name():HttpScheme.HTTP.name());
         	msg = serviceMatch.rewrite((HttpRequest) msg);
