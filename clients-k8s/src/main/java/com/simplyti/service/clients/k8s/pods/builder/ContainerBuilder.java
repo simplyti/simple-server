@@ -14,6 +14,8 @@ public interface ContainerBuilder<T> {
 	ReadinessProbeBuilder withReadinessProbe();
 
 	ResourcesBuilder<T> withResources();
+
+	LifecycleBuilder<T> withLifecycle();
 	
 	T build();
 
