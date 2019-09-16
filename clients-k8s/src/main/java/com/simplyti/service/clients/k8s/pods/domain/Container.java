@@ -17,6 +17,7 @@ public class Container {
 	private final String[] command;
 	private final Probe readinessProbe;
 	private final Resources resources;
+	private final Lifecycle lifecycle;
 
 	@CompiledJson
 	public Container(
@@ -25,13 +26,15 @@ public class Container {
 			List<EnvironmentVariable> env,
 			String[] command,
 			Probe readinessProbe,
-			Resources resources) {
+			Resources resources,
+			Lifecycle lifecycle) {
 		this.name=name;
 		this.command=command;
 		this.env=env;
 		this.image=image;
 		this.readinessProbe=readinessProbe;
 		this.resources=resources;
+		this.lifecycle = lifecycle;
 	}
 	
 }

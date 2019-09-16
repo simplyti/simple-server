@@ -3,12 +3,9 @@ package com.simplyti.service.clients.k8s.pods.builder;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.simplyti.service.clients.k8s.pods.domain.Container;
-import com.simplyti.service.clients.k8s.pods.domain.EnvironmentVariable;
-import com.simplyti.service.clients.k8s.pods.domain.Probe;
-import com.simplyti.service.clients.k8s.pods.domain.Resources;
+import com.simplyti.service.clients.k8s.pods.domain.*;
 
-public class DefaultContainerBuilder<T> implements ContainerBuilder<T>, ReadinessProbeHolder,ResourcesHolder,ContainerEnvironmentHolder {
+public class DefaultContainerBuilder<T> implements ContainerBuilder<T>, ReadinessProbeHolder,ResourcesHolder,ContainerEnvironmentHolder, LifecycleHolder {
 
 	private final T parent;
 	private final ContainerHolder containerHolder;
@@ -19,6 +16,7 @@ public class DefaultContainerBuilder<T> implements ContainerBuilder<T>, Readines
 	private Resources resources;
 	private String[] command;
 	private List<EnvironmentVariable> environments;
+	private Lifecycle lifecycle;
 
 	public DefaultContainerBuilder(T parent, ContainerHolder containerHolder) {
 		this.parent=parent;
@@ -50,7 +48,7 @@ public class DefaultContainerBuilder<T> implements ContainerBuilder<T>, Readines
 
 	@Override
 	public T build() {
-		containerHolder.addContainer(new Container(name,image,environments,command,readinessProbe,resources));
+		containerHolder.addContainer(new Container(name,image,environments,command,readinessProbe,resources, lifecycle));
 		return parent;
 	}
 
@@ -70,6 +68,11 @@ public class DefaultContainerBuilder<T> implements ContainerBuilder<T>, Readines
 	}
 
 	@Override
+	public LifecycleBuilder<T> withLifecycle() {
+		return new DefaultLifecycleBuilder<>(this, this);
+	}
+
+	@Override
 	public void setResources(Resources resources) {
 		this.resources=resources;
 	}
@@ -82,4 +85,8 @@ public class DefaultContainerBuilder<T> implements ContainerBuilder<T>, Readines
 		environments.add(environment);
 	}
 
+	@Override
+	public void setLifecycle(Lifecycle lifecycle) {
+		this.lifecycle = lifecycle;
+	}
 }
