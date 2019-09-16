@@ -8,11 +8,11 @@ import lombok.experimental.Accessors;
 @Accessors(fluent = true)
 public class Lifecycle {
 
-    private HookHandler preStop;
-    private HookHandler postStart;
+	private final LifecycleHookHandler postStart;
+    private final LifecycleHookHandler preStop;
 
     @CompiledJson
-    public Lifecycle(final HookHandler preStop, final HookHandler postStart) {
+    public Lifecycle(final LifecycleHookHandler postStart,final LifecycleHookHandler preStop) {
         this.preStop = preStop;
         this.postStart = postStart;
     }

@@ -4,6 +4,6 @@ public interface LifecycleBuilder<T> {
 
     LifecycleHandlerBuilder<T> preStop();
     LifecycleHandlerBuilder<T> postStart();
-    ContainerBuilder<T> end();
+    ContainerBuilder<T> build();
 
 }

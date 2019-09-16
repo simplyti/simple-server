@@ -6,9 +6,9 @@ import lombok.experimental.Accessors;
 
 @Getter
 @Accessors
-public class ExecActionHookHandler implements HookHandler {
+public class ExecActionHookHandler {
 
-    private String[] command;
+    private final String[] command;
 
     @CompiledJson
     public ExecActionHookHandler(final String[] command) {
