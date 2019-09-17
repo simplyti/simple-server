@@ -1,11 +1,11 @@
 package com.simplyti.service.clients.k8s.pods.builder;
 
-public interface HttpReadinessProbeBuilder {
+public interface HttpReadinessProbeBuilder<T> {
 
-	HttpReadinessProbeBuilder path(String path);
+	HttpReadinessProbeBuilder<T> path(String path);
 
-	HttpReadinessProbeBuilder port(Object port);
+	HttpReadinessProbeBuilder<T> port(Object port);
 
-	ContainerBuilder<?> build();
+	ContainerBuilder<T> build();
 
 }
