@@ -21,6 +21,7 @@ public class DefaultPodBuilder extends AbstractK8sResourceBuilder<PodBuilder,Pod
 	private List<Container> containers;
 	private List<ImagePullSecret> imagePullSecrets;
 	private RestartPolicy restartPolicy;
+	private Integer terminationGracePeriodSeconds;
 	
 	public DefaultPodBuilder(HttpClient client,Json json,K8sAPI api,String namespace, String resource) {
 		super(client,json,api,namespace,resource,Pod.class);
@@ -28,12 +29,18 @@ public class DefaultPodBuilder extends AbstractK8sResourceBuilder<PodBuilder,Pod
 
 	@Override
 	protected Pod resource(K8sAPI api, Metadata metadata) {
-		return new Pod(KIND, api.version(), metadata, new PodSpec(containers,restartPolicy,imagePullSecrets),null);
+		return new Pod(KIND, api.version(), metadata, new PodSpec(containers,restartPolicy,imagePullSecrets,terminationGracePeriodSeconds),null);
 	}
 	
 	@Override
 	public PodBuilder withRestartPolicy(RestartPolicy restartPolicy) {
 		this.restartPolicy=restartPolicy;
+		return this;
+	}
+	
+	@Override
+	public PodBuilder withTerminationGracePeriodSeconds(int terminationGraceSeconds) {
+		this.terminationGracePeriodSeconds=terminationGraceSeconds;
 		return this;
 	}
 

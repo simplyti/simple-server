@@ -14,15 +14,18 @@ public class PodSpec {
 	private final List<Container> containers;
 	private final List<ImagePullSecret> imagePullSecrets;
 	private final RestartPolicy restartPolicy;
+	private final Integer terminationGracePeriodSeconds;
 
 	@CompiledJson
 	public PodSpec(
 			List<Container> containers,
 			RestartPolicy restartPolicy,
-			List<ImagePullSecret> imagePullSecrets) {
+			List<ImagePullSecret> imagePullSecrets,
+			Integer terminationGracePeriodSeconds) {
 		this.containers=containers;
 		this.restartPolicy=restartPolicy;
 		this.imagePullSecrets=imagePullSecrets;
+		this.terminationGracePeriodSeconds=terminationGracePeriodSeconds;
 	}
 
 }

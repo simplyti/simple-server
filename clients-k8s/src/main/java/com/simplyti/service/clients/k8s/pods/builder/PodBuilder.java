@@ -12,4 +12,6 @@ public interface PodBuilder extends K8sResourceBuilder<PodBuilder,Pod> {
 
 	PodBuilder withRestartPolicy(RestartPolicy never);
 
+	PodBuilder withTerminationGracePeriodSeconds(int terminationGraceSeconds);
+
 }
