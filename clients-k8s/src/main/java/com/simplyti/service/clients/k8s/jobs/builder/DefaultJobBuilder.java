@@ -36,7 +36,7 @@ public class DefaultJobBuilder extends AbstractK8sResourceBuilder<JobBuilder,Job
 
 	@Override
 	protected Job resource(K8sAPI api, Metadata metadata) {
-		return new Job(KIND, api.version(), metadata, new JobSpec(new PodTemplateSpec(new PodSpec(containers,restartPolicy, null))),null);
+		return new Job(KIND, api.version(), metadata, new JobSpec(new PodTemplateSpec(new PodSpec(containers,restartPolicy,null, null))),null);
 	}
 	
 	@Override
