@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.simplyti.service.clients.k8s.pods.domain.*;
 
-public class DefaultContainerBuilder<T> implements ContainerBuilder<T>, ReadinessProbeHolder,ResourcesHolder,ContainerEnvironmentHolder, LifecycleHolder {
+public class DefaultContainerBuilder<T> implements ContainerBuilder<T>, ReadinessProbeHolder,ResourcesHolder,ContainerEnvironmentHolder, LifecycleHolder, VolumeMountHolder {
 
 	private final T parent;
 	private final ContainerHolder containerHolder;
@@ -17,6 +17,7 @@ public class DefaultContainerBuilder<T> implements ContainerBuilder<T>, Readines
 	private String[] command;
 	private List<EnvironmentVariable> environments;
 	private Lifecycle lifecycle;
+	private List<VolumeMount> volumeMounts;
 
 	public DefaultContainerBuilder(T parent, ContainerHolder containerHolder) {
 		this.parent=parent;
@@ -48,13 +49,13 @@ public class DefaultContainerBuilder<T> implements ContainerBuilder<T>, Readines
 
 	@Override
 	public T build() {
-		containerHolder.addContainer(new Container(name,image,environments,command,readinessProbe,resources, lifecycle));
+		containerHolder.addContainer(new Container(name,image,environments,command,readinessProbe,resources, lifecycle, volumeMounts));
 		return parent;
 	}
 
 	@Override
-	public ReadinessProbeBuilder withReadinessProbe() {
-		return new DefaultReadinessProbeBuilder(this,this);
+	public ReadinessProbeBuilder<T> withReadinessProbe() {
+		return new DefaultReadinessProbeBuilder<>(this,this);
 	}
 
 	@Override
@@ -84,9 +85,23 @@ public class DefaultContainerBuilder<T> implements ContainerBuilder<T>, Readines
 		}
 		environments.add(environment);
 	}
+	
+	@Override
+	public void addVolumeMount(VolumeMount volumeMount) {
+		if(volumeMounts==null) {
+			this.volumeMounts=new ArrayList<>();
+		}
+		volumeMounts.add(volumeMount);
+	}
 
 	@Override
 	public void setLifecycle(Lifecycle lifecycle) {
 		this.lifecycle = lifecycle;
 	}
+
+	@Override
+	public VolumeMountBuilder<T> withVolumeMount(String name) {
+		return new DefaultVolumeMountBuilder<T>(this,this,name);
+	}
+
 }

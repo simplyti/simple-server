@@ -17,6 +17,8 @@ public interface ContainerBuilder<T> {
 
 	LifecycleBuilder<T> withLifecycle();
 	
+	VolumeMountBuilder<T> withVolumeMount(String name);
+	
 	T build();
 
 }

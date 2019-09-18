@@ -1,19 +1,19 @@
 package com.simplyti.service.clients.k8s.pods.builder;
 
-public class DefaultReadinessProbeBuilder implements ReadinessProbeBuilder {
+public class DefaultReadinessProbeBuilder<T> implements ReadinessProbeBuilder<T> {
 
-	private final ContainerBuilder<?> parent;
+	private final ContainerBuilder<T> parent;
 	private final ReadinessProbeHolder holder;
 
-	public DefaultReadinessProbeBuilder(ContainerBuilder<?> parent,
+	public DefaultReadinessProbeBuilder(ContainerBuilder<T> parent,
 			ReadinessProbeHolder holder) {
 		this.parent=parent;
 		this.holder=holder;
 	}
 
 	@Override
-	public HttpReadinessProbeBuilder http() {
-		return new DefaultHttpReadinessProbeBuilder(parent,holder);
+	public HttpReadinessProbeBuilder<T> http() {
+		return new DefaultHttpReadinessProbeBuilder<>(parent,holder);
 	}
 
 }

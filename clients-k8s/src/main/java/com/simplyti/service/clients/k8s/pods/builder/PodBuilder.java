@@ -14,4 +14,6 @@ public interface PodBuilder extends K8sResourceBuilder<PodBuilder,Pod> {
 
 	PodBuilder withTerminationGracePeriodSeconds(int terminationGraceSeconds);
 
+	VolumeBuilder withVolumes();
+
 }
