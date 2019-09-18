@@ -13,7 +13,7 @@ import java.util.function.Function;
 
 import com.simplyti.service.commons.netty.Promises;
 
-import io.netty.channel.EventLoop;
+import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
 
@@ -21,9 +21,9 @@ public class DefaultFuture<T> implements Future<T>, Promise<T> {
 
 	private final Promise<T> target;
 	
-	private final EventLoop loop;
+	private final EventExecutor loop;
 	
-	public DefaultFuture(Promise<T> target, EventLoop loop) {
+	public DefaultFuture(Promise<T> target, EventExecutor loop) {
 		this.target=target;
 		this.loop=loop;
 	}
