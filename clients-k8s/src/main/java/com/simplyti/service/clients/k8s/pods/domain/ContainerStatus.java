@@ -11,11 +11,13 @@ public class ContainerStatus {
 	
 	private final Boolean ready;
 	private final ContainerState state;
+	private final String name;
 
 	@CompiledJson
-	public ContainerStatus(Boolean ready,ContainerState state) {
+	public ContainerStatus(Boolean ready,ContainerState state,String name) {
 		this.ready=ready;
 		this.state=state;
+		this.name=name;
 	}
 
 }
