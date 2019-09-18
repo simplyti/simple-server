@@ -1,11 +1,14 @@
 package com.simplyti.service.clients.k8s.common.impl;
 
+import java.util.concurrent.TimeUnit;
+
 import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.api.serializer.json.TypeLiteral;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.k8s.K8sAPI;
 import com.simplyti.service.clients.k8s.common.K8sResource;
 import com.simplyti.service.clients.k8s.common.NamespacedK8sApi;
+import com.simplyti.service.clients.k8s.common.domain.KubeClientException;
 import com.simplyti.service.clients.k8s.common.domain.Status;
 import com.simplyti.service.clients.k8s.common.list.KubeList;
 import com.simplyti.service.clients.k8s.common.watch.Observable;
@@ -60,7 +63,7 @@ public class DefaultNamespacedK8sApi<T extends K8sResource> extends DefaultK8sAp
 				.fullResponse(f->response(f.content(), type));
 	}
 	
-	private void watch(String name, Observable<T> observable) {
+	private void watch(String name, InternalObservable<T> observable) {
 		if(observable.isClosed()) {
 			return;
 		}
@@ -69,13 +72,23 @@ public class DefaultNamespacedK8sApi<T extends K8sResource> extends DefaultK8sAp
 				.get(String.format("%s/watch/namespaces/%s/%s/%s",api.path(),namespace,resource,name))
 				.param("watch")
 				.param("resourceVersion",observable.index())
-				.stream(EventStreamHandler.NAME,new EventStreamHandler<>(json,observable,eventType));
-		future.addListener(f->watch(name,observable));
+				.stream(EventStreamHandler.NAME,client->new EventStreamHandler<>(client,json,observable,eventType));
+		future.addListener(f->{
+			if(f.isSuccess()) {
+				watch(name,observable);
+			}else {
+				if(f.cause() instanceof KubeClientException) {
+					observable.error(f.cause());
+				}else {
+					observable.executor().schedule(()->watch(name,observable),1,TimeUnit.SECONDS);
+				}
+			}
+		});
 	}
 
 	@Override
 	public Observable<T> watch(String name, String resourceVersion) {
-		Observable<T> observable = new DefaultObservable<>(eventLoopGroup.next(),resourceVersion);
+		InternalObservable<T> observable = new DefaultObservable<>(eventLoopGroup.next(),resourceVersion);
 		watch(name,observable);
 		return observable;
 	}

@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import com.simplyti.service.clients.ClientRequestChannel;
 import com.simplyti.service.clients.http.sse.ServerEvent;
 import com.simplyti.util.concurrent.Future;
 
@@ -20,7 +21,7 @@ public interface FinishableHttpRequest {
 
 	Future<Void> forEach(Consumer<HttpObject> consumer);
 
-	Future<Void> stream(String handlerName, ChannelHandler handler);
+	Future<Void> stream(String handlerName, Function<ClientRequestChannel<Void>,ChannelHandler> handler);
 	Future<Void> stream(Consumer<ByteBuf> consumer);
 	
 	Future<Void> sse(Consumer<ServerEvent> consumer);

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -56,8 +57,12 @@ import io.netty.util.CharsetUtil;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.PromiseCombiner;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implements ServerStartHook, ServerStopHook {
+	
+	private static final InternalLogger log = InternalLoggerFactory.getInstance(KubernetesServiceDiscovery.class);
 	
 	private static final String SECURE_BACKENDS_ANN = "ingress.kubernetes.io/secure-backends";
 	private static final String AUTH_TYPE = "ingress.kubernetes.io/auth-type";
@@ -174,7 +179,12 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 	}
 
 	private <T extends K8sResource> Observable<T> watch(K8sApi<T> api, String resourceVersion, EventConsumer<T> consumer) {
-		return api.watch(resourceVersion).on(event->handle(eventLoop, event.type(),event.object(),consumer));
+		return api.watch(resourceVersion)
+				.onEvent(event->handle(eventLoop, event.type(),event.object(),consumer))
+				.onError(error->{
+					log.warn("Error ocurred during discovery: "+error.getMessage());
+					eventLoop.schedule(()->executeStart(eventLoop), 1	, TimeUnit.SECONDS);
+				});
 	}
 	
 	private <T extends K8sResource> Future<Void> handle(EventLoop executor, EventType type, T service, EventConsumer<T> consumer) {

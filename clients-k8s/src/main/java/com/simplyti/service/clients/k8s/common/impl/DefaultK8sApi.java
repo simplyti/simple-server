@@ -1,11 +1,14 @@
 package com.simplyti.service.clients.k8s.common.impl;
 
+import java.util.concurrent.TimeUnit;
+
 import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.api.serializer.json.TypeLiteral;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.k8s.K8sAPI;
 import com.simplyti.service.clients.k8s.common.K8sApi;
 import com.simplyti.service.clients.k8s.common.K8sResource;
+import com.simplyti.service.clients.k8s.common.domain.KubeClientException;
 import com.simplyti.service.clients.k8s.common.list.KubeList;
 import com.simplyti.service.clients.k8s.common.watch.Observable;
 import com.simplyti.service.clients.k8s.common.watch.domain.Event;
@@ -45,12 +48,12 @@ public class DefaultK8sApi<T extends K8sResource> implements K8sApi<T> {
 	
 	@Override
 	public Observable<T> watch(String resourceVersion) {
-		Observable<T> observable = new DefaultObservable<>(eventLoopGroup.next(),resourceVersion);
+		InternalObservable<T> observable = new DefaultObservable<>(eventLoopGroup.next(),resourceVersion);
 		watch(observable);
 		return observable;
 	}
 	
-	private void watch(Observable<T> observable) {
+	private void watch(InternalObservable<T> observable) {
 		if(observable.isClosed()) {
 			return;
 		}
@@ -59,8 +62,18 @@ public class DefaultK8sApi<T extends K8sResource> implements K8sApi<T> {
 				.get(String.format("%s/%s", api.path(),resource))
 				.param("watch")
 				.param("resourceVersion",observable.index())
-				.stream(EventStreamHandler.NAME,new EventStreamHandler<>(json,observable,eventType));
-		future.addListener(f->watch(observable));
+				.stream(EventStreamHandler.NAME,client->new EventStreamHandler<>(client,json,observable,eventType));
+		future.addListener(f->{
+			if(f.isSuccess()) {
+				watch(observable);
+			}else {
+				if(f.cause() instanceof KubeClientException) {
+					observable.error(f.cause());
+				}else {
+					observable.executor().schedule(()->watch(observable),1,TimeUnit.SECONDS);
+				}
+			}
+		});
 	}
 
 	protected <O> O response(ByteBuf content, TypeLiteral<O> type) {

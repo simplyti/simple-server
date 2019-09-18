@@ -2,8 +2,9 @@ package com.simplyti.service.sync;
 
 import java.util.concurrent.Callable;
 
+import com.simplyti.util.concurrent.Future;
+
 import io.netty.util.concurrent.EventExecutor;
-import io.netty.util.concurrent.Future;
 
 public interface SyncTaskSubmitter {
 	

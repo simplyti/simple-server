@@ -5,8 +5,10 @@ import java.util.concurrent.ExecutorService;
 
 import javax.inject.Inject;
 
+import com.simplyti.util.concurrent.DefaultFuture;
+import com.simplyti.util.concurrent.Future;
+
 import io.netty.util.concurrent.EventExecutor;
-import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
 
 public class DefaultSyncTaskSubmitter implements SyncTaskSubmitter {
@@ -21,13 +23,13 @@ private final ExecutorService executor;
 	public Future<Void> submit(EventExecutor executor, VoidCallable task) {
 		Promise<Void> promise = executor.newPromise();
 		this.executor.execute(new CatcExceptionVoidCall(task,promise));
-		return promise;
+		return new DefaultFuture<>(promise, executor);
 	}
 
 	public <T> Future<T> submit(EventExecutor executor, Callable<T> task) {
 		Promise<T> promise = executor.newPromise();
 		this.executor.execute(new CatcExceptionCall<>(task,promise));
-		return promise;
+		return new DefaultFuture<>(promise, executor);
 	}
 	
 	private static final class CatcExceptionCall<T> implements Runnable {

@@ -4,9 +4,10 @@ import java.util.Map;
 
 import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.api.serializer.json.TypeLiteral;
+import com.simplyti.service.clients.ClientRequestChannel;
 import com.simplyti.service.clients.k8s.common.K8sResource;
+import com.simplyti.service.clients.k8s.common.domain.KubeClientException;
 import com.simplyti.service.clients.k8s.common.domain.Status;
-import com.simplyti.service.clients.k8s.common.watch.Observable;
 import com.simplyti.service.clients.k8s.common.watch.domain.Event;
 import com.simplyti.service.clients.k8s.common.watch.domain.EventType;
 
@@ -22,11 +23,13 @@ public class EventStreamHandler<T extends K8sResource> extends SimpleChannelInbo
 	
 	private final Json json;
 	
-	private final Observable<T> observable;
+	private final InternalObservable<T> observable;
 	private final TypeLiteral<Event<T>> eventType;
+	private final ClientRequestChannel<Void> client;
 
 
-	public EventStreamHandler(Json json,Observable<T> observable, TypeLiteral<Event<T>> eventType) {
+	public EventStreamHandler(ClientRequestChannel<Void> client, Json json,InternalObservable<T> observable, TypeLiteral<Event<T>> eventType) {
+		this.client=client;
 		this.json=json;
 		this.observable=observable;
 		this.eventType=eventType;
@@ -43,15 +46,17 @@ public class EventStreamHandler<T extends K8sResource> extends SimpleChannelInbo
 	protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
 		Map<?,?> eventMap = json.deserialize(msg.slice(), Map.class);
 		String typeStr = (String) eventMap.get("type");
-		Event event;
 		if(typeStr.equals(EventType.ERROR.name())) {
 			msg.skipBytes(msg.readableBytes());
 			String content = json.serializeAsString(eventMap.get("object"), CharsetUtil.UTF_8);
-			event = new Event(EventType.ERROR,json.deserialize(content, Status.class));
+			Status status = json.deserialize(content, Status.class);
+			client.setFailure(new KubeClientException(status));
+			client.close();
 		}else {
-			event = json.deserialize(msg,eventType);
+			Event event = json.deserialize(msg,eventType);
+			observable.event(event);
 		}
-		observable.event(event);
+		
 	}
 
 }

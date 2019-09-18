@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.simplyti.service.clients.ClientConfig;
+import com.simplyti.service.clients.ClientRequestChannel;
 import com.simplyti.service.clients.InternalClient;
 import com.simplyti.service.clients.http.handler.DecodingFullHttpResponseHandler;
 import com.simplyti.service.clients.http.handler.FullHttpResponseHandler;
@@ -92,10 +93,10 @@ public abstract class AbstractFinishableHttpRequest implements FinishableHttpReq
 	}
 	
 	@Override
-	public Future<Void> stream(String handlerName, ChannelHandler handler) {
+	public Future<Void> stream(String handlerName,Function<ClientRequestChannel<Void>,ChannelHandler> handler) {
 		return client.channel(channel->{
 			channel.pipeline().addLast(new StreamResponseHandler(channel,null));
-			channel.pipeline().addLast(handlerName,handler);
+			channel.pipeline().addLast(handlerName,handler.apply(channel));
 		},request(),config);
 	}
 	

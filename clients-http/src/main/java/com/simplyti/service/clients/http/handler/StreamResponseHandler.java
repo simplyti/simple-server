@@ -54,7 +54,9 @@ public class StreamResponseHandler extends SimpleChannelInboundHandler<HttpObjec
 			}
 		}
 		if(msg instanceof LastHttpContent) {
-			clientChannel.setSuccess(null);
+			if(!clientChannel.isDone()) {
+				clientChannel.setSuccess(null);
+			}
 			cleanChannel(ctx.channel());
 			clientChannel.release();
 		}
