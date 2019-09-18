@@ -504,7 +504,7 @@ public class K8sClientStepDefs {
 		KubeList<Service> currentList = kubeClient.services().list().get();
 		List<Event<Service>> events = new ArrayList<>();
 		scenarioData.put(key, events);
-		Observable<Service> observable = kubeClient.services().watch(currentList.metadata().resourceVersion()).on(events::add);
+		Observable<Service> observable = kubeClient.services().watch(currentList.metadata().resourceVersion()).onEvent(events::add);
 		scenarioData.put(observableKey, observable);
 	}
 	
