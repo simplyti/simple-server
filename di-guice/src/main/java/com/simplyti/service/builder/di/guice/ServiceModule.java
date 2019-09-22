@@ -17,8 +17,10 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
+import com.simplyti.service.DefaultService;
 import com.simplyti.service.DefaultStartStopMonitor;
 import com.simplyti.service.ServerConfig;
+import com.simplyti.service.Service;
 import com.simplyti.service.StartStopMonitor;
 import com.simplyti.service.api.ApiResolver;
 import com.simplyti.service.api.DefaultApiResolver;
@@ -104,6 +106,7 @@ public class ServiceModule extends AbstractModule {
 		bind(ServerHeadersHandler.class).in(Singleton.class);
 		OptionalBinder.newOptionalBinder(binder(), EntryChannelInit.class);
 		
+		bind(new TypeLiteral<Service<?>>() {}).to(DefaultService.class).in(Singleton.class);
 		
 		// Default Handler
 		Multibinder.newSetBinder(binder(), HandlerInit.class).addBinding().to(DefaultBackendHandlerInit.class).in(Singleton.class);

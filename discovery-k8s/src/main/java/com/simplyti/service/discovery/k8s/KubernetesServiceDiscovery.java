@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -92,9 +91,11 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 	private final Map<String,OpenIdClientConfig> openIdClientSecrets;
 	private final Json json;
 	
+	private final com.simplyti.service.Service<?> server;
+	
 	@Inject
 	public KubernetesServiceDiscovery(EventLoopGroup eventLoopgroup,KubeClient client, HttpClient http, KubernetesCertificateProvider certificateProvider,
-			AutodiscoveredOpenIdConfig openIdConfig, Json json) {
+			AutodiscoveredOpenIdConfig openIdConfig, Json json, com.simplyti.service.Service<?> server) {
 		this.client=client;
 		this.http=http;
 		this.eventLoop=eventLoopgroup.next();
@@ -102,6 +103,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		this.openIdConfig=openIdConfig;
 		this.openIdClientSecrets=new ConcurrentHashMap<>();
 		this.json=json;
+		this.server=server;
 	}
 	
 	@Override
@@ -183,7 +185,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 				.onEvent(event->handle(eventLoop, event.type(),event.object(),consumer))
 				.onError(error->{
 					log.warn("Error ocurred during discovery: "+error.getMessage());
-					eventLoop.schedule(()->executeStart(eventLoop), 1	, TimeUnit.SECONDS);
+					server.stop();
 				});
 	}
 	
