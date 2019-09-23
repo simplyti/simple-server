@@ -10,10 +10,12 @@ import lombok.experimental.Accessors;
 public class ContainerState {
 	
 	private final ContainerStateTerminated terminated;
+	private final ContainerStateRunning running;
 	
 	@CompiledJson
-	public ContainerState(ContainerStateTerminated terminated) {
-		this.terminated=terminated;
+	public ContainerState(ContainerStateTerminated terminated, ContainerStateRunning running) {
+		this.terminated = terminated;
+		this.running = running;
 	}
 
 }
