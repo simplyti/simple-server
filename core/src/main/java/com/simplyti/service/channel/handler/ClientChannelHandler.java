@@ -18,6 +18,7 @@ import com.simplyti.service.priority.Priorized;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
@@ -171,8 +172,7 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 				isContinuing=false;
 			}else {
 				if(!upgrading) {
-					currentHandlers.forEach(handler->ctx.pipeline().remove(handler));
-					currentHandlers.clear();
+					resetChannel(ctx.channel());
 				}
 				promise.addListener(f->{
 					if(upgrading) {
@@ -192,6 +192,11 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 
 	private boolean isContinue(Object msg) {
 		return msg instanceof HttpResponse && ((HttpResponse) msg).status().equals(HttpResponseStatus.CONTINUE);
+	}
+
+	public void resetChannel(Channel channel) {
+		currentHandlers.forEach(handler->channel.pipeline().remove(handler));
+		currentHandlers.clear();
 	}
 	
 }

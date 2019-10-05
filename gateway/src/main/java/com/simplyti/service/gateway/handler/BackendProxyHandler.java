@@ -22,6 +22,7 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 
 	private static final String X_FORWARDED_FOR = "X-Forwarded-For";
 	private static final String X_FORWARDED_PROTO = "X-Forwarded-Proto";
+	private static final String X_FORWARDED_HOST = "X-Forwarded-Host";
 	
 	private final Channel frontendChannel;
 	private final ChannelPool backendChannelPool;
@@ -58,9 +59,11 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         if(msg instanceof HttpRequest) {
         	InetSocketAddress inetSocket = (InetSocketAddress) frontendChannel.remoteAddress();
-        	((HttpRequest) msg).headers().set(HttpHeaderNames.HOST,endpoint.address().host());
-        	((HttpRequest) msg).headers().set(X_FORWARDED_FOR,inetSocket.getHostString());
-        	((HttpRequest) msg).headers().set(X_FORWARDED_PROTO,frontSsl?HttpScheme.HTTPS.name():HttpScheme.HTTP.name());
+        	HttpRequest request = (HttpRequest) msg;
+        	request.headers().set(X_FORWARDED_HOST,request.headers().get(HttpHeaderNames.HOST));
+        	request.headers().set(HttpHeaderNames.HOST,endpoint.address().host());
+        	request.headers().set(X_FORWARDED_FOR,inetSocket.getHostString());
+        	request.headers().set(X_FORWARDED_PROTO,frontSsl?HttpScheme.HTTPS.name():HttpScheme.HTTP.name());
         	msg = serviceMatch.rewrite((HttpRequest) msg);
         }
         ctx.write(msg, promise);
