@@ -58,9 +58,11 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 	@Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         if(msg instanceof HttpRequest) {
-        	InetSocketAddress inetSocket = (InetSocketAddress) frontendChannel.remoteAddress();
         	HttpRequest request = (HttpRequest) msg;
-        	request.headers().set(X_FORWARDED_HOST,request.headers().get(HttpHeaderNames.HOST));
+        	InetSocketAddress inetSocket = (InetSocketAddress) frontendChannel.remoteAddress();
+        	if(request.headers().contains(HttpHeaderNames.HOST)) {
+        		request.headers().set(X_FORWARDED_HOST,request.headers().get(HttpHeaderNames.HOST));
+        	}
         	request.headers().set(HttpHeaderNames.HOST,endpoint.address().host());
         	request.headers().set(X_FORWARDED_FOR,inetSocket.getHostString());
         	request.headers().set(X_FORWARDED_PROTO,frontSsl?HttpScheme.HTTPS.name():HttpScheme.HTTP.name());
