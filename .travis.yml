@@ -18,14 +18,19 @@ cache:
     - '$HOME/.m2/repository'
 
 script:
+- jdk_switcher use openjdk8
 - mvn -V --batch-mode -Dstyle.color=always clean verify && bash <(curl -s https://codecov.io/bash)
 
 deploy:
   - provider: script
-    script: .travis/deploy.sh
+    script: 
+    - jdk_switcher use openjdk8
+    - .travis/deploy.sh
     on:
       branch: master
   - provider: script
-    script: .travis/release.sh
+    script: 
+    - jdk_switcher use openjdk8
+    - .travis/release.sh
     on:
       tags: true
