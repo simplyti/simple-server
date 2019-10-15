@@ -7,7 +7,7 @@ env:
     - secure: "GjDqrRYb7jp9gzZg8EIT/MfT1BwTAyzxEN4MHubpj8dqzdEoFuhSCI12x+QtxtfapuBZbpJxaeE++MjQdXSOnAO8K5eHYehaAwO8x2VfCT6vIR/zCGl6oi6y+/qOgWRkNkzcjBNGr7kgneVMEkxldYNqaJ6+mZcgl2YibUD2Y9y+CQZm2pA7ZOQ6WzBz3Ozn6Dj1ejMpzlPOcs8xLvoQB3+8PdcLBzos2c9yTNDQStrt5a+JN203/nHrnyGgkvAr8CqZL/rLDz8A52lvxtZSu1hJU0ARZbhYzGJr9jo0r6nKtHeoK5kM1pqAmopTkahLH39YfSN5E+K1O5tt7xUV3WWWIRIm+cuCTA2Uf4l1oN2hKyy0+PHjHQxe2MSvOZ5w15Fc3w5EU4pChKALSG2SGR26FFIqhnQke6xZgmu6RWJE1ERr0EiXdxG31nPTLLQtXXfShJkwG4NTYetTaBke0dDP21DQrSCwk25HhLPDrGwxof2sFRMOww7/JO4V7RWQ5IgqSm/usCmdNMhh/FVM5wCM+JmKXXuDj5NxvPp+2fhPEDGfjK7ZiXp9WSrT78BVMSpk2f1q/7ZxQqWJ9eG+mN97+AlEtafx00Rg6FJItynQWwl3wrAy6PaEjUHAT4ygmlx+CnhPlIdILm+f4cdBc/3CW+1R0z7HBC0Q0M4kqpU="
 
 sudo: required
-
+script: jdk_switcher use openjdk8
 install: true
 
 services:
@@ -18,19 +18,14 @@ cache:
     - '$HOME/.m2/repository'
 
 script:
-- jdk_switcher use openjdk8
 - mvn -V --batch-mode -Dstyle.color=always clean verify && bash <(curl -s https://codecov.io/bash)
 
 deploy:
   - provider: script
-    script: 
-    - jdk_switcher use openjdk8
-    - .travis/deploy.sh
+    script: .travis/deploy.sh
     on:
       branch: master
   - provider: script
-    script: 
-    - jdk_switcher use openjdk8
-    - .travis/release.sh
+    script: .travis/release.sh
     on:
       tags: true
