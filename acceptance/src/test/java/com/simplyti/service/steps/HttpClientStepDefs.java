@@ -81,7 +81,7 @@ public class HttpClientStepDefs {
 	public void checkProxy() {
 		HttpEndpoint target = HttpEndpoint.of("http://httpbin:80/status/200");
 		ProxiedEndpoint endpoint = ProxiedEndpoint.of(target).through("127.0.0.1", 3128, Proxy.ProxyType.HTTP);
-		Awaitility.await().until(()->{
+		Awaitility.await().atMost(30, TimeUnit.SECONDS).until(()->{
 			Try<FullHttpResponse> result = Try.of(()->client
 					.request()
 					.withEndpoint(endpoint)
