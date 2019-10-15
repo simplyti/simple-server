@@ -24,7 +24,7 @@ public class DefaultNamespacesBuilder implements NamespacesBuilder {
 	
 	private String name;
 	private Map<String,String> annotations;
-
+	private Map<String,String> labels;
 
 
 	public DefaultNamespacesBuilder(HttpClient client, Json json, K8sAPI api) {
@@ -47,6 +47,16 @@ public class DefaultNamespacesBuilder implements NamespacesBuilder {
 		this.annotations.put(ann,value);
 		return this;
 	}
+	
+	@Override
+	public NamespacesBuilder withLabel(String name, String value) {
+		if(this.labels==null) {
+			this.labels=new HashMap<>();
+		}
+		this.labels.put(name,value);
+		return this;
+	}
+
 
 	@Override
 	public Future<Namespace> build() {
@@ -59,6 +69,7 @@ public class DefaultNamespacesBuilder implements NamespacesBuilder {
 	private ByteBuf body(ByteBufAllocator ctx) {
 		ByteBuf buffer = ctx.buffer();
 		json.serialize(new Namespace(KIND,api.version(),Metadata.builder()
+				.labels(labels)
 				.name(name)
 				.build()),buffer);
 		return buffer;

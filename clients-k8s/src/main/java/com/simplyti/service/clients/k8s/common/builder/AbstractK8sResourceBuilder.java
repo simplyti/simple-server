@@ -25,6 +25,7 @@ public abstract class AbstractK8sResourceBuilder<B extends K8sResourceBuilder<B,
 	
 	private String name;
 	private Map<String,String> annotations;
+	private Map<String,String> labels;
 
 	public AbstractK8sResourceBuilder(HttpClient client,Json json, K8sAPI api,String namespace, String resource,
 			Class<T> type) {
@@ -53,6 +54,16 @@ public abstract class AbstractK8sResourceBuilder<B extends K8sResourceBuilder<B,
 		return (B) this;
 	}
 	
+	@SuppressWarnings("unchecked")
+	@Override
+	public B withLabel(String name, String value) {
+		if(this.labels==null) {
+			this.labels=new HashMap<>();
+		}
+		this.labels.put(name,value);
+		return (B) this;
+	}
+	
 	@Override
 	public Future<T> build() {
 		return client.request()
@@ -66,6 +77,7 @@ public abstract class AbstractK8sResourceBuilder<B extends K8sResourceBuilder<B,
 		json.serialize(resource(api,Metadata.builder()
 				.annotations(annotations)
 				.namespace(namespace)
+				.labels(labels)
 				.name(name)
 				.build()),buffer);
 		return buffer;

@@ -10,6 +10,8 @@ public interface K8sResourceBuilder<B extends K8sResourceBuilder<B,T>, T extends
 	
 	B withAnnotation(String ann, String value);
 	
+	B withLabel(String name, String value);
+	
 	Future<T> build();
 
 }

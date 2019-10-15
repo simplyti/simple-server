@@ -10,6 +10,8 @@ import com.simplyti.service.clients.k8s.common.watch.domain.Event;
 import com.simplyti.service.clients.k8s.pods.builder.DefaultPodBuilder;
 import com.simplyti.service.clients.k8s.pods.builder.PodBuilder;
 import com.simplyti.service.clients.k8s.pods.domain.Pod;
+import com.simplyti.service.clients.k8s.pods.updater.DefaultPodUpdater;
+import com.simplyti.service.clients.k8s.pods.updater.PodUpdater;
 
 import io.netty.channel.EventLoopGroup;
 
@@ -23,6 +25,11 @@ public class DefaultNamespacedPods extends DefaultNamespacedK8sApi<Pod> implemen
 	@Override
 	public PodBuilder builder() {
 		return new DefaultPodBuilder(http(),json(), api(), namespace(), resource());
+	}
+
+	@Override
+	public PodUpdater update(String name) {
+		return new DefaultPodUpdater(http(),json(), api(),namespace(),resource(),name);
 	}
 
 }

@@ -25,12 +25,22 @@ public class JsonPatch {
 		this.value=value;
 	}
 	
+	public JsonPatch(
+			String op,
+			String path) {
+		this(op,path,null);
+	}
+	
 	public static JsonPatch replace(String path, Object value) {
 		return new JsonPatch("replace",path,value);
 	}
 	
 	public static JsonPatch add(String path, Object value) {
 		return new JsonPatch("add",path,value);
+	}
+
+	public static JsonPatch remove(String path) {
+		return new JsonPatch("remove",path);
 	}
 
 }
