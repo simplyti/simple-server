@@ -11,7 +11,7 @@ import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.security.oidc.config.auto.AutodiscoveryOpenIdIncompleteException;
 import com.simplyti.service.security.oidc.config.auto.FullAutodiscoveredOpenIdConfig;
-import com.simplyti.service.security.oidc.config.auto.OpenIdWellKnownConfiguration;
+import com.simplyti.service.security.oidc.config.auto.WellKnownOpenIdResponse;
 import com.simplyti.service.security.oidc.jwk.JsonWebKey;
 import com.simplyti.service.security.oidc.jwk.JsonWebKeys;
 
@@ -26,7 +26,7 @@ public class AutodiscoveredOpenIdHandler extends DefaultFullOpenidHandler implem
 	
 	private static final InternalLogger log = InternalLoggerFactory.getInstance(AutodiscoveredOpenIdHandler.class);
 	
-	private OpenIdWellKnownConfiguration oidc;
+	private WellKnownOpenIdResponse oidc;
 	private JsonWebKeys keys;
 	private final Json json;
 	
@@ -38,11 +38,11 @@ public class AutodiscoveredOpenIdHandler extends DefaultFullOpenidHandler implem
 	}
 
 	private void getWellKnownConfiguration(HttpClient client, Endpoint endpoint) {
-		Future<OpenIdWellKnownConfiguration> futureResponse = client.request()
+		Future<WellKnownOpenIdResponse> futureResponse = client.request()
 				.withEndpoint(endpoint)
 				.withCheckStatusCode()
 				.get("/.well-known/openid-configuration")
-				.fullResponse(response->json.deserialize(response.content(), OpenIdWellKnownConfiguration.class));
+				.fullResponse(response->json.deserialize(response.content(), WellKnownOpenIdResponse.class));
 			futureResponse.addListener(f->{
 				if(f.isSuccess()) {
 					this.oidc = futureResponse.getNow();

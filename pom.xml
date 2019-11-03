@@ -49,7 +49,7 @@
 		<lombok.version>1.18.8</lombok.version>
 
 		<!-- IoC -->
-		<inject.version>1</inject.version>
+		<inject.version>1.0</inject.version>
 		<guice.version>4.2.2</guice.version>
 		<dagger.version>2.24</dagger.version>
 
@@ -57,20 +57,23 @@
 		<vavr.version>0.10.2</vavr.version>
 		<classmate.version>1.5.0</classmate.version>
 		<guava.version>28.1-jre</guava.version>
-		<javax.annotation.version>1.3.2</javax.annotation.version>
-		<javax.activation.version>1.1.1</javax.activation.version>
-		<jaxb.version>2.3.1</jaxb.version>
+		<annotation-api.version>1.3.5</annotation-api.version>
+		<activation-api.version>1.2.1</activation-api.version>
+		<xml.bind-api.version>2.3.2</xml.bind-api.version>
 
 		<!-- Networking -->
-		<netty.version>4.1.42.Final</netty.version>
+		<netty.version>4.1.43.Final</netty.version>
 
 		<!-- JAX-RS -->
-		<jax-rs.version>2.1.1</jax-rs.version>
+		<jax-rs.version>2.1.6</jax-rs.version>
 
 		<!-- Json -->
 		<jsoniter.version>0.9.23</jsoniter.version>
 		<dsljson.version>1.9.3</dsljson.version>
 		<jackson.json>2.10.0</jackson.json>
+		
+		<!-- JE2/J -->
+		<re2j.version>1.3</re2j.version>
 		
 		<!-- JWT -->
 		<jjwt.version>0.10.7</jjwt.version>
@@ -180,8 +183,8 @@
 
 			<!-- IoC -->
 			<dependency>
-				<groupId>javax.inject</groupId>
-				<artifactId>javax.inject</artifactId>
+				<groupId>jakarta.inject</groupId>
+    			<artifactId>jakarta.inject-api</artifactId>
 				<version>${inject.version}</version>
 			</dependency>
 			<dependency>
@@ -283,26 +286,33 @@
 				<version>${guava.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>javax.annotation</groupId>
-				<artifactId>javax.annotation-api</artifactId>
-				<version>${javax.annotation.version}</version>
+				<groupId>jakarta.annotation</groupId>
+    			<artifactId>jakarta.annotation-api</artifactId>
+				<version>${annotation-api.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>javax.activation</groupId>
-				<artifactId>activation</artifactId>
-				<version>${javax.activation.version}</version>
+				<groupId>jakarta.activation</groupId>
+    			<artifactId>jakarta.activation-api</artifactId>
+				<version>${activation-api.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>javax.xml.bind</groupId>
-				<artifactId>jaxb-api</artifactId>
-				<version>${jaxb.version}</version>
+				<groupId>jakarta.xml.bind</groupId>
+    			<artifactId>jakarta.xml.bind-api</artifactId>
+				<version>${xml.bind-api.version}</version>
+			</dependency>
+			
+			<!-- RE2/J -->
+			<dependency>
+			  <groupId>com.google.re2j</groupId>
+			  <artifactId>re2j</artifactId>
+			  <version>${re2j.version}</version>
 			</dependency>
 
 
 			<!-- JAX-RS -->
 			<dependency>
-				<groupId>javax.ws.rs</groupId>
-				<artifactId>javax.ws.rs-api</artifactId>
+				<groupId>jakarta.ws.rs</groupId>
+    			<artifactId>jakarta.ws.rs-api</artifactId>
 				<version>${jax-rs.version}</version>
 			</dependency>
 

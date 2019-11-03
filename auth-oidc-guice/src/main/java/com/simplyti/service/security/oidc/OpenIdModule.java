@@ -61,7 +61,7 @@ public class OpenIdModule extends AbstractModule {
 		this.openidProvider=null;
 		this.redirectableOpenidProvider=null;
 		this.fullOpenidProviderConfig=null;
-		this.fullAutodiscoveredOpenIdConfig=new DefaultFullAutodiscoveredOpenIdConfig(openIdProvider,callbackUri,clientId,clientId,cipherKey);
+		this.fullAutodiscoveredOpenIdConfig=new DefaultFullAutodiscoveredOpenIdConfig(openIdProvider,callbackUri,clientId,clientSecret,cipherKey);
 		this.autodiscoveredOpenIdConfig=null;
 	}
 

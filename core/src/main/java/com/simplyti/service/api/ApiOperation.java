@@ -2,9 +2,9 @@ package com.simplyti.service.api;
 
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.regex.Pattern;
 
 import com.simplyti.service.api.serializer.json.TypeLiteral;
+import com.google.re2j.Pattern;
 import com.simplyti.service.api.builder.PathPattern;
 
 import io.netty.handler.codec.http.HttpMethod;

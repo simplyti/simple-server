@@ -3,10 +3,10 @@ package com.simplyti.service.api.builder;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
+import com.google.re2j.Pattern;
 
 import io.netty.util.internal.StringUtil;
 

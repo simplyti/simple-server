@@ -3,9 +3,9 @@ package com.simplyti.service.gateway;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import com.google.common.base.MoreObjects;
+import com.google.re2j.Pattern;
 import com.simplyti.service.api.builder.PathPattern;
 import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.simplyti.service.clients.Endpoint;

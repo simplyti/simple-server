@@ -1,6 +1,6 @@
 package com.simplyti.service.gateway;
 
-import java.util.regex.Matcher;
+import com.google.re2j.Matcher;
 
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.util.internal.StringUtil;

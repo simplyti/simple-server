@@ -1,8 +1,8 @@
 package com.simplyti.service.gateway;
 
 import java.util.Map.Entry;
-import java.util.regex.Matcher;
 
+import com.google.re2j.Matcher;
 import com.simplyti.service.api.builder.PathPattern;
 
 import io.netty.util.internal.StringUtil;

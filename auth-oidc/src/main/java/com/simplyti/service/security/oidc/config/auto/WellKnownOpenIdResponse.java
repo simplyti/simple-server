@@ -7,14 +7,14 @@ import lombok.experimental.Accessors;
 
 @Getter
 @Accessors(fluent=true)
-public class OpenIdWellKnownConfiguration {
+public class WellKnownOpenIdResponse {
 	
 	private final String token_endpoint;
 	private final String authorization_endpoint;
 	private final String jwks_uri;
 
 	@CompiledJson
-	public OpenIdWellKnownConfiguration(
+	public WellKnownOpenIdResponse(
 			String token_endpoint,
 			String authorization_endpoint,
 			String jwks_uri) {

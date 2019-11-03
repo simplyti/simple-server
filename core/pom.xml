@@ -30,8 +30,13 @@
 
 		<!-- IoC -->
 		<dependency>
-			<groupId>javax.inject</groupId>
-			<artifactId>javax.inject</artifactId>
+			<groupId>jakarta.inject</groupId>
+    		<artifactId>jakarta.inject-api</artifactId>
+		</dependency>
+		
+		<dependency>
+		  <groupId>com.google.re2j</groupId>
+		  <artifactId>re2j</artifactId>
 		</dependency>
 
 		<!-- Networking -->
@@ -68,19 +73,19 @@
 			<artifactId>classmate</artifactId>
 		</dependency>
 		<dependency>
-		    <groupId>javax.annotation</groupId>
-		    <artifactId>javax.annotation-api</artifactId>
+		    <groupId>jakarta.annotation</groupId>
+    		<artifactId>jakarta.annotation-api</artifactId>
 		</dependency>
 
 		<!-- JAX-RS -->
 		<dependency>
-			<groupId>javax.ws.rs</groupId>
-			<artifactId>javax.ws.rs-api</artifactId>
+			<groupId>jakarta.ws.rs</groupId>
+    		<artifactId>jakarta.ws.rs-api</artifactId>
 		</dependency>
 		
 		<dependency>
-		    <groupId>javax.activation</groupId>
-		    <artifactId>activation</artifactId>
+		    <groupId>jakarta.activation</groupId>
+    		<artifactId>jakarta.activation-api</artifactId>
 		</dependency>
 	</dependencies>
 
