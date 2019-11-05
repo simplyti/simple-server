@@ -24,6 +24,7 @@ public class DefaultPodBuilder extends AbstractK8sResourceBuilder<PodBuilder,Pod
 	private List<Volume> volumes;
 	private RestartPolicy restartPolicy;
 	private Integer terminationGracePeriodSeconds;
+	private String schedulerName;
 
 	public DefaultPodBuilder(HttpClient client,Json json,K8sAPI api,String namespace, String resource) {
 		super(client,json,api,namespace,resource,Pod.class);
@@ -31,7 +32,7 @@ public class DefaultPodBuilder extends AbstractK8sResourceBuilder<PodBuilder,Pod
 
 	@Override
 	protected Pod resource(K8sAPI api, Metadata metadata) {
-		return new Pod(KIND, api.version(), metadata, new PodSpec(containers,restartPolicy,imagePullSecrets,terminationGracePeriodSeconds,volumes),null);
+		return new Pod(KIND, api.version(), metadata, new PodSpec(containers,restartPolicy,imagePullSecrets,terminationGracePeriodSeconds,volumes,schedulerName),null);
 	}
 	
 	@Override
@@ -79,6 +80,12 @@ public class DefaultPodBuilder extends AbstractK8sResourceBuilder<PodBuilder,Pod
 			this.volumes=new ArrayList<>();
 		}
 		this.volumes.add(volume);
+	}
+
+	@Override
+	public PodBuilder withSchedulerName(String schedulerName) {
+		this.schedulerName=schedulerName;
+		return this;
 	}
 
 }

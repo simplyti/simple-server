@@ -16,6 +16,7 @@ public class PodSpec {
 	private final RestartPolicy restartPolicy;
 	private final Integer terminationGracePeriodSeconds;
 	private final List<Volume> volumes;
+	private final String schedulerName;
 
 	@CompiledJson
 	public PodSpec(
@@ -23,12 +24,14 @@ public class PodSpec {
 			RestartPolicy restartPolicy,
 			List<ImagePullSecret> imagePullSecrets,
 			Integer terminationGracePeriodSeconds,
-			List<Volume> volumes) {
+			List<Volume> volumes,
+			String schedulerName) {
 		this.containers=containers;
 		this.restartPolicy=restartPolicy;
 		this.imagePullSecrets=imagePullSecrets;
 		this.terminationGracePeriodSeconds=terminationGracePeriodSeconds;
 		this.volumes=volumes;
+		this.schedulerName=schedulerName;
 	}
 
 }
