@@ -27,7 +27,6 @@ import com.simplyti.service.clients.proxy.Proxy;
 import com.simplyti.service.clients.proxy.Proxy.ProxyType;
 import com.simplyti.service.clients.trace.RequestTracer;
 
-import cucumber.api.java.Before;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
@@ -51,7 +50,6 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Future;
-import io.vavr.control.Try;
 
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -75,26 +73,6 @@ public class HttpClientStepDefs {
 	@Inject
 	@Named("singleton")
 	private HttpClient client;
-	
-	
-	@Before
-	public void checkProxy() {
-		HttpEndpoint target = HttpEndpoint.of("http://httpbin:80/status/200");
-		ProxiedEndpoint endpoint = ProxiedEndpoint.of(target).through("127.0.0.1", 3128, Proxy.ProxyType.HTTP);
-		Awaitility.await().atMost(30, TimeUnit.SECONDS).until(()->{
-			Try<FullHttpResponse> result = Try.of(()->client
-					.request()
-					.withEndpoint(endpoint)
-					.withReadTimeout(1000)
-					.get(target.path())
-					.fullResponse().get());
-			if(result.isSuccess()) {
-				result.get().release();
-				return true;
-			}
-			return false;
-		});
-	}
 	
 	@Given("^a single thread event loop group \"([^\"]*)\"$")
 	public void aSingleThreadEventLoopGroup(String key) throws Exception {

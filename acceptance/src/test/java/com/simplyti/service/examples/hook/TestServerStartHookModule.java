@@ -1,7 +1,6 @@
-package com.simplyti.service;
+package com.simplyti.service.examples.hook;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.ApiProvider;
@@ -16,10 +15,8 @@ public class TestServerStartHookModule extends AbstractModule implements ServerS
 
 	@Override
 	protected void configure() {
-		Multibinder<ServerStartHook> hooks = Multibinder.newSetBinder(binder(), ServerStartHook.class);
-		bind(TestServerStartHookModule.class).in(Singleton.class);
-		hooks.addBinding().to(TestServerStartHookModule.class).in(Singleton.class);
-		
+		Multibinder.newSetBinder(binder(), ServerStartHook.class).addBinding().toInstance(this);
+		Multibinder.newSetBinder(binder(), ApiProvider.class).addBinding().toInstance(this);
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-package com.simplyti.service;
+package com.simplyti.service.examples.api;
 
 import java.util.stream.Collectors;
 

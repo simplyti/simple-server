@@ -1,10 +1,11 @@
+@standalone
 Feature: Operation Inbound Filter
 
 Scenario: Basic Operation Inbound Filter
 	When I start a service "#serviceFuture" with options:
-		| option	 			| value |
-		| withApi			| com.simplyti.service.APITest	|
-		| withModule			| com.simplyti.service.OperationInboundFilterModule |
+		| option	 		| value |
+		| withApi			| com.simplyti.service.examples.api.APITest	|
+		| withModule		| com.simplyti.service.examples.filter.OperationInboundFilterModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /hello" getting "#response"
@@ -12,22 +13,11 @@ Scenario: Basic Operation Inbound Filter
 	
 Scenario: Basic Operation Inbound Filter
 	When I start a service "#serviceFuture" with options:
-		| option	 			| value |
-		| withApi			| com.simplyti.service.APITest	|
-		| withModule			| com.simplyti.service.OperationInboundFilterModule |
+		| option	 		| value |
+		| withApi			| com.simplyti.service.examples.api.APITest	|
+		| withModule		| com.simplyti.service.examples.filter.OperationInboundFilterModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /hello" with authorizarion header "Bearer thetoken" getting "#response"
 	And I check that "#response" has status code 200
 	And I check that "#response" is equals to "Hello!"
-	
-Scenario: Service tracing capability
-	When I start a service "#serviceFuture" with options:
-		| option	 			| value |
-		| withApi				| com.simplyti.service.APITest	|
-		| withModule			| com.simplyti.service.TracingModule |
-		| withLog4J2Logger		|		|
-	Then I check that "#serviceFuture" is success
-	When I send a "GET /user/1" getting "#response"
-	And I check that "#response" has status code 200
-	And I check that "#response" is equals to "Hello user 1"

@@ -1,10 +1,11 @@
+@standalone
 Feature: Http Response filter
 
 Scenario: Basic Http Response filter
 	When I start a service "#serviceFuture" with options:
 		| option	 		| value |
-		| withApi			| com.simplyti.service.APITest	|
-		| withModule		| com.simplyti.service.BasicHttpResponseFilterModule |
+		| withApi			| com.simplyti.service.examples.api.APITest	|
+		| withModule		| com.simplyti.service.examples.filter.BasicHttpResponseFilterModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /hello" getting "#response"
@@ -15,8 +16,8 @@ Scenario: Basic Http Response filter
 Scenario: Async Http Response filter
 	When I start a service "#serviceFuture" with options:
 		| option	 		| value |
-		| withApi			| com.simplyti.service.APITest	|
-		| withModule		| com.simplyti.service.AsyncHttpResponseFilterModule |
+		| withApi			| com.simplyti.service.examples.api.APITest	|
+		| withModule		| com.simplyti.service.examples.filter.AsyncHttpResponseFilterModule |
 		| withLog4J2Logger	|		|
 		| verbose			|  |
 	Then I check that "#serviceFuture" is success
@@ -28,8 +29,8 @@ Scenario: Async Http Response filter
 Scenario: Basic Http Response filter with buffered body
 	When I start a service "#serviceFuture" with options:
 		| option	 		| value |
-		| withApi			| com.simplyti.service.APITest	|
-		| withModule		| com.simplyti.service.BasicHttpResponseFilterModule |
+		| withApi			| com.simplyti.service.examples.api.APITest	|
+		| withModule		| com.simplyti.service.examples.filter.BasicHttpResponseFilterModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I send a "POST /echo/buffered" with 92160 bytes random body getting "#response"
@@ -39,8 +40,8 @@ Scenario: Basic Http Response filter with buffered body
 Scenario: Async Http Response filter with buffered body
 	When I start a service "#serviceFuture" with options:
 		| option	 		| value |
-		| withApi			| com.simplyti.service.APITest	|
-		| withModule		| com.simplyti.service.AsyncHttpResponseFilterModule |
+		| withApi			| com.simplyti.service.examples.api.APITest	|
+		| withModule		| com.simplyti.service.examples.filter.AsyncHttpResponseFilterModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I send a "POST /echo/buffered" with 92160 bytes random body getting "#response"

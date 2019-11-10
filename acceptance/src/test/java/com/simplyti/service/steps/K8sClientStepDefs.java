@@ -49,7 +49,6 @@ import com.simplyti.service.clients.k8s.services.domain.Service;
 import com.simplyti.service.clients.k8s.services.domain.ServicePort;
 
 import cucumber.api.java.After;
-import cucumber.api.java.Before;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
@@ -65,17 +64,6 @@ public class K8sClientStepDefs {
 	
 	@Inject
 	private Map<String,Object> scenarioData;
-	
-	@Before
-	public void health(){
-		Awaitility.await().atMost(2,TimeUnit.MINUTES).until(()->{
-			try {
-				return kubeClient.health().await().get().equals("ok");
-			} catch (Exception e) {
-				return false;
-			}
-		});
-	}
 	
 	@SuppressWarnings("unchecked")
 	@Given("^a namespace \"([^\"]*)\"$")

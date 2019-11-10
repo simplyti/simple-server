@@ -1,35 +1,35 @@
 Feature: Http Client
 
 Scenario: Get request
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I get "/hello" getting response "#response"
 	Then I check that "#response" is success
 	And I check that http response "#response" has body "Hello!"
 	
 Scenario: Delete request
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I delete "/delete" getting response "#response"
 	Then I check that "#response" is success
 	And I check that http response "#response" has body "Bye!"
 	
 Scenario: Post request
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I post "/echo" with body "Hey!" getting response "#response"
 	Then I check that "#response" is success
 	And I check that http response "#response" has body "Hey!"
 
 Scenario: Get request https
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I get url "https://localhost:8443/hello" getting response "#response"
 	Then I check that "#response" is success
 	And I check that http response "#response" has body "Hello!"
 	
 Scenario: Get request with query params
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I get "/queryparams/all" with query params getting response "#response"
 		| name	| pablo |
@@ -38,14 +38,14 @@ Scenario: Get request with query params
 	And I check that http response "#response" has body "{name=[pablo], city=[Madrid]}"
 	
 Scenario: Http client error
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I get "/responsecode/401" getting response "#response"
 	Then I check that "#response" is failure
 	And I check that http error of "#response" contains status code 401
 
 Scenario: Ignoring status request
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I get "/responsecode/401" ignoring status getting response "#response"
 	Then I check that "#response" is success
@@ -53,7 +53,7 @@ Scenario: Ignoring status request
 	And I check that http response "#response" has body ""
 	
 Scenario: Connection error
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I get "/echo" to port 9090 getting response "#response"
 	Then I check that "#response" is failure
@@ -95,13 +95,13 @@ Scenario: WebSocket connection
 	And I check that text stream "#stream" is equals to "Bye WS!"
 	
 Scenario: Get SSE stream
-	When I start a service "#serviceFuture" with API "com.simplyti.service.SSEApi"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.SSEApi"
 	Then I check that "#serviceFuture" is success
 	When I get url "http://127.0.0.1:8080/sse" getting sse stream "#stream"
 	Then I check that stream "#stream" contains 2 items
 	
 Scenario: Request with response transform
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I get "/hello/json?name=Pablo" getting transformed response to any "#any"
 	Then I check that "#any" is success

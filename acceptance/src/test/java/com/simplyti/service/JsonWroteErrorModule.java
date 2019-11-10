@@ -6,6 +6,7 @@ import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.JsonWriter.WriteObject;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
+import com.simplyti.service.examples.api.SerializedErrorDTO;
 
 public class JsonWroteErrorModule extends AbstractModule implements Configuration , WriteObject<SerializedErrorDTO> {
 	

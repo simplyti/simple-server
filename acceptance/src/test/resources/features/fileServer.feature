@@ -1,3 +1,4 @@
+@standalone
 Feature: File server
 
 Scenario: File server
@@ -59,7 +60,7 @@ Scenario: File server with API
 	"""
 	Hello from file!
 	"""
-	When I start a service "#serviceFuture" with file serve "#tempdir/testfiles" on "/statics" and API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with file serve "#tempdir/testfiles" on "/statics" and API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /statics/hello.txt" getting "#response"
 	And I check that "#response" is equals to "Hello from file!"
@@ -71,7 +72,7 @@ Scenario: File server not match path
 	"""
 	Hello from file!
 	"""
-	When I start a service "#serviceFuture" with file serve "#tempdir/testfiles" on "/statics" and API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with file serve "#tempdir/testfiles" on "/statics" and API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /other/hello.txt" getting "#response"
 	Then I check that "#response" has status code 404

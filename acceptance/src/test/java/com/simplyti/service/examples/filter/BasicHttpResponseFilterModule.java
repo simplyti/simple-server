@@ -1,4 +1,4 @@
-package com.simplyti.service;
+package com.simplyti.service.examples.filter;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;

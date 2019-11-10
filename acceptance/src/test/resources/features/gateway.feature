@@ -2,9 +2,9 @@ Feature: Gateway
 
 Scenario: Simple gateway
 	When I start a service "#serviceFuture" with options:
-		| option	 			| value |
-		| withModule			| com.simplyti.service.gateway.GatewayModule |
-		| withModule			| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| option	 		| value |
+		| withModule		| com.simplyti.service.gateway.GatewayModule |
+		| withModule		| com.simplyti.service.discovery.TestServiceDiscoveryModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I create a service with path "/base64" and backend "http://127.0.0.1:8081"
@@ -14,9 +14,9 @@ Scenario: Simple gateway
 
 Scenario: Not found service
 	When I start a service "#serviceFuture" with options:
-		| option	 			| value |
-		| withModule			| com.simplyti.service.gateway.GatewayModule |
-		| withModule			| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| option	 		| value |
+		| withModule		| com.simplyti.service.gateway.GatewayModule |
+		| withModule		| com.simplyti.service.discovery.TestServiceDiscoveryModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /notfound" getting "#response"
@@ -37,9 +37,9 @@ Scenario: Not available service
 	
 Scenario: Bad gateway service
 	When I start a service "#serviceFuture" with options:
-		| option	 			| value |
-		| withModule			| com.simplyti.service.gateway.GatewayModule |
-		| withModule			| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| option	 		| value |
+		| withModule		| com.simplyti.service.gateway.GatewayModule |
+		| withModule		| com.simplyti.service.discovery.TestServiceDiscoveryModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I create a service with path "/status" and backend "http://127.0.0.1:9090"
@@ -49,16 +49,16 @@ Scenario: Bad gateway service
 	
 Scenario: Streamed body post
 	When I start a service "#serviceFuture" with options:
-		| option	 			| value |
-		| withApi			| com.simplyti.service.APITest |
+		| option	 		| value |
+		| withApi			| com.simplyti.service.examples.api.APITest |
 		| insecuredPort		| 9090	|
 		| securedPort		| 9091	|
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayFuture" with options:
-		| option	 			| value |
-		| withModule			| com.simplyti.service.gateway.GatewayModule |
-		| withModule			| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| option	 		| value |
+		| withModule		| com.simplyti.service.gateway.GatewayModule |
+		| withModule		| com.simplyti.service.discovery.TestServiceDiscoveryModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#gatewayFuture" is success
 	When I create a service with path "/echo" and backend "http://127.0.0.1:9090"
@@ -74,15 +74,15 @@ Scenario: Streamed body post
 	
 Scenario: Service method match
 	When I start a service "#serviceFuture" with options:
-		| option	 			| value |
-		| withApi			| com.simplyti.service.APITest |
+		| option	 		| value |
+		| withApi			| com.simplyti.service.examples.api.APITest |
 		| insecuredPort		| 9090	|
 		| securedPort		| 9091	|
 		| withLog4J2Logger	|		|
 	When I start a service "#gatewayFuture" with options:
-		| option	 			| value |
-		| withModule			| com.simplyti.service.gateway.GatewayModule |
-		| withModule			| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| option	 		| value |
+		| withModule		| com.simplyti.service.gateway.GatewayModule |
+		| withModule		| com.simplyti.service.discovery.TestServiceDiscoveryModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#gatewayFuture" is success
 	When I create a service with method "GET" with path "/anything" and backend "http://127.0.0.1:8081"
@@ -98,15 +98,15 @@ Scenario: Service method match
 	
 Scenario: Especific method is prioritized
 	When I start a service "#serviceFuture" with options:
-		| option	 			| value |
-		| withApi			| com.simplyti.service.APITest |
+		| option	 		| value |
+		| withApi			| com.simplyti.service.examples.api.APITest |
 		| insecuredPort		| 9090	|
 		| securedPort		| 9091	|
 		| withLog4J2Logger	|		|
 	When I start a service "#gatewayFuture" with options:
-		| option	 			| value |
-		| withModule			| com.simplyti.service.gateway.GatewayModule |
-		| withModule			| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| option	 		| value |
+		| withModule		| com.simplyti.service.gateway.GatewayModule |
+		| withModule		| com.simplyti.service.discovery.TestServiceDiscoveryModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#gatewayFuture" is success
 	When I create a service with path "/anything" and backend "http://127.0.0.1:8081"
@@ -119,15 +119,15 @@ Scenario: Especific method is prioritized
 	
 Scenario: Especific host is prioritized
 	When I start a service "#serviceFuture" with options:
-		| option	 			| value |
-		| withApi			| com.simplyti.service.APITest |
+		| option	 		| value |
+		| withApi			| com.simplyti.service.examples.api.APITest |
 		| insecuredPort		| 9090	|
 		| securedPort		| 9091	|
 		| withLog4J2Logger	|		|
 	When I start a service "#gatewayFuture" with options:
-		| option	 			| value |
-		| withModule			| com.simplyti.service.gateway.GatewayModule |
-		| withModule			| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| option	 		| value |
+		| withModule		| com.simplyti.service.gateway.GatewayModule |
+		| withModule		| com.simplyti.service.discovery.TestServiceDiscoveryModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#gatewayFuture" is success
 	When I create a service with backend "http://127.0.0.1:8081"
@@ -138,9 +138,9 @@ Scenario: Especific host is prioritized
 	
 Scenario: Host service match only when host header present
 	When I start a service "#serviceFuture" with options:
-		| option	 			| value |
-		| withModule			| com.simplyti.service.gateway.GatewayModule |
-		| withModule			| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| option	 		| value |
+		| withModule		| com.simplyti.service.gateway.GatewayModule |
+		| withModule		| com.simplyti.service.discovery.TestServiceDiscoveryModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I create a service with host "httpbin.docker" with path "/status" and backend "http://127.0.0.1:8081"
@@ -151,9 +151,9 @@ Scenario: Host service match only when host header present
 	
 Scenario: Path template
 	When I start a service "#serviceFuture" with options:
-		| option	 			| value |
-		| withModule			| com.simplyti.service.gateway.GatewayModule |
-		| withModule			| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| option	 		| value |
+		| withModule		| com.simplyti.service.gateway.GatewayModule |
+		| withModule		| com.simplyti.service.discovery.TestServiceDiscoveryModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I create a service with path "/status/{code:\d+}" and backend "http://127.0.0.1:8081"
@@ -164,9 +164,9 @@ Scenario: Path template
 	
 Scenario: Path template
 	When I start a service "#serviceFuture" with options:
-		| option	 			| value |
-		| withModule			| com.simplyti.service.gateway.GatewayModule |
-		| withModule			| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| option	 		| value |
+		| withModule		| com.simplyti.service.gateway.GatewayModule |
+		| withModule		| com.simplyti.service.discovery.TestServiceDiscoveryModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I create a service with path "/{code:\d+}", rewrite "/status" and backend "http://127.0.0.1:8081"
@@ -175,9 +175,9 @@ Scenario: Path template
 
 Scenario: Web socket backend
 	When I start a service "#serviceFuture" with options:
-		| option	 			| value |
-		| withModule			| com.simplyti.service.gateway.GatewayModule |
-		| withModule			| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| option	 		| value |
+		| withModule		| com.simplyti.service.gateway.GatewayModule |
+		| withModule		| com.simplyti.service.discovery.TestServiceDiscoveryModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I create a service with backend "http://127.0.0.1:8010"
@@ -192,9 +192,9 @@ Scenario: Web socket backend
 
 Scenario: Web socket service connection error
 	When I start a service "#serviceFuture" with options:
-		| option	 			| value |
-		| withModule			| com.simplyti.service.gateway.GatewayModule |
-		| withModule			| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| option	 		| value |
+		| withModule		| com.simplyti.service.gateway.GatewayModule |
+		| withModule		| com.simplyti.service.discovery.TestServiceDiscoveryModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I create a service with backend "http://127.0.0.1:9090"
@@ -204,9 +204,9 @@ Scenario: Web socket service connection error
 
 Scenario: Web socket service bad handshake
 	When I start a service "#serviceFuture" with options:
-		| option	 			| value |
-		| withModule			| com.simplyti.service.gateway.GatewayModule |
-		| withModule			| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| option	 		| value |
+		| withModule		| com.simplyti.service.gateway.GatewayModule |
+		| withModule		| com.simplyti.service.discovery.TestServiceDiscoveryModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I create a service with backend "http://127.0.0.1:8081"
@@ -216,15 +216,15 @@ Scenario: Web socket service bad handshake
 	
 Scenario: Path based routing
 	When I start a service "#serviceFuture" with options:
-		| option	 			| value |
-		| withApi			| com.simplyti.service.APITest |
+		| option	 		| value |
+		| withApi			| com.simplyti.service.examples.api.APITest |
 		| insecuredPort		| 9090	|
 		| securedPort		| 9091	|
 		| withLog4J2Logger	|		|
 	When I start a service "#gatewayFuture" with options:
-		| option	 			| value |
-		| withModule			| com.simplyti.service.gateway.GatewayModule |
-		| withModule			| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| option	 		| value |
+		| withModule		| com.simplyti.service.gateway.GatewayModule |
+		| withModule		| com.simplyti.service.discovery.TestServiceDiscoveryModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#gatewayFuture" is success
 	When I create a service with path "/status" and backend "http://127.0.0.1:8081"

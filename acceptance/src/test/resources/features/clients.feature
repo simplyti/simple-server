@@ -1,7 +1,7 @@
 Feature: Clients
 
 Scenario: Connection is reused
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I get "/hello" getting response "#response"
 	Then I check that "#response" is success
@@ -13,7 +13,7 @@ Scenario: Connection is reused
 	And I check that http client has 1 iddle connection
 	
 Scenario: New connection are created if needed
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I post "/echo/delay?millis=500" with body "Hey 1!" getting response "#response1"
 	And I check that http client has 1 active connection
@@ -31,7 +31,7 @@ Scenario: New connection are created if needed
 	And I check that http client has 2 total connection
 	
 Scenario: Request timeout
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I post "/echo/delay?millis=500" with body "Hey!" and response time 200 getting response "#response"
 	Then I check that "#response" is failure
@@ -46,7 +46,7 @@ Scenario: Connection error
 Scenario: Single thread client
 	Given a single thread event loop group "#eventLoopGroup"
 	When I create an http client "#client" with event loop group "#eventLoopGroup"
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I get "/hello" using client "#client" in event loop "#eventLoopGroup" getting response "#response"
 	Then I check that "#response" is success
@@ -57,7 +57,7 @@ Scenario: Single thread client
 	And I check that http client "#client" has 1 iddle connection
 	
 Scenario: Connection write stream with http objecs
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I post "/echo" with body stream "#stream", content part "Hello ", length of 20 getting response objects "#responseStream"
 	And I check that stream "#stream" is not complete
@@ -80,7 +80,7 @@ Scenario: Connection write stream with http objecs
 Scenario: Single thread stream with http objects
 	Given a single thread event loop group "#eventLoopGroup"
 	When I create an http client "#client" with event loop group "#eventLoopGroup"
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I post "/echo" using client "#client" with body stream "#stream", content part "Hello ", length of 20 getting response objects "#responseStream"
 	And I check that stream "#stream" is not complete
@@ -107,7 +107,7 @@ Scenario: Connection error when write stream
 	Then I check that "#writeresult" is failure
 	
 Scenario: Connection closed
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I get "/close" getting response "#response"
 	And I check that "#response" is failure
@@ -115,7 +115,7 @@ Scenario: Connection closed
 	
 Scenario: Client custom tracer
 	Given a simple client request tracer "#tracer"
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I get "/hello" getting response "#response" with request tracer "#tracer"
 	Then I check that "#response" is success
@@ -123,7 +123,7 @@ Scenario: Client custom tracer
 	And I check that tracer "#tracer" contains 1 request
 	
 Scenario: Client connections close
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APITest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I get "/hello" getting response "#response"
 	Then I check that "#response" is success

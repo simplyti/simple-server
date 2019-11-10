@@ -44,7 +44,7 @@ public class OpenIdStepDefs {
 	
 	@Given("^a JWT sign key \"([^\"]*)\" from self signed ccertificate \"([^\"]*)\"$")
 	public void aJWTSignKeyFromSelfSignedCcertificate(String key, String cert) throws Exception {
-        scenarioData.put(key, ((SelfSignedCertificate)scenarioData.get(cert)).key());
+		scenarioData.put(key, ((SelfSignedCertificate)scenarioData.get(cert)).key());
 	}
 	
 	@Given("^a JWT sign key \"([^\"]*)\"$")
@@ -58,6 +58,7 @@ public class OpenIdStepDefs {
 		String token = Jwts.builder()
 				  .setSubject("Pepe")
 				  .signWith((Key) scenarioData.get(keyKey),alg)
+				  .setHeaderParam("kid","thekey")
 				  .serializeToJsonWith(json::serialize)
 				  .compact();
 		scenarioData.put(tokenKey, token);

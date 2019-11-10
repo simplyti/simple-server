@@ -28,7 +28,6 @@ import org.awaitility.Awaitility;
 
 import com.google.inject.Module;
 import com.simplyti.service.DefaultService;
-import com.simplyti.service.TestServerStopHookModule;
 import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.builder.di.guice.GuiceService;
 import com.simplyti.service.builder.di.guice.GuiceServiceBuilder;
@@ -36,6 +35,7 @@ import com.simplyti.service.client.SimpleHttpClient;
 import com.simplyti.service.client.SimpleHttpResponse;
 import com.simplyti.service.clients.http.exception.HttpException;
 import com.simplyti.service.clients.http.request.StreamedHttpRequest;
+import com.simplyti.service.examples.hook.TestServerStopHookModule;
 
 import cucumber.api.java.After;
 import cucumber.api.java.en.Given;

@@ -1,4 +1,4 @@
-package com.simplyti.service;
+package com.simplyti.service.examples.api;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;

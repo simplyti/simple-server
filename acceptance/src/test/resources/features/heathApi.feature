@@ -1,3 +1,4 @@
+@standalone
 Feature: Health API
 
 Scenario: Health API

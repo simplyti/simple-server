@@ -1,7 +1,8 @@
+@standalone
 Feature: Http Streamed service
 
 Scenario: Basic Http Handle
-	When I start a service "#serviceFuture" with API "com.simplyti.service.StreamAPITest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.StreamAPITest"
 	Then I check that "#serviceFuture" is success
 	And I post "/streamed" with body stream "#stream", content part "Hello ", length of 20 getting response objects "#response"
 	Then I check that stream "#stream" is not complete

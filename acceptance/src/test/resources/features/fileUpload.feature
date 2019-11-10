@@ -1,3 +1,4 @@
+@standalone
 Feature: File upload
 
 Scenario: File server
@@ -5,7 +6,7 @@ Scenario: File server
 	"""
 	Hello!
 	"""
-	When I start a service "#serviceFuture" with API "com.simplyti.service.APIUploadTest"
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APIUploadTest"
 	Then I check that "#serviceFuture" is success
 	When I send files "#tempdir/testfiles/file1.txt" to "/upload" getting "#response"
 	And I check that "#response" has status code 200
