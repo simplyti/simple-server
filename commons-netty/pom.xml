@@ -22,6 +22,16 @@
 			<groupId>io.netty</groupId>
 			<artifactId>netty-transport</artifactId>
 		</dependency>
+		
+		<!-- Test -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.hamcrest</groupId>
+			<artifactId>hamcrest-library</artifactId>
+		</dependency>
 	</dependencies>
 
 </project>
