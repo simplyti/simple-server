@@ -1,16 +1,17 @@
 package com.simplyti.util.concurrent;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import io.netty.util.concurrent.EventExecutor;
+import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
-import lombok.experimental.Delegate;
 
 public class DefaultFuture<T> implements Future<T> {
 
-	@Delegate
 	private final io.netty.util.concurrent.Future<T> target;
 	
 	private final EventExecutor loop;
@@ -195,6 +196,111 @@ public class DefaultFuture<T> implements Future<T> {
 			});
 			return new DefaultFuture<>(promise, loop);
 		}
+	}
+
+	@Override
+	public boolean isSuccess() {
+		return target.isSuccess();
+	}
+
+	@Override
+	public boolean isCancellable() {
+		return target.isCancellable();
+	}
+
+	@Override
+	public Throwable cause() {
+		return target.cause();
+	}
+
+	@Override
+	public io.netty.util.concurrent.Future<T> addListener(GenericFutureListener<? extends io.netty.util.concurrent.Future<? super T>> listener) {
+		return target.addListener(listener) ;
+	}
+
+	@Override
+	public io.netty.util.concurrent.Future<T> addListeners(@SuppressWarnings("unchecked") GenericFutureListener<? extends io.netty.util.concurrent.Future<? super T>>... listeners) {
+		return target.addListeners(listeners);
+	}
+
+	@Override
+	public io.netty.util.concurrent.Future<T> removeListener(GenericFutureListener<? extends io.netty.util.concurrent.Future<? super T>> listener) {
+		return target.removeListener(listener);
+	}
+
+	@Override
+	public io.netty.util.concurrent.Future<T> removeListeners(@SuppressWarnings("unchecked") GenericFutureListener<? extends io.netty.util.concurrent.Future<? super T>>... listeners) {
+		return target.removeListeners(listeners);
+	}
+
+	@Override
+	public io.netty.util.concurrent.Future<T> sync() throws InterruptedException {
+		return target.sync();
+	}
+
+	@Override
+	public io.netty.util.concurrent.Future<T> syncUninterruptibly() {
+		return target.syncUninterruptibly();
+	}
+
+	@Override
+	public io.netty.util.concurrent.Future<T> await() throws InterruptedException {
+		return target.await();
+	}
+
+	@Override
+	public io.netty.util.concurrent.Future<T> awaitUninterruptibly() {
+		return target.awaitUninterruptibly();
+	}
+
+	@Override
+	public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
+		return target.await(timeout, unit);
+	}
+
+	@Override
+	public boolean await(long timeoutMillis) throws InterruptedException {
+		return target.await(timeoutMillis);
+	}
+
+	@Override
+	public boolean awaitUninterruptibly(long timeout, TimeUnit unit) {
+		return target.awaitUninterruptibly(timeout, unit);
+	}
+
+	@Override
+	public boolean awaitUninterruptibly(long timeoutMillis) {
+		return target.awaitUninterruptibly(timeoutMillis);
+	}
+
+	@Override
+	public T getNow() {
+		return target.getNow();
+	}
+
+	@Override
+	public boolean cancel(boolean mayInterruptIfRunning) {
+		return target.cancel(mayInterruptIfRunning);
+	}
+
+	@Override
+	public boolean isCancelled() {
+		return target.isCancelled();
+	}
+
+	@Override
+	public boolean isDone() {
+		return target.isDone();
+	}
+
+	@Override
+	public T get() throws InterruptedException, ExecutionException {
+		return target.get();
+	}
+
+	@Override
+	public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+		return target.get(timeout, unit);
 	}
 	
 }
