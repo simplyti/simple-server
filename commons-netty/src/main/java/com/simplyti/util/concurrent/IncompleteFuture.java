@@ -3,12 +3,14 @@ package com.simplyti.util.concurrent;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import io.netty.util.concurrent.GenericFutureListener;
 
-public class IncompleteFuture<T> implements Future<T>{
+public class IncompleteFuture<T> implements Future<T> {
 
 	@SuppressWarnings("rawtypes")
 	private static final Future INSTANCE = new IncompleteFuture();
@@ -121,6 +123,11 @@ public class IncompleteFuture<T> implements Future<T>{
 	public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
 		return null;
 	}
+	
+	@Override
+	public <A, B> BiCombinedFuture<A, B> thenCombine(Function<? super T, io.netty.util.concurrent.Future<A>> fn1, Function<? super T, io.netty.util.concurrent.Future<B>> fn2) {
+		return IncompleteBiFuture.instance();
+	}
 
 	@Override
 	public <U> Future<U> thenApply(Function<? super T, ? extends U> fn) {
@@ -146,10 +153,47 @@ public class IncompleteFuture<T> implements Future<T>{
 	public Future<Void> onError(Consumer<Throwable> action) {
 		return instance();
 	}
-
+	
 	@SuppressWarnings("unchecked")
 	public static <O> Future<O> instance() {
 		return INSTANCE;
+	}
+	
+	private static class IncompleteBiFuture<A,B> implements BiCombinedFuture<A,B> {
+		
+		@SuppressWarnings("rawtypes")
+		private static final BiCombinedFuture INSTANCE = new IncompleteBiFuture();
+
+		@Override
+		public Future<Void> thenAccept(BiConsumer<? super A, ? super B> action) {
+			return IncompleteFuture.instance();
+		}
+
+		@SuppressWarnings("unchecked")
+		public static <A, B> BiCombinedFuture<A, B> instance() {
+			return INSTANCE;
+		}
+
+		@Override
+		public <O> Future<O> thenApply(BiFunction<? super A, ? super B, ? extends O> action) {
+			return IncompleteFuture.instance();
+		}
+
+		@Override
+		public <O> Future<O> exceptionallyApply(Function<Throwable, ? extends O> fn) {
+			return IncompleteFuture.instance();
+		}
+
+		@Override
+		public Future<Void> onError(Consumer<Throwable> action) {
+			return IncompleteFuture.instance();
+		}
+
+		@Override
+		public <O> Future<O> thenCombine(BiFunction<? super A, ? super B, io.netty.util.concurrent.Future<O>> fn) {
+			return IncompleteFuture.instance();
+		}
+		
 	}
 
 }

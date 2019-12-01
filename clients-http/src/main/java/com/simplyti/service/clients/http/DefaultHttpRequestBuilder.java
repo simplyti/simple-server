@@ -37,7 +37,6 @@ import io.netty.util.concurrent.Promise;
 public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<HttpRequestBuilder> implements HttpRequestBuilder {
 
 	private final InternalClient client;
-	private final Endpoint endpoint;
 	
 	private final DefaultHttpHeaders headers;
 	private boolean checkStatusCode;
@@ -45,7 +44,6 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 	public DefaultHttpRequestBuilder(InternalClient target, Endpoint endpoint,String authHeader,boolean checkStatusCode) {
 		super(endpoint);
 		this.client=target;
-		this.endpoint=endpoint;
 		this.checkStatusCode=checkStatusCode;
 		this.headers = new DefaultHttpHeaders(true);
 		
@@ -119,7 +117,7 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 
 	@Override
 	public FinishableStreamedHttpRequest send(HttpRequest request) {
-		return new DefaultFinishableStreamedHttpRequest(client,endpoint,request,config());
+		return new DefaultFinishableStreamedHttpRequest(client,request,config());
 	}
 
 	@Override

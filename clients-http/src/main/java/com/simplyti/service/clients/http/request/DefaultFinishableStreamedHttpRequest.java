@@ -4,7 +4,6 @@ import java.util.function.Consumer;
 
 import com.simplyti.service.clients.ClientConfig;
 import com.simplyti.service.clients.ClientRequestChannel;
-import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.InternalClient;
 import com.simplyti.service.clients.http.handler.HttpResponseHandler;
 
@@ -20,7 +19,7 @@ public class DefaultFinishableStreamedHttpRequest implements FinishableStreamedH
 	private final ClientConfig config;
 	private final HttpRequest request;
 
-	public DefaultFinishableStreamedHttpRequest(InternalClient client, Endpoint endpoint, HttpRequest request, ClientConfig config) {
+	public DefaultFinishableStreamedHttpRequest(InternalClient client, HttpRequest request, ClientConfig config) {
 		this.client = client;
 		this.config=config;
 		this.request = request;

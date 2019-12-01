@@ -11,6 +11,7 @@ import org.junit.Test;
 import io.netty.channel.EventLoop;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.Promise;
+import io.netty.util.internal.shaded.org.jctools.queues.MessagePassingQueue.Supplier;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
@@ -22,11 +23,12 @@ public class DefaultFutureTest {
 	private NioEventLoopGroup eventloopGroup;
 	private Promise<String> target;
 	private Future<String> future;
+	private EventLoop loop;
 
 	@Before
 	public void setup() {
-		this.eventloopGroup=new NioEventLoopGroup();
-		EventLoop loop = eventloopGroup.next();
+		this.eventloopGroup=new NioEventLoopGroup(20);
+		this.loop = eventloopGroup.next();
 		this.target = loop.newPromise();
 		this.future = new DefaultFuture<>(target, loop);
 	}
@@ -414,9 +416,185 @@ public class DefaultFutureTest {
 		assertThat(result.get(),instanceOf(ExecutionException.class));
 	}
 	
+	@Test
+	public void testAsyncBiCombineAsync() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		eventloopGroup.schedule(()->target.setSuccess("Hello"), 10, TimeUnit.MILLISECONDS);
+		future.thenCombine(this::concatAsync,this::hashCodeAsync)
+			.thenAccept((a,b)->result.set(a+" - "+b))
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Hello Pepe - 69609650"));
+	}
+	
+	@Test
+	public void testAsyncBiCombineAsyncError() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		eventloopGroup.schedule(()->target.setSuccess("Hello"), 10, TimeUnit.MILLISECONDS);
+		future.thenCombine(
+				v->eventloopGroup.next().newSucceededFuture(v.concat(" Pepe")),
+				v->errorAsync())
+			.exceptionallyApply(Throwable::getMessage)
+			.thenAccept(result::set)
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Error!"));
+	}
+	
+	@Test
+	public void testAsyncBiCombineSync() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		eventloopGroup.schedule(()->target.setSuccess("Hello"), 10, TimeUnit.MILLISECONDS);
+		future.thenCombine(
+				v->eventloopGroup.next().newSucceededFuture(v.concat(" Pepe")),
+				v->eventloopGroup.next().newSucceededFuture(v.hashCode()))
+			.thenAccept((a,b)->result.set(a+" - "+b))
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Hello Pepe - 69609650"));
+	}
+	
+	@Test
+	public void testAsyncBiCombineSyncError() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		eventloopGroup.schedule(()->target.setSuccess("Hello"), 10, TimeUnit.MILLISECONDS);
+		future.thenCombine(
+				v->eventloopGroup.next().newSucceededFuture(v.concat(" Pepe")),
+				v->eventloopGroup.next().newFailedFuture(new RuntimeException("Error!")))
+			.exceptionallyApply(Throwable::getMessage)
+			.thenAccept(result::set)
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Error!"));
+	}
+	
+	
+	@Test
+	public void testAsyncBiCombineButError() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		eventloopGroup.schedule(()->target.setFailure(new RuntimeException("Error!")), 10, TimeUnit.MILLISECONDS);
+		future.thenCombine(this::concatAsync,this::hashCodeAsync)
+			.exceptionallyApply(Throwable::getMessage)
+			.thenAccept(result::set)
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Error!"));
+	}
+	
+	@Test
+	public void testSyncBiCombineSync() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		target.setSuccess("Hello");
+		inLoop(()->future
+					.thenCombine(
+						v->loop.newSucceededFuture(v.concat(" Pepe")),
+						v->loop.newSucceededFuture("!"))
+					.thenAccept((a,b)->result.set(a+b)))
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Hello Pepe!"));
+	}
+	
+	@Test
+	public void testSyncBiCombineSyncError() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		target.setSuccess("Hello");
+		inLoop(()->future
+					.thenCombine(
+						v->loop.newSucceededFuture(v.concat(" Pepe")),
+						v->loop.newFailedFuture(new RuntimeException("Error!")))
+					.exceptionallyApply(Throwable::getMessage)
+					.thenAccept(result::set))
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Error!"));
+	}
+		
+	@Test
+	public void testSyncBiCombineAsync() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		target.setSuccess("Hello");
+		inLoop(()->future
+					.thenCombine(
+						this::concatAsync,
+						v->loop.newSucceededFuture("!"))
+					.thenAccept((a,b)->result.set(a+b)))
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Hello Pepe!"));
+	}
+	
+	@Test
+	public void testSyncBiCombineButError() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		target.setFailure(new RuntimeException("Error!"));
+		future.thenCombine(this::concatAsync,this::hashCodeAsync)
+			.exceptionallyApply(Throwable::getMessage)
+			.thenAccept(result::set)
+			.await(1,TimeUnit.SECONDS);
+	
+		assertThat(result.get(),equalTo("Error!"));
+	}
+	
+	@Test
+	public void testSyncBiCombineAsyncOutOfLoop() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		target.setSuccess("Hello");
+		future
+			.thenCombine(
+				this::concatAsync,
+				v->loop.newSucceededFuture("!"))
+			.thenAccept((a,b)->result.set(a+b))
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Hello Pepe!"));
+	}
+	
+	@Test
+	public void testSyncBiCombineSyncOutOfLoop() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		target.setSuccess("Hello");
+		future
+			.thenCombine(
+				v->loop.newSucceededFuture(v.concat(" Pepe")),
+				v->loop.newSucceededFuture("!"))
+			.thenAccept((a,b)->result.set(a+b))
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Hello Pepe!"));
+	}
+	
+	@Test
+	public void testSyncBiCombineSyncHandleError() throws InterruptedException {
+		AtomicReference<Throwable> result = new AtomicReference<>();
+		target.setSuccess("Hello");
+		future
+			.thenCombine(
+				v->{throw new RuntimeException("Error");},
+				v->loop.newSucceededFuture("!"))
+			.onError(result::set)
+			.await(5,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),instanceOf(ExecutionException.class));
+	}
+	
+	private io.netty.util.concurrent.Future<Void> inLoop(Supplier<Future<?>> fn) {
+		Promise<Void> promise = loop.newPromise();
+		loop.execute(()->fn.get()
+				.thenAccept(f->promise.setSuccess(null))
+				.onError(promise::setFailure));
+		return promise;
+	}
+
 	private io.netty.util.concurrent.Future<String> concatAsync(String value) {
 		Promise<String> promise = eventloopGroup.next().newPromise();
 		eventloopGroup.next().schedule(()->promise.setSuccess(value.concat(" Pepe")), 10, TimeUnit.MILLISECONDS);
+		return promise;
+	}
+	
+	private io.netty.util.concurrent.Future<Integer> hashCodeAsync(String value) {
+		Promise<Integer> promise = eventloopGroup.next().newPromise();
+		eventloopGroup.next().schedule(()->promise.setSuccess(value.hashCode()), 10, TimeUnit.MILLISECONDS);
 		return promise;
 	}
 	
