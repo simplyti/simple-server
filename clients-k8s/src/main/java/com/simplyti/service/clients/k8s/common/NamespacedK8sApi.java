@@ -3,8 +3,7 @@ package com.simplyti.service.clients.k8s.common;
 import com.simplyti.service.clients.k8s.common.domain.Status;
 import com.simplyti.service.clients.k8s.common.list.KubeList;
 import com.simplyti.service.clients.k8s.common.watch.Observable;
-
-import io.netty.util.concurrent.Future;
+import com.simplyti.util.concurrent.Future;
 
 public interface NamespacedK8sApi<T extends K8sResource> {
 	

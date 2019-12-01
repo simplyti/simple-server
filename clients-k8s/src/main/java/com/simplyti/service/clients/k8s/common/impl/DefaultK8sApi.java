@@ -12,10 +12,10 @@ import com.simplyti.service.clients.k8s.common.domain.KubeClientException;
 import com.simplyti.service.clients.k8s.common.list.KubeList;
 import com.simplyti.service.clients.k8s.common.watch.Observable;
 import com.simplyti.service.clients.k8s.common.watch.domain.Event;
+import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoopGroup;
-import io.netty.util.concurrent.Future;
 
 public class DefaultK8sApi<T extends K8sResource> implements K8sApi<T> {
 	

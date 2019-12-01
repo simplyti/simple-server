@@ -13,12 +13,12 @@ import com.simplyti.service.clients.k8s.common.domain.Status;
 import com.simplyti.service.clients.k8s.common.list.KubeList;
 import com.simplyti.service.clients.k8s.common.watch.Observable;
 import com.simplyti.service.clients.k8s.common.watch.domain.Event;
+import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.util.concurrent.Future;
 
 public class DefaultNamespacedK8sApi<T extends K8sResource> extends DefaultK8sApi<T> implements NamespacedK8sApi<T> {
 	
