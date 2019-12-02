@@ -18,7 +18,7 @@ public class GatewayModule {
 	@Provides
 	@Singleton
 	public GatewayConfig gatewayConfig() {
-		return new GatewayConfig(10);
+		return new GatewayConfig(10,false);
 	}
 	
 	@Provides
@@ -28,8 +28,8 @@ public class GatewayModule {
 	}
 	
 	@Provides
-	public DefaultBackendRequestHandler defaultBackendRequestHandler(InternalClient client, ServiceDiscovery serviceDiscovery, ServerConfig config) {
-		return new GatewayRequestHandler(client, serviceDiscovery, config);
+	public DefaultBackendRequestHandler defaultBackendRequestHandler(InternalClient client, ServiceDiscovery serviceDiscovery, ServerConfig config, GatewayConfig gatewayConfig) {
+		return new GatewayRequestHandler(client, serviceDiscovery, config, gatewayConfig);
 	}
 
 }

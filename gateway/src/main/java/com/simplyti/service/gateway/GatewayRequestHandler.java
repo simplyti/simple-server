@@ -37,6 +37,7 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	private final ServiceDiscovery serviceDiscovery;
 	private final InternalClient client;
 	private final ServerConfig config;
+	private final GatewayConfig gatewayConfig;
 
 	private final PendingMessages pendingMessages;
 	
@@ -46,10 +47,11 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 
 
 	@Inject
-	public GatewayRequestHandler(InternalClient client, ServiceDiscovery serviceDiscovery, ServerConfig config) {
+	public GatewayRequestHandler(InternalClient client, ServiceDiscovery serviceDiscovery, ServerConfig config,  GatewayConfig gatewayConfig) {
 		super(false);
 		this.client = client;
 		this.config=config;
+		this.gatewayConfig=gatewayConfig;
 		this.serviceDiscovery = serviceDiscovery;
 		this.pendingMessages = new PendingMessages();
 	}
@@ -181,7 +183,7 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	private void handleBackendChannelFuture0(ChannelHandlerContext ctx, Future<Channel> backendChannelFuture,
 			ChannelPool pool, Endpoint endpoint, boolean isContinueExpected, BackendServiceMatcher serviceMatch) {
 		if (backendChannelFuture.isSuccess()) {
-			backendChannelFuture.getNow().pipeline().addLast(new BackendProxyHandler(pool, ctx.channel(),endpoint,isContinueExpected,frontSsl,serviceMatch));
+			backendChannelFuture.getNow().pipeline().addLast(new BackendProxyHandler(gatewayConfig,pool, ctx.channel(),endpoint,isContinueExpected,frontSsl,serviceMatch));
 			this.backendChannel=backendChannelFuture.getNow();
 			pendingMessages.write(backendChannel).addListener(f->handleWriteFuture(ctx, f));
 		}else {

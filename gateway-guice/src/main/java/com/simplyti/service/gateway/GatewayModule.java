@@ -11,9 +11,19 @@ import com.simplyti.service.gateway.api.GatewayApi;
 
 public class GatewayModule extends AbstractModule{
 	
+	private final boolean keepOriginalHost;
+
+	public GatewayModule() {
+		this(false);
+	}
+	
+	public GatewayModule(boolean keepOriginalHost) {
+		this.keepOriginalHost=keepOriginalHost;
+	}
+	
 	@Override
 	public void configure() {
-		bind(GatewayConfig.class).toInstance(new GatewayConfig(10));
+		bind(GatewayConfig.class).toInstance(new GatewayConfig(10,keepOriginalHost));
 		
 		bind(DefaultBackendRequestHandler.class).to(GatewayRequestHandler.class);
 		

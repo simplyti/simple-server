@@ -11,4 +11,6 @@ public class GatewayConfig {
 	
 	private final long maxIddle;
 
+	private final boolean keepOriginalHost;
+
 }

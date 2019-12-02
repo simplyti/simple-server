@@ -4,6 +4,7 @@ import java.net.InetSocketAddress;
 
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.gateway.BackendServiceMatcher;
+import com.simplyti.service.gateway.GatewayConfig;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
@@ -24,6 +25,7 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 	private static final String X_FORWARDED_PROTO = "X-Forwarded-Proto";
 	private static final String X_FORWARDED_HOST = "X-Forwarded-Host";
 	
+	private final GatewayConfig config;
 	private final Channel frontendChannel;
 	private final ChannelPool backendChannelPool;
 	private final boolean frontSsl;
@@ -35,7 +37,8 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 	private boolean isContinuing;
 	
 	
-	public BackendProxyHandler(ChannelPool backendChannelPool, Channel frontendChannel, Endpoint endpoint, boolean isContinueExpected, boolean frontSsl, BackendServiceMatcher serviceMatch) {
+	public BackendProxyHandler(GatewayConfig config, ChannelPool backendChannelPool, Channel frontendChannel, Endpoint endpoint, boolean isContinueExpected, boolean frontSsl, BackendServiceMatcher serviceMatch) {
+		this.config=config;
 		this.frontendChannel = frontendChannel;
 		this.backendChannelPool = backendChannelPool;
 		this.frontSsl=frontSsl;
@@ -63,7 +66,9 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
         	if(request.headers().contains(HttpHeaderNames.HOST)) {
         		request.headers().set(X_FORWARDED_HOST,request.headers().get(HttpHeaderNames.HOST));
         	}
-        	request.headers().set(HttpHeaderNames.HOST,endpoint.address().host());
+        	if(!config.keepOriginalHost()) {
+        		request.headers().set(HttpHeaderNames.HOST,endpoint.address().host());
+        	}
         	request.headers().set(X_FORWARDED_FOR,inetSocket.getHostString());
         	request.headers().set(X_FORWARDED_PROTO,frontSsl?HttpScheme.HTTPS.name():HttpScheme.HTTP.name());
         	msg = serviceMatch.rewrite((HttpRequest) msg);
