@@ -164,7 +164,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 				if(executor.inEventLoop()) {
 					handleList(executor,promise,resourceVersion,future.getNow(),consumer);
 				}else {
-					executor.submit(()->handleList(executor,promise,resourceVersion,future.getNow(),consumer));
+					executor.execute(()->handleList(executor,promise,resourceVersion,future.getNow(),consumer));
 				}
 			}else {
 				promise.setFailure(f.cause());
