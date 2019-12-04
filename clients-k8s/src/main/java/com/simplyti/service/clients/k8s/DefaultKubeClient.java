@@ -12,6 +12,8 @@ import com.simplyti.service.clients.Address;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
+import com.simplyti.service.clients.k8s.configmaps.ConfigMaps;
+import com.simplyti.service.clients.k8s.configmaps.DefaultConfigMaps;
 import com.simplyti.service.clients.k8s.endpoints.DefaultEndpoints;
 import com.simplyti.service.clients.k8s.endpoints.Endpoints;
 import com.simplyti.service.clients.k8s.ingresses.DefaultIngresses;
@@ -64,6 +66,9 @@ public class DefaultKubeClient implements KubeClient {
 	
 	@Getter
 	private final Namespaces namespaces;
+
+	@Getter
+	private final ConfigMaps configMaps;
 	
 	private final HttpClient http;
 
@@ -84,6 +89,7 @@ public class DefaultKubeClient implements KubeClient {
 		this.secrets = new DefaultSecrets(eventLoopGroup,http,json);
 		this.serviceAccounts = new DefaultServiceAccounts(eventLoopGroup,http,json);
 		this.namespaces = new DefaultNamespaces(eventLoopGroup,http,json);
+		this.configMaps = new DefaultConfigMaps(eventLoopGroup, http, json);
 	}
 
 	private String readFile(String fileName) {
