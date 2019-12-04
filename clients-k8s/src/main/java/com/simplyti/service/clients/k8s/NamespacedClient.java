@@ -1,5 +1,6 @@
 package com.simplyti.service.clients.k8s;
 
+import com.simplyti.service.clients.k8s.configmaps.NamespacedConfigMaps;
 import com.simplyti.service.clients.k8s.endpoints.NamespacedEndpoints;
 import com.simplyti.service.clients.k8s.jobs.NamespacedJobs;
 import com.simplyti.service.clients.k8s.pods.NamespacedPods;
@@ -14,5 +15,7 @@ public interface NamespacedClient {
 	public NamespacedPods pods();
 
 	public NamespacedJobs jobs();
+
+	NamespacedConfigMaps configMaps();
 
 }

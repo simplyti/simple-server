@@ -1,5 +1,6 @@
 package com.simplyti.service.clients.k8s;
 
+import com.simplyti.service.clients.k8s.configmaps.ConfigMaps;
 import com.simplyti.service.clients.k8s.endpoints.Endpoints;
 import com.simplyti.service.clients.k8s.ingresses.Ingresses;
 import com.simplyti.service.clients.k8s.jobs.Jobs;
@@ -36,5 +37,7 @@ public interface KubeClient {
 	public Namespaces namespaces();
 
 	public Future<String> health();
+
+	ConfigMaps configMaps();
 
 }

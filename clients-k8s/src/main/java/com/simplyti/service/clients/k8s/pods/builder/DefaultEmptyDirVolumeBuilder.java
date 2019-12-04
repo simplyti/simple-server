@@ -25,7 +25,7 @@ public class DefaultEmptyDirVolumeBuilder implements EmptyDirVolumeBuilder {
 
 	@Override
 	public PodBuilder build() {
-		holder.addVolume(new Volume(name,new EmptyDirVolume(medium)));
+		holder.addVolume(new Volume(name, new EmptyDirVolume(medium)));
 		return parent;
 	}
 
