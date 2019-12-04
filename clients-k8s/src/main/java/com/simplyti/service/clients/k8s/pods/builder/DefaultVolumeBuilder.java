@@ -15,5 +15,8 @@ public class DefaultVolumeBuilder implements VolumeBuilder {
 		return new DefaultEmptyDirVolumeBuilder(parent,holder,name);
 	}
 
-
+	@Override
+	public ConfigMapVolumeBuilder configMap(String name) {
+		return new DefaultConfigMapVolumeBuilder(parent, holder, name);
+	}
 }
