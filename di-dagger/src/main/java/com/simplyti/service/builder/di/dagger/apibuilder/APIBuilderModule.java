@@ -1,5 +1,6 @@
-package com.simplyti.service.builder.di.dagger;
+package com.simplyti.service.builder.di.dagger.apibuilder;
 
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Singleton;
@@ -25,8 +26,8 @@ import dagger.Module;
 import dagger.Provides;
 import dagger.multibindings.IntoSet;
 
-@Module
-public class ApiServer {
+@Module(includes= {APIBuilderOptionals.class})
+public class APIBuilderModule {
 
 	@Provides
 	@IntoSet
@@ -57,9 +58,9 @@ public class ApiServer {
 	}
 	
 	@Provides
-	@IntoSet
-	public ApiProvider health() {
-		return new HealthApi();
+	@Singleton
+	public ServerSentEventEncoder serverSentEventEncoder() {
+		return new ServerSentEventEncoder();
 	}
 	
 	@Provides
@@ -70,8 +71,14 @@ public class ApiServer {
 	
 	@Provides
 	@Singleton
-	public ServerSentEventEncoder serverSentEventEncoder() {
-		return new ServerSentEventEncoder();
+	public InstanceProvider instanceProvider(Map<Class<?>,Object> instances) {
+		return new DaggerInstanceProvider(instances);
+	}
+	
+	@Provides
+	@IntoSet
+	public ApiProvider health() {
+		return new HealthApi();
 	}
 	
 }

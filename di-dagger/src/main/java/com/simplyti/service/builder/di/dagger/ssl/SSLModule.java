@@ -1,4 +1,4 @@
-package com.simplyti.service.builder.di.dagger;
+package com.simplyti.service.builder.di.dagger.ssl;
 
 import java.security.Provider;
 import java.security.cert.CertificateException;
@@ -27,8 +27,8 @@ import dagger.Module;
 import dagger.Provides;
 import io.netty.handler.ssl.SslContext;
 
-@Module
-public class SslModule {
+@Module(includes= { SSLOptionals.class })
+public class SSLModule {
 
 	@Provides
 	@Singleton

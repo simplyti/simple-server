@@ -1,5 +1,6 @@
 package com.simplyti.service;
 
+import java.util.Optional;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -9,6 +10,7 @@ import com.simplyti.service.channel.ClientChannelGroup;
 import com.simplyti.service.channel.ServiceChannelInitializer;
 import com.simplyti.service.hook.ServerStartHook;
 import com.simplyti.service.hook.ServerStopHook;
+import com.simplyti.service.ssl.SslHandlerFactory;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -34,15 +36,17 @@ public class DefaultService extends AbstractService<DefaultService> implements S
 	private final ServerBootstrap bootstrap;
 	private final ServerConfig config;
 	private final ChannelGroup serverChannels;
+	private final Optional<SslHandlerFactory> sslHandlerFactory;
 	
 	@Inject
 	public DefaultService(EventLoopGroup eventLoopGroup, StartStopMonitor startStopMonitor, ServiceChannelInitializer serviceChannelInitializer,
 			@StartStopLoop EventLoop startStopLoop, ServerConfig config, ClientChannelGroup clientChannelGroup,
-			ChannelFactory<ServerChannel> channelFactory,
+			ChannelFactory<ServerChannel> channelFactory, Optional<SslHandlerFactory> sslHandlerFactory,
 			Set<ServerStartHook> serverStartHook, Set<ServerStopHook> serverStopHook){
 		super(eventLoopGroup,startStopMonitor,startStopLoop,clientChannelGroup,serverStartHook,serverStopHook,config);
 		this.config=config;
 		this.serverChannels=new DefaultChannelGroup(startStopLoop);
+		this.sslHandlerFactory=sslHandlerFactory;
 		this.bootstrap = new ServerBootstrap().group(startStopLoop, eventLoopGroup)
 				.channelFactory(channelFactory)
 				.option(ChannelOption.SO_BACKLOG, 100000)
@@ -60,7 +64,7 @@ public class DefaultService extends AbstractService<DefaultService> implements S
 		if(config.insecuredPort()>0) {
 			combiner.add(bind(executor,config.insecuredPort()));
 		}
-		if(config.securedPort()>0) {
+		if(config.securedPort()>0 && sslHandlerFactory.isPresent()) {
 			combiner.add(bind(executor,config.securedPort()));
 		}
 		combiner.finish(aggregated);

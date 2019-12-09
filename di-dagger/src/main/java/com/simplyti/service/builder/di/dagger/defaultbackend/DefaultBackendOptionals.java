@@ -1,4 +1,4 @@
-package com.simplyti.service.builder.di.dagger;
+package com.simplyti.service.builder.di.dagger.defaultbackend;
 
 import com.simplyti.service.channel.handler.DefaultBackendFullRequestHandler;
 import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;

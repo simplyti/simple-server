@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import io.netty.channel.EventLoop;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.internal.shaded.org.jctools.queues.MessagePassingQueue.Supplier;
@@ -20,7 +21,7 @@ import static org.junit.Assert.assertThat;
 
 public class DefaultFutureTest {
 	
-	private NioEventLoopGroup eventloopGroup;
+	private EventLoopGroup eventloopGroup;
 	private Promise<String> target;
 	private Future<String> future;
 	private EventLoop loop;

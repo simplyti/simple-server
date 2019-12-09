@@ -1,4 +1,4 @@
-package com.simplyti.service.builder.di.dagger;
+package com.simplyti.service.builder.di.dagger.defaultbackend;
 
 import java.util.Optional;
 
@@ -14,7 +14,7 @@ import dagger.Provides;
 import dagger.multibindings.IntoSet;
 
 @Module(includes= {DefaultBackendOptionals.class})
-public class DefaultBackend {
+public class DefaultBackendModule {
 	
 	@Provides
 	@IntoSet

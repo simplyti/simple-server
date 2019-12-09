@@ -1,4 +1,4 @@
-package com.simplyti.service.builder.di.dagger;
+package com.simplyti.service.builder.di.dagger.apibuilder;
 
 import java.util.Map;
 

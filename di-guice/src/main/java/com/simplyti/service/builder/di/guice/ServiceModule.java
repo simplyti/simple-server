@@ -1,17 +1,9 @@
 package com.simplyti.service.builder.di.guice;
 
-import java.security.Provider;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Stream;
 
 import javax.inject.Singleton;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.KeyManagerFactorySpi;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.TrustManagerFactorySpi;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
@@ -22,55 +14,39 @@ import com.simplyti.service.DefaultStartStopMonitor;
 import com.simplyti.service.ServerConfig;
 import com.simplyti.service.Service;
 import com.simplyti.service.StartStopMonitor;
-import com.simplyti.service.api.ApiResolver;
-import com.simplyti.service.api.DefaultApiResolver;
 import com.simplyti.service.api.builder.ApiProvider;
-import com.simplyti.service.api.builder.di.InstanceProvider;
 import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.simplyti.service.api.filter.HttpResponseFilter;
 import com.simplyti.service.api.filter.OperationInboundFilter;
-import com.simplyti.service.api.health.HealthApi;
 import com.simplyti.service.builder.di.EventLoopGroupProvider;
 import com.simplyti.service.builder.di.ExecutorServiceProvider;
-import com.simplyti.service.builder.di.SslContextProvider;
+import com.simplyti.service.builder.di.NativeIO;
 import com.simplyti.service.builder.di.StartStopLoop;
 import com.simplyti.service.builder.di.StartStopLoopProvider;
+import com.simplyti.service.builder.di.guice.apibuilder.APIBuilderModule;
+import com.simplyti.service.builder.di.guice.defaultbackend.DefaultBackendModule;
+import com.simplyti.service.builder.di.guice.fileserver.FileServerModule;
+import com.simplyti.service.builder.di.guice.nativeio.NativeIOModule;
+import com.simplyti.service.builder.di.guice.ssl.SSLModule;
 import com.simplyti.service.channel.ClientChannelGroup;
 import com.simplyti.service.channel.DefaultServiceChannelInitializer;
 import com.simplyti.service.channel.EntryChannelInit;
 import com.simplyti.service.channel.ServerChannelFactoryProvider;
 import com.simplyti.service.channel.ServiceChannelInitializer;
 import com.simplyti.service.channel.handler.ServerHeadersHandler;
-import com.simplyti.service.channel.handler.inits.ApiRequestHandlerInit;
-import com.simplyti.service.channel.handler.inits.DefaultBackendHandlerInit;
-import com.simplyti.service.channel.handler.inits.HandlerInit;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.fileserver.FileServeConfiguration;
 import com.simplyti.service.hook.ServerStartHook;
 import com.simplyti.service.hook.ServerStopHook;
 import com.simplyti.service.json.DslJsonModule;
-import com.simplyti.service.sse.ServerSentEventEncoder;
-import com.simplyti.service.ssl.DefaultServerCertificateProvider;
-import com.simplyti.service.ssl.DefaultSslHandlerFactory;
-import com.simplyti.service.ssl.IoCKeyManager;
-import com.simplyti.service.ssl.IoCKeyManagerFactory;
-import com.simplyti.service.ssl.IoCKeyManagerFactorySpi;
-import com.simplyti.service.ssl.IoCSecurityProvider;
-import com.simplyti.service.ssl.IoCTrustManager;
-import com.simplyti.service.ssl.IoCTrustManagerFactory;
-import com.simplyti.service.ssl.IoCTrustManagerFactorySpi;
-import com.simplyti.service.ssl.ServerCertificateProvider;
 import com.simplyti.service.ssl.SslHandlerFactory;
 import com.simplyti.service.sync.DefaultSyncTaskSubmitter;
 import com.simplyti.service.sync.SyncTaskSubmitter;
-import com.simplyti.service.channel.handler.DefaultBackendFullRequestHandler;
-import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;
 
 import io.netty.channel.ChannelFactory;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
-import io.netty.handler.ssl.SslContext;
 
 public class ServiceModule extends AbstractModule {
 	
@@ -93,12 +69,15 @@ public class ServiceModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		install(new DslJsonModule());
+		install(new SSLModule());
+		install(new NativeIOModule());
+		install(new APIBuilderModule(apiProviders,apiClasses));
+		install(new DefaultBackendModule());
 		installFileServer();
 		bind(ServerConfig.class).toInstance(config);
 		
-		bind(InstanceProvider.class).to(GuiceInstanceProvider.class).in(Singleton.class);
-		
 		bindEventLoop();
+		OptionalBinder.newOptionalBinder(binder(), NativeIO.class);
 		bind(EventLoop.class).annotatedWith(StartStopLoop.class).toProvider(StartStopLoopProvider.class).in(Singleton.class);
 		bind(StartStopMonitor.class).to(DefaultStartStopMonitor.class).in(Singleton.class);
 		
@@ -108,17 +87,8 @@ public class ServiceModule extends AbstractModule {
 		// Channel Initialized
 		bind(ServiceChannelInitializer.class).to(DefaultServiceChannelInitializer.class).in(Singleton.class);
 		bind(ServerHeadersHandler.class).in(Singleton.class);
-		OptionalBinder.newOptionalBinder(binder(), EntryChannelInit.class);
 		
 		bind(new TypeLiteral<Service<?>>() {}).to(DefaultService.class).in(Singleton.class);
-		
-		// Default Handler
-		Multibinder.newSetBinder(binder(), HandlerInit.class).addBinding().to(DefaultBackendHandlerInit.class).in(Singleton.class);
-		OptionalBinder.newOptionalBinder(binder(), DefaultBackendFullRequestHandler.class);
-		OptionalBinder.newOptionalBinder(binder(), DefaultBackendRequestHandler.class);
-		
-		// SSE Encoder
-		bind(ServerSentEventEncoder.class).in(Singleton.class);
 		
 		// Exception Handler
 		bind(ExceptionHandler.class).in(Singleton.class);
@@ -127,11 +97,6 @@ public class ServiceModule extends AbstractModule {
 		bind(ExecutorService.class).toProvider(ExecutorServiceProvider.class).in(Singleton.class);
 		bind(SyncTaskSubmitter.class).to(DefaultSyncTaskSubmitter.class).in(Singleton.class);
 	
-		// APIs
-		bind(ApiResolver.class).to(DefaultApiResolver.class).in(Singleton.class);
-		Multibinder.newSetBinder(binder(), HandlerInit.class).addBinding().to(ApiRequestHandlerInit.class).in(Singleton.class);
-		bindApis(Multibinder.newSetBinder(binder(), ApiProvider.class));
-		
 		// Filters
 		Multibinder.newSetBinder(binder(), HttpRequestFilter.class);
 		Multibinder.newSetBinder(binder(), OperationInboundFilter.class);
@@ -141,20 +106,9 @@ public class ServiceModule extends AbstractModule {
 		Multibinder.newSetBinder(binder(), ServerStartHook.class);
 		Multibinder.newSetBinder(binder(), ServerStopHook.class);
 		
-		//SSL
-		bind(Provider.class).to(IoCSecurityProvider.class).in(Singleton.class);
-		bind(KeyManager.class).to(IoCKeyManager.class).in(Singleton.class);
-		bind(KeyManagerFactorySpi.class).to(IoCKeyManagerFactorySpi.class).in(Singleton.class);
-		bind(KeyManagerFactory.class).to(IoCKeyManagerFactory.class).in(Singleton.class);
-		bind(TrustManager.class).to(IoCTrustManager.class).in(Singleton.class);
-		bind(TrustManagerFactorySpi.class).to(IoCTrustManagerFactorySpi.class).in(Singleton.class);
-		bind(TrustManagerFactory.class).to(IoCTrustManagerFactory.class).in(Singleton.class);
-		
-		bind(SslContext.class).toProvider(SslContextProvider.class).in(Singleton.class);
-		bind(SslHandlerFactory.class).to(DefaultSslHandlerFactory.class).in(Singleton.class);
-		
-		OptionalBinder.newOptionalBinder(binder(), DefaultServerCertificateProvider.class);
-		OptionalBinder.newOptionalBinder(binder(), ServerCertificateProvider.class);
+		OptionalBinder.newOptionalBinder(binder(), EntryChannelInit.class);
+		OptionalBinder.newOptionalBinder(binder(), NativeIO.class);
+		OptionalBinder.newOptionalBinder(binder(), SslHandlerFactory.class);
 	}
 
 	private void installFileServer() {
@@ -169,11 +123,6 @@ public class ServiceModule extends AbstractModule {
 		} else {
 			bind(EventLoopGroup.class).toInstance(eventLoopGroup);
 		}
-	}
-
-	private void bindApis(Multibinder<ApiProvider> apiBinder) {
-		apiProviders.forEach(provider->apiBinder.addBinding().toInstance(provider));
-		Stream.concat(apiClasses.stream(), Stream.of(HealthApi.class)).forEach(apiClass->apiBinder.addBinding().to(apiClass).in(Singleton.class));
 	}
 
 }

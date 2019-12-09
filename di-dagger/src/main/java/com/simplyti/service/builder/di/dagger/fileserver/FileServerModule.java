@@ -1,4 +1,4 @@
-package com.simplyti.service.builder.di.dagger;
+package com.simplyti.service.builder.di.dagger.fileserver;
 
 import java.util.Collections;
 import java.util.Set;
@@ -38,10 +38,10 @@ public class FileServerModule {
 
 	@Provides
 	@ElementsIntoSet
-	public Set<HandlerInit> apiRequestHandlerInit( ServerHeadersHandler serverHeadersHandler,
-			@Nullable FileServeConfiguration fileServerConfig,FileServe fileServer) {
+	public Set<HandlerInit> apiRequestHandlerInit(FileServe fileServer, ServerHeadersHandler serverHeadersHandler,
+			@Nullable FileServeConfiguration fileServerConfig) {
 		if(fileServerConfig!=null) {
-			return Collections.singleton(new FileServerHandlerInit(new FileServeHandler(fileServerConfig, fileServer),serverHeadersHandler,fileServerConfig));
+			return Collections.singleton(new FileServerHandlerInit(new FileServeHandler(fileServerConfig,fileServer),serverHeadersHandler,fileServerConfig));
 		}else {
 			return Collections.emptySet();
 		}

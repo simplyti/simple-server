@@ -1,4 +1,4 @@
-package com.simplyti.service.builder.di.guice;
+package com.simplyti.service.builder.di.guice.apibuilder;
 
 import javax.inject.Inject;
 
