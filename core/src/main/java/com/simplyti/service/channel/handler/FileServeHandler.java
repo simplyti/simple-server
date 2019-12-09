@@ -9,9 +9,9 @@ import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
-import com.simplyti.service.ServerConfig;
 import com.simplyti.service.fileserver.DirectoryResolver;
 import com.simplyti.service.fileserver.FileServe;
+import com.simplyti.service.fileserver.FileServeConfiguration;
 
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
@@ -31,9 +31,9 @@ public class FileServeHandler extends SimpleChannelInboundHandler<HttpRequest> {
 	private final FileServe fileServer;
 	
 	@Inject
-	public FileServeHandler(ServerConfig config,FileServe fileServer) {
-		this.pattern=config.fileServer().pattern();
-		this.directoryResolver=config.fileServer().directoryResolver();
+	public FileServeHandler(FileServeConfiguration fileServerConfig,FileServe fileServer) {
+		this.pattern=fileServerConfig.pattern();
+		this.directoryResolver=fileServerConfig.directoryResolver();
 		this.fileServer=fileServer;
 	}
 

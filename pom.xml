@@ -46,7 +46,7 @@
 		<nexus-staging-maven-plugin.version>1.6.8</nexus-staging-maven-plugin.version>
 
 		<!-- Lombok -->
-		<lombok.version>1.18.8</lombok.version>
+		<lombok.version>1.18.10</lombok.version>
 
 		<!-- IoC -->
 		<inject.version>1.0</inject.version>
@@ -63,6 +63,9 @@
 
 		<!-- Networking -->
 		<netty.version>4.1.43.Final</netty.version>
+		
+		<!-- SSL -->
+		<tcnative.version>2.0.26.Final</tcnative.version>
 
 		<!-- JAX-RS -->
 		<jax-rs.version>2.1.6</jax-rs.version>
@@ -207,6 +210,13 @@
 				<groupId>com.google.dagger</groupId>
 				<artifactId>dagger-compiler</artifactId>
 				<version>${dagger.version}</version>
+			</dependency>
+			
+			<!-- SSL -->
+			<dependency>
+			    <groupId>io.netty</groupId>
+			    <artifactId>netty-tcnative-boringssl-static</artifactId>
+			    <version>${tcnative.version}</version>
 			</dependency>
 
 			<!-- Networking -->

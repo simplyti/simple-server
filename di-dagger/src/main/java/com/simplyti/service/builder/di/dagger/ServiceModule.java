@@ -28,7 +28,6 @@ import com.simplyti.service.channel.handler.ChannelExceptionHandler;
 import com.simplyti.service.channel.handler.ServerHeadersHandler;
 import com.simplyti.service.channel.handler.inits.HandlerInit;
 import com.simplyti.service.exception.ExceptionHandler;
-import com.simplyti.service.fileserver.FileServeConfiguration;
 import com.simplyti.service.json.DslJsonModule;
 import com.simplyti.service.ssl.SslHandlerFactory;
 import com.simplyti.service.sync.DefaultSyncTaskSubmitter;
@@ -46,7 +45,7 @@ import io.netty.channel.kqueue.KQueue;
 import io.netty.channel.kqueue.KQueueEventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 
-@Module(includes= { Multibindings.class, ApiServer.class, FileServer.class, DefaultBackend.class, SslModule.class, EntryInit.class, DslJsonModule.class})
+@Module(includes= { Multibindings.class, ApiServer.class, FileServerModule.class, DefaultBackend.class, SslModule.class, EntryInit.class, DslJsonModule.class})
 public class ServiceModule {
 	
 	@Provides
@@ -56,7 +55,7 @@ public class ServiceModule {
 	}
 	
 	@Provides @Singleton @StartStopLoop
-	public EventLoop startStopLoop(ServerConfig config, EventLoopGroup eventLoopGroup) {
+	public EventLoop startStopLoop(ServerConfig config, EventLoopGroup eventLoopGroup, ServerConfig serverConfig) {
 		if(Epoll.isAvailable()) {
 			return new EpollEventLoopGroup(1).next();
 		}else if(KQueue.isAvailable()) {
@@ -70,7 +69,6 @@ public class ServiceModule {
 	@Singleton
 	public ServerConfig serverConfig(
 			@Nullable @Named("name") String name,
-			@Nullable FileServeConfiguration fileServeConfiguration,
 			@Nullable @Named("blockingThreadPool") Integer blockingThreadPool, 
 			@Nullable @Named("insecuredPort") Integer insecuredPort, 
 			@Nullable @Named("securedPort") Integer  securedPort,
@@ -79,7 +77,6 @@ public class ServiceModule {
 				MoreObjects.firstNonNull(blockingThreadPool, 500),
 				MoreObjects.firstNonNull(insecuredPort, 8080),
 				MoreObjects.firstNonNull(securedPort, 8443), 
-				fileServeConfiguration, 
 				false, 
 				MoreObjects.firstNonNull(verbose, false));
 	}
@@ -141,11 +138,11 @@ public class ServiceModule {
 	@Provides
 	@Singleton
 	public ServiceChannelInitializer serviceChannelInitializer(ClientChannelGroup clientChannelGroup,
-			SslHandlerFactory sslHandlerFactory, StartStopMonitor startStopMonitor,
+			Optional<SslHandlerFactory> sslHandlerFactory, StartStopMonitor startStopMonitor,
 			ChannelExceptionHandler channelExceptionHandler,
 			Set<HandlerInit> handlers, Set<HttpRequestFilter> requestFilters, Set<HttpResponseFilter> responseFilters,
 			Optional<EntryChannelInit> entryChannelInit, ServerConfig serverConfig) {
-		return new DefaultServiceChannelInitializer(clientChannelGroup, serverConfig, sslHandlerFactory,
+		return new DefaultServiceChannelInitializer(clientChannelGroup, serverConfig, sslHandlerFactory.orElse(null),
 				startStopMonitor, channelExceptionHandler, handlers, requestFilters, responseFilters,
 				entryChannelInit);
 	}

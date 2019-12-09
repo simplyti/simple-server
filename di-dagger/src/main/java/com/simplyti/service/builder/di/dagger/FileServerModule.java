@@ -8,7 +8,6 @@ import javax.annotation.Nullable;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import com.simplyti.service.ServerConfig;
 import com.simplyti.service.channel.handler.FileServeHandler;
 import com.simplyti.service.channel.handler.ServerHeadersHandler;
 import com.simplyti.service.channel.handler.inits.FileServerHandlerInit;
@@ -22,7 +21,7 @@ import dagger.Provides;
 import dagger.multibindings.ElementsIntoSet;
 
 @Module
-public class FileServer {
+public class FileServerModule {
 	
 	@Provides
 	@Singleton
@@ -40,9 +39,9 @@ public class FileServer {
 	@Provides
 	@ElementsIntoSet
 	public Set<HandlerInit> apiRequestHandlerInit( ServerHeadersHandler serverHeadersHandler,
-			ServerConfig config,FileServe fileServer) {
-		if(config.fileServer()!=null) {
-			return Collections.singleton(new FileServerHandlerInit(new FileServeHandler(config, fileServer),serverHeadersHandler,config));
+			@Nullable FileServeConfiguration fileServerConfig,FileServe fileServer) {
+		if(fileServerConfig!=null) {
+			return Collections.singleton(new FileServerHandlerInit(new FileServeHandler(fileServerConfig, fileServer),serverHeadersHandler,fileServerConfig));
 		}else {
 			return Collections.emptySet();
 		}

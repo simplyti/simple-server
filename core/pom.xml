@@ -38,6 +38,12 @@
 		  <groupId>com.google.re2j</groupId>
 		  <artifactId>re2j</artifactId>
 		</dependency>
+		
+		<!-- SSL -->
+		<dependency>
+		    <groupId>io.netty</groupId>
+		    <artifactId>netty-tcnative-boringssl-static</artifactId>
+		</dependency>
 
 		<!-- Networking -->
 		<dependency>

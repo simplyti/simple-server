@@ -27,7 +27,7 @@ public interface AbstractServiceBuilder<T extends AbstractServiceBuilder<T,O>,O 
 
 	@BindsInstance
 	T verbose(@Nullable @Named("verbose") boolean verbose);
-
+	
 	O build();
 
 }

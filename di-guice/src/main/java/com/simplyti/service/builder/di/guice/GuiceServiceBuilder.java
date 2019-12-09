@@ -11,6 +11,7 @@ import com.google.inject.util.Modules;
 import com.simplyti.service.ServerConfig;
 import com.simplyti.service.Service;
 import com.simplyti.service.api.builder.ApiProvider;
+import com.simplyti.service.fileserver.FileServeConfiguration;
 
 import io.netty.channel.EventLoopGroup;
 
@@ -21,10 +22,10 @@ public class GuiceServiceBuilder<T extends Service<?>> extends AbstractServiceBu
 	}
 
 	@Override
-	protected T build0(ServerConfig config, Class<T> serviceClass, Stream<Module> additinalModules,
+	protected T build0(ServerConfig config,FileServeConfiguration fileServerConfig, Class<T> serviceClass, Stream<Module> additinalModules,
 			Collection<Class<? extends ApiProvider>> apiClasses, Collection<ApiProvider> apiProviders,
 			EventLoopGroup eventLoopGroup) {
-		ServiceModule coreModule = new ServiceModule(config,apiClasses,apiProviders,eventLoopGroup);
+		ServiceModule coreModule = new ServiceModule(config,fileServerConfig,apiClasses,apiProviders,eventLoopGroup);
 		Injector injector = Guice.createInjector(Modules.override(coreModule).with(additinalModules.collect(Collectors.toList())));
 		return injector.getInstance(serviceClass);
 	}

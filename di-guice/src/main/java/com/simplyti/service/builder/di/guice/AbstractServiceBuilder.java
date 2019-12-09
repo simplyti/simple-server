@@ -39,7 +39,7 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 	private Integer securedPort;
 	private String name;
 
-	private FileServeConfiguration fileServe;
+	private FileServeConfiguration fileServerConfig;
 	private EventLoopGroup eventLoopGroup;
 	
 	private boolean verbose;
@@ -54,20 +54,20 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 				name,
 				MoreObjects.firstNonNull(blockingThreadPool, DEFAULT_BLOCKING_THREAD_POOL),
 				MoreObjects.firstNonNull(insecuredPort, DEFAULT_INSECURE_PORT),
-				MoreObjects.firstNonNull(securedPort, DEFAULT_SECURE_PORT),fileServe,eventLoopGroup!=null,
+				MoreObjects.firstNonNull(securedPort, DEFAULT_SECURE_PORT),eventLoopGroup!=null,
 				verbose);
 		
 		Stream<Module> additinalModules = Optional.ofNullable(modules)
 				.map(Collection::stream)
 				.orElse(Stream.<Module>empty());
 		
-		return build0(config,serviceClass,additinalModules,
+		return build0(config,fileServerConfig, serviceClass,additinalModules,
 				MoreObjects.firstNonNull(apiClasses, Collections.emptySet()),
 				MoreObjects.firstNonNull(apiProviders, Collections.emptySet()),
 				eventLoopGroup);
 	}
 	
-	protected abstract T build0(ServerConfig config, Class<T> serviceClass, Stream<Module> additinalModules, Collection<Class<? extends ApiProvider>> apiClasses, Collection<ApiProvider> apiProviders,  EventLoopGroup eventLoopGroup);
+	protected abstract T build0(ServerConfig config, FileServeConfiguration fileServerConfig, Class<T> serviceClass, Stream<Module> additinalModules, Collection<Class<? extends ApiProvider>> apiClasses, Collection<ApiProvider> apiProviders,  EventLoopGroup eventLoopGroup);
 
 	@Override
 	public ServiceBuilder<T> withBlockingThreadPoolSize(int blockingThreadPool) {
@@ -159,7 +159,7 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 
 	@Override
 	public ServiceBuilder<T> fileServe(String path, String directory) {
-		this.fileServe=new FileServeConfiguration(Pattern.compile("^"+path+"/(.*)$"),DirectoryResolver.literal(directory));
+		this.fileServerConfig=new FileServeConfiguration(Pattern.compile("^"+path+"/(.*)$"),DirectoryResolver.literal(directory));
 		return this;
 	}
 

@@ -10,7 +10,9 @@ import com.simplyti.service.api.filter.OperationInboundFilter;
 import com.simplyti.service.channel.handler.inits.HandlerInit;
 import com.simplyti.service.hook.ServerStartHook;
 import com.simplyti.service.hook.ServerStopHook;
+import com.simplyti.service.ssl.SslHandlerFactory;
 
+import dagger.BindsOptionalOf;
 import dagger.Module;
 import dagger.multibindings.Multibinds;
 
@@ -28,4 +30,6 @@ public abstract class Multibindings {
 	
 	@Multibinds abstract Set<ServerStartHook> serverStartHooks();
 	@Multibinds abstract Set<ServerStopHook> serverStopHooks();
+	
+	@BindsOptionalOf abstract SslHandlerFactory sslHandlerFactory();
 }

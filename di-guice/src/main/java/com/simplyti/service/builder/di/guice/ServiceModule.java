@@ -40,13 +40,12 @@ import com.simplyti.service.channel.DefaultServiceChannelInitializer;
 import com.simplyti.service.channel.EntryChannelInit;
 import com.simplyti.service.channel.ServerChannelFactoryProvider;
 import com.simplyti.service.channel.ServiceChannelInitializer;
-import com.simplyti.service.channel.handler.FileServeHandler;
 import com.simplyti.service.channel.handler.ServerHeadersHandler;
 import com.simplyti.service.channel.handler.inits.ApiRequestHandlerInit;
 import com.simplyti.service.channel.handler.inits.DefaultBackendHandlerInit;
-import com.simplyti.service.channel.handler.inits.FileServerHandlerInit;
 import com.simplyti.service.channel.handler.inits.HandlerInit;
 import com.simplyti.service.exception.ExceptionHandler;
+import com.simplyti.service.fileserver.FileServeConfiguration;
 import com.simplyti.service.hook.ServerStartHook;
 import com.simplyti.service.hook.ServerStopHook;
 import com.simplyti.service.json.DslJsonModule;
@@ -76,12 +75,16 @@ import io.netty.handler.ssl.SslContext;
 public class ServiceModule extends AbstractModule {
 	
 	private final ServerConfig config;
+	private final FileServeConfiguration fileServerConfig;
 	private final Collection<Class<? extends ApiProvider>> apiClasses;
 	private final EventLoopGroup eventLoopGroup;
 	private final Collection<ApiProvider> apiProviders;
 
-	public ServiceModule(ServerConfig config, Collection<Class<? extends ApiProvider>> apiClasses, Collection<ApiProvider> apiProviders,  EventLoopGroup eventLoopGroup){
+	public ServiceModule(ServerConfig config, FileServeConfiguration fileServerConfig, 
+			Collection<Class<? extends ApiProvider>> apiClasses, Collection<ApiProvider> apiProviders,  
+			EventLoopGroup eventLoopGroup){
 		this.config=config;
+		this.fileServerConfig=fileServerConfig;
 		this.apiClasses=apiClasses;
 		this.apiProviders=apiProviders;
 		this.eventLoopGroup=eventLoopGroup;
@@ -90,6 +93,7 @@ public class ServiceModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		install(new DslJsonModule());
+		installFileServer();
 		bind(ServerConfig.class).toInstance(config);
 		
 		bind(InstanceProvider.class).to(GuiceInstanceProvider.class).in(Singleton.class);
@@ -112,9 +116,6 @@ public class ServiceModule extends AbstractModule {
 		Multibinder.newSetBinder(binder(), HandlerInit.class).addBinding().to(DefaultBackendHandlerInit.class).in(Singleton.class);
 		OptionalBinder.newOptionalBinder(binder(), DefaultBackendFullRequestHandler.class);
 		OptionalBinder.newOptionalBinder(binder(), DefaultBackendRequestHandler.class);
-		
-		// File server
-		bindFileServer();
 		
 		// SSE Encoder
 		bind(ServerSentEventEncoder.class).in(Singleton.class);
@@ -156,10 +157,9 @@ public class ServiceModule extends AbstractModule {
 		OptionalBinder.newOptionalBinder(binder(), ServerCertificateProvider.class);
 	}
 
-	private void bindFileServer() {
-		if(config.fileServer()!=null) {
-			Multibinder.newSetBinder(binder(), HandlerInit.class).addBinding().to(FileServerHandlerInit.class).in(Singleton.class);
-			bind(FileServeHandler.class).in(Singleton.class);
+	private void installFileServer() {
+		if(fileServerConfig!=null) {
+			install(new FileServerModule(fileServerConfig));
 		}
 	}
 
