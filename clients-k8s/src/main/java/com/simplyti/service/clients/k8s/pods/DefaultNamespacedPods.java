@@ -17,9 +17,20 @@ import io.netty.channel.EventLoopGroup;
 
 public class DefaultNamespacedPods extends DefaultNamespacedK8sApi<Pod> implements NamespacedPods {
 
+	private final EventLoopGroup eventLoopGroup;
+	private final HttpClient http;
+	private final String resource;
+	private final String namespace;
+	private final K8sAPI api;
+	
 	public DefaultNamespacedPods(EventLoopGroup eventLoopGroup,HttpClient http,Json json, K8sAPI api, String resource, TypeLiteral<KubeList<Pod>> listType, 
 			TypeLiteral<Event<Pod>> eventType, String namespace) {
 		super(eventLoopGroup,http,json,api,namespace,resource,Pod.class,listType,eventType);
+		this.eventLoopGroup=eventLoopGroup;
+		this.http=http;
+		this.resource=resource;
+		this.namespace=namespace;
+		this.api=api;
 	}
 	
 	@Override
@@ -30,6 +41,11 @@ public class DefaultNamespacedPods extends DefaultNamespacedK8sApi<Pod> implemen
 	@Override
 	public PodUpdater update(String name) {
 		return new DefaultPodUpdater(http(),json(), api(),namespace(),resource(),name);
+	}
+
+	@Override
+	public LogStream log(String name) {
+		return new DefaultLogStream(eventLoopGroup.next(), api,http,name,namespace,resource);
 	}
 
 }
