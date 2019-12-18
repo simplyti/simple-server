@@ -88,14 +88,14 @@ public abstract class AbstractFinishableHttpRequest implements FinishableHttpReq
 	@Override
 	public Future<Void> stream(Consumer<ByteBuf> consumer) {
 		return client.channel(channel->{
-			channel.pipeline().addLast(new StreamResponseHandler(channel,consumer));
+			channel.pipeline().addLast(new StreamResponseHandler(channel,consumer,checkStatusCode));
 		},request(),config);
 	}
 	
 	@Override
 	public Future<Void> stream(String handlerName,Function<ClientRequestChannel<Void>,ChannelHandler> handler) {
 		return client.channel(channel->{
-			channel.pipeline().addLast(new StreamResponseHandler(channel,null));
+			channel.pipeline().addLast(new StreamResponseHandler(channel,null,checkStatusCode));
 			channel.pipeline().addLast(handlerName,handler.apply(channel));
 		},request(),config);
 	}
