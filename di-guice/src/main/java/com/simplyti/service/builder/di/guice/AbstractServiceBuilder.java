@@ -16,8 +16,10 @@ import com.simplyti.service.Service;
 import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.fileserver.DirectoryResolver;
 import com.simplyti.service.fileserver.FileServeConfiguration;
+import com.simplyti.service.ssl.SslConfig;
 
 import io.netty.channel.EventLoopGroup;
+import io.netty.handler.ssl.SslProvider;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Log4J2LoggerFactory;
 import io.netty.util.internal.logging.Slf4JLoggerFactory;
@@ -38,6 +40,8 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 	private Integer insecuredPort;
 	private Integer securedPort;
 	private String name;
+	
+	private SslProvider sslProvider;
 
 	private FileServeConfiguration fileServerConfig;
 	private EventLoopGroup eventLoopGroup;
@@ -61,13 +65,13 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 				.map(Collection::stream)
 				.orElse(Stream.<Module>empty());
 		
-		return build0(config,fileServerConfig, serviceClass,additinalModules,
+		return build0(config, new SslConfig(sslProvider), fileServerConfig, serviceClass,additinalModules,
 				MoreObjects.firstNonNull(apiClasses, Collections.emptySet()),
 				MoreObjects.firstNonNull(apiProviders, Collections.emptySet()),
 				eventLoopGroup);
 	}
 	
-	protected abstract T build0(ServerConfig config, FileServeConfiguration fileServerConfig, Class<T> serviceClass, Stream<Module> additinalModules, Collection<Class<? extends ApiProvider>> apiClasses, Collection<ApiProvider> apiProviders,  EventLoopGroup eventLoopGroup);
+	protected abstract T build0(ServerConfig config, SslConfig sslConfig, FileServeConfiguration fileServerConfig, Class<T> serviceClass, Stream<Module> additinalModules, Collection<Class<? extends ApiProvider>> apiClasses, Collection<ApiProvider> apiProviders,  EventLoopGroup eventLoopGroup);
 
 	@Override
 	public ServiceBuilder<T> withBlockingThreadPoolSize(int blockingThreadPool) {
@@ -145,6 +149,12 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 	@Override
 	public ServiceBuilder<T> withName(String name) {
 		this.name=name;
+		return this;
+	}
+	
+	@Override
+	public ServiceBuilder<T> withSslProvider(SslProvider sslProvider) {
+		this.sslProvider=sslProvider;
 		return this;
 	}
 	

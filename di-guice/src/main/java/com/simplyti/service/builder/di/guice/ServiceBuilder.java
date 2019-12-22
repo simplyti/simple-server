@@ -5,6 +5,7 @@ import com.simplyti.service.Service;
 import com.simplyti.service.api.builder.ApiProvider;
 
 import io.netty.channel.EventLoopGroup;
+import io.netty.handler.ssl.SslProvider;
 
 public interface ServiceBuilder<T extends Service<?>> {
 
@@ -39,5 +40,7 @@ public interface ServiceBuilder<T extends Service<?>> {
 	public ServiceBuilder<T> verbose();
 
 	public ServiceBuilder<T> withName(String name);
+	
+	public ServiceBuilder<T> withSslProvider(SslProvider sslProvider);
 
 }

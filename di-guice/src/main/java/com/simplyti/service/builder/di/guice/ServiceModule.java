@@ -39,6 +39,7 @@ import com.simplyti.service.fileserver.FileServeConfiguration;
 import com.simplyti.service.hook.ServerStartHook;
 import com.simplyti.service.hook.ServerStopHook;
 import com.simplyti.service.json.DslJsonModule;
+import com.simplyti.service.ssl.SslConfig;
 import com.simplyti.service.ssl.SslHandlerFactory;
 import com.simplyti.service.sync.DefaultSyncTaskSubmitter;
 import com.simplyti.service.sync.SyncTaskSubmitter;
@@ -51,14 +52,16 @@ import io.netty.channel.ServerChannel;
 public class ServiceModule extends AbstractModule {
 	
 	private final ServerConfig config;
+	private final SslConfig sslConfig;
 	private final FileServeConfiguration fileServerConfig;
 	private final Collection<Class<? extends ApiProvider>> apiClasses;
 	private final EventLoopGroup eventLoopGroup;
 	private final Collection<ApiProvider> apiProviders;
 
-	public ServiceModule(ServerConfig config, FileServeConfiguration fileServerConfig, 
+	public ServiceModule(ServerConfig config, SslConfig sslConfig, FileServeConfiguration fileServerConfig, 
 			Collection<Class<? extends ApiProvider>> apiClasses, Collection<ApiProvider> apiProviders,  
 			EventLoopGroup eventLoopGroup){
+		this.sslConfig=sslConfig;
 		this.config=config;
 		this.fileServerConfig=fileServerConfig;
 		this.apiClasses=apiClasses;
@@ -69,7 +72,7 @@ public class ServiceModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		install(new DslJsonModule());
-		install(new SSLModule());
+		install(new SSLModule(sslConfig));
 		install(new NativeIOModule());
 		install(new APIBuilderModule(apiProviders,apiClasses));
 		install(new DefaultBackendModule());

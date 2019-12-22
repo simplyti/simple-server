@@ -135,7 +135,7 @@ public abstract class AbstractApiInvocationContext<O> implements APIContext<O> {
 	
 	@Override
 	public Future<Void> close() {
-		ReferenceCountUtil.release(this);
+		tryRelease();
 		return ctx.close();
 	}
 	

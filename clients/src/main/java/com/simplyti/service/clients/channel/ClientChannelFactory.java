@@ -1,32 +1,26 @@
 package com.simplyti.service.clients.channel;
 
-import java.nio.channels.spi.SelectorProvider;
-
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFactory;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.epoll.EpollSocketChannel;
-import io.netty.channel.kqueue.KQueueEventLoopGroup;
-import io.netty.channel.kqueue.KQueueSocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
 
 public class ClientChannelFactory implements ChannelFactory<Channel> {
 
-	private final EventLoopGroup eventLoopGroup;
+	private final NioChannelFactory nioChannelFactory;
+	private final NativeChannelFactory nativeChannelFactory;
 
 	public ClientChannelFactory(EventLoopGroup eventLoopGroup) {
-		this.eventLoopGroup=eventLoopGroup;
+		this.nioChannelFactory = new NioChannelFactory();
+		this.nativeChannelFactory = new NativeChannelFactory(eventLoopGroup);
 	}
 
 	@Override
 	public Channel newChannel() {
-		if(eventLoopGroup instanceof EpollEventLoopGroup) {
-			return new EpollSocketChannel();
-		}else if(eventLoopGroup instanceof KQueueEventLoopGroup) {
-			return new KQueueSocketChannel();
-		}else {
-			return new NioSocketChannel(SelectorProvider.provider());
+		Channel channel = this.nativeChannelFactory.newChannel();
+		if(channel!=null) {
+			return channel;
+		} else {
+			return nioChannelFactory.newChannel();
 		}
 	}
 	

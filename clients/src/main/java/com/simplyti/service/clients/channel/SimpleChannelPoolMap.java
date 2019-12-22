@@ -9,6 +9,8 @@ import com.simplyti.service.clients.ssl.SSLChannelInitializer;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFactory;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.pool.AbstractChannelPoolMap;
@@ -17,6 +19,7 @@ import io.netty.channel.pool.ChannelPool;
 import io.netty.channel.pool.ChannelPoolHandler;
 import io.netty.channel.pool.FixedChannelPool;
 import io.netty.channel.pool.SimpleChannelPool;
+import io.netty.handler.ssl.SslProvider;
 
 public class SimpleChannelPoolMap extends AbstractChannelPoolMap<Endpoint, ChannelPool> {
 	
@@ -24,16 +27,18 @@ public class SimpleChannelPoolMap extends AbstractChannelPoolMap<Endpoint, Chann
 	private final ChannelPoolHandler initializer;
 	private final ChannelHealthChecker checker;
 	private final PoolConfig pool;
+	private final SslProvider sslProvider;
 	
-	public SimpleChannelPoolMap(EventLoopGroup eventLoopGroup, ChannelPoolHandler poolHandler, ChannelHealthChecker checker,
-			PoolConfig pool) {
+	public SimpleChannelPoolMap(SslProvider sslProvider, EventLoopGroup eventLoopGroup, ChannelPoolHandler poolHandler, ChannelHealthChecker checker,
+			ChannelFactory<Channel> channelFactory, PoolConfig pool) {
 		this.bootstrap = new Bootstrap().group(eventLoopGroup)
-				.channelFactory(new ClientChannelFactory(eventLoopGroup))
+				.channelFactory(channelFactory)
 				.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
 				.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 		this.initializer = poolHandler;
 		this.checker=checker;
 		this.pool=pool;
+		this.sslProvider=sslProvider;
 	}
 
 	@Override
@@ -63,7 +68,7 @@ public class SimpleChannelPoolMap extends AbstractChannelPoolMap<Endpoint, Chann
 
 	private ChannelPoolHandler handler(Endpoint key) {
 		if(key.schema().ssl()) {
-			return new SSLChannelInitializer(initializer,key);
+			return new SSLChannelInitializer(sslProvider, initializer,key);
 		}else {
 			return initializer;
 		}

@@ -4,6 +4,7 @@ import javax.annotation.Nullable;
 import javax.inject.Named;
 
 import dagger.BindsInstance;
+import io.netty.handler.ssl.SslProvider;
 
 public interface AbstractServiceBuilder<T extends AbstractServiceBuilder<T,O>,O extends AbstractService> {
 	
@@ -18,6 +19,9 @@ public interface AbstractServiceBuilder<T extends AbstractServiceBuilder<T,O>,O 
 	
 	@BindsInstance
 	T withBlockingThreadPoolSize(@Nullable @Named("blockingThreadPool") int blockingThreadPool);
+	
+	@BindsInstance
+	T withSslProvider(@Nullable @Named("sslProvider") SslProvider sslProvider);
 	
 	@BindsInstance
 	T insecuredPort(@Nullable @Named("insecuredPort") int insecuredPort);

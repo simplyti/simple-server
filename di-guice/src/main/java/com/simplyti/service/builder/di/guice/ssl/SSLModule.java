@@ -23,14 +23,22 @@ import com.simplyti.service.ssl.IoCTrustManager;
 import com.simplyti.service.ssl.IoCTrustManagerFactory;
 import com.simplyti.service.ssl.IoCTrustManagerFactorySpi;
 import com.simplyti.service.ssl.ServerCertificateProvider;
+import com.simplyti.service.ssl.SslConfig;
 import com.simplyti.service.ssl.SslHandlerFactory;
 
 import io.netty.handler.ssl.SslContext;
 
 public class SSLModule extends AbstractModule {
 	
+	private final SslConfig sslConfig;
+
+	public SSLModule(SslConfig sslConfig) {
+		this.sslConfig=sslConfig;
+	}
+	
 	@Override
 	protected void configure() {
+		bind(SslConfig.class).toInstance(sslConfig);
 		bind(Provider.class).to(IoCSecurityProvider.class).in(Singleton.class);
 		bind(KeyManager.class).to(IoCKeyManager.class).in(Singleton.class);
 		bind(KeyManagerFactorySpi.class).to(IoCKeyManagerFactorySpi.class).in(Singleton.class);

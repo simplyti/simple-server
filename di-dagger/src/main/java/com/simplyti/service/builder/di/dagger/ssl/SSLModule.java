@@ -4,6 +4,7 @@ import java.security.Provider;
 import java.security.cert.CertificateException;
 import java.util.Optional;
 
+import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -12,6 +13,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.TrustManagerFactorySpi;
 
+import com.dslplatform.json.Nullable;
 import com.simplyti.service.builder.di.SslContextProvider;
 import com.simplyti.service.ssl.DefaultSslHandlerFactory;
 import com.simplyti.service.ssl.IoCKeyManager;
@@ -21,14 +23,22 @@ import com.simplyti.service.ssl.IoCSecurityProvider;
 import com.simplyti.service.ssl.IoCTrustManager;
 import com.simplyti.service.ssl.IoCTrustManagerFactory;
 import com.simplyti.service.ssl.IoCTrustManagerFactorySpi;
+import com.simplyti.service.ssl.SslConfig;
 import com.simplyti.service.ssl.SslHandlerFactory;
 
 import dagger.Module;
 import dagger.Provides;
 import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslProvider;
 
 @Module(includes= { SSLOptionals.class })
 public class SSLModule {
+	
+	@Provides
+	@Singleton
+	public SslConfig sslConfig(@Nullable @Named("sslProvider") SslProvider sslProvider) {
+		return new SslConfig(sslProvider);
+	}
 
 	@Provides
 	@Singleton
@@ -75,11 +85,12 @@ public class SSLModule {
 	public TrustManager trustManager() {
 		return new IoCTrustManager();
 	}
-
+	
 	@Provides
 	@Singleton
-	public SslContext sslContext(KeyManagerFactory keyManagerFactory, TrustManagerFactory trustManagerFactory) {
-		return new SslContextProvider(keyManagerFactory, trustManagerFactory).get();
+	public SslContext sslContext(KeyManagerFactory keyManagerFactory, TrustManagerFactory trustManagerFactory,
+			SslConfig config) {
+		return new SslContextProvider(keyManagerFactory, trustManagerFactory,config).get();
 	}
 
 	@Provides

@@ -15,6 +15,7 @@ import com.simplyti.service.commons.netty.Promises;
 import com.simplyti.util.concurrent.DefaultFuture;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFactory;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
@@ -23,6 +24,7 @@ import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.pool.ChannelHealthChecker;
 import io.netty.channel.pool.ChannelPool;
 import io.netty.channel.pool.ChannelPoolHandler;
+import io.netty.handler.ssl.SslProvider;
 import io.netty.handler.timeout.ReadTimeoutException;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
@@ -42,13 +44,17 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler, Chan
 
 	private PoolConfig poolConfig;
 	
-	public InternalClient(EventLoopGroup eventLoopGroup, ChannelPoolHandler poolHandler, PoolConfig poolConfig) {
+	public InternalClient(EventLoopGroup eventLoopGroup, ChannelPoolHandler poolHandler, ChannelFactory<Channel> channelFactory, PoolConfig poolConfig) {
+		this(null,eventLoopGroup,poolHandler,channelFactory, poolConfig);
+	}
+	
+	public InternalClient(SslProvider sslProvider, EventLoopGroup eventLoopGroup, ChannelPoolHandler poolHandler, ChannelFactory<Channel> channelFactory,PoolConfig poolConfig) {
 		this.eventLoopGroup = eventLoopGroup;
 		EventLoop channelGroupsEventLoop = eventLoopGroup.next();
 		this.allChannels=new DefaultChannelGroup(channelGroupsEventLoop);
 		this.activeChannels=new DefaultChannelGroup(channelGroupsEventLoop);
 		this.iddleChannels=new DefaultChannelGroup(channelGroupsEventLoop);
-		this.channelPoolMap = new SimpleChannelPoolMap(eventLoopGroup, new MonitoredHandler(this, poolHandler), this, poolConfig);
+		this.channelPoolMap = new SimpleChannelPoolMap(sslProvider,eventLoopGroup, new MonitoredHandler(this, poolHandler), this, channelFactory, poolConfig);
 		this.poolConfig = poolConfig;
 	}
 	

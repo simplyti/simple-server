@@ -46,7 +46,7 @@
 						<guice.injector-source>com.simplyti.service.injector.CustomInjectorSource</guice.injector-source>
 					</systemPropertyVariables>
 					<includes>
-						<include>**/CucumberITest.java</include>
+						<include>**/*CucumberITest.java</include>
 					</includes>
 				</configuration>
 				<executions>
