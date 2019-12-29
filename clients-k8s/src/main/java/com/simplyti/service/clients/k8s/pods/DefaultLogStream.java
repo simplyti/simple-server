@@ -2,11 +2,10 @@ package com.simplyti.service.clients.k8s.pods;
 
 import java.util.function.Consumer;
 
-import com.simplyti.service.clients.ClientRequestChannel;
+import com.simplyti.service.clients.channel.ClientChannel;
 import com.simplyti.service.clients.http.HttpClient;
-import com.simplyti.service.clients.http.request.FinishableHttpRequest;
+import com.simplyti.service.clients.http.request.FinishableHttpRequestBuilder;
 import com.simplyti.service.clients.k8s.K8sAPI;
-import com.simplyti.service.clients.k8s.common.impl.EventStreamHandler;
 import com.simplyti.util.concurrent.DefaultFuture;
 import com.simplyti.util.concurrent.Future;
 
@@ -24,7 +23,7 @@ public class DefaultLogStream implements LogStream {
 	private final String resource;
 	private final EventLoop loop;
 	private boolean closed;
-	private ClientRequestChannel<Void> client;
+	private ClientChannel client;
 
 	public DefaultLogStream(EventLoop loop, K8sAPI api, HttpClient http, String name, String namespace, String resource) {
 		this.http=http;
@@ -43,7 +42,7 @@ public class DefaultLogStream implements LogStream {
 
 
 	private Future<Void> followLog(Promise<Void> promise, boolean isContinue, Consumer<ByteBuf> consumer) {
-		FinishableHttpRequest builder = http.request()
+		FinishableHttpRequestBuilder builder = http.request()
 			.withReadTimeout(30000)
 			.get(String.format("%s/namespaces/%s/%s/%s/log",api.path(),namespace,resource,name))
 			.param("follow",true);
@@ -52,10 +51,10 @@ public class DefaultLogStream implements LogStream {
 			builder.param("sinceSeconds",30);
 		}
 		
-		builder.stream(EventStreamHandler.NAME,client->{
+		builder.stream().withHandler(client->{
 				this.client=client;
 				checkClose();
-				return new LogStreamHandler(consumer);
+				client.pipeline().addLast(new LogStreamHandler(consumer));
 			})
 		.thenApply(promise::setSuccess)
 		.onError(cause->{

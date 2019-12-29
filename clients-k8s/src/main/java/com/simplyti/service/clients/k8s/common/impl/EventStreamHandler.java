@@ -4,7 +4,6 @@ import java.util.Map;
 
 import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.api.serializer.json.TypeLiteral;
-import com.simplyti.service.clients.ClientRequestChannel;
 import com.simplyti.service.clients.k8s.common.K8sResource;
 import com.simplyti.service.clients.k8s.common.domain.KubeClientException;
 import com.simplyti.service.clients.k8s.common.domain.Status;
@@ -19,17 +18,16 @@ import io.netty.util.CharsetUtil;
 
 public class EventStreamHandler<T extends K8sResource> extends SimpleChannelInboundHandler<ByteBuf> {
 	
-	public static final String NAME = "evt-handler";
+	public static final String EVENT_HANDLER = "evt-handler";
 	
 	private final Json json;
 	
+	private final String handlerName;
 	private final InternalObservable<T> observable;
 	private final TypeLiteral<Event<T>> eventType;
-	private final ClientRequestChannel<Void> client;
 
-
-	public EventStreamHandler(ClientRequestChannel<Void> client, Json json,InternalObservable<T> observable, TypeLiteral<Event<T>> eventType) {
-		this.client=client;
+	public EventStreamHandler(String handlerName, Json json,InternalObservable<T> observable, TypeLiteral<Event<T>> eventType) {
+		this.handlerName=handlerName;
 		this.json=json;
 		this.observable=observable;
 		this.eventType=eventType;
@@ -38,7 +36,7 @@ public class EventStreamHandler<T extends K8sResource> extends SimpleChannelInbo
 	@Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
 		observable.channel(ctx.channel());
-		ctx.pipeline().addBefore(NAME, "json-decoder", new JsonObjectDecoder());
+		ctx.pipeline().addBefore(handlerName, "json-decoder", new JsonObjectDecoder());
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -50,8 +48,7 @@ public class EventStreamHandler<T extends K8sResource> extends SimpleChannelInbo
 			msg.skipBytes(msg.readableBytes());
 			String content = json.serializeAsString(eventMap.get("object"), CharsetUtil.UTF_8);
 			Status status = json.deserialize(content, Status.class);
-			client.setFailure(new KubeClientException(status));
-			client.close();
+			throw new KubeClientException(status); 
 		}else {
 			Event event = json.deserialize(msg,eventType);
 			observable.event(event);

@@ -1,4 +1,4 @@
-@standalone
+@maxBody @standalone
 Feature: Maximun body
 
 Scenario: Maximun body

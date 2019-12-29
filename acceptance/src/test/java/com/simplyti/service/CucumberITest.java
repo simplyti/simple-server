@@ -36,7 +36,7 @@ public class CucumberITest {
 		ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
 		Awaitility.await().until(()->listening(1080));
 		EventLoopGroup eventLoopGroup = new NioEventLoopGroup(1);
-		HttpClient http = HttpClient.builder().eventLoopGroup(eventLoopGroup).build();
+		HttpClient http = HttpClient.builder().withEventLoopGroup(eventLoopGroup).build();
 		HttpEndpoint target = HttpEndpoint.of("http://httpbin:80/status/200");
 		KubeClient k8s = KubeClient.builder().eventLoopGroup(eventLoopGroup).server("http://localhost:8082").build();
 		ProxiedEndpoint endpoint = ProxiedEndpoint.of(target).through("127.0.0.1", 3128, Proxy.ProxyType.HTTP);

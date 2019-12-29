@@ -1,4 +1,4 @@
-@standalone
+@ssl @standalone
 Feature: Ssl serve
 
 Scenario: Ssl listerner

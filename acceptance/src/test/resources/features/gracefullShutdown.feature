@@ -1,4 +1,4 @@
-@standalone
+@shutdown @standalone
 Feature: Gracefull shutdown
 
 Scenario: Server stop gracefully awaiting until all requests are precesed

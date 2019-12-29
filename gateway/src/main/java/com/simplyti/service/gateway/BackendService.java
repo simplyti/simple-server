@@ -8,7 +8,7 @@ import com.google.common.base.MoreObjects;
 import com.google.re2j.Pattern;
 import com.simplyti.service.api.builder.PathPattern;
 import com.simplyti.service.api.filter.HttpRequestFilter;
-import com.simplyti.service.clients.Endpoint;
+import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.gateway.balancer.RoundRobinLoadBalancer;
 import com.simplyti.service.gateway.balancer.ServiceBalancer;
 

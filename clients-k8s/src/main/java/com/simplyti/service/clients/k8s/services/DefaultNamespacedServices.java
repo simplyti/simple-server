@@ -37,7 +37,7 @@ public class DefaultNamespacedServices extends DefaultNamespacedK8sApi<Service> 
 	public Future<Service> updateStatus(Service service) {
 		return http().request()
 				.put(String.format("%s/namespaces/%s/%s/%s/status",api().path(),namespace(),resource(),service.metadata().name()))
-				.body(ctx->body(ctx,service))
+				.withBody(buff->body(buff,service))
 				.fullResponse(f->response(f, Service.class));
 	}
 

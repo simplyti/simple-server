@@ -6,7 +6,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import com.simplyti.service.api.serializer.json.Json;
-import com.simplyti.service.clients.Endpoint;
+import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.security.oidc.config.auto.AutodiscoveryOpenIdIncompleteException;

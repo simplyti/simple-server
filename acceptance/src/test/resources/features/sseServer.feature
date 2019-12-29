@@ -1,4 +1,4 @@
-@standalone
+@sse @standalone
 Feature: SSE server
 
 Scenario: SSE server

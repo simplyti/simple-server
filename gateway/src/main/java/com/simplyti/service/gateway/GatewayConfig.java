@@ -9,7 +9,7 @@ import lombok.experimental.Accessors;
 @Accessors(fluent=true)
 public class GatewayConfig {
 	
-	private final long maxIddle;
+	private final long maxChannelIdleTimeout;
 
 	private final boolean keepOriginalHost;
 

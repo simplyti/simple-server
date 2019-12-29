@@ -1,4 +1,4 @@
-@standalone
+@jaxrs @standalone
 Feature: JAX RS Interface
 
 Scenario: Get Method

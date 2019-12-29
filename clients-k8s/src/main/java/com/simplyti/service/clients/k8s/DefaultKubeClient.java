@@ -8,8 +8,8 @@ import java.nio.file.Paths;
 import java.util.Collections;
 
 import com.simplyti.service.api.serializer.json.Json;
-import com.simplyti.service.clients.Address;
-import com.simplyti.service.clients.Endpoint;
+import com.simplyti.service.clients.endpoint.Address;
+import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.clients.k8s.configmaps.ConfigMaps;
@@ -75,7 +75,7 @@ public class DefaultKubeClient implements KubeClient {
 
 	public DefaultKubeClient(EventLoopGroup eventLoopGroup, String endpoint, String token) {
 		this.http = HttpClient.builder()
-				.eventLoopGroup(eventLoopGroup)
+				.withEventLoopGroup(eventLoopGroup)
 				.withCheckStatusCode()
 				.withEndpoint(apiserver(endpoint))
 				.withBearerAuth(token!=null?token:readFile(DEFAULT_TOKEN_FILE))

@@ -1,4 +1,4 @@
-@standalone
+@responseFilter @standalone
 Feature: Http Response filter
 
 Scenario: Basic Http Response filter

@@ -7,7 +7,7 @@ import javax.inject.Inject;
 
 import com.google.inject.Injector;
 import com.simplyti.service.api.filter.HttpRequestFilter;
-import com.simplyti.service.clients.Endpoint;
+import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.gateway.BackendService;
 import com.simplyti.service.gateway.DefaultServiceDiscovery;
 

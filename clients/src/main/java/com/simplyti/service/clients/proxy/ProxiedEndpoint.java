@@ -1,8 +1,8 @@
 package com.simplyti.service.clients.proxy;
 
-import com.simplyti.service.clients.Address;
-import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.Schema;
+import com.simplyti.service.clients.endpoint.Address;
+import com.simplyti.service.clients.endpoint.Endpoint;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

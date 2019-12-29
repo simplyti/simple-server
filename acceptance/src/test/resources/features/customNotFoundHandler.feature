@@ -1,4 +1,4 @@
-@standalone
+@notFoundHandler @standalone
 Feature: Custom Not found handler
 
 Scenario: Not found handler with. Full request

@@ -10,7 +10,6 @@ import com.simplyti.service.clients.k8s.common.K8sResource;
 import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 
@@ -26,8 +25,6 @@ public class AbstractK8sResourceUpdater<T extends K8sResource> {
 	private final Class<T> type;
 	
 	private final String name;
-
-
 	
 	public AbstractK8sResourceUpdater(HttpClient client, Json json, K8sAPI api,String namespace, String resource,
 			String name, Class<T> type) {
@@ -53,12 +50,11 @@ public class AbstractK8sResourceUpdater<T extends K8sResource> {
 		return client.request()
 				.withHeader(HttpHeaderNames.CONTENT_TYPE.toString(),"application/json-patch+json")
 				.patch(String.format("%s/namespaces/%s/%s/%s",api.path(),namespace,resource,name))
-				.body(this::body)
+				.withBody(this::body)
 				.fullResponse(f->response(f, type));
 	}
 	
-	private ByteBuf body(ByteBufAllocator ctx) {
-		ByteBuf buffer = ctx.buffer();
+	private ByteBuf body(ByteBuf buffer) {
 		json.serialize(this.patches,buffer);
 		return buffer;
 	}

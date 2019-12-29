@@ -1,4 +1,4 @@
-@standalone 
+@openid @standalone 
 Feature: OpenId 
 
 Scenario: Request without JWT gets 401 status 

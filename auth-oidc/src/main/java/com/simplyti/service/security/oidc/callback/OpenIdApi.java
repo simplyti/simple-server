@@ -76,7 +76,8 @@ public class OpenIdApi implements ApiProvider{
 				
 				Future<FullHttpResponse> result = httpClient.request().withEndpoint(tokenEndpoint)
 					.withCheckStatusCode()
-					.sendFull(request).fullResponse();
+					.send(request)
+					.fullResponse();
 				
 				result.addListener(f->{
 						if(f.isSuccess()) {

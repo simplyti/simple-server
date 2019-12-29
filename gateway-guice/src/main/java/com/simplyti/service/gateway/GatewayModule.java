@@ -7,7 +7,7 @@ import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.google.inject.TypeLiteral;
 import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;
-import com.simplyti.service.clients.InternalClient;
+import com.simplyti.service.clients.GenericClient;
 import com.simplyti.service.gateway.api.GatewayApi;
 import com.simplyti.service.gateway.channel.ChannelFactoryProvider;
 
@@ -33,7 +33,7 @@ public class GatewayModule extends AbstractModule{
 		
 		bind(DefaultBackendRequestHandler.class).to(GatewayRequestHandler.class);
 		
-		bind(InternalClient.class).toProvider(ClientProvider.class).in(Singleton.class);
+		bind(GenericClient.class).toProvider(ClientProvider.class).in(Singleton.class);
 		
 		Multibinder.newSetBinder(binder(), ApiProvider.class).addBinding().to(GatewayApi.class).in(Singleton.class);
 		

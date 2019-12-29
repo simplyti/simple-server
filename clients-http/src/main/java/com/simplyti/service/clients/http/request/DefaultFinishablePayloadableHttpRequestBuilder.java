@@ -1,0 +1,138 @@
+package com.simplyti.service.clients.http.request;
+
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
+import com.simplyti.service.clients.channel.ClientChannel;
+import com.simplyti.service.clients.http.sse.ServerSentEvents;
+import com.simplyti.service.clients.http.stream.HttpInputStream;
+import com.simplyti.service.clients.request.ChannelProvider;
+import com.simplyti.util.concurrent.Future;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpMethod;
+
+public class DefaultFinishablePayloadableHttpRequestBuilder extends AbstractFinishableHttpRequestBuilder<FinishablePayloadableHttpRequestBuilder> implements FinishablePayloadableHttpRequestBuilder {
+
+	private Consumer<ByteBuf> bodyBuilder;
+
+	public DefaultFinishablePayloadableHttpRequestBuilder(ChannelProvider channelProvider, HttpMethod method, String path, Map<String,Object> params, HttpHeaders headers, boolean checkStatus) {
+		super(channelProvider,method,path, params, headers, checkStatus);
+	}
+
+	@Override
+	public FinishableHttpRequestBuilder withBody(Consumer<ByteBuf> bobyWriter) {
+		this.bodyBuilder=bobyWriter;
+		return new DefaultFinishablePayloadHttpRequestBuilder(this);
+	}
+	
+	@Override
+	public FinishableHttpRequestBuilder body(Consumer<ByteBuf> bobyWriter) {
+		return withBody(bobyWriter);
+	}
+
+	@Override
+	protected ByteBuf body(ClientChannel ch) {
+		if(bodyBuilder!=null) {
+			ByteBuf buff = ch.alloc().buffer();
+			bodyBuilder.accept(buff);
+			return buff;
+		} else {
+			return null;
+		}
+	}
+	
+	private static final class DefaultFinishablePayloadHttpRequestBuilder implements FinishableHttpRequestBuilder {
+
+		private FinishablePayloadableHttpRequestBuilder target;
+
+		public DefaultFinishablePayloadHttpRequestBuilder(FinishablePayloadableHttpRequestBuilder target) {
+			this.target=target;
+		}
+
+		@Override
+		public Future<FullHttpResponse> fullResponse() {
+			return target.fullResponse();
+		}
+
+		@Override
+		public <T> Future<T> fullResponse(Function<FullHttpResponse, T> fn) {
+			return target.fullResponse(fn);
+		}
+
+		@Override
+		public FinishableHttpRequestBuilder withHeader(String name, String value) {
+			target.withHeader(name, value);
+			return this;
+		}
+
+		@Override
+		public FinishableHttpRequestBuilder withHeader(CharSequence name, String value) {
+			target.withHeader(name, value);
+			return this;
+		}
+
+		@Override
+		public FinishableHttpRequestBuilder withHeader(CharSequence name, CharSequence value) {
+			target.withHeader(name, value);
+			return this;
+		}
+
+		@Override
+		public FinishableHttpRequestBuilder withHeader(String name, CharSequence value) {
+			target.withHeader(name, value);
+			return this;
+		}
+		
+		@Override
+		public FinishableHttpRequestBuilder withCheckStatusCode() {
+			target.withCheckStatusCode();
+			return this;
+		}
+
+		@Override
+		public HttpInputStream stream() {
+			return target.stream();
+		}
+
+		@Override
+		public FinishableHttpRequestBuilder params(Map<String, String> params) {
+			target.params(params);
+			return this;
+		}
+		
+		@Override
+		public FinishableHttpRequestBuilder param(String name, Object value) {
+			target.param(name,value);
+			return this;
+		}
+
+		@Override
+		public FinishableHttpRequestBuilder param(String name) {
+			target.param(name);
+			return this;
+		}
+
+		@Override
+		public FinishableHttpRequestBuilder withIgnoreStatusCode() {
+			target.withIgnoreStatusCode();
+			return this;
+		}
+
+		@Override
+		public ServerSentEvents sse() {
+			return target.sse();
+		}
+
+		@Override
+		public FinishableHttpRequestBuilder withBasicAuth(String user, String pass) {
+			target.withBasicAuth(user, pass);
+			return this;
+		}
+
+	}
+
+}

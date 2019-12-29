@@ -1,3 +1,4 @@
+@httpClientAuth
 Feature: Http Client basic auth
 
 Scenario: Basic auth

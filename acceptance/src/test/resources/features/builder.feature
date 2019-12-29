@@ -1,4 +1,4 @@
-@standalone
+@serverBuilder @standalone
 Feature: Builder
 
 Scenario: I cannot specify logger factory twice

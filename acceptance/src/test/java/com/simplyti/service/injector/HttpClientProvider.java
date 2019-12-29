@@ -15,7 +15,8 @@ public class HttpClientProvider implements Provider<HttpClient>{
 	@Override
 	public HttpClient get() {
 		return HttpClient.builder()
-				.eventLoopGroup(eventLoopGroup)
+				.withEventLoopGroup(eventLoopGroup)
+				.withMonitorEnabled()
 				.withCheckStatusCode()
 				.build();
 	}

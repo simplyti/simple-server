@@ -1,6 +1,6 @@
 package com.simplyti.service.clients.proxy;
 
-import com.simplyti.service.clients.Endpoint;
+import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.proxy.Proxy.ProxyType;
 
 public class ProxiedEndpointBuilder {

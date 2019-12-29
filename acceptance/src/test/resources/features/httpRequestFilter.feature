@@ -1,4 +1,4 @@
-@standalone
+@requestFilter @standalone
 Feature: Http Request filter
 
 Scenario: Basic Http Request filter

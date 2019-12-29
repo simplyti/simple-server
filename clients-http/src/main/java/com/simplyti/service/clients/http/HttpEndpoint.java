@@ -4,9 +4,9 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.simplyti.service.clients.Address;
-import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.Schema;
+import com.simplyti.service.clients.endpoint.Address;
+import com.simplyti.service.clients.endpoint.Endpoint;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

@@ -2,7 +2,8 @@ package com.simplyti.service.gateway.handler;
 
 import java.net.InetSocketAddress;
 
-import com.simplyti.service.clients.Endpoint;
+import com.simplyti.service.clients.channel.ClientChannel;
+import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.gateway.BackendServiceMatcher;
 import com.simplyti.service.gateway.GatewayConfig;
 
@@ -10,7 +11,6 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
-import io.netty.channel.pool.ChannelPool;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
@@ -27,7 +27,7 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 	
 	private final GatewayConfig config;
 	private final Channel frontendChannel;
-	private final ChannelPool backendChannelPool;
+	private final ClientChannel ClientChannel;
 	private final boolean frontSsl;
 	private final boolean isContinueExpected;
 	private final BackendServiceMatcher serviceMatch;
@@ -37,10 +37,10 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 	private boolean isContinuing;
 	
 	
-	public BackendProxyHandler(GatewayConfig config, ChannelPool backendChannelPool, Channel frontendChannel, Endpoint endpoint, boolean isContinueExpected, boolean frontSsl, BackendServiceMatcher serviceMatch) {
+	public BackendProxyHandler(GatewayConfig config, ClientChannel ClientChannel, Channel frontendChannel, Endpoint endpoint, boolean isContinueExpected, boolean frontSsl, BackendServiceMatcher serviceMatch) {
 		this.config=config;
 		this.frontendChannel = frontendChannel;
-		this.backendChannelPool = backendChannelPool;
+		this.ClientChannel = ClientChannel;
 		this.frontSsl=frontSsl;
 		this.isContinueExpected=isContinueExpected;
 		this.serviceMatch=serviceMatch;
@@ -99,7 +99,7 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 				isContinuing=false;
 			}else {
 				ctx.pipeline().remove(this);
-				backendChannelPool.release(ctx.channel());
+				ClientChannel.release();
 			}
 		}
 	}

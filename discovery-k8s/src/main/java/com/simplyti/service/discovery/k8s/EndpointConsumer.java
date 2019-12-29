@@ -1,6 +1,6 @@
 package com.simplyti.service.discovery.k8s;
 
-import com.simplyti.service.clients.Endpoint;
+import com.simplyti.service.clients.endpoint.Endpoint;
 
 @FunctionalInterface
 public interface EndpointConsumer {

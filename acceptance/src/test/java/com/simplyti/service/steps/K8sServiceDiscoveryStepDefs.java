@@ -27,7 +27,7 @@ import org.awaitility.Awaitility;
 import com.google.common.base.Splitter;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.any.Any;
-import com.simplyti.service.clients.Endpoint;
+import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.clients.k8s.KubeClient;

@@ -62,12 +62,11 @@ public class DefaultNamespacesBuilder implements NamespacesBuilder {
 	public Future<Namespace> build() {
 		return client.request()
 				.post(String.format("%s/namespaces",api.path()))
-				.body(this::body)
+				.withBody(this::body)
 				.fullResponse(this::response);
 	}
 	
-	private ByteBuf body(ByteBufAllocator ctx) {
-		ByteBuf buffer = ctx.buffer();
+	private ByteBuf body(ByteBuf buffer) {
 		json.serialize(new Namespace(KIND,api.version(),Metadata.builder()
 				.labels(labels)
 				.name(name)

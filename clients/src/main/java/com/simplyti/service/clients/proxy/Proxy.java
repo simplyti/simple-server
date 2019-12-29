@@ -1,6 +1,6 @@
 package com.simplyti.service.clients.proxy;
 
-import com.simplyti.service.clients.Address;
+import com.simplyti.service.clients.endpoint.Address;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;

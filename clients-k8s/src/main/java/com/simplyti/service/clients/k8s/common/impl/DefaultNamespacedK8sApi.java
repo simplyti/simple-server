@@ -16,7 +16,6 @@ import com.simplyti.service.clients.k8s.common.watch.domain.Event;
 import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.http.FullHttpResponse;
 
@@ -72,7 +71,8 @@ public class DefaultNamespacedK8sApi<T extends K8sResource> extends DefaultK8sAp
 				.get(String.format("%s/watch/namespaces/%s/%s/%s",api.path(),namespace,resource,name))
 				.param("watch")
 				.param("resourceVersion",observable.index())
-				.stream(EventStreamHandler.NAME,client->new EventStreamHandler<>(client,json,observable,eventType));
+				.stream().withHandler(client->client.pipeline().addLast(EventStreamHandler.EVENT_HANDLER,
+						new EventStreamHandler<>(EventStreamHandler.EVENT_HANDLER,json,observable,eventType)));
 		future.addListener(f->{
 			if(f.isSuccess()) {
 				watch(name,observable);
@@ -100,9 +100,7 @@ public class DefaultNamespacedK8sApi<T extends K8sResource> extends DefaultK8sAp
 				.fullResponse(f->response(f.content(), STATUS_TYPE));
 	}
 	
-	
-	protected ByteBuf body(ByteBufAllocator ctx, T resource) {
-		ByteBuf buffer = ctx.buffer();
+	protected ByteBuf body(ByteBuf buffer, T resource) {
 		json.serialize(resource,buffer);
 		return buffer;
 	}

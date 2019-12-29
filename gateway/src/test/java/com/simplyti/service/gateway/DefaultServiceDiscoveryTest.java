@@ -3,9 +3,9 @@ package com.simplyti.service.gateway;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.simplyti.service.clients.Address;
-import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.Schema;
+import com.simplyti.service.clients.endpoint.Address;
+import com.simplyti.service.clients.endpoint.Endpoint;
 
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.util.concurrent.ImmediateEventExecutor;

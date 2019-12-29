@@ -34,7 +34,6 @@ import com.simplyti.service.builder.di.guice.GuiceServiceBuilder;
 import com.simplyti.service.client.SimpleHttpClient;
 import com.simplyti.service.client.SimpleHttpResponse;
 import com.simplyti.service.clients.http.exception.HttpException;
-import com.simplyti.service.clients.http.request.StreamedHttpRequest;
 import com.simplyti.service.examples.hook.TestServerStopHookModule;
 
 import cucumber.api.java.After;
@@ -469,13 +468,6 @@ public class ServiceBuilderStepDefs {
 		assertThat(future.isDone(),equalTo(false));
 	}
 	
-	@Then("^I check that stream \"([^\"]*)\" is not complete$")
-	public void iCheckThatStreamIsNotComplete(String key) throws Exception {
-		Thread.sleep(100);
-		StreamedHttpRequest future = (StreamedHttpRequest) scenarioData.get(key);
-		assertThat(future.isDone(),equalTo(false));
-	}
-	
 	@Then("^I check that \"([^\"]*)\" is success$")
 	public void iCheckThatIsSuccess(String key) throws Exception {
 		Future<?> futureService = (Future<?>) scenarioData.get(key);
@@ -486,29 +478,25 @@ public class ServiceBuilderStepDefs {
 		assertThat(futureService.isSuccess(),equalTo(true));
 	}
 	
-	@Then("^I check that stream \"([^\"]*)\" is success$")
-	public void iCheckThatStreamIsSuccess(String key) throws Exception {
-		StreamedHttpRequest futureService = (StreamedHttpRequest) scenarioData.get(key);
-		Awaitility.await().until(futureService::isDone);
-		if(!futureService.isSuccess()) {
-			futureService.cause().printStackTrace();
-		}
-		assertThat(futureService.isSuccess(),equalTo(true));
-	}
-	
-	@When("^I check that stream \"([^\"]*)\" is failure$")
-	public void iCheckThatStreamIsFailure(String key) throws Exception {
-		StreamedHttpRequest futureService = (StreamedHttpRequest) scenarioData.get(key);
-		Awaitility.await().until(futureService::isDone);
-		assertThat(futureService.isSuccess(),equalTo(false));
-	}
-	
 	@Then("^I check that \"([^\"]*)\" is failure$")
 	public void iCheckThatIsFailure(String key) throws Exception {
 		Future<?> futureService = (Future<?>) scenarioData.get(key);
 		Awaitility.await().until(futureService::isDone);
 		assertThat(futureService.isSuccess(),equalTo(false));
 	}
+	
+	@Then("^I check that error cause of \"([^\"]*)\" is instancence of \"([^\"]*)\"$")
+	public void iCheckThatErrorCauseOfIsInstancenceOf(String key, Class<? extends Throwable> clazz) throws Exception {
+		Future<?> futureService = (Future<?>) scenarioData.get(key);
+		assertThat(futureService.cause(),instanceOf(clazz));
+	}
+	
+	@Then("^I check that error cause of \"([^\"]*)\" contains message \"([^\"]*)\"$")
+	public void iCheckThatErrorCauseOfContainsMessage(String key, String message) throws Exception {
+		Future<?> futureService = (Future<?>) scenarioData.get(key);
+		assertThat(futureService.cause().getMessage(),equalTo(message));
+	}
+
 	
 	@When("^I check that \"([^\"]*)\" has conention closed failure$")
 	public void iCheckThatHasConentionClosrdFailure(String key) throws Exception {

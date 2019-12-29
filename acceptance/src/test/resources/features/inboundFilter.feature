@@ -1,4 +1,4 @@
-@standalone
+@apiFilter @standalone
 Feature: Operation Inbound Filter
 
 Scenario: Basic Operation Inbound Filter

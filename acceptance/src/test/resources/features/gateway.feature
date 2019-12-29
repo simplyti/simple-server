@@ -1,3 +1,4 @@
+@gateway
 Feature: Gateway
 
 Scenario: Simple gateway
@@ -62,15 +63,15 @@ Scenario: Streamed body post
 		| withLog4J2Logger	|		|
 	Then I check that "#gatewayFuture" is success
 	When I create a service with path "/echo" and backend "http://127.0.0.1:9090"
-	And I post "/echo" with body stream "#stream", content part "Hello ", length of 20 getting response objects "#response"
-	Then I check that stream "#stream" is not complete
+	And I post "/echo" with body stream "#stream", content part "Hello ", length of 20 getting response "#response"
+	Then I check that "#response" is not complete
 	When I send "stream." to stream "#stream" getting result "#writeresult"
 	Then I check that "#writeresult" is success
-	And I check that stream "#stream" is not complete
+	Then I check that "#response" is not complete
 	When I send "The end" to stream "#stream" getting result "#writeresult"
 	Then I check that "#writeresult" is success
-	And I check that stream "#stream" is success
-	And I check that response stream "#response" contains body "Hello stream.The end"
+	Then I check that "#response" is success
+	And I check that http response "#response" has body "Hello stream.The end"
 	
 Scenario: Service method match
 	When I start a service "#serviceFuture" with options:
@@ -116,7 +117,7 @@ Scenario: Especific method is prioritized
 	And I check that "#response" is equals to "This is a prioritized response"
 	When I send a "POST /anything" getting "#response"
 	Then I check that "#response" has status code 200
-	
+
 Scenario: Especific host is prioritized
 	When I start a service "#serviceFuture" with options:
 		| option	 		| value |

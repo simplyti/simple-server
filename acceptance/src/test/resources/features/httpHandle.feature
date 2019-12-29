@@ -1,4 +1,4 @@
-@standalone
+@httpHandle @standalone
 Feature: Http Handle
 
 

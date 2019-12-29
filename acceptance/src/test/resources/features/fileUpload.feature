@@ -1,4 +1,4 @@
-@standalone
+@fileUpload @standalone
 Feature: File upload
 
 Scenario: File server

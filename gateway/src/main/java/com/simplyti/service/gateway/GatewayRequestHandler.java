@@ -10,17 +10,18 @@ import javax.ws.rs.ServiceUnavailableException;
 import com.simplyti.service.ServerConfig;
 import com.simplyti.service.api.filter.FilterChain;
 import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;
-import com.simplyti.service.clients.Endpoint;
-import com.simplyti.service.clients.InternalClient;
+import com.simplyti.service.clients.GenericClient;
+import com.simplyti.service.clients.channel.ClientChannel;
+import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.commons.netty.pending.PendingMessages;
 import com.simplyti.service.gateway.handler.BackendProxyHandler;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.pool.ChannelPool;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -35,7 +36,7 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	private static final InternalLogger log = InternalLoggerFactory.getInstance(GatewayRequestHandler.class);
 	
 	private final ServiceDiscovery serviceDiscovery;
-	private final InternalClient client;
+	private final GenericClient client;
 	private final ServerConfig config;
 	private final GatewayConfig gatewayConfig;
 
@@ -47,7 +48,7 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 
 
 	@Inject
-	public GatewayRequestHandler(InternalClient client, ServiceDiscovery serviceDiscovery, ServerConfig config,  GatewayConfig gatewayConfig) {
+	public GatewayRequestHandler(GenericClient client, ServiceDiscovery serviceDiscovery, ServerConfig config,  GatewayConfig gatewayConfig) {
 		super(false);
 		this.client = client;
 		this.config=config;
@@ -162,28 +163,30 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	}
 
 	private void connectToEndpoint(ChannelHandlerContext ctx, Endpoint endpoint, boolean isContinueExpected, BackendServiceMatcher serviceMatch) {
-		ChannelPool pool = client.pool(endpoint);
-		Future<Channel> channelFuture = pool.acquire();
+		Future<ClientChannel> channelFuture = this.client.request()
+			.withEndpoint(endpoint)
+			.withChannelInitialize(ch->ch.pipeline().addLast(new HttpClientCodec()))
+			.channel();
 		if (channelFuture.isDone()) {
-			handleBackendChannelFuture(ctx, channelFuture, pool, endpoint, isContinueExpected, serviceMatch);
+			handleBackendChannelFuture(ctx, channelFuture, endpoint, isContinueExpected, serviceMatch);
 		} else {
-			channelFuture.addListener(f -> handleBackendChannelFuture(ctx, channelFuture, pool, endpoint, isContinueExpected, serviceMatch));
+			channelFuture.addListener(f -> handleBackendChannelFuture(ctx, channelFuture, endpoint, isContinueExpected, serviceMatch));
 		}
 	}
 	
-	private void handleBackendChannelFuture(ChannelHandlerContext ctx, Future<Channel> backendChannelFuture,
-			ChannelPool pool, Endpoint endpoint, boolean isContinueExpected, BackendServiceMatcher serviceMatch) {
+	private void handleBackendChannelFuture(ChannelHandlerContext ctx, Future<ClientChannel> backendChannelFuture,
+			Endpoint endpoint, boolean isContinueExpected, BackendServiceMatcher serviceMatch) {
 		if(ctx.executor().inEventLoop()) {
-			handleBackendChannelFuture0(ctx,backendChannelFuture,pool,endpoint, isContinueExpected, serviceMatch);
+			handleBackendChannelFuture0(ctx,backendChannelFuture,endpoint, isContinueExpected, serviceMatch);
 		}else {
-			ctx.executor().execute(()->handleBackendChannelFuture0(ctx,backendChannelFuture,pool,endpoint,isContinueExpected, serviceMatch));
+			ctx.executor().execute(()->handleBackendChannelFuture0(ctx,backendChannelFuture,endpoint,isContinueExpected, serviceMatch));
 		}
 	}
 	
-	private void handleBackendChannelFuture0(ChannelHandlerContext ctx, Future<Channel> backendChannelFuture,
-			ChannelPool pool, Endpoint endpoint, boolean isContinueExpected, BackendServiceMatcher serviceMatch) {
+	private void handleBackendChannelFuture0(ChannelHandlerContext ctx, Future<ClientChannel> backendChannelFuture,
+			Endpoint endpoint, boolean isContinueExpected, BackendServiceMatcher serviceMatch) {
 		if (backendChannelFuture.isSuccess()) {
-			backendChannelFuture.getNow().pipeline().addLast(new BackendProxyHandler(gatewayConfig,pool, ctx.channel(),endpoint,isContinueExpected,frontSsl,serviceMatch));
+			backendChannelFuture.getNow().pipeline().addLast(new BackendProxyHandler(gatewayConfig, backendChannelFuture.getNow(), ctx.channel(),endpoint,isContinueExpected,frontSsl,serviceMatch));
 			this.backendChannel=backendChannelFuture.getNow();
 			pendingMessages.write(backendChannel).addListener(f->handleWriteFuture(ctx, f));
 		}else {

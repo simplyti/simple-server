@@ -17,7 +17,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.simplyti.service.api.serializer.json.Json;
-import com.simplyti.service.clients.Address;
+import com.simplyti.service.clients.endpoint.Address;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.clients.k8s.KubeClient;
@@ -222,8 +222,8 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 			if(endpoints.containsKey(id)) {
 				Endpoint endpoint = endpoints.get(id);
 				List<EnpointAddress> addresses = address(endpoint);
-				Map<ServiceKey, List<com.simplyti.service.clients.Endpoint>> oldEndpoints = endpoints(oldService,addresses);
-				Map<ServiceKey, List<com.simplyti.service.clients.Endpoint>> newEndpoints = endpoints(service,addresses);
+				Map<ServiceKey, List<com.simplyti.service.clients.endpoint.Endpoint>> oldEndpoints = endpoints(oldService,addresses);
+				Map<ServiceKey, List<com.simplyti.service.clients.endpoint.Endpoint>> newEndpoints = endpoints(service,addresses);
 				oldEndpoints.forEach((key,edps)->edps.stream().filter(edp->!newEndpoints.containsKey(key) || !newEndpoints.get(key).contains(edp))
 						.forEach(edp->deleteEndpoint(key.host(), key.method(), key.path(), edp)));
 				newEndpoints.forEach((key,edps)->edps.stream().filter(edp->!oldEndpoints.containsKey(key) || !oldEndpoints.get(key).contains(edp))
@@ -233,14 +233,14 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		return promise.setSuccess(null);
 	}
 	
-	private Map<ServiceKey,List<com.simplyti.service.clients.Endpoint>> endpoints(Service service, List<EnpointAddress> addresses) {
-		Map<ServiceKey,List<com.simplyti.service.clients.Endpoint>> mapedServices = new HashMap<>();
+	private Map<ServiceKey,List<com.simplyti.service.clients.endpoint.Endpoint>> endpoints(Service service, List<EnpointAddress> addresses) {
+		Map<ServiceKey,List<com.simplyti.service.clients.endpoint.Endpoint>> mapedServices = new HashMap<>();
 		addresses.forEach(address->eachEndpoint(service, address, (edp,host,path)->{
 						ServiceKey key = new ServiceKey(host,null,path);
 						if(mapedServices.containsKey(key)) {
 							mapedServices.get(key).add(edp);
 						}else {
-							List<com.simplyti.service.clients.Endpoint> edps = new ArrayList<>();
+							List<com.simplyti.service.clients.endpoint.Endpoint> edps = new ArrayList<>();
 							edps.add(edp);
 							mapedServices.put(key, edps);
 						}
@@ -408,7 +408,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		return a.metadata().namespace().equals(b.metadata().namespace());
 	}
 
-	private Collection<com.simplyti.service.clients.Endpoint> endpoints(String namespace, Ingress ingress, IngressBackend backend) {
+	private Collection<com.simplyti.service.clients.endpoint.Endpoint> endpoints(String namespace, Ingress ingress, IngressBackend backend) {
 		String serviceId = Joiner.on(':').join(namespace,backend.serviceName());
 		if(services.containsKey(serviceId) && endpoints.containsKey(serviceId)) {
 			return services.get(serviceId).spec().ports().stream()
@@ -431,12 +431,12 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		}
 	}
 
-	private com.simplyti.service.clients.Endpoint endpoint(Ingress ingress, com.simplyti.service.clients.k8s.endpoints.domain.Address address, Port port) {
+	private com.simplyti.service.clients.endpoint.Endpoint endpoint(Ingress ingress, com.simplyti.service.clients.k8s.endpoints.domain.Address address, Port port) {
 		return endpoint(ingress,new Address(address.ip(), port.port()));
 	}
 	
-	private com.simplyti.service.clients.Endpoint endpoint(Ingress ingress, Address address) {
-		return new com.simplyti.service.clients.Endpoint(isSsl(ingress)?HttpEndpoint.HTTPS_SCHEMA:HttpEndpoint.HTTP_SCHEMA,address);
+	private com.simplyti.service.clients.endpoint.Endpoint endpoint(Ingress ingress, Address address) {
+		return new com.simplyti.service.clients.endpoint.Endpoint(isSsl(ingress)?HttpEndpoint.HTTPS_SCHEMA:HttpEndpoint.HTTP_SCHEMA,address);
 	}
 
 	private boolean isSsl(Ingress ingress) {

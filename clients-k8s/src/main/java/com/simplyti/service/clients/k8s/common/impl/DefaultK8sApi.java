@@ -62,7 +62,8 @@ public class DefaultK8sApi<T extends K8sResource> implements K8sApi<T> {
 				.get(String.format("%s/%s", api.path(),resource))
 				.param("watch")
 				.param("resourceVersion",observable.index())
-				.stream(EventStreamHandler.NAME,client->new EventStreamHandler<>(client,json,observable,eventType));
+				.stream().withHandler(client->client.pipeline().addLast(EventStreamHandler.EVENT_HANDLER,
+						new EventStreamHandler<>(EventStreamHandler.EVENT_HANDLER,json,observable,eventType)));
 		future.addListener(f->{
 			if(f.isSuccess()) {
 				watch(observable);

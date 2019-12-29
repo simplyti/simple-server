@@ -1,4 +1,4 @@
-@standalone
+@startStopHook @standalone
 Feature: Server start/stop hook
 
 Scenario: Server start hook

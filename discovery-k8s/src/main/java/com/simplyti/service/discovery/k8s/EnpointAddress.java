@@ -1,6 +1,7 @@
 package com.simplyti.service.discovery.k8s;
 
-import com.simplyti.service.clients.Address;
+
+import com.simplyti.service.clients.endpoint.Address;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

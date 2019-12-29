@@ -1,4 +1,4 @@
-@standalone
+@fileServer @standalone
 Feature: File server
 
 Scenario: File server

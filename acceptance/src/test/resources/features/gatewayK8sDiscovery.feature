@@ -1,3 +1,4 @@
+@gateway @k8sdiscovery
 Feature: Gateway with k8s discovery
 
 Background:
@@ -28,7 +29,7 @@ Scenario: Create service after ingress
 	When I send a "GET /status/200" getting "#response"
 	Then I check that "#response" has status code 200
 	And I check that "#response" is equals to ""
-	
+
 Scenario: Ingress with service port name reference
 	When I start a service "#serviceFuture" with options:
 		| option	 			| value |

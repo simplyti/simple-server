@@ -13,43 +13,50 @@ import org.awaitility.Awaitility;
 
 import com.jsoniter.JsonIterator;
 import com.jsoniter.any.Any;
-import com.simplyti.service.client.tracer.SimpleRequestTracer;
-import com.simplyti.service.clients.Address;
-import com.simplyti.service.clients.Endpoint;
+import com.simplyti.service.clients.Client;
+import com.simplyti.service.clients.GenericClient;
+import com.simplyti.service.clients.endpoint.Address;
+import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
-import com.simplyti.service.clients.http.request.StreamedHttpRequest;
 import com.simplyti.service.clients.http.sse.ServerEvent;
-import com.simplyti.service.clients.http.ws.WebSocketClient;
+import com.simplyti.service.clients.http.stream.request.StreamedInputHttpRequestBuilder;
+import com.simplyti.service.clients.http.websocket.WebsocketClient;
 import com.simplyti.service.clients.proxy.ProxiedEndpoint;
 import com.simplyti.service.clients.proxy.ProxiedEndpointBuilder;
 import com.simplyti.service.clients.proxy.Proxy;
 import com.simplyti.service.clients.proxy.Proxy.ProxyType;
-import com.simplyti.service.clients.trace.RequestTracer;
+import com.simplyti.service.commons.netty.Promises;
+import com.simplyti.util.concurrent.Future;
+import com.simplyti.service.clients.channel.ClientChannel;
 
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.CompositeByteBuf;
-import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.DefaultHttpContent;
 import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.DefaultLastHttpContent;
+import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpContent;
+import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpVersion;
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.CharsetUtil;
-import io.netty.util.ReferenceCountUtil;
-import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.Promise;
 
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -83,9 +90,39 @@ public class HttpClientStepDefs {
 	public void iCreateAnHttpClientWithEventLoopGroup(String key, String eventloopKey) throws Exception {
 		EventLoopGroup eventloop = (EventLoopGroup) scenarioData.get(eventloopKey);
 		scenarioData.put(key,HttpClient.builder()
-		.eventLoopGroup(eventloop)
-		.withCheckStatusCode()
-		.build());
+			.withEventLoopGroup(eventloop)
+			.withMonitorEnabled()
+			.withCheckStatusCode()
+			.build());
+	}
+	
+	@When("^I create an http client \"([^\"]*)\" with pool size (\\d+)$")
+	public void iCreateAnHttpClientWithPoolSize(String key, int poolSize) throws Exception {
+		scenarioData.put(key,HttpClient.builder()
+			.withEventLoopGroup(eventLoopGroup)
+			.withChannelPoolSize(poolSize)
+			.withMonitorEnabled()
+			.withCheckStatusCode()
+			.build());
+	}
+	
+	@When("^I create an http client \"([^\"]*)\" with unpooled channels$")
+	public void iCreateAnHttpClientWithUnpooledChannels(String key) throws Exception {
+		scenarioData.put(key,HttpClient.builder()
+				.withEventLoopGroup(eventLoopGroup)
+				.withUnpooledChannels()
+				.withMonitorEnabled()
+				.withCheckStatusCode()
+				.build());
+	}
+	
+	@When("^I create an generic client \"([^\"]*)\" with pool idle timeout (\\d+)$")
+	public void iCreateAnGenericClientWithPoolIdleTimeout(String key, int iddleTime) throws Exception {
+		scenarioData.put(key,Client.builder()
+	    	.withEventLoopGroup(eventLoopGroup)
+	    	.withMonitorEnabled()
+	    	.withChannelPoolIdleTimeout(iddleTime)
+	    	.build());
 	}
 	
 	@When("^I get \"([^\"]*)\" using client \"([^\"]*)\" in event loop \"([^\"]*)\" getting response \"([^\"]*)\"$")
@@ -102,65 +139,92 @@ public class HttpClientStepDefs {
 		Awaitility.await().until(done::get);
 	}
 	
-	@When("^I post \"([^\"]*)\" with body stream \"([^\"]*)\", content part \"([^\"]*)\", length of (\\d+) getting response objects \"([^\"]*)\"$")
-	public void iPostWithBodyStreamAndLengthOfSgettingResponse(String path, String streamKey, String cotentPart, int length, String responseObjects) throws Exception {
-		HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, path);
-		request.headers().set(HttpHeaderNames.CONTENT_LENGTH,length);
-		List<HttpObject> responseStream = new ArrayList<>();
-		scenarioData.put(responseObjects, responseStream);
-		StreamedHttpRequest stream = sutClient.request().withEndpoint(LOCAL_ENDPOINT)
-			.send(request)
-			.forEach(obj->responseStream.add(ReferenceCountUtil.retain(obj)));
-		stream.send(new DefaultHttpContent(Unpooled.wrappedBuffer(cotentPart.getBytes(CharsetUtil.UTF_8))));
-		scenarioData.put(streamKey, stream);
+	@When("^I post \"([^\"]*)\" with body \"([^\"]*)\" using generic client \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	public void iPostWithBodyUsingGenericClientGettingResponse(String path, String body, String clientKey, String resultKey) throws Exception {
+	    GenericClient client = (GenericClient) scenarioData.get(clientKey);
+	    FullHttpRequest fullRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, path, Unpooled.copiedBuffer(body, CharsetUtil.UTF_8));
+	    fullRequest.headers().set(HttpHeaderNames.CONTENT_LENGTH,fullRequest.content().readableBytes());
+	    Future<HttpResponse> response = client.request()
+	    	.withEndpoint(LOCAL_ENDPOINT)
+	    	.withChannelInitialize(ch->{
+	    		ch.pipeline().addLast(new LoggingHandler(LogLevel.INFO));
+	    		ch.pipeline().addLast(new HttpClientCodec());
+	    	})
+	    	.channel()
+	    	.thenCombine(ch-> {
+	    		Promise<ClientChannel> promise = ch.eventLoop().newPromise();
+	    		ChannelFuture future = ch.writeAndFlush(fullRequest);
+	    		Promises.ifSuccessMap(future, promise, __->ch);
+	    		return promise;
+	    	})
+	    	.thenCombine(ch->{
+	    		Promise<HttpResponse> promise = ch.eventLoop().newPromise();
+	    		ch.pipeline().addLast(new SimpleChannelInboundHandler<HttpResponse>() {
+
+					@Override
+					protected void channelRead0(ChannelHandlerContext ctx, HttpResponse msg) throws Exception {
+						ctx.pipeline().remove(this);
+						promise.setSuccess(msg);
+						ch.release();
+					}
+				});
+	    		return promise;
+	    	});
+	    scenarioData.put(resultKey, response);
 	}
 	
-	@When("^I post \"([^\"]*)\" using client \"([^\"]*)\" with body stream \"([^\"]*)\", content part \"([^\"]*)\", length of (\\d+) getting response objects \"([^\"]*)\"$")
-	public void iPostWithBodyStreamAndLengthOfSgettingResponse(String path,String clientKey, String streamKey, String cotentPart, int length, String responseObjects) throws Exception {
+	@When("^I post \"([^\"]*)\" with body stream \"([^\"]*)\", content part \"([^\"]*)\", length of (\\d+) getting response \"([^\"]*)\"$")
+	public void iPostWithBodyStreamAndLengthOfSgettingResponse(String path, String streamKey, String cotentPart, int length, String responseKey) throws Exception {
 		HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, path);
 		request.headers().set(HttpHeaderNames.CONTENT_LENGTH,length);
-		List<HttpObject> responseStream = new ArrayList<>();
-		scenarioData.put(responseObjects, responseStream);
-		StreamedHttpRequest stream = ((HttpClient)scenarioData.get(clientKey)).request().withEndpoint(LOCAL_ENDPOINT)
-			.send(request)
-			.forEach(obj->responseStream.add(ReferenceCountUtil.retain(obj)));
-		stream.send(new DefaultHttpContent(Unpooled.wrappedBuffer(cotentPart.getBytes(CharsetUtil.UTF_8))));
+		StreamedInputHttpRequestBuilder stream = sutClient.request().withEndpoint(LOCAL_ENDPOINT).send(request);
 		scenarioData.put(streamKey, stream);
+		Future<FullHttpResponse> response = stream.fullResponse();
+		stream.send(new DefaultHttpContent(Unpooled.wrappedBuffer(cotentPart.getBytes(CharsetUtil.UTF_8))));
+		scenarioData.put(responseKey, response);
 	}
 	
-	@Then("^I check that response stream \"([^\"]*)\" contains body \"([^\"]*)\"$")
-	public void iCheckThatResponseStreamContainsBody(String responseStreamKey, String expected) throws Exception {
-		@SuppressWarnings("unchecked")
-		List<HttpObject> responseStream = (List<HttpObject>) scenarioData.get(responseStreamKey);
-		CompositeByteBuf buff = new CompositeByteBuf(PooledByteBufAllocator.DEFAULT, false, 100);
-		responseStream.stream()
-			.filter(obj->obj instanceof HttpContent)
-			.map(HttpContent.class::cast)
-			.forEach(obj->buff.addComponent(true, obj.content()));
-		
-		assertThat(buff.toString(CharsetUtil.UTF_8),equalTo(expected));
-		buff.release();
-		buff.toString();
+	@When("^I post \"([^\"]*)\" using client \"([^\"]*)\" with body stream \"([^\"]*)\", content part \"([^\"]*)\", length of (\\d+) getting response \"([^\"]*)\"$")
+	public void iPostWithBodyStreamAndLengthOfSgettingResponse(String path,String clientKey, String streamKey, String cotentPart, int length, String responseKey) throws Exception {
+		HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, path);
+		request.headers().set(HttpHeaderNames.CONTENT_LENGTH,length);
+		StreamedInputHttpRequestBuilder stream = ((HttpClient)scenarioData.get(clientKey)).request().withEndpoint(LOCAL_ENDPOINT).send(request);
+		scenarioData.put(streamKey, stream);
+		Future<FullHttpResponse> response = stream.fullResponse();
+		stream.send(new DefaultHttpContent(Unpooled.wrappedBuffer(cotentPart.getBytes(CharsetUtil.UTF_8))));
+		scenarioData.put(responseKey, response);
+	}
+	
+	@When("^I post \"([^\"]*)\" using client \"([^\"]*)\" with body stream \"([^\"]*)\", content part \"([^\"]*)\" from loop group \"([^\"]*)\", length of (\\d+) getting response \"([^\"]*)\"$")
+	public void iPostUsingClientWithBodyStreamContentPartFromLoopGroupLengthOfGettingResponse(String path, String clientKey, String streamKey, String cotentPart, String eventLoopKey, int length, String responseKey) throws Exception {
+		HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, path);
+		request.headers().set(HttpHeaderNames.CONTENT_LENGTH,length);
+		StreamedInputHttpRequestBuilder stream = ((HttpClient)scenarioData.get(clientKey)).request().withEndpoint(LOCAL_ENDPOINT).send(request);
+		scenarioData.put(streamKey, stream);
+		Future<FullHttpResponse> response = stream.fullResponse();
+		((EventLoopGroup)scenarioData.get(eventLoopKey)).next().execute(()->
+			stream.send(new DefaultHttpContent(Unpooled.wrappedBuffer(cotentPart.getBytes(CharsetUtil.UTF_8)))));
+		scenarioData.put(responseKey, response);
 	}
 	
 	@When("^I send \"([^\"]*)\" to stream \"([^\"]*)\" getting result \"([^\"]*)\"$")
 	public void iSendToStreamGettingResult(String data, String streamKey, String resultKey) throws Exception {
-		StreamedHttpRequest stream = (StreamedHttpRequest) scenarioData.get(streamKey);
+		StreamedInputHttpRequestBuilder stream = (StreamedInputHttpRequestBuilder) scenarioData.get(streamKey);
 		Future<Void> result = stream.send(new DefaultHttpContent(Unpooled.wrappedBuffer(data.getBytes(CharsetUtil.UTF_8))));
 		scenarioData.put(resultKey, result);
 	}
-	
-	@When("^I send last \"([^\"]*)\" to stream \"([^\"]*)\" getting result \"([^\"]*)\"$")
-	public void iSendLastToStreamGettingResult(String data, String streamKey, String resultKey) throws Exception {
-		StreamedHttpRequest stream = (StreamedHttpRequest) scenarioData.get(streamKey);
-		Future<Void> result = stream.send(new DefaultLastHttpContent(Unpooled.wrappedBuffer(data.getBytes(CharsetUtil.UTF_8))));
-		scenarioData.put(resultKey, result);
-	}
-	
+
 	@When("^I get \"([^\"]*)\" getting response \"([^\"]*)\"$")
 	public void iGetWithClientGettingResponse(String path, String resultKey) throws Exception {
 		Future<FullHttpResponse> response = sutClient.request().withEndpoint(LOCAL_ENDPOINT)
 			.get(path).fullResponse();
+		scenarioData.put(resultKey, response);
+	}
+	
+	@When("^I post \"([^\"]*)\" using client \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	public void iPostUsingClientGettingResponse(String path, String clientKey, String resultKey) throws Exception {
+		Future<FullHttpResponse> response = ((HttpClient)scenarioData.get(clientKey)).request().withEndpoint(LOCAL_ENDPOINT)
+				.get(path).fullResponse();
 		scenarioData.put(resultKey, response);
 	}
 	
@@ -203,12 +267,38 @@ public class HttpClientStepDefs {
 	@Then("^I check that http client \"([^\"]*)\" has (\\d+) iddle connection$")
 	public void iCheckThatHttpClientHasIddleConnection(String clientKey, int number) throws Exception {
 		HttpClient client = (HttpClient) scenarioData.get(clientKey);
-		assertThat(client.monitor().iddleConnections(),equalTo(number));
+		assertThat(client.monitor().idleConnections(),equalTo(number));
+	}
+	
+	@Then("^I check that client \"([^\"]*)\" has (\\d+) iddle connection$")
+	public void iCheckThatClientHasIddleConnection(String clientKey, int number) throws Exception {
+		Client<?> client = (Client<?>) scenarioData.get(clientKey);
+		assertThat(client.monitor().idleConnections(),equalTo(number));
+	}
+	
+	@Then("^I check that client \"([^\"]*)\" has (\\d+) active connection$")
+	public void iCheckThatClientHasActiveConnection(String clientKey, int number) throws Exception {
+		Client<?> client = (Client<?>) scenarioData.get(clientKey);
+		assertThat(client.monitor().activeConnections(),equalTo(number));
+	}
+
+	@Then("^I check that http client \"([^\"]*)\" has (\\d+) total connection$")
+	public void iCheckThatHttpClientHasTotalConnection(String clientKey, int number) throws Exception {
+		HttpClient client = (HttpClient) scenarioData.get(clientKey);
+		assertThat(client.monitor().totalConnections(),equalTo(number));
+	}
+	
+	@When("^I check that http client \"([^\"]*)\" has (\\d+) active connection$")
+	public void iCheckThatHttpClientHasActiveConnection(String clientKey, int number) throws Exception {
+		HttpClient client = (HttpClient) scenarioData.get(clientKey);
+		Awaitility.await()
+			.pollDelay(50, TimeUnit.MILLISECONDS)
+			.until(client.monitor()::activeConnections,equalTo(number));
 	}
 	
 	@Then("^I check that http client has (\\d+) iddle connection$")
 	public void iCheckThatHttpClientHasIddleConnection(int number) throws Exception {
-		assertThat(sutClient.monitor().iddleConnections(),equalTo(number));
+		assertThat(sutClient.monitor().idleConnections(),equalTo(number));
 	}
 	
 	@Then("^I check that http client has (\\d+) active connection$")
@@ -244,17 +334,69 @@ public class HttpClientStepDefs {
 	public void iGetWithClientGetingResponse(String path,String body, String resultKey) throws Exception {
 		Future<FullHttpResponse> response =  sutClient.request().withEndpoint(LOCAL_ENDPOINT)
 			.post(path)
-			.body(alloc->alloc.buffer().writeBytes(Unpooled.copiedBuffer(body, CharsetUtil.UTF_8)))
+			.withBody(buffer->buffer.writeCharSequence(body, CharsetUtil.UTF_8))
 			.fullResponse();
 		scenarioData.put(resultKey, response);
+	}
+	
+	@When("^I post \"([^\"]*)\" using client \"([^\"]*)\" with body \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	public void iPostUsingClientWithBodyGettingResponse(String path, String clientKey, String body, String resultKey) throws Exception {
+		Future<FullHttpResponse> response =  ((HttpClient)scenarioData.get(clientKey)).request().withEndpoint(LOCAL_ENDPOINT)
+				.post(path)
+				.withBody(buffer->buffer.writeCharSequence(body, CharsetUtil.UTF_8))
+				.fullResponse();
+			scenarioData.put(resultKey, response);
+	}
+	
+	@When("^I send a full post request \"([^\"]*)\" with body \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	public void iSendAFullPostRequestWithBodyGettingResponse(String path, String body, String resultKey) throws Exception {
+		FullHttpRequest fullRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, path, Unpooled.copiedBuffer(body, CharsetUtil.UTF_8));
+		Future<FullHttpResponse> response =  sutClient.request().withEndpoint(LOCAL_ENDPOINT)
+				.send(fullRequest)
+				.fullResponse();
+		scenarioData.put(resultKey, response);
+	}
+	
+	@When("^I send a post request \"([^\"]*)\" with content-lenght (\\d+) to stream \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	public void iSendAPostRequestWithContentLenghtToStreamGettingResponse(String path, int length, String streamKey, String resultKey) throws Exception {
+		HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, path);
+		request.headers().set(HttpHeaderNames.CONTENT_LENGTH,length);
+		StreamedInputHttpRequestBuilder streamed = sutClient.request().withEndpoint(LOCAL_ENDPOINT).send(request);
+		scenarioData.put(streamKey, streamed);
+		Future<FullHttpResponse>  response = streamed.fullResponse();
+		scenarioData.put(resultKey, response);
+	}
+	
+	@When("^I send content \"([^\"]*)\" to http stream \"([^\"]*)\" getting \"([^\"]*)\"$")
+	public void iSendContentToHttpStreamGetting(String content, String streamKey, String resultKey) throws Exception {
+		StreamedInputHttpRequestBuilder streamed = (StreamedInputHttpRequestBuilder) scenarioData.get(streamKey);
+		Future<Void> result = streamed.send(new DefaultHttpContent(Unpooled.copiedBuffer(content, CharsetUtil.UTF_8)));
+		scenarioData.put(resultKey, result);
+	}
+	
+	@When("^I send last content \"([^\"]*)\" to http stream \"([^\"]*)\" getting \"([^\"]*)\"$")
+	public void iSendLastContentToHttpStreamGetting(String content, String streamKey, String resultKey) throws Exception {
+		StreamedInputHttpRequestBuilder streamed = (StreamedInputHttpRequestBuilder) scenarioData.get(streamKey);
+		Future<Void> result = streamed.send(new DefaultLastHttpContent(Unpooled.copiedBuffer(content, CharsetUtil.UTF_8)));
+		scenarioData.put(resultKey, result);
 	}
 	
 	@When("^I post \"([^\"]*)\" with body \"([^\"]*)\" and response time (\\d+) getting response \"([^\"]*)\"$")
 	public void iPostWithBodyAndResponseTimeGettingResponse(String path, String body, int timeout, String resultKey) throws Exception {
 		Future<FullHttpResponse> response =  sutClient.request().withEndpoint(LOCAL_ENDPOINT)
+				.withResponseTimeout(timeout)
+				.post(path)
+				.withBody(buffer->buffer.writeCharSequence(body, CharsetUtil.UTF_8))
+				.fullResponse();
+			scenarioData.put(resultKey, response);
+	}
+	
+	@When("^I post \"([^\"]*)\" with body \"([^\"]*)\" and read timeout (\\d+) getting response \"([^\"]*)\"$")
+	public void iPostWithBodyAndReadTimeGettingResponse(String path, String body, int timeout, String resultKey) throws Exception {
+		Future<FullHttpResponse> response =  sutClient.request().withEndpoint(LOCAL_ENDPOINT)
 				.withReadTimeout(timeout)
 				.post(path)
-				.body(alloc->alloc.buffer().writeBytes(Unpooled.copiedBuffer(body, CharsetUtil.UTF_8)))
+				.withBody(buffer->buffer.writeCharSequence(body, CharsetUtil.UTF_8))
 				.fullResponse();
 			scenarioData.put(resultKey, response);
 	}
@@ -285,7 +427,6 @@ public class HttpClientStepDefs {
 		assertThat(response.status().code(),equalTo(status));
 	}
 	
-
 	@Then("^I get url \"([^\"]*)\" getting response \"([^\"]*)\"$")
 	public void iGetUrlGettingResponse(String endpointUrl, String resultKey) throws Exception {
 		HttpEndpoint endpoint = HttpEndpoint.of(endpointUrl);
@@ -348,7 +489,7 @@ public class HttpClientStepDefs {
 		HttpEndpoint endpoint = HttpEndpoint.of(endpointUrl);
 		List<HttpObject> objets = new ArrayList<>();
 		sutClient.request().withEndpoint(endpoint).get(endpoint.path())
-				.forEach(objets::add).await();
+				.stream().forEach(objets::add).await();
 		scenarioData.put(resultKey, objets);
 	}
 	
@@ -363,8 +504,10 @@ public class HttpClientStepDefs {
 	public void iGetUrlGettingStream(String endpointUrl, String resultKey) throws Exception {
 		HttpEndpoint endpoint = HttpEndpoint.of(endpointUrl);
 		List<ByteBuf> stream = new ArrayList<>();
-		sutClient.request().withEndpoint(endpoint).get(endpoint.path())
-				.stream(data->stream.add(Unpooled.copiedBuffer(data))).sync();
+		sutClient.request().withEndpoint(endpoint)
+				.get(endpoint.path())
+				.stream()
+					.onData(data->stream.add(Unpooled.copiedBuffer(data))).sync();
 		scenarioData.put(resultKey, stream);
 	}
 	
@@ -373,7 +516,7 @@ public class HttpClientStepDefs {
 		HttpEndpoint endpoint = HttpEndpoint.of(endpointUrl);
 		List<ServerEvent> stream = new ArrayList<>();
 		sutClient.request().withEndpoint(endpoint).get(endpoint.path())
-				.sse(event->stream.add(event)).sync();
+				.sse().onEvent(event->stream.add(event)).sync();
 		scenarioData.put(resultKey, stream);
 	}
 	
@@ -397,17 +540,8 @@ public class HttpClientStepDefs {
 	public void iConnectToWebsocketGettingTextStream(String wsKey, String stream) throws Exception {
 		StringBuilder data = new StringBuilder();
 		scenarioData.put(stream, data);
-		WebSocketClient ws = client.request().withEndpoint(LOCAL_ENDPOINT)
-			.websocket("/",frame->data.append(((TextWebSocketFrame)frame).text()));
-		scenarioData.put(wsKey, ws);
-	}
-	
-	@When("^I connect to websocket \"([^\"]*)\" getting text stream \"([^\"]*)\" and write \"([^\"]*)\"$")
-	public void iConnectToWebsocketGettingTextStreamAndWrite(String wsKey, String stream, String arg3) throws Exception {
-		StringBuilder data = new StringBuilder();
-		scenarioData.put(stream, data);
-		WebSocketClient ws = client.request().withEndpoint(LOCAL_ENDPOINT)
-			.websocket("/",frame->data.append(((TextWebSocketFrame)frame).text()));
+		WebsocketClient ws = client.request().withEndpoint(LOCAL_ENDPOINT).websocket();
+		ws.onData(buff->data.append(buff.toString(CharsetUtil.UTF_8)));
 		scenarioData.put(wsKey, ws);
 	}
 	
@@ -416,8 +550,8 @@ public class HttpClientStepDefs {
 		HttpEndpoint endpoint = HttpEndpoint.of(endpointUrl);
 		StringBuilder data = new StringBuilder();
 		scenarioData.put(stream, data);
-		WebSocketClient ws = client.request().withEndpoint(endpoint)
-			.websocket("/",frame->data.append(((TextWebSocketFrame)frame).text()));
+		WebsocketClient ws = client.request().withEndpoint(endpoint).websocket();
+		ws.onData(buff->data.append(buff.toString(CharsetUtil.UTF_8)));
 		scenarioData.put(wsKey, ws);
 	}
 	
@@ -439,36 +573,13 @@ public class HttpClientStepDefs {
 	
 	@When("^I send message \"([^\"]*)\" to websocket \"([^\"]*)\" getting \"([^\"]*)\"$")
 	public void iSendMessageToWebsocketGetting(String msg, String wsKey, String result) throws Exception {
-		WebSocketClient ws = (WebSocketClient) scenarioData.get(wsKey);
+		WebsocketClient ws = (WebsocketClient) scenarioData.get(wsKey);
 		scenarioData.put(result, ws.send(msg));
 	}
 	
-	
-	@Given("^a simple client request tracer \"([^\"]*)\"$")
-	public void aSimpleClientRequestTracer(String key) throws Exception {
-	    this.scenarioData.put(key, new SimpleRequestTracer());
-	}
-
-	@When("^I get \"([^\"]*)\" getting response \"([^\"]*)\" with request tracer \"([^\"]*)\"$")
-	public void iGetGettingResponseWithRequestTracer(String path, String resultKey, String tracerKey) throws Exception {
-		RequestTracer<?,?> tracer =  (RequestTracer<?,?>) scenarioData.get(tracerKey);
-		Future<FullHttpResponse> response = sutClient.request().withEndpoint(LOCAL_ENDPOINT)
-				.withTracer(tracer)
-				.get(path).fullResponse();
-		
-		scenarioData.put(resultKey, response);
-	}
-
-	@Then("^I check that tracer \"([^\"]*)\" contains (\\d+) request$")
-	public void iCheckThatTracerContainsRequest(String tracerKey, int count) throws Exception {
-		SimpleRequestTracer tracer =  (SimpleRequestTracer) scenarioData.get(tracerKey);
-		assertThat(tracer.requests(),hasSize(1));
-	}
-
 	@When("^I close client connections \"([^\"]*)\"$")
 	public void iCloseClientConnections(String key) throws Exception {
 		scenarioData.put(key,sutClient.close());
 	}
-	
 	
 }
