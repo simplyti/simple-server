@@ -25,7 +25,6 @@ public class SimpleClientChannelFactory extends AbstractClientChannelPoolMap {
 		} else {
 			return new SimpleChannelPool(bootstrap, handler);
 		}
-		
 	}
 	
 }
