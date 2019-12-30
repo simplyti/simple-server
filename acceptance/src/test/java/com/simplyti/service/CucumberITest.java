@@ -40,7 +40,7 @@ public class CucumberITest {
 		HttpEndpoint target = HttpEndpoint.of("http://httpbin:80/status/200");
 		KubeClient k8s = KubeClient.builder().eventLoopGroup(eventLoopGroup).server("http://localhost:8082").build();
 		ProxiedEndpoint endpoint = ProxiedEndpoint.of(target).through("127.0.0.1", 3128, Proxy.ProxyType.HTTP);
-		Awaitility.await().atMost(30, TimeUnit.SECONDS).until(()->requestSuccess(http,endpoint,target.path()));
+		Awaitility.await().atMost(60, TimeUnit.SECONDS).pollInterval(5, TimeUnit.SECONDS).until(()->requestSuccess(http,endpoint,target.path()));
 		Awaitility.await().atMost(2,TimeUnit.MINUTES).until(()->k8sSuccess(k8s));
 	}
 
