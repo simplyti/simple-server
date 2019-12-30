@@ -6,7 +6,7 @@ import java.util.Map;
 
 import com.simplyti.service.clients.channel.ClientChannelFactory;
 import com.simplyti.service.clients.endpoint.Endpoint;
-import com.simplyti.service.clients.http.stream.request.DefaultStreamedInputHttpRequestBuilder;
+import com.simplyti.service.clients.http.stream.request.DefaultStreamedOutputHttpRequestBuilder;
 import com.simplyti.service.clients.http.stream.request.StreamedInputHttpRequestBuilder;
 import com.simplyti.service.clients.http.websocket.DefaultWebsocketClient;
 import com.simplyti.service.clients.http.websocket.WebsocketClient;
@@ -81,7 +81,7 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 	
 	@Override
 	public StreamedInputHttpRequestBuilder send(HttpRequest request) {
-		return new DefaultStreamedInputHttpRequestBuilder(this,request,params,headers,checkStatus,eventLoopGroup.next());
+		return new DefaultStreamedOutputHttpRequestBuilder(this,request,params,headers,checkStatus,eventLoopGroup.next());
 	}
 	
 	@Override

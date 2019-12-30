@@ -16,6 +16,7 @@ public class UnpooledClientChannel implements ClientChannel {
 	public UnpooledClientChannel(Channel channel, Address address) {
 		this.channel=channel;
 		this.address=address;
+		this.channel.attr(ADDRESS).set(address);
 	}
 
 	@Override

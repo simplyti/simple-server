@@ -2,6 +2,7 @@ package com.simplyti.service.clients.http.stream.request;
 
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import com.simplyti.service.clients.channel.ClientChannel;
 import com.simplyti.service.clients.http.handler.FullHttpResponseHandler;
@@ -12,21 +13,17 @@ import com.simplyti.service.clients.http.stream.HttpInputStream;
 import com.simplyti.service.clients.request.ChannelProvider;
 import com.simplyti.service.clients.stream.PendingRequest;
 import com.simplyti.service.clients.stream.StreamedOutput;
-import com.simplyti.service.commons.netty.Promises;
 import com.simplyti.util.concurrent.Future;
 
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
-import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.QueryStringEncoder;
 import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.Promise;
 
-public class DefaultStreamedInputHttpRequestBuilder implements StreamedInputHttpRequestBuilder, PendingRequest {
+public class DefaultStreamedOutputHttpRequestBuilder implements StreamedInputHttpRequestBuilder, PendingRequest {
 
 	private static final String HANDLER = "handler";
 	
@@ -40,9 +37,7 @@ public class DefaultStreamedInputHttpRequestBuilder implements StreamedInputHttp
 	private Future<ClientChannel> futureChannel;
 	private StreamedOutput streamOutput;
 
-
-
-	public DefaultStreamedInputHttpRequestBuilder(ChannelProvider channelProvider,
+	public DefaultStreamedOutputHttpRequestBuilder(ChannelProvider channelProvider,
 			HttpRequest request, Map<String,Object> params, HttpHeaders headers, boolean checkStatus, EventExecutor executor) {
 		this.request=request;
 		this.params=params;
@@ -60,16 +55,14 @@ public class DefaultStreamedInputHttpRequestBuilder implements StreamedInputHttp
 	@Override
 	public Future<FullHttpResponse> fullResponse() {
 		this.futureChannel = channelProvider.channel();
-		this.streamOutput = new StreamedOutput(this.futureChannel, executor);
-		return futureChannel.thenCombine(ch->writeRequest(ch,request(ch),this::fullResponseHandler));
+		this.streamOutput = new StreamedOutput(futureChannel, executor);
+		this.streamOutput.send(request());
+		return futureChannel.thenCombine(ch->this.fullResponseHandler(ch));
 	}
 	
-	private HttpRequest request(ClientChannel ch) {
+	private HttpRequest request() {
 		if(headers!=null) {
 			request.headers().set(headers);
-		}
-		if(!request.headers().contains(HttpHeaderNames.HOST)) {
-			request.headers().set(HttpHeaderNames.HOST,ch.address().host());
 		}
 		return request.setUri(withParams(request.uri(),params));
 	}
@@ -84,25 +77,22 @@ public class DefaultStreamedInputHttpRequestBuilder implements StreamedInputHttp
 		return encoder.toString();
 	}
 	
-	private io.netty.util.concurrent.Future<FullHttpResponse> fullResponseHandler(ClientChannel channel){
+	private Promise<FullHttpResponse> fullResponseHandler(ClientChannel channel){
 		Promise<FullHttpResponse> promise = channel.eventLoop().newPromise();
 		channel.pipeline().addLast(HANDLER,new FullHttpResponseHandler(HANDLER,channel,checkStatus,promise));
 		return promise;
 	}
 	
-	private static <U> io.netty.util.concurrent.Future<U> writeRequest(ClientChannel ch, HttpRequest request, Function<ClientChannel,io.netty.util.concurrent.Future<U>> reqInit) {
-		io.netty.util.concurrent.Future<U> future = reqInit.apply(ch);
-		ch.writeAndFlush(request).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+	private <U> io.netty.util.concurrent.Future<U> addHandlerAndSend(ClientChannel ch, HttpRequest request, Function<ClientChannel,io.netty.util.concurrent.Future<U>> requestHandlerInit) {
+		io.netty.util.concurrent.Future<U> future = requestHandlerInit.apply(ch);
+		this.streamOutput.send(request).addListener(f->{
+			if(!f.isSuccess()) {
+				ch.pipeline().fireExceptionCaught(future.cause());
+			}
+		});
 		return future;
 	}
 	
-	private static io.netty.util.concurrent.Future<ClientChannel> writeRequest(ClientChannel ch, HttpRequest request) {
-		ChannelFuture future = ch.writeAndFlush(request);
-		Promise<ClientChannel> promise = ch.eventLoop().newPromise();
-		Promises.ifSuccessMap(future, promise, v->ch);
-		return promise;
-	}
-
 	@Override
 	public <T> Future<T> fullResponse(Function<FullHttpResponse, T> object) {
 		return null;
@@ -124,12 +114,10 @@ public class DefaultStreamedInputHttpRequestBuilder implements StreamedInputHttp
 	}
 	
 	@Override
-	public Future<ClientChannel> send() {
-		this.futureChannel = channelProvider.channel().thenCombine(ch->writeRequest(ch,request(ch)));
-		this.streamOutput = new StreamedOutput(this.futureChannel, executor);
-		return futureChannel;
+	public <U> Future<U> addHandlerAndSend(Future<ClientChannel> futureChannel, Supplier<io.netty.util.concurrent.Future<U>> requestHandlerInit){
+		return futureChannel.thenCombine(ch->addHandlerAndSend(ch,request(),__->requestHandlerInit.get()));
 	}
-
+	
 	@Override
 	public StreamedInputHttpRequestBuilder withCheckStatusCode() {
 		return this;

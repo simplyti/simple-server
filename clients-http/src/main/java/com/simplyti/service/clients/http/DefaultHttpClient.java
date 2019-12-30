@@ -13,6 +13,7 @@ import com.simplyti.service.clients.monitor.DefaultClientMonitor;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.pool.AbstractChannelPoolHandler;
 import io.netty.handler.codec.http.HttpClientCodec;
@@ -28,6 +29,8 @@ public class DefaultHttpClient extends AbstractChannelPoolHandler implements Htt
 	private final boolean checkStatusCode;
 	private final HttpHeaders headers;
 	private final DefaultClientMonitor monitor;
+	
+	private final ChannelHandler setHostHeaderHandler;
 
 	public DefaultHttpClient(EventLoopGroup eventLoopGroup, Bootstrap bootstrap, Endpoint endpoint, HttpHeaders headers, SslProvider sslProvider, boolean checkStatusCode,
 			DefaultClientMonitor monitor, int poolSize, boolean unpooledChannels, long poolIdleTimeout) {
@@ -43,6 +46,7 @@ public class DefaultHttpClient extends AbstractChannelPoolHandler implements Htt
 		this.endpoint=endpoint;
 		this.headers=headers;
 		this.checkStatusCode=checkStatusCode;
+		this.setHostHeaderHandler = new SetHostHeaderHandler();
 	}
 
 	@Override
@@ -53,6 +57,7 @@ public class DefaultHttpClient extends AbstractChannelPoolHandler implements Htt
 	@Override
 	public void channelCreated(Channel ch) throws Exception {
 		ch.pipeline().addLast(new HttpClientCodec());
+		ch.pipeline().addLast(setHostHeaderHandler);
 	}
 
 	@Override

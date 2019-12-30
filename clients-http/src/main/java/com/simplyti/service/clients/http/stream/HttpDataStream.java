@@ -29,8 +29,8 @@ public class HttpDataStream implements HttpInputStream {
 
 	@Override
 	public Future<Void> onData(Consumer<ByteBuf> consumer) {
-		futureChannel =  pendingRequest.send();
-		return futureChannel.thenCombine(ch->streamHandle(ch,consumer));
+		this.futureChannel =  pendingRequest.channel();
+		return this.futureChannel.thenCombine(ch->pendingRequest.addHandlerAndSend(this.futureChannel, ()->streamHandle(ch,consumer)));
 	}
 	
 	private io.netty.util.concurrent.Future<Void> streamHandle(ClientChannel ch, Consumer<ByteBuf> consumer){
@@ -42,8 +42,8 @@ public class HttpDataStream implements HttpInputStream {
 	
 	@Override
 	public Future<Void> forEach(Consumer<HttpObject> consumer) {
-		futureChannel =  pendingRequest.send();
-		return futureChannel.thenCombine(ch->streamObjectsHandle(ch,consumer));
+		this.futureChannel =  pendingRequest.channel();
+		return this.futureChannel.thenCombine(ch->pendingRequest.addHandlerAndSend(this.futureChannel, ()->streamObjectsHandle(ch,consumer)));
 	}
 	
 	private io.netty.util.concurrent.Future<Void> streamObjectsHandle(ClientChannel ch, Consumer<HttpObject> consumer){
@@ -55,8 +55,8 @@ public class HttpDataStream implements HttpInputStream {
 	
 	@Override
 	public Future<Void> withHandler(Consumer<ClientChannel> initialized) {
-		futureChannel =  pendingRequest.send();
-		return futureChannel.thenCombine(ch->customStreamHandler(ch,initialized));
+		this.futureChannel =  pendingRequest.channel();
+		return this.futureChannel.thenCombine(ch->pendingRequest.addHandlerAndSend(this.futureChannel, ()->customStreamHandler(ch,initialized)));
 	}
 
 	private io.netty.util.concurrent.Future<Void> customStreamHandler(ClientChannel ch, Consumer<ClientChannel> initialized) {

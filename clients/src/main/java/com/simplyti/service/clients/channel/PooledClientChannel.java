@@ -30,6 +30,7 @@ public class PooledClientChannel implements ClientChannel {
 		this.pool=pool;
 		this.address=address;
 		this.channel=channel;
+		this.channel.attr(ADDRESS).set(address);
 		if(responseTimeoutMillis>0) {
 			this.releaseTimeoutSchedule = this.channel.eventLoop().schedule(this::throwResponseTimeout, responseTimeoutMillis, TimeUnit.MILLISECONDS);
 		} else {

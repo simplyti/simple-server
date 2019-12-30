@@ -23,8 +23,8 @@ public class DefaultServerSentEvents implements ServerSentEvents {
 
 	@Override
 	public Future<Void> onEvent(Consumer<ServerEvent> consumer) {
-		futureChannel = pendingRequest.send();
-		return futureChannel.thenCombine(ch->eventHandle(ch,consumer));
+		this.futureChannel = pendingRequest.channel();
+		return this.futureChannel.thenCombine(ch->pendingRequest.addHandlerAndSend(this.futureChannel, ()->eventHandle(ch,consumer)));
 	}
 	
 	private io.netty.util.concurrent.Future<Void> eventHandle(ClientChannel ch, Consumer<ServerEvent> consumer){
