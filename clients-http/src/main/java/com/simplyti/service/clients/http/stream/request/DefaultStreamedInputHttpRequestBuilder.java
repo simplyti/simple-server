@@ -16,6 +16,7 @@ import com.simplyti.service.commons.netty.Promises;
 import com.simplyti.util.concurrent.Future;
 
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -58,9 +59,9 @@ public class DefaultStreamedInputHttpRequestBuilder implements StreamedInputHttp
 
 	@Override
 	public Future<FullHttpResponse> fullResponse() {
-		this.futureChannel = channelProvider.channel().thenCombine(ch->writeRequest(ch,request(ch)));
+		this.futureChannel = channelProvider.channel();
 		this.streamOutput = new StreamedOutput(this.futureChannel, executor);
-		return futureChannel.thenCombine(this::fullResponseHandler);
+		return futureChannel.thenCombine(ch->writeRequest(ch,request(ch),this::fullResponseHandler));
 	}
 	
 	private HttpRequest request(ClientChannel ch) {
@@ -89,7 +90,13 @@ public class DefaultStreamedInputHttpRequestBuilder implements StreamedInputHttp
 		return promise;
 	}
 	
-	public static io.netty.util.concurrent.Future<ClientChannel> writeRequest(ClientChannel ch, HttpRequest request) {
+	private static <U> io.netty.util.concurrent.Future<U> writeRequest(ClientChannel ch, HttpRequest request, Function<ClientChannel,io.netty.util.concurrent.Future<U>> reqInit) {
+		io.netty.util.concurrent.Future<U> future = reqInit.apply(ch);
+		ch.writeAndFlush(request).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+		return future;
+	}
+	
+	private static io.netty.util.concurrent.Future<ClientChannel> writeRequest(ClientChannel ch, HttpRequest request) {
 		ChannelFuture future = ch.writeAndFlush(request);
 		Promise<ClientChannel> promise = ch.eventLoop().newPromise();
 		Promises.ifSuccessMap(future, promise, v->ch);
@@ -109,6 +116,11 @@ public class DefaultStreamedInputHttpRequestBuilder implements StreamedInputHttp
 	@Override
 	public ServerSentEvents sse() {
 		return new DefaultServerSentEvents(this);
+	}
+	
+	@Override
+	public Future<ClientChannel> channel() {
+		return channelProvider.channel();
 	}
 	
 	@Override

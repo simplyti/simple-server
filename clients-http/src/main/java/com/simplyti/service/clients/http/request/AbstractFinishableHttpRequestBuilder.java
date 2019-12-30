@@ -19,6 +19,7 @@ import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -56,8 +57,13 @@ public abstract class AbstractFinishableHttpRequestBuilder<T> implements BaseFin
 	@Override
 	public Future<FullHttpResponse> fullResponse() {
 		return channelProvider.channel()
-				.thenCombine(ch->writeRequest(ch,request(ch)))
-				.thenCombine(this::fullResponseHandler);
+				.thenCombine(ch->writeRequest(ch,request(ch), this::fullResponseHandler));
+	}
+	
+	@Override
+	public <U> Future<U> fullResponse(Function<FullHttpResponse, U> fn) {
+		return channelProvider.channel()
+				.thenCombine(ch->writeRequest(ch,request(ch), __->decodingFullResponseHandler(ch,fn)));
 	}
 	
 	@Override
@@ -207,14 +213,14 @@ public abstract class AbstractFinishableHttpRequestBuilder<T> implements BaseFin
 	}
 	
 	@Override
-	public Future<ClientChannel> send(){
-		return channelProvider.channel()
-				.thenCombine(ch->writeRequest(ch,request(ch)));
+	public Future<ClientChannel> channel() {
+		return channelProvider.channel();
 	}
 	
 	@Override
-	public <U> Future<U> fullResponse(Function<FullHttpResponse, U> fn) {
-		return send().thenCombine(ch->decodingFullResponseHandler(ch,fn));
+	public Future<ClientChannel> send(){
+		return channelProvider.channel()
+				.thenCombine(ch->writeRequest(ch,request(ch)));
 	}
 	
 	private <U> io.netty.util.concurrent.Future<U> decodingFullResponseHandler(ClientChannel channel, Function<FullHttpResponse, U> fn){
@@ -223,7 +229,13 @@ public abstract class AbstractFinishableHttpRequestBuilder<T> implements BaseFin
 		return promise;
 	}
 	
-	public static io.netty.util.concurrent.Future<ClientChannel> writeRequest(ClientChannel ch, HttpRequest request) {
+	private static <U> io.netty.util.concurrent.Future<U> writeRequest(ClientChannel ch, HttpRequest request, Function<ClientChannel,io.netty.util.concurrent.Future<U>> reqInit) {
+		io.netty.util.concurrent.Future<U> future = reqInit.apply(ch);
+		ch.writeAndFlush(request).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+		return future;
+	}
+	
+	private static io.netty.util.concurrent.Future<ClientChannel> writeRequest(ClientChannel ch, HttpRequest request) {
 		ChannelFuture future = ch.writeAndFlush(request);
 		Promise<ClientChannel> promise = ch.eventLoop().newPromise();
 		Promises.ifSuccessMap(future, promise, v->ch);

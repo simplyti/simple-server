@@ -68,9 +68,9 @@ public class K8sClientStepDefs {
 	@SuppressWarnings("unchecked")
 	@Given("^a namespace \"([^\"]*)\"$")
 	public void aNamespace(String name) throws Exception {
-		kubeClient.namespaces().builder()
-				.withName(name).build()
-				.sync();
+		Future<Namespace> future = kubeClient.namespaces().builder()
+				.withName(name).build();
+		Awaitility.await().until(future::isSuccess);
 		if(scenarioData.containsKey(CREATED_NAMESPACES)){
 			((List<String>)scenarioData.get(CREATED_NAMESPACES)).add(name);
 		}else{
