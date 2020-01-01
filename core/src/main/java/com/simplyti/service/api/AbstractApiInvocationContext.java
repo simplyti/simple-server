@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
 
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.sync.SyncTaskSubmitter;
@@ -24,6 +25,13 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 public abstract class AbstractApiInvocationContext<O> implements APIContext<O> {
 	
 	private static final InternalLogger log = InternalLoggerFactory.getInstance(AbstractApiInvocationContext.class);
+
+	private static final String STRING = "string";
+	private static final String INTEGER = "integer";
+	private static final String LONG = "long";
+	private static final String FLOAT = "float";
+	private static final String DOUBLE = "double";
+
 	
 	private final ChannelHandlerContext ctx;
 	private final boolean isKeepAlive;
@@ -32,7 +40,8 @@ public abstract class AbstractApiInvocationContext<O> implements APIContext<O> {
 	private final ApiInvocation invocation;
 	private final SyncTaskSubmitter syncTaskSubmitter;
 	
-	private final Map<String,String> cachedpathParams = new HashMap<>();
+	private final Map<String,Object> convertedPathParams = new HashMap<>();
+	private final Map<String,Object> convertedQueryParams = new HashMap<>();
 	
 	private boolean released = false ;
 
@@ -94,30 +103,83 @@ public abstract class AbstractApiInvocationContext<O> implements APIContext<O> {
 	
 	@Override
 	public String pathParam(String key) {
-		return cachedpathParams.computeIfAbsent(key, theKey->{
+		return pathParam(key,STRING,Function.identity());
+	}
+	
+	@Override
+	public Integer pathParamAsInt(String key) {
+		return pathParam(key,INTEGER,Integer::parseInt);
+	}
+	
+	@Override
+	public Long pathParamAsLong(String key) {
+		return pathParam(key,LONG,Long::parseLong);
+	}
+	
+	@Override
+	public Float pathParamAsFloat(String key) {
+		return pathParam(key,FLOAT,Float::parseFloat);
+	}
+	
+	@Override
+	public Double pathParamAsDouble(String key) {
+		return pathParam(key,DOUBLE,Double::parseDouble);
+	}
+	
+	@SuppressWarnings("unchecked")
+	private <T> T pathParam(String key, String type, Function<String,T> fn) {
+		return (T) convertedPathParams.computeIfAbsent(String.format("%s.%s", type,key), theKey->{
 			Integer group = invocation.operation().pathParamNameToGroup().get(key);
 			if(group==null){
 				return null;
 			}else{
-				return matcher.matcher().group(group);
+				return fn.apply(matcher.matcher().group(group));
 			}
 		});
 	}
-	
+
 	@Override
 	public String queryParam(String name) {
-		if(this.matcher.parameters().containsKey(name)) {
-			List<String> params = this.matcher.parameters().get(name);
-			if(params.isEmpty()) {
-				return null;
-			}else {
-				return params.get(0);
-			}
-		}else {
-			return null;
-		}
+		return queryParam(name,STRING,Function.identity());
 	}
 	
+	@Override
+	public Integer queryParamAsInt(String name) {
+		return queryParam(name,INTEGER,Integer::parseInt);
+	}
+	
+	@Override
+	public Long queryParamAsLong(String name) {
+		return queryParam(name,LONG,Long::parseLong);
+	}
+	
+	@Override
+	public Float queryParamAsFloat(String name) {
+		return queryParam(name,FLOAT,Float::parseFloat);
+	}
+	
+	@Override
+	public Double queryParamAsDouble(String name) {
+		return queryParam(name,DOUBLE,Double::parseDouble);
+	}
+	
+	@SuppressWarnings("unchecked")
+	private <T> T queryParam(String name, String type, Function<String,T> fn) {
+		return (T) this.convertedQueryParams.computeIfAbsent(String.format("%s.%s", type,name), key->{
+			if(this.matcher.parameters().containsKey(name)) {
+				List<String> params = this.matcher.parameters().get(name);
+				if(params.isEmpty()) {
+					return null;
+				}else {
+					return fn.apply(params.get(0));
+				}
+			}else {
+				return null;
+			}
+		});
+		
+	}
+
 	@Override
 	public List<String> queryParams(String name) {
 		return this.matcher.parameters().get(name);

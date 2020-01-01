@@ -22,7 +22,18 @@ public interface APIContext<T> {
 	public Future<Void> sync(VoidCallable task);
 	
 	public String pathParam(String key);
+	public Integer pathParamAsInt(String key);
+	public Long pathParamAsLong(String key);
+	public Float pathParamAsFloat(String key);
+	public Double pathParamAsDouble(String key);
+	
 	public String queryParam(String name);
+	public Integer queryParamAsInt(String name);
+	public Long queryParamAsLong(String name);
+	public Float queryParamAsFloat(String name);
+	public Double queryParamAsDouble(String name);
+	
+	
 	public List<String> queryParams(String name);
 	public Map<String, List<String>> queryParams();
 	
