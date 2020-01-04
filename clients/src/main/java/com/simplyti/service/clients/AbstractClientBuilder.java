@@ -104,17 +104,21 @@ public abstract class AbstractClientBuilder<B,T extends Client<R>,R extends Base
 	@Override
 	public T build() {
 		EventLoopGroup elg = eventLoopGroup();
-		return build0(elg, bootstrap(),endpoint, sslProvider, monitorEnabled?new DefaultClientMonitor(elg):null,poolSize,unpooledChannels, poolIdleTimeout);
+		return build0(elg, bootstrap(elg),endpoint, sslProvider(), monitorEnabled?new DefaultClientMonitor(elg):null,poolSize,unpooledChannels, poolIdleTimeout);
 	}
 
-	private Bootstrap bootstrap() {
+	private SslProvider sslProvider() {
+		return sslProvider;
+	}
+
+	private Bootstrap bootstrap(EventLoopGroup eventLoopGroup) {
 		return new Bootstrap().group(eventLoopGroup)
-			.channelFactory(channelFactory())
+			.channelFactory(channelFactory(eventLoopGroup))
 			.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
 			.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 	}
 
-	private ChannelFactory<Channel> channelFactory() {
+	private ChannelFactory<Channel> channelFactory(EventLoopGroup eventLoopGroup) {
 		if(channelFactory!=null) {
 			return channelFactory;
 		} else {

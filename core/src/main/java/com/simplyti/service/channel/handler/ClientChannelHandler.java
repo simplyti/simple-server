@@ -1,6 +1,5 @@
 package com.simplyti.service.channel.handler;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -40,25 +39,22 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 
 	private final StartStopMonitor startStopMonitor;
 	
-	private final List<String> currentHandlers = new ArrayList<>();
-	
 	private final Set<HttpRequestFilter> requestFilters;
 	private final Set<HttpResponseFilter> responseFilters;
 	
 	private final List<HandlerInit> handlers;
+	
+	private List<String> currentHandlers;
 
 	private boolean expectedContinue;
 	private boolean isContinuing;
 	private boolean upgrading;
 
 	private PendingMessages readPending;
-	
 	private PendingMessages writePending;
 	private boolean flushed;
 
-
-	public ClientChannelHandler(StartStopMonitor startStopMonitor,
-			Set<HandlerInit> handlers,
+	public ClientChannelHandler(StartStopMonitor startStopMonitor, Set<HandlerInit> handlers,
 			Set<HttpRequestFilter> requestFilters,Set<HttpResponseFilter> responseFilters) {
 		this.startStopMonitor=startStopMonitor;
 		this.handlers=handlers.stream().sorted(Priorized.PRIORITY_ANN_ORDER).collect(Collectors.toList());
@@ -119,7 +115,7 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 	}
 
 	private void handle(ChannelHandlerContext ctx, HttpRequest request, List<String> added) {
-		currentHandlers.addAll(added);
+		currentHandlers = added;
 		ctx.fireChannelRead(request);
 	}
 
@@ -171,13 +167,12 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 			if(isContinuing) {
 				isContinuing=false;
 			}else {
-				if(!upgrading) {
-					resetChannel(ctx.channel());
-				}
 				promise.addListener(f->{
 					if(upgrading) {
 						ctx.pipeline().remove(HttpServerCodec.class);
 						ctx.pipeline().remove(this);
+					} else {
+						resetChannel(ctx.channel());
 					}
 					ctx.channel().attr(ClientChannelGroup.IN_PROGRESS).set(false);
 					if(startStopMonitor.isStoping()){
@@ -195,8 +190,10 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 	}
 
 	public void resetChannel(Channel channel) {
-		currentHandlers.forEach(handler->channel.pipeline().remove(handler));
-		currentHandlers.clear();
+		if(currentHandlers!=null) {
+			currentHandlers.forEach(handler->channel.pipeline().remove(handler));
+			currentHandlers = null;
+		}
 	}
 	
 }

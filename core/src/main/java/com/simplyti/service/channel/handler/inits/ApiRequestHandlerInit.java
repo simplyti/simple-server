@@ -49,18 +49,18 @@ public class ApiRequestHandlerInit extends HandlerInit {
 		if(apiMacher.operation().isStreamed()) {
 			return new ChannelHandlerEntry[] {
 					this.serverHeadersHandler,
-					apiResponseEncoder,
+					this.apiResponseEncoder,
 					new ChannelHandlerEntry("chunk-write", new ChunkedWriteHandler()),
 					new ChannelHandlerEntry("api-handler",new StreamedApiInvocationHandler(apiMacher,exceptionHandler,syncTaskSubmitter))
 			};
 		}else {
 			return new ChannelHandlerEntry[] {
 					new ChannelHandlerEntry("aggregator", new HttpObjectAggregator(apiMacher.operation().maxBodyLength())),
-					serverHeadersHandler,
-					apiResponseEncoder,
+					this.serverHeadersHandler,
+					this.apiResponseEncoder,
 					new ChannelHandlerEntry("api-decoder",new ApiInvocationDecoder(apiMacher)),
 					new ChannelHandlerEntry("chunk-write", new ChunkedWriteHandler()),
-					apiInvocationHandler
+					this.apiInvocationHandler
 			};
 		}
 	}
