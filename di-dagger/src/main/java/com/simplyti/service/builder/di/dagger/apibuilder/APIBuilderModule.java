@@ -47,8 +47,10 @@ public class APIBuilderModule {
 	
 	@Provides
 	@Singleton
-	public ApiResolver apiResolver(ApiBuilder apiBuilder, Set<ApiProvider> providers) {
-		return new DefaultApiResolver(providers, apiBuilder);
+	public ApiResolver apiResolver(ApiBuilder apiBuilder, Set<ApiProvider> providers, ApiResponseEncoder apiResponseEncoder,
+			ApiInvocationHandler apiInvocationHandler, ExceptionHandler exceptionHandler,
+			SyncTaskSubmitter syncTaskSubmitter, ServerHeadersHandler serverHeadersHandler) {
+		return new DefaultApiResolver(providers, apiBuilder,apiResponseEncoder,apiInvocationHandler,exceptionHandler,syncTaskSubmitter,serverHeadersHandler);
 	}
 	
 	@Provides
