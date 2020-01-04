@@ -1,7 +1,6 @@
 package com.simplyti.service.channel;
 
 import java.net.InetSocketAddress;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -15,25 +14,19 @@ import com.simplyti.service.channel.handler.ClientChannelHandler;
 import com.simplyti.service.channel.handler.inits.HandlerInit;
 import com.simplyti.service.ssl.SslHandlerFactory;
 
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
 import lombok.RequiredArgsConstructor;
 
 @Sharable
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
-public class DefaultServiceChannelInitializer extends ChannelInboundHandlerAdapter implements ServiceChannelInitializer  {
+public class DefaultServiceChannelInitializer extends ChannelInitializer<Channel> implements ServiceChannelInitializer  {
 
-	private static final InternalLogger log = InternalLoggerFactory.getInstance(DefaultServiceChannelInitializer.class);
-	
 	private final ClientChannelGroup clientChannelGroup;
 	
 	private final ServerConfig serverConfig;
@@ -49,26 +42,14 @@ public class DefaultServiceChannelInitializer extends ChannelInboundHandlerAdapt
 	private final Set<HttpRequestFilter> requestFilters;
 	private final Set<HttpResponseFilter> responseFilters;
 	
-	private final Optional<EntryChannelInit> entryChannelInit;
+	private final EntryChannelInit entryChannelInit;
 	
 	@Override
-	public void channelRegistered(ChannelHandlerContext ctx) {
-		initChannel(ctx.channel());
-		ctx.pipeline().remove(this);
-		ctx.pipeline().fireChannelRegistered();
-	}
-	
-	private void initChannel(Channel channel) {
-		log.debug("Connected {}", channel.remoteAddress());
+	protected void initChannel(Channel channel) throws Exception {
 		clientChannelGroup.add(channel);
-		channel.closeFuture().addListener(future -> {
-			log.debug("Disconnected {}", channel.remoteAddress());
-			clientChannelGroup.remove(channel);
-		});
-		
 		ChannelPipeline pipeline = channel.pipeline();
-		if(channel instanceof SocketChannel && 
-				((InetSocketAddress)channel.localAddress()).getPort()==serverConfig.securedPort()) {
+		
+		if(isSslChannel(channel)) {
 			pipeline.addLast("ssl",sslHandlerFactory.handler(channel));
 		}
 		
@@ -76,14 +57,13 @@ public class DefaultServiceChannelInitializer extends ChannelInboundHandlerAdapt
 			pipeline.addLast(new LoggingHandler(LogLevel.INFO));
 		}
 		
-		if(entryChannelInit.isPresent()) {
-			entryChannelInit.get().init(pipeline);
-		}else {
-			pipeline.addLast(new HttpServerCodec());
-		}
-		
+		entryChannelInit.init(pipeline);
 		pipeline.addLast(ClientChannelHandler.NAME, new ClientChannelHandler(startStopMonitor,handlers,requestFilters,responseFilters));
 		pipeline.addLast(channelExceptionHandler);
+	}
+
+	private boolean isSslChannel(Channel channel) {
+		return channel instanceof SocketChannel &&  ((InetSocketAddress)channel.localAddress()).getPort()==serverConfig.securedPort();
 	}
 
 }

@@ -86,6 +86,7 @@ public class ServiceModule extends AbstractModule {
 		
 		bind(new TypeLiteral<ChannelFactory<ServerChannel>>() {}).toProvider(ServerChannelFactoryProvider.class).in(Singleton.class);
 		bind(ClientChannelGroup.class).in(Singleton.class);
+		bind(EntryChannelInit.class).to(DefaultHttpEntryChannelInit.class).in(Singleton.class);
 		
 		// Channel Initialized
 		bind(ServiceChannelInitializer.class).to(DefaultServiceChannelInitializer.class).in(Singleton.class);
@@ -109,7 +110,6 @@ public class ServiceModule extends AbstractModule {
 		Multibinder.newSetBinder(binder(), ServerStartHook.class);
 		Multibinder.newSetBinder(binder(), ServerStopHook.class);
 		
-		OptionalBinder.newOptionalBinder(binder(), EntryChannelInit.class);
 		OptionalBinder.newOptionalBinder(binder(), NativeIO.class);
 		OptionalBinder.newOptionalBinder(binder(), SslHandlerFactory.class);
 	}

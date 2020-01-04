@@ -22,6 +22,7 @@ import com.simplyti.service.builder.di.StartStopLoopProvider;
 import com.simplyti.service.builder.di.dagger.apibuilder.APIBuilderModule;
 import com.simplyti.service.builder.di.dagger.defaultbackend.DefaultBackendModule;
 import com.simplyti.service.builder.di.dagger.fileserver.FileServerModule;
+import com.simplyti.service.builder.di.guice.DefaultHttpEntryChannelInit;
 import com.simplyti.service.channel.ClientChannelGroup;
 import com.simplyti.service.channel.DefaultServiceChannelInitializer;
 import com.simplyti.service.channel.EntryChannelInit;
@@ -78,6 +79,12 @@ public class BaseServiceModule {
 	public ChannelFactory<ServerChannel> channelFactory(Optional<NativeIO> nativeIO) {
 		return new ServerChannelFactoryProvider(nativeIO).get();
 	}
+	
+	@Provides
+	@Singleton
+	public EntryChannelInit entryChannelInit() {
+		return new DefaultHttpEntryChannelInit();
+	}
 
 	@Provides
 	@Singleton
@@ -128,7 +135,7 @@ public class BaseServiceModule {
 			Optional<SslHandlerFactory> sslHandlerFactory, StartStopMonitor startStopMonitor,
 			ChannelExceptionHandler channelExceptionHandler,
 			Set<HandlerInit> handlers, Set<HttpRequestFilter> requestFilters, Set<HttpResponseFilter> responseFilters,
-			Optional<EntryChannelInit> entryChannelInit, ServerConfig serverConfig) {
+			EntryChannelInit entryChannelInit, ServerConfig serverConfig) {
 		return new DefaultServiceChannelInitializer(clientChannelGroup, serverConfig, sslHandlerFactory.orElse(null),
 				startStopMonitor, channelExceptionHandler, handlers, requestFilters, responseFilters,
 				entryChannelInit);
