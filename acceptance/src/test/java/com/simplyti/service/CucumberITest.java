@@ -34,7 +34,7 @@ public class CucumberITest {
 	@BeforeClass
 	public static void prepare() throws InterruptedException {
 		ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
-		Awaitility.await().until(()->listening(1080));
+		Awaitility.await().atMost(30, TimeUnit.SECONDS).until(()->listening(1080));
 		EventLoopGroup eventLoopGroup = new NioEventLoopGroup(1);
 		HttpClient http = HttpClient.builder().eventLoopGroup(eventLoopGroup).build();
 		HttpEndpoint target = HttpEndpoint.of("http://httpbin:80/status/200");
