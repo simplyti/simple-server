@@ -1,5 +1,6 @@
 package com.simplyti.service.sse;
 
+import com.simplyti.service.channel.handler.ClientChannelHandler;
 import com.simplyti.service.commons.netty.pending.PendingMessages;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -7,7 +8,6 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
@@ -30,7 +30,9 @@ public class DefaultSSEStream implements SSEStream {
 
 	private void updateConnection(Future<? super Void> f, ServerSentEventEncoder serverEventEncoder) {
 		if(f.isSuccess()) {
-			ctx.pipeline().replace(HttpServerCodec.class, "sse-codec", serverEventEncoder);
+			ctx.pipeline().remove("encoder");
+			ctx.pipeline().remove("decoder");
+			ctx.pipeline().addBefore(ClientChannelHandler.NAME,"sse-codec", serverEventEncoder);
 			pendingMessages.write(ctx.channel());
 		}else {
 			pendingMessages.fail(f.cause());

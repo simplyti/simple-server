@@ -47,13 +47,14 @@ public class DefaultService extends AbstractService<DefaultService> implements S
 		this.config=config;
 		this.serverChannels=new DefaultChannelGroup(startStopLoop);
 		this.sslHandlerFactory=sslHandlerFactory;
-		this.bootstrap = new ServerBootstrap().group(startStopLoop, eventLoopGroup)
+		this.bootstrap = new ServerBootstrap().group(eventLoopGroup)
 				.channelFactory(channelFactory)
-				.option(ChannelOption.SO_BACKLOG, 100000)
+				.option(ChannelOption.SO_BACKLOG, 8192)
 				.option(ChannelOption.SO_REUSEADDR, true)
 				.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
 				.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
 				.childOption(ChannelOption.SO_KEEPALIVE, true)
+				.childOption(ChannelOption.SO_REUSEADDR, true)
 				.childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, WriteBufferWaterMark.DEFAULT)
 				.childHandler(serviceChannelInitializer);
 	}

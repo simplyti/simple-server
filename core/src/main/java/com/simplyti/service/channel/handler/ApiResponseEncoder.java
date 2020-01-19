@@ -54,7 +54,7 @@ public class ApiResponseEncoder extends MessageToMessageEncoder<ApiResponse> {
 	}
 	
 	private FullHttpResponse buildHttpResponse(ByteBuf content, HttpResponseStatus status, ApiResponse msg, AsciiString contentType) {
-		FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, content);
+		FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, content, false);
 		response.headers().set(HttpHeaderNames.CONTENT_LENGTH, content.readableBytes());
 		if(contentType!=null) {
 			response.headers().set(HttpHeaderNames.CONTENT_TYPE, contentType);

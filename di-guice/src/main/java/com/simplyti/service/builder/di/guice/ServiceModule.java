@@ -29,6 +29,7 @@ import com.simplyti.service.builder.di.guice.fileserver.FileServerModule;
 import com.simplyti.service.builder.di.guice.nativeio.NativeIOModule;
 import com.simplyti.service.builder.di.guice.ssl.SSLModule;
 import com.simplyti.service.channel.ClientChannelGroup;
+import com.simplyti.service.channel.DefaultHttpEntryChannelInit;
 import com.simplyti.service.channel.DefaultServiceChannelInitializer;
 import com.simplyti.service.channel.EntryChannelInit;
 import com.simplyti.service.channel.ServerChannelFactoryProvider;

@@ -102,21 +102,21 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 			ReferenceCountUtil.release(request);
 			ctx.fireExceptionCaught(new BadRequestException());
 		}else {
-			for(HandlerInit init:handlers) {
-				List<String> addedHandlers = init.canHandle(ctx,request,NAME);
-				if(addedHandlers!=null) {
-					handle(ctx,request,addedHandlers);
-					return;
-				}
-			}
-			ReferenceCountUtil.release(request);
-			ctx.fireExceptionCaught(new NotFoundException());
+			handle(ctx,request);
 		}
 	}
 
-	private void handle(ChannelHandlerContext ctx, HttpRequest request, List<String> added) {
-		currentHandlers = added;
-		ctx.fireChannelRead(request);
+	private void handle(ChannelHandlerContext ctx, HttpRequest request) {
+		for(HandlerInit init:handlers) {
+			List<String> addedHandlers = init.canHandle(ctx,request,NAME);
+			if(addedHandlers!=null) {
+				currentHandlers = addedHandlers;
+				ctx.fireChannelRead(request);
+				return;
+			}
+		}
+		ReferenceCountUtil.release(request);
+		ctx.fireExceptionCaught(new NotFoundException());
 	}
 
 	@Override
@@ -191,7 +191,9 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 
 	public void resetChannel(Channel channel) {
 		if(currentHandlers!=null) {
-			currentHandlers.forEach(handler->channel.pipeline().remove(handler));
+			for(String handler:currentHandlers) {
+				channel.pipeline().remove(handler);
+			}
 			currentHandlers = null;
 		}
 	}
