@@ -12,5 +12,7 @@ public interface NamespacedPods extends NamespacedK8sApi<Pod> {
 	PodUpdater update(String name);
 
 	LogStream log(String name);
+
+	LogStream log(String pod, String container);
 	
 }
