@@ -17,7 +17,7 @@ import lombok.experimental.Accessors;
 @EqualsAndHashCode(callSuper=true,of= {})
 public class HttpEndpoint extends Endpoint{
 	
-	private static final Pattern PATTERN = Pattern.compile("(http|https)?(://)?([^:/]+):?(\\d+)?");
+	private static final Pattern PATTERN = Pattern.compile("((http|https)(://))?([^:/]+):?(\\d+)?");
 	public static final Schema HTTP_SCHEMA = new Schema("http", false, 80);
 	public static final Schema HTTPS_SCHEMA = new Schema("https", true, 443);
 	
@@ -49,13 +49,13 @@ public class HttpEndpoint extends Endpoint{
 		
 		Matcher matcher = PATTERN.matcher(hostPart);
 		matcher.matches();
-		Optional<String> optionalSchema = Optional.ofNullable(matcher.group(1));
+		Optional<String> optionalSchema = Optional.ofNullable(matcher.group(2));
 		Schema schema = optionalSchema
 				.map(str->str.equals(HTTPS_SCHEMA.name())?HTTPS_SCHEMA:HTTP_SCHEMA)
 				.orElse(HTTP_SCHEMA);
 		
-		String host = matcher.group(3);
-		int port = Optional.ofNullable(matcher.group(4))
+		String host = matcher.group(4);
+		int port = Optional.ofNullable(matcher.group(5))
 				.map(Integer::parseInt)
 				.orElseGet(schema::defaultPort);
 		return new HttpEndpoint(schema,new Address(host, port),path);

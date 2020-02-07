@@ -22,6 +22,10 @@ public class HttpEndpointTest {
                  { "https://10.0.0.1:8443", "https", true, "10.0.0.1", 8443, "/" },
                  { "http://10.0.0.1:8080/path", "http", false, "10.0.0.1", 8080, "/path" },
                  { "10.0.0.1", "http", false, "10.0.0.1", 80, "/" },
+                 { "httpbin", "http", false, "httpbin", 80, "/" },
+                 { "httpbin/path", "http", false, "httpbin", 80, "/path" },
+                 { "httpbin/path:80", "http", false, "httpbin", 80, "/path:80" },
+                 { "httpbin:443/path:80", "http", false, "httpbin", 443, "/path:80" },
            });
     }
 
