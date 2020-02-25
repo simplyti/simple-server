@@ -202,7 +202,7 @@ public abstract class AbstractApiInvocationContext<O> implements APIContext<O> {
 	}
 	
 	@Override
-	public Future<O> sync(Callable<O> task) {
+	public <U> Future<U> sync(Callable<U> task) {
 		return syncTaskSubmitter.submit(ctx.executor(), task);
 	}
 	
