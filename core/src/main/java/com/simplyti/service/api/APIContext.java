@@ -18,7 +18,7 @@ public interface APIContext<T> {
 	public Future<Void> send(HttpObject response);
 	public Future<Void> failure(Throwable error);
 	
-	public Future<T> sync(Callable<T> task);
+	public <U> Future<U> sync(Callable<U> task);
 	public Future<Void> sync(VoidCallable task);
 	
 	public String pathParam(String key);
