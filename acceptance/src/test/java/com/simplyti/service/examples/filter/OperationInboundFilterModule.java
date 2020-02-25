@@ -4,9 +4,9 @@ package com.simplyti.service.examples.filter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
-import com.simplyti.service.api.ApiInvocation;
+import com.simplyti.server.http.api.filter.OperationInboundFilter;
+import com.simplyti.server.http.api.handler.ApiInvocation;
 import com.simplyti.service.api.filter.FilterContext;
-import com.simplyti.service.api.filter.OperationInboundFilter;
 import com.simplyti.service.exception.UnauthorizedException;
 
 import io.netty.handler.codec.http.HttpHeaderNames;

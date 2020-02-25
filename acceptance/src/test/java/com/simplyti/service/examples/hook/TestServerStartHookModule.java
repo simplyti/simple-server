@@ -2,7 +2,7 @@ package com.simplyti.service.examples.hook;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-import com.simplyti.service.api.builder.ApiBuilder;
+import com.simplyti.server.http.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.hook.ServerStartHook;
 

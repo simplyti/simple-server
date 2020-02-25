@@ -8,7 +8,7 @@ import javax.inject.Inject;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.simplyti.service.api.builder.ApiBuilder;
+import com.simplyti.server.http.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.api.serializer.json.Json;
 
