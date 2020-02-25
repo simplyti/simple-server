@@ -63,7 +63,7 @@
 		<xml.bind-api.version>2.3.2</xml.bind-api.version>
 
 		<!-- Networking -->
-		<netty.version>4.1.45.Final</netty.version>
+		<netty.version>4.1.43.Final</netty.version>
 		
 		<!-- SSL -->
 		<tcnative.version>2.0.26.Final</tcnative.version>
