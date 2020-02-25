@@ -1,8 +1,8 @@
 package com.simplyti.service.builder.di.guice;
 
 import com.google.inject.Module;
+import com.simplyti.server.http.api.ApiProvider;
 import com.simplyti.service.Service;
-import com.simplyti.service.api.builder.ApiProvider;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.handler.ssl.SslProvider;

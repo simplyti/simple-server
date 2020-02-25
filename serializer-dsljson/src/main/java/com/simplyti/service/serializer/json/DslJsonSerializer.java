@@ -38,7 +38,11 @@ public class DslJsonSerializer implements Json {
 	@Override
 	@SneakyThrows
 	public <T> T deserialize(ByteBuf content, TypeLiteral<T> type) {
-		return (T) dslJson.deserialize(type.getType(), new ByteBufInputStream(content));
+		if(content.isReadable()) {
+			return (T) dslJson.deserialize(type.getType(), new ByteBufInputStream(content));
+		} else {
+			return null;
+		}
 	}
 	
 	@Override

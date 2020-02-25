@@ -11,6 +11,7 @@ import io.netty.handler.ssl.SslProvider;
 public interface ClientBuilder<B,T extends Client<R>,R extends BaseClientRequestBuilder<R>> {
 
 	B withEventLoopGroup(EventLoopGroup eventLoopGroup);
+	B eventLoopGroup(EventLoopGroup eventLoopGroup);
 	
 	B withEventLoopGroupFactory(EventLoopGroupFactory factory);
 	

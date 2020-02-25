@@ -15,7 +15,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.simplyti.cloud</groupId>
-			<artifactId>simple-server-core</artifactId>
+			<artifactId>simple-server-http-api-builder</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>

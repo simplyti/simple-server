@@ -5,8 +5,8 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import com.simplyti.service.api.builder.ApiBuilder;
-import com.simplyti.service.api.builder.ApiProvider;
+import com.simplyti.server.http.api.ApiProvider;
+import com.simplyti.server.http.api.builder.ApiBuilder;
 import com.simplyti.service.api.serializer.json.TypeLiteral;
 import com.simplyti.service.gateway.ServiceDiscovery;
 

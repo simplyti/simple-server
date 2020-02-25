@@ -14,6 +14,7 @@ import java.util.Base64;
 import sun.security.util.DerValue;
 import sun.security.util.DerInputStream;
 
+@SuppressWarnings("restriction")
 public class PrivateKeyUtils {
 	
 	// PKCS#8 format

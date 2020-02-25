@@ -39,6 +39,11 @@ public abstract class AbstractClientBuilder<B,T extends Client<R>,R extends Base
 	}
 	
 	@Override
+	public B eventLoopGroup(EventLoopGroup eventLoopGroup) {
+		return withEventLoopGroup(eventLoopGroup);
+	}
+	
+	@Override
 	@SuppressWarnings("unchecked")
 	public B withEventLoopGroupFactory(EventLoopGroupFactory eventLoopGroupFactory) {
 		this.eventLoopGroupFactory=eventLoopGroupFactory;

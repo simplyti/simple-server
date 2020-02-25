@@ -1,5 +1,7 @@
 package com.simplyti.service.clients.http;
 
+import java.util.Base64;
+
 import com.simplyti.service.clients.AbstractClientBuilder;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.http.request.HttpRequestBuilder;
@@ -11,11 +13,15 @@ import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.ssl.SslProvider;
+import io.netty.util.CharsetUtil;
 
 public class DefaultHttpClientBuilder extends AbstractClientBuilder<HttpClientBuilder, HttpClient, HttpRequestBuilder>  implements HttpClientBuilder {
 
 	private boolean checkStatus;
-	private String token;
+	private String bearerToken;
+	
+	private String basicUser;
+	private String basicPass;
 
 	@Override
 	public HttpClientBuilder withCheckStatusCode() {
@@ -25,7 +31,14 @@ public class DefaultHttpClientBuilder extends AbstractClientBuilder<HttpClientBu
 	
 	@Override
 	public HttpClientBuilder withBearerAuth(String token) {
-		this.token=token;
+		this.bearerToken=token;
+		return this;
+	}
+	
+	@Override
+	public HttpClientBuilder withBasicAuth(String user, String password) {
+		this.basicUser=user;
+		this.basicPass=password;
 		return this;
 	}
 	
@@ -36,9 +49,14 @@ public class DefaultHttpClientBuilder extends AbstractClientBuilder<HttpClientBu
 	}
 
 	private HttpHeaders headers() {
-		if(token!=null) {
+		if(bearerToken!=null) {
 			HttpHeaders headers = new DefaultHttpHeaders();
-			headers.set(HttpHeaderNames.AUTHORIZATION,"Bearer "+token);
+			headers.set(HttpHeaderNames.AUTHORIZATION,"Bearer "+bearerToken);
+			return headers;
+		} else if(basicUser!=null && basicPass!=null) {
+			HttpHeaders headers = new DefaultHttpHeaders();
+			String userPass = basicUser+":"+basicPass;
+			headers.set(HttpHeaderNames.AUTHORIZATION,"Basic "+Base64.getEncoder().encodeToString(userPass.getBytes(CharsetUtil.UTF_8)));
 			return headers;
 		}
 		return null;

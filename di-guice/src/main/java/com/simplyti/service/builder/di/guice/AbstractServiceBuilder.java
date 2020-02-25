@@ -11,9 +11,9 @@ import java.util.stream.Stream;
 
 import com.google.common.base.MoreObjects;
 import com.google.inject.Module;
+import com.simplyti.server.http.api.ApiProvider;
 import com.simplyti.service.ServerConfig;
 import com.simplyti.service.Service;
-import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.fileserver.DirectoryResolver;
 import com.simplyti.service.fileserver.FileServeConfiguration;
 import com.simplyti.service.ssl.SslConfig;

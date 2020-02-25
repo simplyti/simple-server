@@ -6,6 +6,8 @@ import javax.ws.rs.WebApplicationException;
 
 import com.simplyti.service.channel.ClientChannelGroup;
 import com.simplyti.service.jaxrs.SimpleResponse;
+import com.simplyti.util.concurrent.DefaultFuture;
+import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -16,7 +18,6 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
-import io.netty.util.concurrent.Future;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
@@ -39,13 +40,13 @@ public class ExceptionHandler {
 			if(ctx.channel().attr(ClientChannelGroup.IN_PROGRESS).get()) {
 				return writeResponse(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR,null);
 			}else {
-				return ctx.channel().newSucceededFuture();
+				return new DefaultFuture<>(ctx.channel().newSucceededFuture(), ctx.executor());
 			}
 		}
 	}
 
 	private Future<Void> writeResponse(ChannelHandlerContext ctx, HttpResponseStatus status, HttpHeaders headers) {
-		return ctx.writeAndFlush(response(status,headers));
+		return new DefaultFuture<>(ctx.writeAndFlush(response(status,headers)), ctx.executor()); 
 	}
 
 	private FullHttpResponse response(HttpResponseStatus statusCode, HttpHeaders headers) {

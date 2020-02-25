@@ -23,7 +23,6 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.ReferenceCountUtil;
@@ -41,7 +40,7 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 	
 	private final Set<HttpRequestFilter> requestFilters;
 	private final Set<HttpResponseFilter> responseFilters;
-	
+
 	private final List<HandlerInit> handlers;
 	
 	private List<String> currentHandlers;

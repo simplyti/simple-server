@@ -9,4 +9,6 @@ public interface HttpClientBuilder extends ClientBuilder<HttpClientBuilder,HttpC
 
 	HttpClientBuilder withBearerAuth(String token);
 
+	HttpClientBuilder withBasicAuth(String user, String password);
+
 }

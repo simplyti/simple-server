@@ -11,6 +11,7 @@ import com.simplyti.service.clients.request.ChannelProvider;
 import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
@@ -18,6 +19,7 @@ import io.netty.handler.codec.http.HttpMethod;
 public class DefaultFinishablePayloadableHttpRequestBuilder extends AbstractFinishableHttpRequestBuilder<FinishablePayloadableHttpRequestBuilder> implements FinishablePayloadableHttpRequestBuilder {
 
 	private Consumer<ByteBuf> bodyBuilder;
+	private Function<ByteBufAllocator,ByteBuf> bodyBuilderSupplier;
 
 	public DefaultFinishablePayloadableHttpRequestBuilder(ChannelProvider channelProvider, HttpMethod method, String path, Map<String,Object> params, HttpHeaders headers, boolean checkStatus) {
 		super(channelProvider,method,path, params, headers, checkStatus);
@@ -30,8 +32,9 @@ public class DefaultFinishablePayloadableHttpRequestBuilder extends AbstractFini
 	}
 	
 	@Override
-	public FinishableHttpRequestBuilder body(Consumer<ByteBuf> bobyWriter) {
-		return withBody(bobyWriter);
+	public FinishableHttpRequestBuilder body(Function<ByteBufAllocator,ByteBuf> fn) {
+		this.bodyBuilderSupplier=fn;
+		return new DefaultFinishablePayloadHttpRequestBuilder(this);
 	}
 
 	@Override
@@ -40,7 +43,9 @@ public class DefaultFinishablePayloadableHttpRequestBuilder extends AbstractFini
 			ByteBuf buff = ch.alloc().buffer();
 			bodyBuilder.accept(buff);
 			return buff;
-		} else {
+		} else if(bodyBuilderSupplier !=null) {
+			return bodyBuilderSupplier .apply(ch.alloc());
+		}else {
 			return null;
 		}
 	}

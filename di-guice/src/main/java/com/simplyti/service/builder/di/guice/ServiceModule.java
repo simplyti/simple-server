@@ -9,15 +9,15 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
+import com.simplyti.server.http.api.ApiProvider;
+import com.simplyti.server.http.api.filter.OperationInboundFilter;
 import com.simplyti.service.DefaultService;
 import com.simplyti.service.DefaultStartStopMonitor;
 import com.simplyti.service.ServerConfig;
 import com.simplyti.service.Service;
 import com.simplyti.service.StartStopMonitor;
-import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.simplyti.service.api.filter.HttpResponseFilter;
-import com.simplyti.service.api.filter.OperationInboundFilter;
 import com.simplyti.service.builder.di.EventLoopGroupProvider;
 import com.simplyti.service.builder.di.ExecutorServiceProvider;
 import com.simplyti.service.builder.di.NativeIO;
@@ -35,6 +35,7 @@ import com.simplyti.service.channel.EntryChannelInit;
 import com.simplyti.service.channel.ServerChannelFactoryProvider;
 import com.simplyti.service.channel.ServiceChannelInitializer;
 import com.simplyti.service.channel.handler.ServerHeadersHandler;
+import com.simplyti.service.channel.handler.inits.RequestChannerHandler;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.fileserver.FileServeConfiguration;
 import com.simplyti.service.hook.ServerStartHook;
@@ -88,6 +89,7 @@ public class ServiceModule extends AbstractModule {
 		bind(new TypeLiteral<ChannelFactory<ServerChannel>>() {}).toProvider(ServerChannelFactoryProvider.class).in(Singleton.class);
 		bind(ClientChannelGroup.class).in(Singleton.class);
 		bind(EntryChannelInit.class).to(DefaultHttpEntryChannelInit.class).in(Singleton.class);
+		Multibinder.newSetBinder(binder(), RequestChannerHandler.class);
 		
 		// Channel Initialized
 		bind(ServiceChannelInitializer.class).to(DefaultServiceChannelInitializer.class).in(Singleton.class);
