@@ -6,12 +6,12 @@ Scenario: Get Method
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /jaxrs" getting "#response"
 	Then I check that "#response" is equals to "Hello!"
-	
+
 Scenario: Post Method
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
-	When I send a "POST /jaxrs/echo" with body "Hello echo!" getting "#response"
-	Then I check that "#response" is equals to "Hello echo!"
+	When I send a "POST /jaxrs/echo" with body '{"message":"Hello echo!"}' getting "#response"
+	Then I check that "#response" is equals to '{"message":"Hello echo!"}'
 
 Scenario: Path param 
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"

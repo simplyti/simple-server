@@ -10,12 +10,10 @@ public class APIUploadTest implements ApiProvider{
 	@Override
 	public void build(ApiBuilder builder) {
 		builder.when().post("/upload")
-			.asFileUplod()
+			.asFileUpload()
 			.then(ctx->{
 				ctx.send("Got "+ctx.body().stream().map(file->file.filename()+" ("+file.content().readableBytes()+"b)").collect(Collectors.toList()));
-				ctx.body().forEach(f->f.release());
 			});
-		
 	}
 
 }

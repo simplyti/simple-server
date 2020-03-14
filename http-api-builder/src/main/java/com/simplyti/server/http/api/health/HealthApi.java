@@ -1,7 +1,7 @@
 package com.simplyti.server.http.api.health;
 
-import com.simplyti.server.http.api.ApiProvider;
-import com.simplyti.server.http.api.builder.ApiBuilder;
+import com.simplyti.service.api.builder.ApiBuilder;
+import com.simplyti.service.api.builder.ApiProvider;
 
 public class HealthApi implements ApiProvider{
 	

@@ -5,9 +5,8 @@ import java.util.Set;
 
 import javax.inject.Singleton;
 
-import com.simplyti.server.http.api.ApiProvider;
-import com.simplyti.server.http.api.builder.ApiBuilder;
 import com.simplyti.server.http.api.builder.ApiBuilderImpl;
+import com.simplyti.server.http.api.builder.jaxrs.JaxRsApiContextFactory;
 import com.simplyti.server.http.api.filter.OperationInboundFilter;
 import com.simplyti.server.http.api.handler.ApiInvocationHandler;
 import com.simplyti.server.http.api.handler.ApiRequestHandlerInit;
@@ -17,12 +16,14 @@ import com.simplyti.server.http.api.operations.ApiOperationResolver;
 import com.simplyti.server.http.api.operations.ApiOperationResolverImpl;
 import com.simplyti.server.http.api.operations.ApiOperations;
 import com.simplyti.server.http.api.operations.ApiOperationsImpl;
+import com.simplyti.server.http.api.sse.ServerSentEventEncoder;
+import com.simplyti.service.api.builder.ApiBuilder;
+import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.api.builder.di.InstanceProvider;
 import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.channel.handler.ServerHeadersHandler;
 import com.simplyti.service.channel.handler.inits.HandlerInit;
 import com.simplyti.service.exception.ExceptionHandler;
-import com.simplyti.service.sse.ServerSentEventEncoder;
 import com.simplyti.service.sync.SyncTaskSubmitter;
 
 import dagger.Module;
@@ -56,7 +57,7 @@ public class APIBuilderModule {
 	
 	@Provides
 	@Singleton
-	public ApiOperationResolver apiResolver(ApiOperations operations, Set<ApiProvider> apis,ApiBuilder builder) {
+	public ApiOperationResolver apiResolver(ApiOperations operations, Set<ApiProvider> apis, ApiBuilder builder) {
 		return new ApiOperationResolverImpl(operations,apis,builder);
 	}
 	
@@ -74,8 +75,8 @@ public class APIBuilderModule {
 	
 	@Provides
 	@Singleton
-	public ApiBuilder apiBuilder(ApiOperations apiOperations, Json json) {
-		return new ApiBuilderImpl(apiOperations, json);
+	public ApiBuilder apiBuilder(ApiOperations apiOperations, Json json, InstanceProvider instanceProvider, SyncTaskSubmitter syncTaskSubmitter) {
+		return new ApiBuilderImpl(apiOperations,instanceProvider, syncTaskSubmitter, new JaxRsApiContextFactory(json), json);
 	}
 	
 	@Provides

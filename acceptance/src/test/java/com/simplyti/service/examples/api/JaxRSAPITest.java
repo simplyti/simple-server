@@ -11,13 +11,13 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
 import com.google.common.base.Joiner;
-import com.simplyti.service.api.APIContext;
+import com.simplyti.server.http.api.builder.jaxrs.JaxRsApiContext;
 
 @Path("/jaxrs")
 public class JaxRSAPITest {
 	
 	@GET
-	public void getHello(APIContext<String> ctx) {
+	public void getHello(JaxRsApiContext<String> ctx) {
 		ctx.send("Hello!");
 	}
 	
@@ -29,19 +29,19 @@ public class JaxRSAPITest {
 	
 	@POST
 	@Path("echo")
-	public void echo(APIContext<String> ctx, String message) {
-		ctx.send(message);
+	public void echo(JaxRsApiContext<APITestDTO> ctx, APITestDTO body) {
+		ctx.send(body);
 	}
 	
 	@GET
 	@Path("/pathparams/{name}")
-	public void getPathParams(APIContext<String> ctx, @PathParam("name") String name) {
+	public void getPathParams(JaxRsApiContext<String> ctx, @PathParam("name") String name) {
 		ctx.send(name);
 	}
 
 	@GET
 	@Path("queryparams/primitives")
-	public void getQueryParamsPromitives(APIContext<String> ctx, 
+	public void getQueryParamsPromitives(JaxRsApiContext<String> ctx, 
 			@QueryParam("string") String string,
 			@QueryParam("short") short shortValue,
 			@QueryParam("int") int intValue,
@@ -53,7 +53,7 @@ public class JaxRSAPITest {
 	
 	@GET
 	@Path("queryparams")
-	public void getQueryParams(APIContext<String> ctx, 
+	public void getQueryParams(JaxRsApiContext<String> ctx, 
 			@QueryParam("string") String string,
 			@QueryParam("short") Short shortValue,
 			@QueryParam("int") Integer intValue,
@@ -65,27 +65,27 @@ public class JaxRSAPITest {
 	
 	@GET
 	@Path("queryparams/list")
-	public void getQueryParams(APIContext<String> ctx, 
+	public void getQueryParams(JaxRsApiContext<String> ctx, 
 			@QueryParam("string") List<String> names) {
 		ctx.send(Joiner.on(',').join(names));
 	}
 	
 	@GET
 	@Path("queryparams/default")
-	public void getQueryParamDefault(APIContext<String> ctx, 
+	public void getQueryParamDefault(JaxRsApiContext<String> ctx, 
 			@QueryParam("string") @DefaultValue("Hello Default!") String name) {
 		ctx.send(name);
 	}
 	
 	@GET
 	@Path("throwexception")
-	public void throwException(APIContext<String> ctx) {
+	public void throwException(JaxRsApiContext<String> ctx) {
 		throw new RuntimeException("This is a test a error");
 	}
 	
 	@GET
 	@Path("failure")
-	public void failure(APIContext<String> ctx,@QueryParam("msg") String msg) {
+	public void failure(JaxRsApiContext<String> ctx,@QueryParam("msg") String msg) {
 		ctx.failure(new RuntimeException(msg));
 	}
 	
@@ -97,7 +97,7 @@ public class JaxRSAPITest {
 	
 	@GET
 	@Path("headerparam")
-	public void headerParam(APIContext<String> ctx, @HeaderParam("x-my-header") String myHeader) {
+	public void headerParam(JaxRsApiContext<String> ctx, @HeaderParam("x-my-header") String myHeader) {
 		ctx.send(myHeader);
 	}
 

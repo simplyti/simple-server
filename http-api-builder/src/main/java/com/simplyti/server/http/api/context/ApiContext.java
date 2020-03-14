@@ -13,7 +13,7 @@ import io.netty.util.concurrent.EventExecutor;
 public interface ApiContext {
 	
 	String queryParam(String name);
-	Iterable<String> queryParams(String name);
+	List<String> queryParams(String name);
 	Map<String,List<String>> queryParams();
 	
 	String pathParam(String name);

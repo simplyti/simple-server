@@ -1,5 +1,9 @@
 package com.simplyti.server.http.api.builder;
 
+import com.simplyti.server.http.api.builder.fileupload.FileUploadApiBuilder;
+import com.simplyti.server.http.api.builder.fileupload.FileUploadApiBuilderImpl;
+import com.simplyti.server.http.api.builder.stream.StreamedRequestResponseTypableApiBuilder;
+import com.simplyti.server.http.api.builder.stream.StreamedRequestResponseTypableApiBuilderImpl;
 import com.simplyti.server.http.api.context.ApiContextFactory;
 import com.simplyti.server.http.api.operations.AnyWithBodyApiOperation;
 import com.simplyti.server.http.api.operations.ApiOperations;
@@ -18,12 +22,13 @@ public class RequestBodyTypableApiBuilderImpl implements RequestTypableApiBuilde
 	private final ApiContextFactory responseTypedWithBodyContextFactory;
 	private final ApiContextFactory requestResponseTypedContextFactory;
 	private final ApiContextFactory streamAnyContextFactory;
+	private final ApiContextFactory fileUploadContextFactory;
 	
 	private int maxBodyLength;
 
 	public RequestBodyTypableApiBuilderImpl(ApiContextFactory anyContextFactory, ApiContextFactory requestTypedContextFactory,
 			ApiContextFactory requestResponseTypedContextFactory, ApiContextFactory responseTypedWithBodyContextFactory,
-			ApiContextFactory streamAnyContextFactory,
+			ApiContextFactory streamAnyContextFactory, ApiContextFactory fileUploadContextFactory,
 			ApiOperations operations, HttpMethod method, String path) {
 		this.operations=operations;
 		this.method=method;
@@ -33,6 +38,7 @@ public class RequestBodyTypableApiBuilderImpl implements RequestTypableApiBuilde
 		this.responseTypedWithBodyContextFactory=responseTypedWithBodyContextFactory;
 		this.requestResponseTypedContextFactory=requestResponseTypedContextFactory;
 		this.streamAnyContextFactory=streamAnyContextFactory;
+		this.fileUploadContextFactory=fileUploadContextFactory;
 	}
 
 	@Override
@@ -70,6 +76,11 @@ public class RequestBodyTypableApiBuilderImpl implements RequestTypableApiBuilde
 	@Override
 	public StreamedRequestResponseTypableApiBuilder withStreamedInput() {
 		return new StreamedRequestResponseTypableApiBuilderImpl(streamAnyContextFactory,operations,method,path);
+	}
+
+	@Override
+	public FileUploadApiBuilder asFileUpload() {
+		return new FileUploadApiBuilderImpl(fileUploadContextFactory,operations,method,path);
 	}
 
 }

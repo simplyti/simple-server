@@ -8,9 +8,9 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
-import com.simplyti.server.http.api.ApiProvider;
 import com.simplyti.service.ServerConfig;
 import com.simplyti.service.Service;
+import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.fileserver.FileServeConfiguration;
 import com.simplyti.service.ssl.SslConfig;
 

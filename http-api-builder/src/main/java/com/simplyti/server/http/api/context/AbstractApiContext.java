@@ -78,7 +78,7 @@ public abstract class AbstractApiContext implements ApiContext {
 	}
 
 	@Override
-	public Iterable<String> queryParams(String name) {
+	public List<String> queryParams(String name) {
 		return this.matcher.parameters().get(name);
 	}
 

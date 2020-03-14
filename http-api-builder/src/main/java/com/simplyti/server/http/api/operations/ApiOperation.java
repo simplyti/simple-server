@@ -17,6 +17,8 @@ import lombok.experimental.Accessors;
 @Accessors(fluent=true)
 public class ApiOperation<T extends ApiContext> {
 
+	private static final int DEFAULT_MAX_BODY = 10000000;
+	
 	private final HttpMethod method;
 	private final ApiPattern pattern;
 	private final Consumer<T> handler;
@@ -38,7 +40,7 @@ public class ApiOperation<T extends ApiContext> {
 		this.contextFactory=contextFactory;
 		this.metadata=MoreObjects.firstNonNull(metadata, Collections.emptyMap());
 		this.streamedRequest=streamedRequest;
-		this.maxBodyLength=maxBodyLength;
+		this.maxBodyLength=maxBodyLength>0?maxBodyLength:DEFAULT_MAX_BODY;
 	}
 
 	@SuppressWarnings("unchecked")

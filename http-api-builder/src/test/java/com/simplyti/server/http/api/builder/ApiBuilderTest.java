@@ -29,6 +29,7 @@ import com.simplyti.server.http.api.operations.ApiOperationResolverImpl;
 import com.simplyti.server.http.api.operations.ApiOperations;
 import com.simplyti.server.http.api.operations.ApiOperationsImpl;
 import com.simplyti.server.http.api.request.ApiMatchRequest;
+import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.serializer.json.Json;
 
 import io.netty.buffer.Unpooled;
@@ -50,7 +51,7 @@ public class ApiBuilderTest {
 		this.json = mock(Json.class);
 		this.queryDecoder = mock(QueryStringDecoder.class);
 		this.operations = new ApiOperationsImpl();
-		this.builder = new ApiBuilderImpl(operations,json);
+		this.builder = new ApiBuilderImpl(operations,null,null,null,json);
 		this.resolver=new ApiOperationResolverImpl(operations, Collections.emptySet(), builder);
 	}
 	

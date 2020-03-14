@@ -148,11 +148,12 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 			log.warn("Error executing response filters: {}",future.cause().getMessage());
 		}
 		responseProceed(ctx,response,promise);
-		writePending.forEach(msg->responseProceed(ctx,msg.msg(),msg.promise()));
+		PendingMessages thisWritePending = writePending;
+		writePending=null;
+		thisWritePending.forEach(msg->responseProceed(ctx,msg.msg(),msg.promise()));
 		if(flushed) {
 			ctx.flush();
 		}
-		writePending=null;
 	}
 
 	private void responseProceed(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {

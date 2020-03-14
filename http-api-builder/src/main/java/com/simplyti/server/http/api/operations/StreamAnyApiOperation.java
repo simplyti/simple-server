@@ -2,9 +2,9 @@ package com.simplyti.server.http.api.operations;
 
 import java.util.Map;
 
-import com.simplyti.server.http.api.builder.StreamdRequestApiContextConsumer;
+import com.simplyti.server.http.api.builder.stream.StreamdRequestApiContextConsumer;
 import com.simplyti.server.http.api.context.ApiContextFactory;
-import com.simplyti.server.http.api.context.StreamdRequestApiContext;
+import com.simplyti.server.http.api.context.stream.StreamdRequestApiContext;
 import com.simplyti.server.http.api.pattern.ApiPattern;
 
 import io.netty.handler.codec.http.HttpMethod;

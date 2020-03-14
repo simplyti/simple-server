@@ -1,7 +1,7 @@
 package com.simplyti.server.http.api.context;
 
+import com.simplyti.server.http.api.handler.message.ApiResponse;
 import com.simplyti.server.http.api.request.ApiMatchRequest;
-import com.simplyti.service.api.ApiResponse;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.sync.SyncTaskSubmitter;
 import com.simplyti.util.concurrent.DefaultFuture;
@@ -50,8 +50,6 @@ public class ResponseTypedApiContextImpl<T> extends AbstractApiContext implement
 	public Future<Void> send(T value) {
 		return writeAndFlush(value);
 	}
-
-
 	
 	private void writeListener(io.netty.util.concurrent.Future<? super Void> future) {
 		if(future.isSuccess()) {
@@ -62,5 +60,5 @@ public class ResponseTypedApiContextImpl<T> extends AbstractApiContext implement
 			failure(future.cause());
 		}
 	}
-
+	
 }

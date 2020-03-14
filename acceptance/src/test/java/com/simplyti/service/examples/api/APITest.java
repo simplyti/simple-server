@@ -7,7 +7,7 @@ import javax.inject.Inject;
 
 import com.google.common.base.Joiner;
 import com.jsoniter.spi.JsoniterSpi;
-import com.simplyti.service.api.ApiInvocationContext;
+import com.simplyti.server.http.api.context.ResponseTypedApiContext;
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.ApiProvider;
 
@@ -26,7 +26,7 @@ import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
 
-public class APITest implements ApiProvider{
+public class APITest implements ApiProvider {
 	
 	@Inject
 	private EventLoopGroup eventLoopGroup;
@@ -37,7 +37,7 @@ public class APITest implements ApiProvider{
 			.then(ctx->ctx.send("Hello!"));
 		
 		builder.when().get("/empty")
-			.then(ctx->ctx.send(null));
+			.then(ctx->ctx.sendEmpty());
 		
 		builder.when().post("/echo")
 			.then(ctx->ctx.send(ctx.body().copy()));
@@ -47,16 +47,18 @@ public class APITest implements ApiProvider{
 		
 		builder.when().post("/echo/buffered")
 		.then(ctx->{
-			ctx.send( new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, new DefaultHttpHeaders()
+			ByteBuf bodyCopy = ctx.body().retain();
+			ctx.send(new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, new DefaultHttpHeaders()
 					.set(HttpHeaderNames.CONTENT_LENGTH,ctx.body().readableBytes())));
-			while(ctx.body().isReadable()) {
-				ByteBuf content = ctx.body().readSlice(Math.min(1024, ctx.body().readableBytes())).copy();
-				if(ctx.body().isReadable()) {
-					ctx.send(new DefaultHttpContent(content));
+			while(bodyCopy.isReadable()) {
+				ByteBuf content = bodyCopy.readSlice(Math.min(1024, bodyCopy.readableBytes()));
+				if(bodyCopy.isReadable()) {
+					ctx.send(new DefaultHttpContent(content.retain()));
 				}else {
-					ctx.send(new DefaultLastHttpContent(content));
+					ctx.send(new DefaultLastHttpContent(content.retain()));
 				}
 			}
+			bodyCopy.release();
 			
 		});
 		
@@ -67,7 +69,7 @@ public class APITest implements ApiProvider{
 			.then(ctx->ctx.send(((InetSocketAddress)ctx.channel().remoteAddress()).getAddress().toString()));
 		
 		builder.when().post("/echo/delay")
-			.then(ctx->eventLoopGroup.next().schedule(()->ctx.send(ctx.body().copy()), Long.parseLong(ctx.queryParam("millis")), TimeUnit.MILLISECONDS));
+			.then(ctx->eventLoopGroup.next().schedule(()->ctx.send(ctx.body().retain()), Long.parseLong(ctx.queryParam("millis")), TimeUnit.MILLISECONDS));
 		
 		builder.when().get("/throwexception")
 			.then(ctx->throwRuntimeException(ctx.queryParam("message")));
@@ -151,8 +153,8 @@ public class APITest implements ApiProvider{
 		});
 		
 		builder.when().get("/user/{id}")
-		.withMeta("serviceId", "GetUser")
-		.then(ctx->ctx.send("Hello user "+ctx.pathParam("id")));
+			.withMeta("serviceId", "GetUser")
+			.then(ctx->ctx.send("Hello user "+ctx.pathParam("id")));
 		
 		builder.when().delete("/delete")
 			.then(ctx->ctx.send("Bye!"));
@@ -180,7 +182,7 @@ public class APITest implements ApiProvider{
 		builder.usingJaxRSContract(JaxRSAPITest.class);
 	}
 
-	private Future<APITestDTO> futureResponse(ApiInvocationContext<ByteBuf, APITestDTO> ctx) {
+	private Future<APITestDTO> futureResponse(ResponseTypedApiContext<APITestDTO> ctx) {
 		Promise<APITestDTO> promise = ctx.executor().newPromise();
 		ctx.executor().schedule(()->promise.setSuccess(new APITestDTO("Hello future!")), 10, TimeUnit.MILLISECONDS);
 		return promise;

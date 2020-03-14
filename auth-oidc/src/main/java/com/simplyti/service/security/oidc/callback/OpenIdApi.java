@@ -11,8 +11,8 @@ import javax.crypto.NoSuchPaddingException;
 import javax.inject.Inject;
 
 import com.google.common.base.Joiner;
-import com.simplyti.server.http.api.ApiProvider;
-import com.simplyti.server.http.api.builder.ApiBuilder;
+import com.simplyti.service.api.builder.ApiBuilder;
+import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;

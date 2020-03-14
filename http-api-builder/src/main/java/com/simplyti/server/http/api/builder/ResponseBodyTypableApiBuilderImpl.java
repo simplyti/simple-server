@@ -3,6 +3,8 @@ package com.simplyti.server.http.api.builder;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.simplyti.server.http.api.builder.sse.ServerSentEventApiBuilder;
+import com.simplyti.server.http.api.builder.sse.ServerSentEventApiBuilderImpl;
 import com.simplyti.server.http.api.context.ApiContextFactory;
 import com.simplyti.server.http.api.operations.AnyApiOperation;
 import com.simplyti.server.http.api.operations.ApiOperations;
@@ -18,15 +20,18 @@ public class ResponseBodyTypableApiBuilderImpl implements ResponseTypableApiBuil
 	private final String path;
 	private final ApiContextFactory responseTypeContextFactory;
 	private final ApiContextFactory anyContextFactory;
+	private final ApiContextFactory serverSentEventContextFactory;
 	
 	private Map<String,Object> metadata;
 
-	public ResponseBodyTypableApiBuilderImpl(ApiContextFactory anyContextFactory, ApiContextFactory responseTypeContextFactory,ApiOperations operations, HttpMethod method, String path) {
+	public ResponseBodyTypableApiBuilderImpl(ApiContextFactory anyContextFactory, ApiContextFactory responseTypeContextFactory,
+			ApiContextFactory serverSentEventContextFactory, ApiOperations operations, HttpMethod method, String path) {
 		this.operations=operations;
 		this.method=method;
 		this.path=path;
 		this.responseTypeContextFactory=responseTypeContextFactory;
 		this.anyContextFactory=anyContextFactory;
+		this.serverSentEventContextFactory=serverSentEventContextFactory;
 	}
 
 	@Override
@@ -62,5 +67,10 @@ public class ResponseBodyTypableApiBuilderImpl implements ResponseTypableApiBuil
 		}
 		metadata.put(key, value);
 		return this;
+	}
+
+	@Override
+	public ServerSentEventApiBuilder asServerSentEvent() {
+		return new ServerSentEventApiBuilderImpl(serverSentEventContextFactory,operations,method,path);
 	}
 }

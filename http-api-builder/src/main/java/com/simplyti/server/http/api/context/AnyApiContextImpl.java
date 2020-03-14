@@ -1,7 +1,7 @@
 package com.simplyti.server.http.api.context;
 
+import com.simplyti.server.http.api.handler.message.ApiResponse;
 import com.simplyti.server.http.api.request.ApiMatchRequest;
-import com.simplyti.service.api.ApiResponse;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.sync.SyncTaskSubmitter;
 import com.simplyti.util.concurrent.DefaultFuture;

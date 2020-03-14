@@ -1,11 +1,12 @@
 package com.simplyti.server.http.api.handler;
 
 import java.nio.CharBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.util.List;
 
 import javax.inject.Inject;
 
-import com.simplyti.service.api.ApiResponse;
+import com.simplyti.server.http.api.handler.message.ApiResponse;
 import com.simplyti.service.api.serializer.json.Json;
 
 import io.netty.buffer.ByteBuf;
@@ -22,6 +23,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
+import io.netty.util.ReferenceCountUtil;
 import lombok.AllArgsConstructor;
 
 @Sharable
@@ -32,7 +34,10 @@ public class ApiResponseEncoder extends MessageToMessageEncoder<ApiResponse> {
 	
 	@Override
 	protected void encode(ChannelHandlerContext ctx, ApiResponse msg, List<Object> out) throws Exception {
-		if(msg.response() == null && msg.notFoundOnNull()) {
+		if(!ctx.channel().isActive()) {
+			ReferenceCountUtil.release(msg);
+			throw new ClosedChannelException();
+		} else if(msg.response() == null && msg.notFoundOnNull()) {
 			out.add(buildHttpResponse(Unpooled.EMPTY_BUFFER, HttpResponseStatus.NOT_FOUND,msg,null));
 		} else if(msg.response()==null){
 			out.add(buildHttpResponse(Unpooled.EMPTY_BUFFER, HttpResponseStatus.NO_CONTENT,msg,null));

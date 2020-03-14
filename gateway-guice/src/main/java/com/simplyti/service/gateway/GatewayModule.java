@@ -3,7 +3,7 @@ package com.simplyti.service.gateway;
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
-import com.simplyti.server.http.api.ApiProvider;
+import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.google.inject.TypeLiteral;
 import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;

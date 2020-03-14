@@ -1,5 +1,11 @@
 package com.simplyti.service.api.builder;
 
-public interface ApiBuilder extends com.simplyti.server.http.api.builder.ApiBuilder {
+import com.simplyti.server.http.api.builder.HttpMethodApiBuilder;
+
+public interface ApiBuilder {
+	
+	HttpMethodApiBuilder when();
+
+	void usingJaxRSContract(Class<?> clazz);
 
 }

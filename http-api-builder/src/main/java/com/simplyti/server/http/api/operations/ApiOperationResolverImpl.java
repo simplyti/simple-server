@@ -4,11 +4,11 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import com.simplyti.server.http.api.ApiProvider;
-import com.simplyti.server.http.api.builder.ApiBuilder;
 import com.simplyti.server.http.api.context.ApiContext;
 import com.simplyti.server.http.api.pattern.ApiMatcher;
 import com.simplyti.server.http.api.request.ApiMatchRequest;
+import com.simplyti.service.api.builder.ApiBuilder;
+import com.simplyti.service.api.builder.ApiProvider;
 
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.QueryStringDecoder;
@@ -18,7 +18,7 @@ public class ApiOperationResolverImpl implements ApiOperationResolver {
 	private final ApiOperations operations;
 
 	@Inject
-	public ApiOperationResolverImpl(ApiOperations operations, Set<ApiProvider> apis,ApiBuilder builder) {
+	public ApiOperationResolverImpl(ApiOperations operations, Set<ApiProvider> apis, ApiBuilder builder) {
 		this.operations=operations;
 		apis.forEach(api->api.build(builder));
 		this.operations.sort();

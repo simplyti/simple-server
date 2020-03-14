@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import com.simplyti.server.http.api.context.ApiContext;
+import com.simplyti.server.http.api.context.WithBodyApiContext;
 import com.simplyti.server.http.api.filter.OperationInboundFilter;
 import com.simplyti.server.http.api.operations.ApiOperation;
 import com.simplyti.server.http.api.request.FullApiInvocation;
@@ -29,6 +30,8 @@ public class ApiInvocationHandler extends SimpleChannelInboundHandler<FullApiInv
 	private final Collection<OperationInboundFilter> filters;
 	private final ExceptionHandler exceptionHandler;
 	
+	private ApiContext context;
+	
 	@Inject
 	public ApiInvocationHandler(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler, Set<OperationInboundFilter> filters) {
 		this.syncTaskSubmitter=syncTaskSubmitter;
@@ -45,14 +48,16 @@ public class ApiInvocationHandler extends SimpleChannelInboundHandler<FullApiInv
 		if(filters.isEmpty()) {
 			serviceProceed(msg.match().operation(),context(ctx, msg));
 		}else {
-			FilterChain.of(filters,ctx,msg);
 			Future<Boolean> futureHandled = FilterChain.of(filters,ctx,msg).execute();
 			futureHandled.addListener(result->{
 					if(result.isSuccess()) {
 						if(!futureHandled.getNow()) {
 							serviceProceed(msg.match().operation(),context(ctx, msg));
+						} else {
+							msg.request().release();
 						}
 					}else {
+						msg.request().release();
 						ctx.fireExceptionCaught(result.cause());
 					}
 				});
@@ -63,12 +68,21 @@ public class ApiInvocationHandler extends SimpleChannelInboundHandler<FullApiInv
 		try{
 			operation.handler().accept(ctx);
 		}catch(Throwable e) {
-			throw e;
+			ctx.failure(e);
 		}
 	}
 
 	private <T extends ApiContext> T context(ChannelHandlerContext ctx, FullApiInvocation msg) {
-		return msg.match().operation().contextFactory().create(syncTaskSubmitter, exceptionHandler, ctx, msg.match(), msg.request(), msg.request().content());
+		T context = msg.match().operation().contextFactory().create(syncTaskSubmitter, exceptionHandler, ctx, msg.match(), msg.request(), msg.request().content());
+		this.context = context;
+		return context;
 	}
+	
+	@Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        if(this.context instanceof WithBodyApiContext) {
+        	((WithBodyApiContext)this.context).release();
+        }
+    }
 
 }

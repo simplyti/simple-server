@@ -1,7 +1,8 @@
 package com.simplyti.service.examples.api;
 
-import com.simplyti.server.http.api.ApiProvider;
-import com.simplyti.server.http.api.builder.ApiBuilder;
+
+import com.simplyti.service.api.builder.ApiBuilder;
+import com.simplyti.service.api.builder.ApiProvider;
 
 import io.netty.handler.codec.http.DefaultHttpContent;
 import io.netty.handler.codec.http.DefaultHttpResponse;

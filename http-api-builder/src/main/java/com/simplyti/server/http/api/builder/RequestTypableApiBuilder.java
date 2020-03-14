@@ -1,5 +1,8 @@
 package com.simplyti.server.http.api.builder;
 
+import com.simplyti.server.http.api.builder.fileupload.FileUploadApiBuilder;
+import com.simplyti.server.http.api.builder.stream.StreamedRequestResponseTypableApiBuilder;
+
 public interface RequestTypableApiBuilder {
 	
 	void then(ApiWithBodyContextConsumer consumer);
@@ -13,5 +16,7 @@ public interface RequestTypableApiBuilder {
 	RequestTypableApiBuilder withMaximunBodyLength(int maxBodyLength);
 
 	StreamedRequestResponseTypableApiBuilder withStreamedInput();
+
+	FileUploadApiBuilder asFileUpload();
 
 }

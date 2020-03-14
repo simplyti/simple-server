@@ -1,7 +1,9 @@
 package com.simplyti.server.http.api.context;
 
+import java.nio.channels.ClosedChannelException;
+
+import com.simplyti.server.http.api.handler.message.ApiResponse;
 import com.simplyti.server.http.api.request.ApiMatchRequest;
-import com.simplyti.service.api.ApiResponse;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.sync.SyncTaskSubmitter;
 import com.simplyti.util.concurrent.DefaultFuture;
@@ -13,6 +15,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpUtil;
+import io.netty.util.ReferenceCountUtil;
 
 public class AnyWithBodyApiContextImpl extends AbstractApiContext implements AnyWithBodyApiContext {
 	
@@ -58,6 +61,10 @@ public class AnyWithBodyApiContextImpl extends AbstractApiContext implements Any
 	@Override
 	public Future<Void> writeAndFlush(ByteBuf value) {
 		release();
+		if(!ctx.channel().isActive()) {
+			ReferenceCountUtil.release(value);
+			return new DefaultFuture<>(ctx.channel().newFailedFuture(new ClosedChannelException()),ctx.executor());
+		}
 		try {
 			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(value, isKeepAlive, false))
 					.addListener(this::writeListener);
@@ -105,7 +112,8 @@ public class AnyWithBodyApiContextImpl extends AbstractApiContext implements Any
 		}
 	}
 	
-	private void release() {
+	@Override
+	public void release() {
 		if(this.released) {
 			return;
 		}

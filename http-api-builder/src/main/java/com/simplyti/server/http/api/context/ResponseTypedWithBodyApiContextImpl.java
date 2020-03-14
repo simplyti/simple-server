@@ -1,7 +1,7 @@
 package com.simplyti.server.http.api.context;
 
+import com.simplyti.server.http.api.handler.message.ApiResponse;
 import com.simplyti.server.http.api.request.ApiMatchRequest;
-import com.simplyti.service.api.ApiResponse;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.sync.SyncTaskSubmitter;
 import com.simplyti.util.concurrent.DefaultFuture;
@@ -30,7 +30,7 @@ public class ResponseTypedWithBodyApiContextImpl<T> extends AbstractApiContext i
 
 	@Override
 	public Future<Void> writeAndFlush(T value) {
-		body.release();
+		release();
 		try {
 			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(value, isKeepAlive, false))
 					.addListener(this::writeListener);
@@ -42,7 +42,7 @@ public class ResponseTypedWithBodyApiContextImpl<T> extends AbstractApiContext i
 	
 	@Override
 	public Future<Void> failure(Throwable cause) {
-		body.release();
+		release();
 		return exceptionHandler.exceptionCaught(ctx, cause);
 	}
 	
@@ -61,13 +61,18 @@ public class ResponseTypedWithBodyApiContextImpl<T> extends AbstractApiContext i
 
 	@Override
 	public Future<Void> close() {
-		body.release();
+		release();
 		return new DefaultFuture<>(ctx.close(),ctx.executor());
 	}
 
 	@Override
 	public ByteBuf body() {
 		return body;
+	}
+
+	@Override
+	public void release() {
+		body.release();
 	}
 
 }

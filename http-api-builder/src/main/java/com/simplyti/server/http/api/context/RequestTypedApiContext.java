@@ -4,7 +4,7 @@ import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.ByteBuf;
 
-public interface RequestTypedApiContext<T> extends ApiContext {
+public interface RequestTypedApiContext<T> extends WithBodyApiContext, ApiContext {
 
 	T body();
 

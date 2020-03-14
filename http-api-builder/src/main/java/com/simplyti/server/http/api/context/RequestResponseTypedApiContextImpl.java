@@ -1,7 +1,7 @@
 package com.simplyti.server.http.api.context;
 
+import com.simplyti.server.http.api.handler.message.ApiResponse;
 import com.simplyti.server.http.api.request.ApiMatchRequest;
-import com.simplyti.service.api.ApiResponse;
 import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.api.serializer.json.TypeLiteral;
 import com.simplyti.service.exception.ExceptionHandler;
@@ -58,14 +58,6 @@ public class RequestResponseTypedApiContextImpl<T,U> extends AbstractApiContext 
 		this.bodyParsed=true;
 		release();
 		return bodyObj;
-	}
-
-	private void release() {
-		if(this.released) {
-			return;
-		}
-		body.release();
-		this.released=true;
 	}
 
 	@Override
@@ -131,6 +123,15 @@ public class RequestResponseTypedApiContextImpl<T,U> extends AbstractApiContext 
 	@Override
 	public Future<Void> send(ByteBuf body) {
 		return writeAndFlush(body);
+	}
+	
+	@Override
+	public void release() {
+		if(this.released) {
+			return;
+		}
+		body.release();
+		this.released=true;
 	}
 
 }
