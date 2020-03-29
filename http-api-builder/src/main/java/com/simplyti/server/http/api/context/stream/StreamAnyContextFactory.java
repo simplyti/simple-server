@@ -16,7 +16,7 @@ public class StreamAnyContextFactory implements ApiContextFactory {
 	@SuppressWarnings("unchecked")
 	public <T extends ApiContext> T create(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler,
 			ChannelHandlerContext ctx, ApiMatchRequest match, HttpRequest request, ByteBuf body) {
-		return (T) new StreamRequestApiContextImpl(syncTaskSubmitter, ctx, request, match);
+		return (T) new StreamRequestApiContextImpl(syncTaskSubmitter, exceptionHandler, ctx, request, match);
 	}
 
 }

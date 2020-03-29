@@ -6,5 +6,7 @@ public interface RequestBodyTypableResponseTypedApiBuilder<T> {
 	<U> RequestResponseBodyTypedFinishableApiBuilder<U,T> withRequestBodyType(Class<U> clazz);
 
 	void then(ResponseTypedWithRequestApiContextConsumer<T> consumer);
+	
+	RequestBodyTypableResponseTypedApiBuilder<T> withNotFoundOnNull();
 
 }

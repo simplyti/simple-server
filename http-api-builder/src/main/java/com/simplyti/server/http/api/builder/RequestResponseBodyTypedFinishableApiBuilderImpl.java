@@ -1,12 +1,18 @@
 package com.simplyti.server.http.api.builder;
 
+import java.util.Map;
+import java.util.function.Function;
+
 import com.simplyti.server.http.api.context.ApiContextFactory;
+import com.simplyti.server.http.api.context.RequestResponseTypedApiContext;
+import com.simplyti.server.http.api.futurehandler.RequestResponseBodyTypedFutureHandle;
 import com.simplyti.server.http.api.operations.ApiOperations;
 import com.simplyti.server.http.api.operations.RequestResponseTypeApiOperation;
 import com.simplyti.server.http.api.pattern.ApiPattern;
 import com.simplyti.service.api.serializer.json.TypeLiteral;
 
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.util.concurrent.Future;
 
 public class RequestResponseBodyTypedFinishableApiBuilderImpl<T,U> implements RequestResponseBodyTypedFinishableApiBuilder<T, U> {
 
@@ -15,19 +21,29 @@ public class RequestResponseBodyTypedFinishableApiBuilderImpl<T,U> implements Re
 	private final String path;
 	private final ApiContextFactory requestTypedContextFactory;
 	private final TypeLiteral<T> requestType;
+	private final Map<String, Object> metadata;
+	private final boolean notFoundOnNull;
 
-	public RequestResponseBodyTypedFinishableApiBuilderImpl(ApiContextFactory requestTypedContextFactory,ApiOperations operations, HttpMethod method, String path, TypeLiteral<T> requestType) {
+	public RequestResponseBodyTypedFinishableApiBuilderImpl(ApiContextFactory requestTypedContextFactory,ApiOperations operations, HttpMethod method, String path, Map<String,Object> metadata, 
+			boolean notFoundOnNull, TypeLiteral<T> requestType) {
 		this.operations=operations;
 		this.method=method;
 		this.path=path;
 		this.requestTypedContextFactory=requestTypedContextFactory;
 		this.requestType=requestType;
+		this.metadata=metadata;
+		this.notFoundOnNull=notFoundOnNull;
 	}
 	
 	@Override
 	public void then(RequestResponseTypedApiContextConsumer<T, U> consumer) {
 		ApiPattern apiPattern = ApiPattern.build(path);
-		operations.add(new RequestResponseTypeApiOperation<>(method,apiPattern,null,requestType,consumer,requestTypedContextFactory));
+		operations.add(new RequestResponseTypeApiOperation<>(method,apiPattern,metadata,requestType,consumer,requestTypedContextFactory, notFoundOnNull));
+	}
+
+	@Override
+	public void thenFuture(Function<RequestResponseTypedApiContext<T, U>, Future<U>> futureSupplier) {
+		then(new RequestResponseBodyTypedFutureHandle<T,U>(futureSupplier));
 	}
 
 }

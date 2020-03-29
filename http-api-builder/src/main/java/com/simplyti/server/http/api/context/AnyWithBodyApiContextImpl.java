@@ -3,6 +3,7 @@ package com.simplyti.server.http.api.context;
 import java.nio.channels.ClosedChannelException;
 
 import com.simplyti.server.http.api.handler.message.ApiResponse;
+import com.simplyti.server.http.api.operations.ApiOperation;
 import com.simplyti.server.http.api.request.ApiMatchRequest;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.sync.SyncTaskSubmitter;
@@ -23,6 +24,7 @@ public class AnyWithBodyApiContextImpl extends AbstractApiContext implements Any
 	private final ExceptionHandler exceptionHandler;
 	private final boolean isKeepAlive;
 	private final ByteBuf body;
+	private final ApiOperation<?> operation;
 	
 	private boolean released;
 
@@ -32,13 +34,14 @@ public class AnyWithBodyApiContextImpl extends AbstractApiContext implements Any
 		this.exceptionHandler=exceptionHandler;
 		this.isKeepAlive=HttpUtil.isKeepAlive(request);
 		this.body=body;
+		this.operation=match.operation();
 	}
 
 	@Override
 	public Future<Void> writeAndFlush(String message) {
 		release();
 		try {
-			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(message, isKeepAlive, false))
+			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(message, isKeepAlive, operation.notFoundOnNull()))
 					.addListener(this::writeListener);
 			return new DefaultFuture<>(future,ctx.executor());
 		} catch(RuntimeException cause) {
@@ -50,7 +53,7 @@ public class AnyWithBodyApiContextImpl extends AbstractApiContext implements Any
 	public Future<Void> writeAndFlush(Object value) {
 		release();
 		try {
-			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(value, isKeepAlive, false))
+			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(value, isKeepAlive, operation.notFoundOnNull()))
 					.addListener(this::writeListener);
 			return new DefaultFuture<>(future,ctx.executor());
 		} catch(RuntimeException cause) {
@@ -66,7 +69,7 @@ public class AnyWithBodyApiContextImpl extends AbstractApiContext implements Any
 			return new DefaultFuture<>(ctx.channel().newFailedFuture(new ClosedChannelException()),ctx.executor());
 		}
 		try {
-			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(value, isKeepAlive, false))
+			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(value, isKeepAlive, operation.notFoundOnNull()))
 					.addListener(this::writeListener);
 			return new DefaultFuture<>(future,ctx.executor());
 		} catch(RuntimeException cause) {
@@ -78,7 +81,7 @@ public class AnyWithBodyApiContextImpl extends AbstractApiContext implements Any
 	public Future<Void> writeAndFlushEmpty() {
 		release();
 		try {
-			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(null, isKeepAlive, false))
+			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(null, isKeepAlive, operation.notFoundOnNull()))
 					.addListener(this::writeListener);
 			return new DefaultFuture<>(future,ctx.executor());
 		} catch(RuntimeException cause) {

@@ -17,6 +17,9 @@ import io.netty.util.concurrent.EventExecutor;
 public abstract class AbstractApiContext implements ApiContext {
 	
 	private static final String STRING = "string";
+	private static final String INTEGER = "integer";
+	private static final String LONG = "long";
+	private static final String BOOLEAN = "boolean";
 	
 	private final SyncTaskSubmitter syncTaskSubmitter;
 	private final Channel channel;
@@ -35,20 +38,57 @@ public abstract class AbstractApiContext implements ApiContext {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private <T> T queryParam(String name, String type, Function<String,T> fn) {
+	private <T> T queryParam(String name, String type, Function<String,T> fn, T defaultValue) {
 		return (T) this.convertedQueryParams.computeIfAbsent(String.format("%s.%s", type,name), key->{
 			if(this.matcher.parameters().containsKey(name)) {
 				List<String> params = this.matcher.parameters().get(name);
 				if(params.isEmpty()) {
-					return null;
+					return defaultValue;
 				}else {
 					return fn.apply(params.get(0));
 				}
 			}else {
-				return null;
+				return defaultValue;
 			}
 		});
 	}
+	
+	@Override
+	public String queryParam(String name) {
+		return queryParam(name,STRING,Function.identity(),null);
+	}
+	
+	@Override
+	public boolean queryParaAsBoolean(String name) {
+		return queryParam(name,BOOLEAN,this::parseBoolean,false);
+	}
+	
+	private boolean parseBoolean(String value) {
+		if(value.isEmpty()) {
+			return true;
+		} else {
+			return Boolean.parseBoolean(value);
+		}
+	}
+	
+	@Override
+	public Integer queryParamAsInt(String name) {
+		return queryParam(name,INTEGER,Integer::parseInt,null);
+	}
+	
+	public Integer queryParamAsInt(String name, int defaultValue) {
+		return queryParam(name,INTEGER,Integer::parseInt,defaultValue);
+	}
+	
+	@Override
+	public Long queryParamAsLong(String name) {
+		return queryParam(name,LONG,Long::parseLong,null);
+	}
+	
+	public Long queryParamAsLong(String name, long defaultValue) {
+		return queryParam(name,LONG,Long::parseLong,defaultValue);
+	}
+
 	
 	@SuppressWarnings("unchecked")
 	private <T> T pathParam(String key, String type, Function<String,T> fn) {
@@ -63,8 +103,18 @@ public abstract class AbstractApiContext implements ApiContext {
 	}
 	
 	@Override
-	public String queryParam(String name) {
-		return queryParam(name,STRING,Function.identity());
+	public String pathParam(String key) {
+		return pathParam(key,STRING,Function.identity());
+	}
+	
+	@Override
+	public Integer pathParamAsInt(String key) {
+		return pathParam(key,INTEGER,Integer::parseInt);
+	}
+	
+	@Override
+	public Long pathParamAsLong(String key) {
+		return pathParam(key,LONG,Long::parseLong);
 	}
 	
 	@Override
@@ -85,11 +135,6 @@ public abstract class AbstractApiContext implements ApiContext {
 	@Override
 	public Map<String,List<String>> queryParams() {
 		return this.matcher.parameters();
-	}
-
-	@Override
-	public String pathParam(String key) {
-		return pathParam(key,STRING,Function.identity());
 	}
 
 	@Override

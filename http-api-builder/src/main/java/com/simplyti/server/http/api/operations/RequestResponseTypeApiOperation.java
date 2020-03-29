@@ -19,8 +19,8 @@ public class RequestResponseTypeApiOperation<T,U> extends ApiOperation<RequestRe
 	private final TypeLiteral<T> requestType;
 
 	public RequestResponseTypeApiOperation(HttpMethod method, ApiPattern pattern, Map<String,Object> metadata, TypeLiteral<T> requestType, RequestResponseTypedApiContextConsumer<T,U> consumer, 
-			ApiContextFactory contextFactory) {
-		super(method, pattern,metadata,consumer,contextFactory,false);
+			ApiContextFactory contextFactory, boolean notFoundOnNull) {
+		super(method, pattern,metadata,consumer,contextFactory,false, notFoundOnNull);
 		this.requestType=requestType;
 	}
 	

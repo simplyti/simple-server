@@ -11,8 +11,9 @@ import io.netty.handler.codec.http.HttpMethod;
 
 public class AnyApiOperation extends ApiOperation<AnyApiContext> {
 
-	public AnyApiOperation(HttpMethod method, ApiPattern pattern, Map<String,Object> metadata, ApiContextConsumer consumer, ApiContextFactory contextFactory) {
-		super(method, pattern, metadata, consumer,contextFactory,false);
+	public AnyApiOperation(HttpMethod method, ApiPattern pattern, Map<String,Object> metadata, ApiContextConsumer consumer, ApiContextFactory contextFactory,
+			boolean notFoundOnNull) {
+		super(method, pattern, metadata, consumer,contextFactory,false, notFoundOnNull);
 	}
 
 }

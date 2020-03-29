@@ -1,6 +1,7 @@
 package com.simplyti.server.http.api.context;
 
 import com.simplyti.server.http.api.handler.message.ApiResponse;
+import com.simplyti.server.http.api.operations.ApiOperation;
 import com.simplyti.server.http.api.request.ApiMatchRequest;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.sync.SyncTaskSubmitter;
@@ -19,6 +20,7 @@ public class ResponseTypedWithBodyApiContextImpl<T> extends AbstractApiContext i
 	private final ExceptionHandler exceptionHandler;
 	private final boolean isKeepAlive;
 	private final ByteBuf body;
+	private final ApiOperation<?> operation;
 	
 	public ResponseTypedWithBodyApiContextImpl(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler, ChannelHandlerContext ctx, HttpRequest request, ByteBuf body, ApiMatchRequest match) {
 		super(syncTaskSubmitter, ctx.channel(), request, match);
@@ -26,13 +28,14 @@ public class ResponseTypedWithBodyApiContextImpl<T> extends AbstractApiContext i
 		this.isKeepAlive=HttpUtil.isKeepAlive(request);
 		this.body=body;
 		this.exceptionHandler=exceptionHandler;
+		this.operation=match.operation();
 	}
 
 	@Override
 	public Future<Void> writeAndFlush(T value) {
 		release();
 		try {
-			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(value, isKeepAlive, false))
+			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(value, isKeepAlive, operation.notFoundOnNull()))
 					.addListener(this::writeListener);
 			return new DefaultFuture<>(future,ctx.executor());
 		} catch(RuntimeException cause) {

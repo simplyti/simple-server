@@ -33,6 +33,130 @@ public class APITest implements ApiProvider {
 
 	@Override
 	public void build(ApiBuilder builder) {
+		
+		builder.when().get("/get")
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:"GET!"));
+		
+		builder.when().get("/get/notfoundnull")
+			.withNotFoundOnNull()
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:"GET!"));
+		
+		builder.when().get("/get/dto")
+			.withResponseBodyType(APITestDTO.class)
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:new APITestDTO("GET!")));
+		
+		builder.when().get("/get/notfoundnull/dto")
+			.withNotFoundOnNull()
+			.withResponseBodyType(APITestDTO.class)
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:new APITestDTO("GET!")));
+		
+		builder.when().get("/get/dto/notfoundnull")
+			.withResponseBodyType(APITestDTO.class)
+			.withNotFoundOnNull()
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:new APITestDTO("GET!")));
+		
+		builder.when().delete("/delete")
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:"DELETE!"));
+		
+		builder.when().delete("/delete/notfoundnull")
+			.withNotFoundOnNull()
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:"DELETE!"));
+		
+		builder.when().delete("/delete/dto")
+			.withResponseBodyType(APITestDTO.class)
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:new APITestDTO("DELETE!")));
+		
+		builder.when().delete("/delete/notfoundnull/dto")
+			.withNotFoundOnNull()
+			.withResponseBodyType(APITestDTO.class)
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:new APITestDTO("DELETE!")));
+		
+		builder.when().delete("/delete/dto/notfoundnull")
+			.withResponseBodyType(APITestDTO.class)
+			.withNotFoundOnNull()
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:new APITestDTO("DELETE!")));
+		
+		builder.when().post("/post")
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:"POST!"));
+		
+		builder.when().post("/post/notfoundnull")
+			.withNotFoundOnNull()
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:"POST!"));
+	
+		builder.when().post("/post/dto")
+			.withResponseBodyType(APITestDTO.class)
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:new APITestDTO("POST!")));
+		
+		builder.when().post("/post/dto/echo")
+			.withRequestBodyType(APITestDTO.class)
+			.withResponseBodyType(APITestDTO.class)
+			.then(ctx->ctx.send(ctx.body()));
+		
+		builder.when().post("/post/notfoundnull/dto")
+			.withNotFoundOnNull()
+			.withResponseBodyType(APITestDTO.class)
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:new APITestDTO("POST!")));
+		
+		builder.when().post("/post/dto/notfoundnull")
+			.withResponseBodyType(APITestDTO.class)
+			.withNotFoundOnNull()
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:new APITestDTO("POST!")));
+		
+		builder.when().put("/put")
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:"PUT!"));
+		
+		builder.when().put("/put/notfoundnull")
+			.withNotFoundOnNull()
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:"PUT!"));
+
+		builder.when().put("/put/dto")
+			.withResponseBodyType(APITestDTO.class)
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:new APITestDTO("PUT!")));
+		
+		builder.when().put("/put/dto/echo")
+			.withRequestBodyType(APITestDTO.class)
+			.withResponseBodyType(APITestDTO.class)
+			.then(ctx->ctx.send(ctx.body()));
+		
+		builder.when().put("/put/notfoundnull/dto")
+			.withNotFoundOnNull()
+			.withResponseBodyType(APITestDTO.class)
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:new APITestDTO("PUT!")));
+		
+		builder.when().put("/put/dto/notfoundnull")
+			.withResponseBodyType(APITestDTO.class)
+			.withNotFoundOnNull()
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:new APITestDTO("PUT!")));
+		
+		builder.when().patch("/patch")
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:"PATCH!"));
+		
+		builder.when().patch("/patch/notfoundnull")
+			.withNotFoundOnNull()
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:"PATCH!"));
+
+		builder.when().patch("/patch/dto")
+			.withResponseBodyType(APITestDTO.class)
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:new APITestDTO("PATCH!")));
+		
+		builder.when().patch("/patch/dto/echo")
+			.withRequestBodyType(APITestDTO.class)
+			.withResponseBodyType(APITestDTO.class)
+			.then(ctx->ctx.send(ctx.body()));
+		
+		builder.when().patch("/patch/notfoundnull/dto")
+			.withNotFoundOnNull()
+			.withResponseBodyType(APITestDTO.class)
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:new APITestDTO("PATCH!")));
+		
+		builder.when().patch("/patch/dto/notfoundnull")
+			.withResponseBodyType(APITestDTO.class)
+			.withNotFoundOnNull()
+			.then(ctx->ctx.send(ctx.queryParaAsBoolean("null")?null:new APITestDTO("PATCH!")));
+		
+		
+		
+		
 		builder.when().get("/hello")
 			.then(ctx->ctx.send("Hello!"));
 		
@@ -155,9 +279,6 @@ public class APITest implements ApiProvider {
 		builder.when().get("/user/{id}")
 			.withMeta("serviceId", "GetUser")
 			.then(ctx->ctx.send("Hello user "+ctx.pathParam("id")));
-		
-		builder.when().delete("/delete")
-			.then(ctx->ctx.send("Bye!"));
 		
 		builder.when().get("/error/after/send")
 			.then(ctx->{

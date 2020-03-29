@@ -26,14 +26,15 @@ public class ApiOperation<T extends ApiContext> {
 	private final Map<String,Object> metadata;
 	private final boolean streamedRequest;
 	private final int maxBodyLength;
+	private final boolean notFoundOnNull;
 
 	public ApiOperation(HttpMethod method, ApiPattern pattern, Map<String,Object> metadata, Consumer<T> handler, ApiContextFactory contextFactory,
-			boolean streamedRequest) {
-		this(method, pattern, metadata, handler, contextFactory, streamedRequest, 10000000);
+			boolean streamedRequest, boolean notFoundOnNull) {
+		this(method, pattern, metadata, handler, contextFactory, streamedRequest, notFoundOnNull, 10000000);
 	}
 	
 	public ApiOperation(HttpMethod method, ApiPattern pattern, Map<String,Object> metadata, Consumer<T> handler, ApiContextFactory contextFactory,
-			boolean streamedRequest,int maxBodyLength) {
+			boolean streamedRequest, boolean notFoundOnNull, int maxBodyLength) {
 		this.method=method;
 		this.pattern=pattern;
 		this.handler=handler;
@@ -41,6 +42,7 @@ public class ApiOperation<T extends ApiContext> {
 		this.metadata=MoreObjects.firstNonNull(metadata, Collections.emptyMap());
 		this.streamedRequest=streamedRequest;
 		this.maxBodyLength=maxBodyLength>0?maxBodyLength:DEFAULT_MAX_BODY;
+		this.notFoundOnNull=notFoundOnNull;
 	}
 
 	@SuppressWarnings("unchecked")

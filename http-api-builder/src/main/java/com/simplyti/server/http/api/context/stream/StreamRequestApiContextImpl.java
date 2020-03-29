@@ -4,7 +4,10 @@ import java.util.function.Consumer;
 
 import com.simplyti.server.http.api.context.AbstractApiContext;
 import com.simplyti.server.http.api.handler.StreamedApiInvocationHandler;
+import com.simplyti.server.http.api.handler.message.ApiResponse;
+import com.simplyti.server.http.api.operations.ApiOperation;
 import com.simplyti.server.http.api.request.ApiMatchRequest;
+import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.sync.SyncTaskSubmitter;
 import com.simplyti.util.concurrent.DefaultFuture;
 import com.simplyti.util.concurrent.Future;
@@ -19,29 +22,51 @@ import io.netty.util.concurrent.Promise;
 
 public class StreamRequestApiContextImpl extends AbstractApiContext implements StreamdRequestApiContext {
 
+	private final ExceptionHandler exceptionHandler;
 	private final ChannelHandlerContext ctx;
 	private final boolean isKeepAlive;
+	private final ApiOperation<?> operation;
 
-	public StreamRequestApiContextImpl(SyncTaskSubmitter syncTaskSubmitter, ChannelHandlerContext ctx, HttpRequest request,
+	public StreamRequestApiContextImpl(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler, ChannelHandlerContext ctx, HttpRequest request,
 			ApiMatchRequest matcher) {
 		super(syncTaskSubmitter, ctx.channel(), request, matcher);
+		this.exceptionHandler=exceptionHandler;
 		this.ctx=ctx;
 		this.isKeepAlive=HttpUtil.isKeepAlive(request);
+		this.operation=matcher.operation();
 	}
 
 	@Override
 	public Future<Void> writeAndFlushEmpty() {
-		return null;
+		try {
+			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(null, isKeepAlive, false))
+					.addListener(this::writeListener);
+			return new DefaultFuture<>(future,ctx.executor());
+		} catch(RuntimeException cause) {
+			return new DefaultFuture<>(ctx.channel().eventLoop().newFailedFuture(cause), ctx.executor());
+		}
 	}
 
 	@Override
 	public Future<Void> writeAndFlush(String message) {
-		return null;
+		try {
+			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(message, isKeepAlive, operation.notFoundOnNull()))
+					.addListener(this::writeListener);
+			return new DefaultFuture<>(future,ctx.executor());
+		} catch(RuntimeException cause) {
+			return new DefaultFuture<>(ctx.channel().eventLoop().newFailedFuture(cause), ctx.executor());
+		}
 	}
 
 	@Override
 	public Future<Void> writeAndFlush(ByteBuf body) {
-		return null;
+		try {
+			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(body, isKeepAlive, operation.notFoundOnNull()))
+					.addListener(this::writeListener);
+			return new DefaultFuture<>(future,ctx.executor());
+		} catch(RuntimeException cause) {
+			return new DefaultFuture<>(ctx.channel().eventLoop().newFailedFuture(cause), ctx.executor());
+		}
 	}
 
 	@Override
@@ -57,22 +82,13 @@ public class StreamRequestApiContextImpl extends AbstractApiContext implements S
 
 	@Override
 	public Future<Void> writeAndFlush(Object value) {
-		return null;
-	}
-
-	@Override
-	public Future<Void> sendEmpty() {
-		return null;
-	}
-
-	@Override
-	public Future<Void> send(String string) {
-		return null;
-	}
-
-	@Override
-	public Future<Void> send(ByteBuf body) {
-		return null;
+		try {
+			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(value, isKeepAlive, operation.notFoundOnNull()))
+					.addListener(this::writeListener);
+			return new DefaultFuture<>(future,ctx.executor());
+		} catch(RuntimeException cause) {
+			return new DefaultFuture<>(ctx.channel().eventLoop().newFailedFuture(cause), ctx.executor());
+		}
 	}
 
 	@Override
@@ -90,17 +106,32 @@ public class StreamRequestApiContextImpl extends AbstractApiContext implements S
 
 	@Override
 	public Future<Void> send(Object value) {
-		return null;
+		return writeAndFlush(value);
+	}
+	
+	@Override
+	public Future<Void> sendEmpty() {
+		return writeAndFlushEmpty();
+	}
+
+	@Override
+	public Future<Void> send(String string) {
+		return writeAndFlush(string);
+	}
+
+	@Override
+	public Future<Void> send(ByteBuf body) {
+		return writeAndFlush(body);
 	}
 
 	@Override
 	public Future<Void> failure(Throwable cause) {
-		return null;
+		return exceptionHandler.exceptionCaught(ctx, cause);
 	}
 
 	@Override
 	public Future<Void> close() {
-		return null;
+		return new DefaultFuture<>(ctx.close(),ctx.executor());
 	}
 
 	@Override
@@ -109,5 +140,5 @@ public class StreamRequestApiContextImpl extends AbstractApiContext implements S
 		ctx.pipeline().addLast(new StreamedApiInvocationHandler(consumer,promise));
 		return new DefaultFuture<>(promise, ctx.executor());
 	}
-	
+
 }

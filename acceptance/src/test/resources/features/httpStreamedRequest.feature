@@ -1,5 +1,5 @@
 @streamApi @standalone
-Feature: Http Streamed service
+Feature: Http Input streamed service
 
 Scenario: Basic Http Handle
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.StreamAPITest"
@@ -13,3 +13,9 @@ Scenario: Basic Http Handle
 	Then I check that "#writeresult" is success
 	And I check that "#response" is success
 	And I check that http response "#response" has body "Hello stream.The end"
+	
+Scenario: Basic Http handle error
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.StreamAPITest"
+	Then I check that "#serviceFuture" is success
+	When I send a "POST /streamed/error" with body "Hello!" getting "#response"
+	And I check that "#response" has status code 500

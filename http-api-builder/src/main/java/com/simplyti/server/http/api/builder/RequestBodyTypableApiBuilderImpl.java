@@ -1,5 +1,8 @@
 package com.simplyti.server.http.api.builder;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.simplyti.server.http.api.builder.fileupload.FileUploadApiBuilder;
 import com.simplyti.server.http.api.builder.fileupload.FileUploadApiBuilderImpl;
 import com.simplyti.server.http.api.builder.stream.StreamedRequestResponseTypableApiBuilder;
@@ -24,6 +27,8 @@ public class RequestBodyTypableApiBuilderImpl implements RequestTypableApiBuilde
 	private final ApiContextFactory streamAnyContextFactory;
 	private final ApiContextFactory fileUploadContextFactory;
 	
+	private Map<String,Object> metadata;
+	private boolean notFoundOnNull;
 	private int maxBodyLength;
 
 	public RequestBodyTypableApiBuilderImpl(ApiContextFactory anyContextFactory, ApiContextFactory requestTypedContextFactory,
@@ -43,7 +48,7 @@ public class RequestBodyTypableApiBuilderImpl implements RequestTypableApiBuilde
 
 	@Override
 	public <T> RequestBodyTypedFinishableApiBuilder<T> withRequestType(Class<T> clazz) {
-		return new RequestBodyTypedFinishableApiBuilderImpl<>(operations,method,path,TypeLiteral.create(clazz),requestTypedContextFactory,requestResponseTypedContextFactory);
+		return new RequestBodyTypedFinishableApiBuilderImpl<>(operations,method,path,metadata,notFoundOnNull,TypeLiteral.create(clazz),requestTypedContextFactory,requestResponseTypedContextFactory);
 	}
 	
 	@Override
@@ -53,7 +58,7 @@ public class RequestBodyTypableApiBuilderImpl implements RequestTypableApiBuilde
 
 	@Override
 	public <T> RequestBodyTypableResponseTypedApiBuilder<T> withResponseType(Class<T> clazz) {
-		return new RequestBodyTypableResponseTypedApiBuilderImpl<>(responseTypedWithBodyContextFactory,requestResponseTypedContextFactory,operations,method,path);
+		return new RequestBodyTypableResponseTypedApiBuilderImpl<>(responseTypedWithBodyContextFactory,requestResponseTypedContextFactory,operations,method,path,metadata,notFoundOnNull);
 	}
 	
 	@Override
@@ -64,12 +69,27 @@ public class RequestBodyTypableApiBuilderImpl implements RequestTypableApiBuilde
 	@Override
 	public void then(ApiWithBodyContextConsumer consumer) {
 		ApiPattern apiPattern = ApiPattern.build(path);
-		operations.add(new AnyWithBodyApiOperation(method,apiPattern,null,consumer,anyContextFactory,maxBodyLength));
+		operations.add(new AnyWithBodyApiOperation(method,apiPattern,metadata,consumer,anyContextFactory,notFoundOnNull,maxBodyLength));
 	}
 
 	@Override
 	public RequestTypableApiBuilder withMaximunBodyLength(int maxBodyLength) {
 		this.maxBodyLength=maxBodyLength;
+		return this;
+	}
+	
+	@Override
+	public RequestTypableApiBuilder withMeta(String key, String value) {
+		if(metadata==null) {
+			metadata = new HashMap<>();
+		}
+		metadata.put(key, value);
+		return this;
+	}
+	
+	@Override
+	public RequestTypableApiBuilder withNotFoundOnNull() {
+		this.notFoundOnNull=true;
 		return this;
 	}
 

@@ -1,6 +1,7 @@
 package com.simplyti.server.http.api.context;
 
 import com.simplyti.server.http.api.handler.message.ApiResponse;
+import com.simplyti.server.http.api.operations.ApiOperation;
 import com.simplyti.server.http.api.request.ApiMatchRequest;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.sync.SyncTaskSubmitter;
@@ -19,6 +20,7 @@ public class AnyApiContextImpl extends AbstractApiContext implements AnyApiConte
 	private final ChannelHandlerContext ctx;
 	private final boolean isKeepAlive;
 	private final ExceptionHandler exceptionHandler;
+	private final ApiOperation<?> operation;
 
 	public AnyApiContextImpl(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler, 
 			ChannelHandlerContext ctx, HttpRequest request,ApiMatchRequest match) {
@@ -26,6 +28,7 @@ public class AnyApiContextImpl extends AbstractApiContext implements AnyApiConte
 		this.ctx=ctx;
 		this.isKeepAlive=HttpUtil.isKeepAlive(request);
 		this.exceptionHandler=exceptionHandler;
+		this.operation = match.operation();
 	}
 
 	@Override
@@ -36,7 +39,7 @@ public class AnyApiContextImpl extends AbstractApiContext implements AnyApiConte
 	@Override
 	public Future<Void> writeAndFlush(String message) {
 		try {
-			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(message, isKeepAlive, false))
+			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(message, isKeepAlive, operation.notFoundOnNull()))
 					.addListener(this::writeListener);
 			return new DefaultFuture<>(future,ctx.executor());
 		} catch(RuntimeException cause) {
@@ -47,7 +50,7 @@ public class AnyApiContextImpl extends AbstractApiContext implements AnyApiConte
 	@Override
 	public Future<Void> writeAndFlush(ByteBuf body) {
 		try {
-			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(body, isKeepAlive, false))
+			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(body, isKeepAlive, operation.notFoundOnNull()))
 					.addListener(this::writeListener);
 			return new DefaultFuture<>(future,ctx.executor());
 		} catch(RuntimeException cause) {
@@ -58,7 +61,7 @@ public class AnyApiContextImpl extends AbstractApiContext implements AnyApiConte
 	@Override
 	public Future<Void> writeAndFlush(Object value) {
 		try {
-			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(value, isKeepAlive, false))
+			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(value, isKeepAlive, operation.notFoundOnNull()))
 					.addListener(this::writeListener);
 			return new DefaultFuture<>(future,ctx.executor());
 		} catch(RuntimeException cause) {

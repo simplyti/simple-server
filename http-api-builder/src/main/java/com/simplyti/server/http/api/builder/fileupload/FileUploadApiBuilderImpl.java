@@ -24,7 +24,7 @@ public class FileUploadApiBuilderImpl implements FileUploadApiBuilder {
 	@Override
 	public void then(FileUploadAnyApiContextConsumer consumer) {
 		ApiPattern apiPattern = ApiPattern.build(path);
-		operations.add(new FileUploadApiOperation(method,apiPattern,null,consumer,streamAnyContextFactory));
+		operations.add(new FileUploadApiOperation(method,apiPattern,null,consumer,streamAnyContextFactory, false));
 	}
 
 }

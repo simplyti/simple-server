@@ -1,5 +1,7 @@
 package com.simplyti.server.http.api.builder;
 
+import java.util.Map;
+
 import com.simplyti.server.http.api.context.ApiContextFactory;
 import com.simplyti.server.http.api.operations.ApiOperations;
 import com.simplyti.server.http.api.operations.ResponseTypeWithBodyApiOperation;
@@ -15,18 +17,24 @@ public class RequestBodyTypableResponseTypedApiBuilderImpl<T> implements Request
 	private final String path;
 	private final ApiContextFactory responseTypedWithBodyContextFactory;
 	private final ApiContextFactory requestResponseTypedContextFactory;
+	
+	private final Map<String, Object> metadata;
+	private boolean notFoundOnNull;
 
-	public RequestBodyTypableResponseTypedApiBuilderImpl(ApiContextFactory responseTypedWithBodyContextFactory,ApiContextFactory requestResponseTypedContextFactory, ApiOperations operations, HttpMethod method, String path) {
+	public RequestBodyTypableResponseTypedApiBuilderImpl(ApiContextFactory responseTypedWithBodyContextFactory,ApiContextFactory requestResponseTypedContextFactory, ApiOperations operations, HttpMethod method, String path,
+			Map<String,Object> metadata, boolean notFoundOnNull) {
 		this.operations=operations;
 		this.method=method;
 		this.path=path;
+		this.metadata=metadata;
+		this.notFoundOnNull=notFoundOnNull;
 		this.responseTypedWithBodyContextFactory=responseTypedWithBodyContextFactory;
 		this.requestResponseTypedContextFactory=requestResponseTypedContextFactory;
 	}
 	
 	@Override
 	public <U> RequestResponseBodyTypedFinishableApiBuilder<U, T> withRequestType(Class<U> clazz) {
-		return new RequestResponseBodyTypedFinishableApiBuilderImpl<>(requestResponseTypedContextFactory,operations,method,path,TypeLiteral.create(clazz));
+		return new RequestResponseBodyTypedFinishableApiBuilderImpl<>(requestResponseTypedContextFactory,operations,method,path,metadata,notFoundOnNull,TypeLiteral.create(clazz));
 	}
 	
 	@Override
@@ -37,7 +45,13 @@ public class RequestBodyTypableResponseTypedApiBuilderImpl<T> implements Request
 	@Override
 	public void then(ResponseTypedWithRequestApiContextConsumer<T> consumer) {
 		ApiPattern apiPattern = ApiPattern.build(path);
-		operations.add(new ResponseTypeWithBodyApiOperation<>(method,apiPattern,null,consumer,responseTypedWithBodyContextFactory));
+		operations.add(new ResponseTypeWithBodyApiOperation<>(method,apiPattern,null,consumer,responseTypedWithBodyContextFactory, notFoundOnNull));
+	}
+
+	@Override
+	public RequestBodyTypableResponseTypedApiBuilder<T> withNotFoundOnNull() {
+		this.notFoundOnNull=true;
+		return this;
 	}
 
 }

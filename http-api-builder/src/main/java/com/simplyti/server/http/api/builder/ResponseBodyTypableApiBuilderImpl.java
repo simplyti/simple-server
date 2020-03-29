@@ -23,6 +23,7 @@ public class ResponseBodyTypableApiBuilderImpl implements ResponseTypableApiBuil
 	private final ApiContextFactory serverSentEventContextFactory;
 	
 	private Map<String,Object> metadata;
+	private boolean notFoundOnNull;
 
 	public ResponseBodyTypableApiBuilderImpl(ApiContextFactory anyContextFactory, ApiContextFactory responseTypeContextFactory,
 			ApiContextFactory serverSentEventContextFactory, ApiOperations operations, HttpMethod method, String path) {
@@ -36,18 +37,18 @@ public class ResponseBodyTypableApiBuilderImpl implements ResponseTypableApiBuil
 
 	@Override
 	public <T> ResponseBodyTypedApiBuilder<T> withResponseType(Class<T> clazz) {
-		return new ResponseBodyTypedApiBuilderImpl<>(responseTypeContextFactory,operations,method,path);
+		return new ResponseBodyTypedApiBuilderImpl<>(responseTypeContextFactory,operations,method,path,metadata,notFoundOnNull);
 	}
 	
 	@Override
 	public <T> ResponseBodyTypedApiBuilder<T> withResponseType(TypeLiteral<T> clazz) {
-		return new ResponseBodyTypedApiBuilderImpl<>(responseTypeContextFactory,operations,method,path);
+		return new ResponseBodyTypedApiBuilderImpl<>(responseTypeContextFactory,operations,method,path,metadata,notFoundOnNull);
 	}
 
 	@Override
 	public void then(ApiContextConsumer consumer) {
 		ApiPattern apiPattern = ApiPattern.build(path);
-		operations.add(new AnyApiOperation(method,apiPattern,metadata,consumer,anyContextFactory));
+		operations.add(new AnyApiOperation(method,apiPattern,metadata,consumer,anyContextFactory, notFoundOnNull));
 	}
 
 	@Override
@@ -68,9 +69,16 @@ public class ResponseBodyTypableApiBuilderImpl implements ResponseTypableApiBuil
 		metadata.put(key, value);
 		return this;
 	}
+	
+	@Override
+	public ResponseTypableApiBuilder withNotFoundOnNull() {
+		this.notFoundOnNull=true;
+		return this;
+	}
 
 	@Override
 	public ServerSentEventApiBuilder asServerSentEvent() {
 		return new ServerSentEventApiBuilderImpl(serverSentEventContextFactory,operations,method,path);
 	}
+
 }

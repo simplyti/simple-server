@@ -12,8 +12,8 @@ import io.netty.handler.codec.http.HttpMethod;
 public class ResponseTypeApiOperation<T> extends ApiOperation<ResponseTypedApiContext<T>> {
 
 	public ResponseTypeApiOperation(HttpMethod method, ApiPattern pattern, Map<String,Object> metadata, ResponseTypedApiContextConsumer<T> consumer,
-			ApiContextFactory contextFactory) {
-		super(method, pattern, metadata, consumer, contextFactory, false);
+			ApiContextFactory contextFactory, boolean notFoundOnNull) {
+		super(method, pattern, metadata, consumer, contextFactory, false, notFoundOnNull);
 	}
 	
 }

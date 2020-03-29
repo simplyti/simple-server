@@ -10,6 +10,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -31,6 +32,7 @@ import com.simplyti.server.http.api.operations.ApiOperationsImpl;
 import com.simplyti.server.http.api.request.ApiMatchRequest;
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.serializer.json.Json;
+import com.simplyti.service.api.serializer.json.TypeLiteral;
 
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.HttpMethod;
@@ -84,6 +86,22 @@ public class ApiBuilderTest {
 		ResponseTypedApiContext<String> ctx = mock(ResponseTypedApiContext.class);
 		operation.handler().accept(ctx);
 		verify(ctx,times(1)).writeAndFlush("Hello!");
+	}
+	
+	@Test
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public void buildResponseTypeParameterizedGetApi() {
+		builder.when().delete("/")
+			.withResponseBodyType(new TypeLiteral<List<String>>() {})
+			.then(ctx->ctx.writeAndFlush(Collections.singletonList("Hello!")));
+		
+		ApiMatchRequest matchRequest = resolver.resolveOperation(HttpMethod.DELETE,"/",queryDecoder);
+		assertThat(matchRequest,notNullValue());
+		ApiOperation operation = matchRequest.operation();
+		
+		ResponseTypedApiContext<List<String>> ctx = mock(ResponseTypedApiContext.class);
+		operation.handler().accept(ctx);
+		verify(ctx,times(1)).writeAndFlush(Collections.singletonList("Hello!"));
 	}
 	
 	@Test

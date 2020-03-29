@@ -14,7 +14,8 @@ public interface ResponseTypableApiBuilder {
 	<T> ResponseBodyTypedApiBuilder<T> withResponseBodyType(TypeLiteral<T> clazz);
 
 	ResponseTypableApiBuilder withMeta(String key, String value);
+	ResponseTypableApiBuilder withNotFoundOnNull();
 
 	ServerSentEventApiBuilder asServerSentEvent();
-	
+
 }

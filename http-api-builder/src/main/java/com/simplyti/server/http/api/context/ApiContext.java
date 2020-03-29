@@ -12,11 +12,20 @@ import io.netty.util.concurrent.EventExecutor;
 
 public interface ApiContext {
 	
-	String queryParam(String name);
-	List<String> queryParams(String name);
+	String queryParam(String key);
+	boolean queryParaAsBoolean(String key);
+	Integer queryParamAsInt(String key);
+	Integer queryParamAsInt(String key, int defaultValue);
+	Long queryParamAsLong(String key);
+	Long queryParamAsLong(String key, long defaultValue);
+	
+	List<String> queryParams(String key);
 	Map<String,List<String>> queryParams();
 	
 	String pathParam(String name);
+	Integer pathParamAsInt(String key);
+	Long pathParamAsLong(String key);
+	
 	
 	HttpRequest request();
 	Channel channel();

@@ -21,7 +21,6 @@ import com.simplyti.service.builder.di.StartStopLoop;
 import com.simplyti.service.builder.di.StartStopLoopProvider;
 import com.simplyti.service.builder.di.dagger.apibuilder.APIBuilderModule;
 import com.simplyti.service.builder.di.dagger.defaultbackend.DefaultBackendModule;
-import com.simplyti.service.builder.di.dagger.fileserver.FileServerModule;
 import com.simplyti.service.channel.ClientChannelGroup;
 import com.simplyti.service.channel.DefaultHttpEntryChannelInit;
 import com.simplyti.service.channel.DefaultServiceChannelInitializer;
@@ -31,6 +30,7 @@ import com.simplyti.service.channel.ServiceChannelInitializer;
 import com.simplyti.service.channel.handler.ChannelExceptionHandler;
 import com.simplyti.service.channel.handler.ServerHeadersHandler;
 import com.simplyti.service.channel.handler.inits.HandlerInit;
+import com.simplyti.service.exception.DefaultExceptionHandler;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.json.DslJsonModule;
 import com.simplyti.service.ssl.SslHandlerFactory;
@@ -44,7 +44,7 @@ import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
 
-@Module(includes= { Multibindings.class, APIBuilderModule.class, FileServerModule.class, DefaultBackendModule.class, DslJsonModule.class})
+@Module(includes= { Multibindings.class, APIBuilderModule.class, DefaultBackendModule.class, DslJsonModule.class})
 public class BaseServiceModule {
 	
 	@Provides
@@ -102,7 +102,7 @@ public class BaseServiceModule {
 	@Provides
 	@Singleton
 	public ExceptionHandler exceptionHandler() {
-		return new ExceptionHandler();
+		return new DefaultExceptionHandler();
 	}
 
 	@Provides

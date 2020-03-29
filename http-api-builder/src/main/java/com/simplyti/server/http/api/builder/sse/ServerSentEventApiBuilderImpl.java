@@ -24,7 +24,7 @@ public class ServerSentEventApiBuilderImpl implements ServerSentEventApiBuilder 
 	@Override
 	public void then(ServerSentEventAnyApiContextConsumer consumer) {
 		ApiPattern apiPattern = ApiPattern.build(path);
-		operations.add(new ServerSentEventApiOperation(method,apiPattern,null,consumer,streamAnyContextFactory));
+		operations.add(new ServerSentEventApiOperation(method,apiPattern,null,consumer,streamAnyContextFactory, false));
 	}
 
 }

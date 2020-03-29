@@ -23,7 +23,7 @@ public class ServerSentEventContextFactory implements ApiContextFactory {
 	@SuppressWarnings("unchecked")
 	public <T extends ApiContext> T create(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler,
 			ChannelHandlerContext ctx, ApiMatchRequest match, HttpRequest request, ByteBuf body) {
-		return (T) new ServerSentEventApiContextImpl(syncTaskSubmitter, ctx, request, match, serverEventEncoder);
+		return (T) new ServerSentEventApiContextImpl(syncTaskSubmitter, exceptionHandler, ctx, request, match, serverEventEncoder);
 	}
 
 }

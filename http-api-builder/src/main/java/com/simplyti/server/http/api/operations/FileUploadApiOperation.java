@@ -11,8 +11,9 @@ import io.netty.handler.codec.http.HttpMethod;
 
 public class FileUploadApiOperation extends ApiOperation<FileUploadAnyApiContext> {
 	
-	public FileUploadApiOperation(HttpMethod method, ApiPattern pattern, Map<String,Object> metadata, FileUploadAnyApiContextConsumer consumer, ApiContextFactory contextFactory) {
-		super(method, pattern,metadata, consumer,contextFactory, false);
+	public FileUploadApiOperation(HttpMethod method, ApiPattern pattern, Map<String,Object> metadata, FileUploadAnyApiContextConsumer consumer, ApiContextFactory contextFactory,
+			boolean notFoundOnNull) {
+		super(method, pattern,metadata, consumer,contextFactory, false, notFoundOnNull);
 	}
 
 }

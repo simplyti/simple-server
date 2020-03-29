@@ -26,6 +26,12 @@ public class StreamAPITest implements ApiProvider{
 				ctx.stream(content->ctx.send(new DefaultHttpContent(content).retain()))
 					.addListener(f->ctx.send(LastHttpContent.EMPTY_LAST_CONTENT));
 			});
+		
+		builder.when().post("/streamed/error")
+			.withStreamedInput()
+			.then(ctx->{
+				ctx.failure(new RuntimeException("This is an error"));
+			});
 	}
 
 }

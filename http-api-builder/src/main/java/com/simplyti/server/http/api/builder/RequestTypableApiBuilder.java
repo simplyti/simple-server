@@ -14,6 +14,8 @@ public interface RequestTypableApiBuilder {
 	<T> RequestBodyTypableResponseTypedApiBuilder<T> withResponseBodyType(Class<T> clazz);
 
 	RequestTypableApiBuilder withMaximunBodyLength(int maxBodyLength);
+	RequestTypableApiBuilder withMeta(String key, String value);
+	RequestTypableApiBuilder withNotFoundOnNull();
 
 	StreamedRequestResponseTypableApiBuilder withStreamedInput();
 

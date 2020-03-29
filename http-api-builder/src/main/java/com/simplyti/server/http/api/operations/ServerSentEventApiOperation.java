@@ -11,8 +11,9 @@ import io.netty.handler.codec.http.HttpMethod;
 
 public class ServerSentEventApiOperation extends ApiOperation<ServerSentEventAnyApiContext> {
 	
-	public ServerSentEventApiOperation(HttpMethod method, ApiPattern pattern, Map<String,Object> metadata, ServerSentEventAnyApiContextConsumer consumer, ApiContextFactory contextFactory) {
-		super(method, pattern,metadata, consumer,contextFactory, true);
+	public ServerSentEventApiOperation(HttpMethod method, ApiPattern pattern, Map<String,Object> metadata, ServerSentEventAnyApiContextConsumer consumer, ApiContextFactory contextFactory,
+			boolean notFoundOnNull) {
+		super(method, pattern,metadata, consumer,contextFactory, true, notFoundOnNull);
 	}
 
 }

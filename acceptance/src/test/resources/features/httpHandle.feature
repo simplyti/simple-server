@@ -1,7 +1,6 @@
 @httpHandle @standalone
 Feature: Http Handle
 
-
 Scenario: Basic Http Handle
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
@@ -187,7 +186,7 @@ Scenario: Delete operation
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I send a "DELETE /delete" getting "#response"
-	Then I check that "#response" is equals to "Bye!"
+	Then I check that "#response" is equals to "DELETE!"
 	
 Scenario: Bad Http request
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
@@ -234,3 +233,51 @@ Scenario: Invocation context can submit sync tasks
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /typed/response/sync" getting "#response"
 	Then I check that "#response" match witch '\{"message":"Hello from thread blockingGroup-.*"\}'
+	
+Scenario Outline: Http method <method> handler
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
+	Then I check that "#serviceFuture" is success
+	When I send a "<method> /<path>" getting "#response"
+	Then I check that "#response" is equals to "<method>!"
+	When I send a "<method> /<path>?null" getting "#response"
+	Then I check that "#response" has status code 204
+	When I send a "<method> /<path>/notfoundnull?null" getting "#response"
+	Then I check that "#response" has status code 404
+	When I send a "<method> /<path>/notfoundnull" getting "#response"
+	Then I check that "#response" is equals to "<method>!"
+	When I send a "<method> /<path>/dto" getting "#response"
+	Then I check that "#response" is equals to '{"message":"<method>!"}'
+	When I send a "<method> /<path>/dto?null" getting "#response"
+	Then I check that "#response" has status code 204
+	When I send a "<method> /<path>/dto/notfoundnull?null" getting "#response"
+	Then I check that "#response" has status code 404
+	When I send a "<method> /<path>/dto/notfoundnull" getting "#response"
+	Then I check that "#response" is equals to '{"message":"<method>!"}'
+	When I send a "<method> /<path>/notfoundnull/dto?null" getting "#response"
+	Then I check that "#response" has status code 404
+	When I send a "<method> /<path>/notfoundnull/dto" getting "#response"
+	Then I check that "#response" is equals to '{"message":"<method>!"}'
+	Examples:
+	| method 	| path 		|
+	| GET 		| get    	|
+	| DELETE	| delete 	|
+	| POST		| post 		|
+	| PUT		| put 		|
+	| PATCH		| patch		|
+	
+Scenario Outline: Http body method <method> handler
+	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
+	Then I check that "#serviceFuture" is success
+	When I send a "<method> /<path>/dto/echo" with body '{"message":"<method>!"}' getting "#response"
+	Then I check that "#response" is equals to '{"message":"<method>!"}'
+	Examples:
+	| method 	| path 		|
+	| POST		| post 		|
+	| PUT		| put 		|
+	| PATCH		| patch		|
+	
+
+	
+	
+	
+	

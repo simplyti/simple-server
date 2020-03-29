@@ -12,8 +12,8 @@ import io.netty.handler.codec.http.HttpMethod;
 public class AnyWithBodyApiOperation extends ApiOperation<AnyWithBodyApiContext> {
 	
 	public AnyWithBodyApiOperation(HttpMethod method, ApiPattern pattern,Map<String,Object> metadata, ApiWithBodyContextConsumer consumer, ApiContextFactory contextFactory,
-			int maxBodyLength) {
-		super(method, pattern,metadata,consumer,contextFactory,false, maxBodyLength);
+			boolean notFoundOnNull, int maxBodyLength) {
+		super(method, pattern,metadata,consumer,contextFactory,false, notFoundOnNull, maxBodyLength);
 	}
 
 }

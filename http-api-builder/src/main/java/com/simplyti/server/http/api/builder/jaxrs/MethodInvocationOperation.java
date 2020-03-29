@@ -19,7 +19,7 @@ public class MethodInvocationOperation<T> extends ApiOperation<JaxRsApiContext<T
 	private final TypeLiteral<?> requestType;
 
 	public MethodInvocationOperation(HttpMethod method, ApiPattern pattern, TypeLiteral<?> requestType, Consumer<JaxRsApiContext<T>> consumer, ApiContextFactory factory) {
-		super(method, pattern, Collections.emptyMap(), consumer, factory, false);
+		super(method, pattern, Collections.emptyMap(), consumer, factory, false, false);
 		this.requestType=requestType;
 	}
 

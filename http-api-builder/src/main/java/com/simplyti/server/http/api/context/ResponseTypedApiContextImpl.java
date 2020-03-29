@@ -17,12 +17,14 @@ public class ResponseTypedApiContextImpl<T> extends AbstractApiContext implement
 	private final ChannelHandlerContext ctx;
 	private final ExceptionHandler exceptionHandler;
 	private final boolean isKeepAlive;
+	private final boolean notFoundOnNull;
 	
 	public ResponseTypedApiContextImpl(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler, ChannelHandlerContext ctx, HttpRequest request,ApiMatchRequest match) {
 		super(syncTaskSubmitter, ctx.channel(), request, match);
 		this.ctx=ctx;
 		this.exceptionHandler=exceptionHandler;
 		this.isKeepAlive=HttpUtil.isKeepAlive(request);
+		this.notFoundOnNull=match.operation().notFoundOnNull();
 	}
 
 	@Override
@@ -33,7 +35,7 @@ public class ResponseTypedApiContextImpl<T> extends AbstractApiContext implement
 	@Override
 	public Future<Void> writeAndFlush(T value) {
 		try {
-			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(value, isKeepAlive, false))
+			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(value, isKeepAlive, notFoundOnNull))
 					.addListener(this::writeListener);
 			return new DefaultFuture<>(future,ctx.executor());
 		} catch(RuntimeException cause) {

@@ -24,7 +24,7 @@ public class StreamedRequestResponseTypableApiBuilderImpl implements StreamedReq
 	@Override
 	public void then(StreamdRequestApiContextConsumer consumer) {
 		ApiPattern apiPattern = ApiPattern.build(path);
-		operations.add(new StreamAnyApiOperation(method,apiPattern,null,consumer,streamAnyContextFactory));
+		operations.add(new StreamAnyApiOperation(method,apiPattern,null,consumer,streamAnyContextFactory, false));
 	}
 
 }

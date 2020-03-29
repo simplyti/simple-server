@@ -1,5 +1,6 @@
 package com.simplyti.server.http.api.builder;
 
+import java.util.Map;
 import java.util.function.Function;
 
 import com.simplyti.server.http.api.context.ApiContextFactory;
@@ -18,23 +19,35 @@ public class ResponseBodyTypedApiBuilderImpl<T> implements ResponseBodyTypedApiB
 	private final HttpMethod method;
 	private final String path;
 	private final ApiContextFactory factory;
+	
+	private final Map<String, Object> metadata;
+	private boolean notFoundOnNull;
 
-	public ResponseBodyTypedApiBuilderImpl(ApiContextFactory factory, ApiOperations operations, HttpMethod method, String path) {
+	public ResponseBodyTypedApiBuilderImpl(ApiContextFactory factory, ApiOperations operations, HttpMethod method, String path,
+			Map<String,Object> metadata, boolean notFoundOnNull) {
 		this.factory=factory;
 		this.operations=operations;
 		this.method=method;
 		this.path=path;
+		this.metadata=metadata;
+		this.notFoundOnNull=notFoundOnNull;
 	}
 
 	@Override
 	public void then(ResponseTypedApiContextConsumer<T> consumer) {
 		ApiPattern apiPattern = ApiPattern.build(path);
-		operations.add(new ResponseTypeApiOperation<>(method,apiPattern,null,consumer,factory));
+		operations.add(new ResponseTypeApiOperation<>(method,apiPattern,metadata,consumer,factory, notFoundOnNull));
 	}
 
 	@Override
 	public void thenFuture(Function<ResponseTypedApiContext<T>, Future<T>> futureSupplier) {
 		then(new ResponseBodyTypedFutureHandle<T>(futureSupplier));
+	}
+
+	@Override
+	public ResponseBodyTypedApiBuilder<T> withNotFoundOnNull() {
+		this.notFoundOnNull=true;
+		return this;
 	}
 
 }

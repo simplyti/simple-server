@@ -6,6 +6,7 @@ import com.simplyti.server.http.api.sse.ServerEvent;
 import com.simplyti.server.http.api.sse.ServerSentEventEncoder;
 import com.simplyti.service.channel.handler.ClientChannelHandler;
 import com.simplyti.service.commons.netty.pending.PendingMessages;
+import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.sync.SyncTaskSubmitter;
 import com.simplyti.util.concurrent.DefaultFuture;
 import com.simplyti.util.concurrent.Future;
@@ -30,26 +31,28 @@ public class ServerSentEventApiContextImpl extends AbstractApiContext implements
 	
 	private final ChannelHandlerContext ctx;
 	private final ServerSentEventEncoder serverEventEncoder;
+	private final ExceptionHandler exceptionHandler;
 	
 	private UpdateStatus status = UpdateStatus.INIT;
 	private PendingMessages pendingMessages;
 	private Throwable updateError;
 	
-	public ServerSentEventApiContextImpl(SyncTaskSubmitter syncTaskSubmitter, ChannelHandlerContext ctx, HttpRequest request,
+	public ServerSentEventApiContextImpl(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler, ChannelHandlerContext ctx, HttpRequest request,
 			ApiMatchRequest matcher, ServerSentEventEncoder serverEventEncoder) {
 		super(syncTaskSubmitter, ctx.channel(), request, matcher);
 		this.ctx=ctx;
 		this.serverEventEncoder=serverEventEncoder;
+		this.exceptionHandler=exceptionHandler;
 	}
 
 	@Override
 	public Future<Void> failure(Throwable cause) {
-		return null;
+		return exceptionHandler.exceptionCaught(ctx, cause);
 	}
 
 	@Override
 	public Future<Void> close() {
-		return null;
+		return new DefaultFuture<>(ctx.close(),ctx.executor());
 	}
 
 	@Override

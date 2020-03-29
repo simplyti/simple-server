@@ -11,8 +11,9 @@ import io.netty.handler.codec.http.HttpMethod;
 
 public class StreamAnyApiOperation extends ApiOperation<StreamdRequestApiContext> {
 	
-	public StreamAnyApiOperation(HttpMethod method, ApiPattern pattern, Map<String,Object> metadata, StreamdRequestApiContextConsumer consumer, ApiContextFactory contextFactory) {
-		super(method, pattern,metadata, consumer,contextFactory, true);
+	public StreamAnyApiOperation(HttpMethod method, ApiPattern pattern, Map<String,Object> metadata, StreamdRequestApiContextConsumer consumer, ApiContextFactory contextFactory,
+			boolean notFoundOnNull) {
+		super(method, pattern,metadata, consumer,contextFactory, true, notFoundOnNull);
 	}
 
 }

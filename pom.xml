@@ -50,7 +50,7 @@
 
 		<!-- IoC -->
 		<inject.version>1.0</inject.version>
-		<guice.version>4.2.2</guice.version>
+		<guice.version>4.2.3</guice.version>
 		<dagger.version>2.25.4</dagger.version>
 		<kotlin.version>1.3.61</kotlin.version>
 
@@ -64,7 +64,7 @@
 		<xml.bind-api.version>2.3.2</xml.bind-api.version>
 
 		<!-- Networking -->
-		<netty.version>4.1.45.Final</netty.version>
+		<netty.version>4.1.48.Final</netty.version>
 
 		<!-- SSL -->
 		<tcnative.version>2.0.26.Final</tcnative.version>
@@ -74,14 +74,14 @@
 
 		<!-- Json -->
 		<jsoniter.version>0.9.23</jsoniter.version>
-		<dsljson.version>1.9.3</dsljson.version>
-		<jackson.json>2.10.1</jackson.json>
+		<dsljson.version>1.9.5</dsljson.version>
+		<jackson.json>2.10.3</jackson.json>
 
 		<!-- JE2/J -->
 		<re2j.version>1.3</re2j.version>
 
 		<!-- JWT -->
-		<jjwt.version>0.10.7</jjwt.version>
+		<jjwt.version>0.11.1</jjwt.version>
 
 		<!-- Test -->
 		<junit.version>4.12</junit.version>

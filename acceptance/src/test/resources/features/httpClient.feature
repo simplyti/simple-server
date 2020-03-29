@@ -15,7 +15,7 @@ Scenario: Delete request
 	Then I check that "#serviceFuture" is success
 	When I delete "/delete" getting response "#response"
 	Then I check that "#response" is success
-	And I check that http response "#response" has body "Bye!"
+	And I check that http response "#response" has body "DELETE!"
 	
 @standalone
 Scenario: Post request

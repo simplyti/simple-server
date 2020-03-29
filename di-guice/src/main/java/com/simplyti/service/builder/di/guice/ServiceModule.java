@@ -35,6 +35,7 @@ import com.simplyti.service.channel.EntryChannelInit;
 import com.simplyti.service.channel.ServerChannelFactoryProvider;
 import com.simplyti.service.channel.ServiceChannelInitializer;
 import com.simplyti.service.channel.handler.ServerHeadersHandler;
+import com.simplyti.service.exception.DefaultExceptionHandler;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.fileserver.FileServeConfiguration;
 import com.simplyti.service.hook.ServerStartHook;
@@ -96,7 +97,7 @@ public class ServiceModule extends AbstractModule {
 		bind(new TypeLiteral<Service<?>>() {}).to(DefaultService.class).in(Singleton.class);
 		
 		// Exception Handler
-		bind(ExceptionHandler.class).in(Singleton.class);
+		bind(ExceptionHandler.class).to(DefaultExceptionHandler.class).in(Singleton.class);
 		
 		// Sync operations
 		bind(ExecutorService.class).toProvider(ExecutorServiceProvider.class).in(Singleton.class);
