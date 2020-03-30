@@ -3,9 +3,6 @@ package com.simplyti.service.gateway;
 import java.net.InetSocketAddress;
 
 import javax.inject.Inject;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.ServerErrorException;
-import javax.ws.rs.ServiceUnavailableException;
 
 import com.simplyti.service.ServerConfig;
 import com.simplyti.service.api.filter.FilterChain;
@@ -13,6 +10,8 @@ import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.InternalClient;
 import com.simplyti.service.commons.netty.pending.PendingMessages;
+import com.simplyti.service.exception.NotFoundException;
+import com.simplyti.service.exception.ServiceException;
 import com.simplyti.service.gateway.handler.BackendProxyHandler;
 
 import io.netty.buffer.Unpooled;
@@ -153,7 +152,7 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	private void serviceProceed(ChannelHandlerContext ctx, BackendServiceMatcher service,boolean isContinueExpected) {
 		Endpoint endpoint = service.get().loadBalander().next();
 		if (endpoint == null) {
-			ctx.fireExceptionCaught(new ServiceUnavailableException());
+			ctx.fireExceptionCaught(new ServiceException(HttpResponseStatus.SERVICE_UNAVAILABLE));
 			pendingMessages.fail(new RuntimeException("No endpoints"));
 			this.ignoreNextMessages=true;
 		} else {
@@ -188,7 +187,7 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 			pendingMessages.write(backendChannel).addListener(f->handleWriteFuture(ctx, f));
 		}else {
 			log.warn("Cannot connect to backend {}: {}", endpoint, backendChannelFuture.cause().toString());
-			ctx.fireExceptionCaught(new ServerErrorException(HttpResponseStatus.BAD_GATEWAY.code()));
+			ctx.fireExceptionCaught(new ServiceException(HttpResponseStatus.BAD_GATEWAY));
 			pendingMessages.fail(backendChannelFuture.cause());
 			ignoreNextMessages=true;
 		}

@@ -39,8 +39,8 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 
 	private final StartStopMonitor startStopMonitor;
 	
-	private final Set<HttpRequestFilter> requestFilters;
-	private final Set<HttpResponseFilter> responseFilters;
+	private final List<HttpRequestFilter> requestFilters;
+	private final List<HttpResponseFilter> responseFilters;
 	
 	private final List<HandlerInit> handlers;
 	
@@ -58,8 +58,8 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 			Set<HttpRequestFilter> requestFilters,Set<HttpResponseFilter> responseFilters) {
 		this.startStopMonitor=startStopMonitor;
 		this.handlers=handlers.stream().sorted(Priorized.PRIORITY_ANN_ORDER).collect(Collectors.toList());
-		this.requestFilters=requestFilters;
-		this.responseFilters=responseFilters;
+		this.requestFilters=requestFilters.stream().sorted(Priorized.PRIORITY_ANN_ORDER).collect(Collectors.toList());
+		this.responseFilters=responseFilters.stream().sorted(Priorized.PRIORITY_ANN_ORDER).collect(Collectors.toList());;
 	}
 	
 	@Override
