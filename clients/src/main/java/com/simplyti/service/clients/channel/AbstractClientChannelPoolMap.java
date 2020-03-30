@@ -65,7 +65,7 @@ public abstract class AbstractClientChannelPoolMap extends AbstractChannelPoolMa
 	}
 
 	private ChannelPoolHandler handler(Endpoint key) {
-		if(key.schema().ssl() && !key.isProxied()) {
+		if(key.schema()!=null && key.schema().ssl() && !key.isProxied()) {
 			return new SSLChannelInitializeHandler(sslProvider, handler, key);
 		}else {
 			return handler;
