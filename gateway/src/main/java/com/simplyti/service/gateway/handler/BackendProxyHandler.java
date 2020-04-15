@@ -1,6 +1,7 @@
 package com.simplyti.service.gateway.handler;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.gateway.BackendServiceMatcher;
@@ -17,6 +18,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpScheme;
+import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.LastHttpContent;
 
 public class BackendProxyHandler extends ChannelDuplexHandler {
@@ -35,6 +37,7 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 	
 	private boolean upgrading;
 	private boolean isContinuing;
+	private boolean keepAlive;
 	
 	
 	public BackendProxyHandler(GatewayConfig config, ChannelPool backendChannelPool, Channel frontendChannel, Endpoint endpoint, boolean isContinueExpected, boolean frontSsl, BackendServiceMatcher serviceMatch) {
@@ -90,6 +93,10 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 			this.isContinuing=true;
 		}
 		
+		if(msg instanceof HttpResponse) {
+			this.keepAlive = HttpUtil.isKeepAlive((HttpResponse)msg);
+		}
+		
 		if(msg instanceof HttpResponse && "Upgrade".equalsIgnoreCase(((HttpResponse) msg).headers().get(HttpHeaderNames.CONNECTION))) {
 			this.upgrading=true;
 		} else if(upgrading && msg instanceof LastHttpContent) {
@@ -97,10 +104,20 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 		} else if(msg instanceof LastHttpContent) {
 			if (isContinuing) {
 				isContinuing=false;
-			}else {
+			} else if(keepAlive) {
 				ctx.pipeline().remove(this);
-				backendChannelPool.release(ctx.channel());
+				release(ctx.channel());
+			} else {
+				ctx.channel().close();
 			}
+		}
+	}
+
+	private void release(Channel channel) {
+		if(config.releaseChannelGraceTime()>0) {
+			channel.eventLoop().schedule(()->backendChannelPool.release(channel), config.releaseChannelGraceTime(), TimeUnit.MILLISECONDS);
+		} else {
+			backendChannelPool.release(channel);
 		}
 	}
 

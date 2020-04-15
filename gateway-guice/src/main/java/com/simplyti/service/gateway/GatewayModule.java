@@ -17,18 +17,30 @@ import io.netty.channel.ChannelFactory;
 public class GatewayModule extends AbstractModule{
 	
 	private final boolean keepOriginalHost;
+	private final long maxIddleTime;
+	private final int releaseChannelGraceTime;
 
 	public GatewayModule() {
 		this(false);
 	}
 	
 	public GatewayModule(boolean keepOriginalHost) {
+		this(10,keepOriginalHost);
+	}
+	
+	public GatewayModule(long maxIddleTime, boolean keepOriginalHost) {
+		this(maxIddleTime,keepOriginalHost,-1);
+	}
+	
+	public GatewayModule(long maxIddleTime, boolean keepOriginalHost,int releaseChannelGraceTime) {
 		this.keepOriginalHost=keepOriginalHost;
+		this.maxIddleTime=maxIddleTime;
+		this.releaseChannelGraceTime=releaseChannelGraceTime;
 	}
 	
 	@Override
 	public void configure() {
-		bind(GatewayConfig.class).toInstance(new GatewayConfig(10,keepOriginalHost));
+		bind(GatewayConfig.class).toInstance(new GatewayConfig(maxIddleTime,keepOriginalHost,releaseChannelGraceTime));
 		bind(new TypeLiteral<ChannelFactory<Channel>>() {}).toProvider(ChannelFactoryProvider.class).in(Singleton.class);
 		
 		bind(DefaultBackendRequestHandler.class).to(GatewayRequestHandler.class);
