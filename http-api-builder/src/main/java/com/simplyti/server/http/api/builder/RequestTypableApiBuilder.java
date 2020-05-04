@@ -2,6 +2,7 @@ package com.simplyti.server.http.api.builder;
 
 import com.simplyti.server.http.api.builder.fileupload.FileUploadApiBuilder;
 import com.simplyti.server.http.api.builder.stream.StreamedRequestResponseTypableApiBuilder;
+import com.simplyti.service.api.serializer.json.TypeLiteral;
 
 public interface RequestTypableApiBuilder {
 	
@@ -9,6 +10,7 @@ public interface RequestTypableApiBuilder {
 
 	<T> RequestBodyTypedFinishableApiBuilder<T> withRequestType(Class<T> clazz);
 	<T> RequestBodyTypedFinishableApiBuilder<T> withRequestBodyType(Class<T> clazz);
+	<T> RequestBodyTypedFinishableApiBuilder<T> withRequestBodyType(TypeLiteral<T> clazz);
 
 	<T> RequestBodyTypableResponseTypedApiBuilder<T> withResponseType(Class<T> clazz);
 	<T> RequestBodyTypableResponseTypedApiBuilder<T> withResponseBodyType(Class<T> clazz);

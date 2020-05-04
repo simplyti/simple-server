@@ -45,10 +45,15 @@ public class RequestBodyTypableApiBuilderImpl implements RequestTypableApiBuilde
 		this.streamAnyContextFactory=streamAnyContextFactory;
 		this.fileUploadContextFactory=fileUploadContextFactory;
 	}
+	
+	@Override
+	public <T> RequestBodyTypedFinishableApiBuilder<T> withRequestBodyType(TypeLiteral<T> type) {
+		return new RequestBodyTypedFinishableApiBuilderImpl<>(operations,method,path,metadata,notFoundOnNull,type,requestTypedContextFactory,requestResponseTypedContextFactory);
+	}
 
 	@Override
 	public <T> RequestBodyTypedFinishableApiBuilder<T> withRequestType(Class<T> clazz) {
-		return new RequestBodyTypedFinishableApiBuilderImpl<>(operations,method,path,metadata,notFoundOnNull,TypeLiteral.create(clazz),requestTypedContextFactory,requestResponseTypedContextFactory);
+		return withRequestBodyType(TypeLiteral.create(clazz));
 	}
 	
 	@Override

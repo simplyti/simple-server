@@ -33,10 +33,15 @@ public class RequestBodyTypedFinishableApiBuilderImpl<T> implements RequestBodyT
 		this.requestTypedContextFactory=requestTypedContextFactory;
 		this.requestResponseTypedContextFactory=requestResponseTypedContextFactory;
 	}
+	
+	@Override
+	public <U> RequestResponseBodyTypedFinishableApiBuilder<T, U> withResponseType(TypeLiteral<U> type) {
+		return new RequestResponseBodyTypedFinishableApiBuilderImpl<>(requestResponseTypedContextFactory,operations,method,path,metadata,notFoundOnNull,requestType);
+	}
 
 	@Override
 	public <U> RequestResponseBodyTypedFinishableApiBuilder<T, U> withResponseType(Class<U> clazz) {
-		return new RequestResponseBodyTypedFinishableApiBuilderImpl<>(requestResponseTypedContextFactory,operations,method,path,metadata,notFoundOnNull,requestType);
+		return withResponseType(TypeLiteral.create(clazz));
 	}
 	
 	@Override
@@ -49,7 +54,5 @@ public class RequestBodyTypedFinishableApiBuilderImpl<T> implements RequestBodyT
 		ApiPattern apiPattern = ApiPattern.build(path);
 		operations.add(new RequestTypeApiOperation<>(method,apiPattern,null,requestType,consumer,requestTypedContextFactory, notFoundOnNull));
 	}
-
-	
 
 }

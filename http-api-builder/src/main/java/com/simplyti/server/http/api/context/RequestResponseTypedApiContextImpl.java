@@ -97,6 +97,18 @@ public class RequestResponseTypedApiContextImpl<T,U> extends AbstractApiContext 
 	}
 	
 	@Override
+	public Future<Void> writeAndFlushEmpty() {
+		release();
+		try {
+			ChannelFuture future = ctx.writeAndFlush(new ApiResponse(null, isKeepAlive, false))
+					.addListener(this::writeListener);
+			return new DefaultFuture<>(future,ctx.executor());
+		} catch(RuntimeException cause) {
+			return new DefaultFuture<>(ctx.channel().eventLoop().newFailedFuture(cause), ctx.executor());
+		}
+	}
+	
+	@Override
 	public Future<Void> failure(Throwable cause) {
 		release();
 		return exceptionHandler.exceptionCaught(ctx, cause);
@@ -123,6 +135,11 @@ public class RequestResponseTypedApiContextImpl<T,U> extends AbstractApiContext 
 	@Override
 	public Future<Void> send(ByteBuf body) {
 		return writeAndFlush(body);
+	}
+	
+	@Override
+	public Future<Void> sendEmpty() {
+		return writeAndFlushEmpty();
 	}
 	
 	@Override
