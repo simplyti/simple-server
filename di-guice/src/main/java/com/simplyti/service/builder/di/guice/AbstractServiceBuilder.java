@@ -2,15 +2,18 @@ package com.simplyti.service.builder.di.guice;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import com.google.common.base.MoreObjects;
 import com.google.inject.Module;
+import com.simplyti.service.Listener;
 import com.simplyti.service.ServerConfig;
 import com.simplyti.service.Service;
 import com.simplyti.service.api.builder.ApiProvider;
@@ -37,6 +40,7 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 	private Collection<ApiProvider> apiProviders;
 	private Collection<Module> modules;
 	private Integer blockingThreadPool;
+	private List<Listener> listeners;
 	private Integer insecuredPort;
 	private Integer securedPort;
 	private String name;
@@ -57,8 +61,7 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 		ServerConfig config = new ServerConfig(
 				name,
 				MoreObjects.firstNonNull(blockingThreadPool, DEFAULT_BLOCKING_THREAD_POOL),
-				MoreObjects.firstNonNull(insecuredPort, DEFAULT_INSECURE_PORT),
-				MoreObjects.firstNonNull(securedPort, DEFAULT_SECURE_PORT),eventLoopGroup!=null,
+				listeners(),eventLoopGroup!=null,
 				verbose);
 		
 		Stream<Module> additinalModules = Optional.ofNullable(modules)
@@ -71,6 +74,24 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 				eventLoopGroup);
 	}
 	
+	private List<Listener> listeners() {
+		if(listeners!=null) {
+			return Collections.unmodifiableList(listeners);
+		}
+		
+		if(insecuredPort == null ) {
+			listeners.add(new Listener(DEFAULT_INSECURE_PORT,false));
+		} else if(insecuredPort>0) {
+			listeners.add(new Listener(insecuredPort,false));
+		}
+		if(securedPort == null ) {
+			listeners.add(new Listener(DEFAULT_SECURE_PORT,true));
+		} else if(securedPort>0) {
+			listeners.add(new Listener(securedPort,true));
+		}
+		return Collections.unmodifiableList(listeners);
+	}
+
 	protected abstract T build0(ServerConfig config, SslConfig sslConfig, FileServeConfiguration fileServerConfig, Class<T> serviceClass, Stream<Module> additinalModules, Collection<Class<? extends ApiProvider>> apiClasses, Collection<ApiProvider> apiProviders,  EventLoopGroup eventLoopGroup);
 
 	@Override
@@ -100,6 +121,15 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 	@Override
 	public ServiceBuilder<T> securedPort(int port) {
 		this.securedPort=port;
+		return this;
+	}
+	
+	@Override
+	public ServiceBuilder<T> withListener(int port, boolean ssl) {
+		if(listeners == null) {
+			this.listeners = new ArrayList<>();
+		}
+		this.listeners.add(new Listener(port,ssl));
 		return this;
 	}
 

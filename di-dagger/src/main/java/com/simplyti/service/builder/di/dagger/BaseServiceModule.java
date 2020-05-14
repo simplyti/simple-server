@@ -1,5 +1,8 @@
 package com.simplyti.service.builder.di.dagger;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -10,6 +13,7 @@ import javax.inject.Singleton;
 
 import com.google.common.base.MoreObjects;
 import com.simplyti.service.DefaultStartStopMonitor;
+import com.simplyti.service.Listener;
 import com.simplyti.service.ServerConfig;
 import com.simplyti.service.StartStopMonitor;
 import com.simplyti.service.api.filter.HttpRequestFilter;
@@ -47,6 +51,10 @@ import io.netty.channel.ServerChannel;
 @Module(includes= { Multibindings.class, APIBuilderModule.class, FileServerModule.class, DefaultBackendModule.class, DslJsonModule.class})
 public class BaseServiceModule {
 	
+	private static final int DEFAULT_BLOCKING_THREAD_POOL = 500;
+	private static final int DEFAULT_INSECURE_PORT = 8080;
+	private static final int DEFAULT_SECURE_PORT = 8443;
+	
 	@Provides
 	@Singleton
 	public EventLoopGroup eventLoopGroup(Optional<NativeIO> nativeIO) {
@@ -67,11 +75,25 @@ public class BaseServiceModule {
 			@Nullable @Named("securedPort") Integer  securedPort,
 			@Nullable @Named("verbose") Boolean verbose) {
 		return new ServerConfig(name,
-				MoreObjects.firstNonNull(blockingThreadPool, 500),
-				MoreObjects.firstNonNull(insecuredPort, 8080),
-				MoreObjects.firstNonNull(securedPort, 8443), 
+				MoreObjects.firstNonNull(blockingThreadPool, DEFAULT_BLOCKING_THREAD_POOL),
+				listeners(insecuredPort,securedPort),
 				false, 
 				MoreObjects.firstNonNull(verbose, false));
+	}
+	
+	private List<Listener> listeners(Integer insecuredPort, Integer securedPort) {
+		List<Listener> listeners = new ArrayList<>();
+		if(insecuredPort == null ) {
+			listeners.add(new Listener(DEFAULT_INSECURE_PORT,false));
+		} else if(insecuredPort>0) {
+			listeners.add(new Listener(insecuredPort,false));
+		}
+		if(securedPort == null ) {
+			listeners.add(new Listener(DEFAULT_SECURE_PORT,false));
+		} else if(securedPort>0) {
+			listeners.add(new Listener(securedPort,true));
+		}
+		return Collections.unmodifiableList(listeners);
 	}
 	
 	@Provides

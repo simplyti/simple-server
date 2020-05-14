@@ -1,10 +1,11 @@
 package com.simplyti.service.channel;
 
-import java.net.InetSocketAddress;
 import java.util.Set;
 
 import javax.inject.Inject;
 
+import com.simplyti.service.DefaultService;
+import com.simplyti.service.Listener;
 import com.simplyti.service.ServerConfig;
 import com.simplyti.service.StartStopMonitor;
 import com.simplyti.service.api.filter.HttpRequestFilter;
@@ -18,7 +19,6 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler.Sharable;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import lombok.RequiredArgsConstructor;
@@ -63,7 +63,8 @@ public class DefaultServiceChannelInitializer extends ChannelInitializer<Channel
 	}
 
 	private boolean isSslChannel(Channel channel) {
-		return channel instanceof SocketChannel &&  ((InetSocketAddress)channel.localAddress()).getPort()==serverConfig.securedPort();
+		Listener listener = channel.parent() != null ? channel.parent().attr(DefaultService.LISTENER_ATT).get() : null;
+		return listener !=null? listener.ssl() : false;
 	}
 
 }

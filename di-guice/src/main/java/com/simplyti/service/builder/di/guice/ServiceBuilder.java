@@ -23,6 +23,8 @@ public interface ServiceBuilder<T extends Service<?>> {
 	
 	public ServiceBuilder<T> securedPort(int port);
 
+	public ServiceBuilder<T> withListener(int port, boolean ssl);
+
 	public ServiceBuilder<T> withModule(Class<? extends Module> module);
 	
 	public ServiceBuilder<T> withModule(Module module);

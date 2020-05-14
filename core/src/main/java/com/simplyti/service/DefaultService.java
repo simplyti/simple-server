@@ -23,6 +23,7 @@ import io.netty.channel.ServerChannel;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.PromiseCombiner;
@@ -32,6 +33,8 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 public class DefaultService extends AbstractService<DefaultService> implements Service<DefaultService>{
 	
 	private static final InternalLogger log = InternalLoggerFactory.getInstance(DefaultService.class);
+
+	public static final AttributeKey<Listener> LISTENER_ATT = AttributeKey.valueOf("server.listener");
 	
 	private final ServerBootstrap bootstrap;
 	private final ServerConfig config;
@@ -61,27 +64,26 @@ public class DefaultService extends AbstractService<DefaultService> implements S
 	protected Future<Void> bind(EventLoop executor){
 		Promise<Void> aggregated = executor.newPromise();
 		PromiseCombiner combiner = new PromiseCombiner(executor);
-		if(config.insecuredPort()>0) {
-			combiner.add(bind(executor,config.insecuredPort()));
-		}
-		if(config.securedPort()>0 && sslHandlerFactory.isPresent()) {
-			combiner.add(bind(executor,config.securedPort()));
-		}
+		config.listeners().forEach(listener->combiner.add(bind(executor,listener)));
 		combiner.finish(aggregated);
 		return aggregated;
 	}
 	
-	private Future<Void> bind(EventLoop executor, int port) {
+	private Future<Void> bind(EventLoop executor, Listener listener) {
+		if(listener.ssl() &&  !sslHandlerFactory.isPresent()) {
+			return executor.newSucceededFuture(null);
+		}
 		Promise<Void> futureBind = executor.newPromise();
-		log.info("Starting service listener on port {}", port);
-		ChannelFuture channelFuture = bootstrap.bind(port);
+		log.info("Starting service listener on port {}", listener.port());
+		ChannelFuture channelFuture = bootstrap.bind(listener.port());
 		channelFuture.addListener((ChannelFuture future) -> {
 			if (future.isSuccess()) {
 				log.info("Listening on {}", future.channel().localAddress());
+				channelFuture.channel().attr(LISTENER_ATT).set(listener);
 				this.serverChannels.add(channelFuture.channel());
 				futureBind.setSuccess(null);
 			} else {
-				log.warn("Error listening on port {}: {}", port, future.cause().getMessage());
+				log.warn("Error listening on port {}: {}", listener.port(), future.cause().getMessage());
 				futureBind.setFailure(future.cause());
 			}
 		});

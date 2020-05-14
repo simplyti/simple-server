@@ -1,10 +1,8 @@
 package com.simplyti.service.gateway;
 
-import java.net.InetSocketAddress;
-
 import javax.inject.Inject;
 
-import com.simplyti.service.ServerConfig;
+import com.simplyti.service.DefaultService;
 import com.simplyti.service.api.filter.FilterChain;
 import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;
 import com.simplyti.service.clients.Endpoint;
@@ -35,7 +33,6 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	
 	private final ServiceDiscovery serviceDiscovery;
 	private final InternalClient client;
-	private final ServerConfig config;
 	private final GatewayConfig gatewayConfig;
 
 	private final PendingMessages pendingMessages;
@@ -46,10 +43,9 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 
 
 	@Inject
-	public GatewayRequestHandler(InternalClient client, ServiceDiscovery serviceDiscovery, ServerConfig config,  GatewayConfig gatewayConfig) {
+	public GatewayRequestHandler(InternalClient client, ServiceDiscovery serviceDiscovery, GatewayConfig gatewayConfig) {
 		super(false);
 		this.client = client;
-		this.config=config;
 		this.gatewayConfig=gatewayConfig;
 		this.serviceDiscovery = serviceDiscovery;
 		this.pendingMessages = new PendingMessages();
@@ -196,8 +192,7 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	@Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
 		ctx.channel().config().setAutoRead(false);
-		InetSocketAddress localAddress = (InetSocketAddress) ctx.channel().localAddress();
-		this.frontSsl = config.securedPort()==localAddress.getPort();
+		this.frontSsl = ctx.channel().parent().attr(DefaultService.LISTENER_ATT).get().ssl();
     }
 	
 	@Override
