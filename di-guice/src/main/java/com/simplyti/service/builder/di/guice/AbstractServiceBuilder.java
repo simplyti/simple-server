@@ -2,12 +2,11 @@ package com.simplyti.service.builder.di.guice;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -40,7 +39,7 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 	private Collection<ApiProvider> apiProviders;
 	private Collection<Module> modules;
 	private Integer blockingThreadPool;
-	private List<Listener> listeners;
+	private Set<Listener> listeners;
 	private Integer insecuredPort;
 	private Integer securedPort;
 	private String name;
@@ -74,11 +73,12 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 				eventLoopGroup);
 	}
 	
-	private List<Listener> listeners() {
+	private Set<Listener> listeners() {
 		if(listeners!=null) {
-			return Collections.unmodifiableList(listeners);
+			return Collections.unmodifiableSet(listeners);
 		}
 		
+		Set<Listener> listeners = new HashSet<>();
 		if(insecuredPort == null ) {
 			listeners.add(new Listener(DEFAULT_INSECURE_PORT,false));
 		} else if(insecuredPort>0) {
@@ -89,7 +89,7 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 		} else if(securedPort>0) {
 			listeners.add(new Listener(securedPort,true));
 		}
-		return Collections.unmodifiableList(listeners);
+		return Collections.unmodifiableSet(listeners);
 	}
 
 	protected abstract T build0(ServerConfig config, SslConfig sslConfig, FileServeConfiguration fileServerConfig, Class<T> serviceClass, Stream<Module> additinalModules, Collection<Class<? extends ApiProvider>> apiClasses, Collection<ApiProvider> apiProviders,  EventLoopGroup eventLoopGroup);
@@ -127,7 +127,7 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 	@Override
 	public ServiceBuilder<T> withListener(int port, boolean ssl) {
 		if(listeners == null) {
-			this.listeners = new ArrayList<>();
+			this.listeners = new HashSet<>();
 		}
 		this.listeners.add(new Listener(port,ssl));
 		return this;

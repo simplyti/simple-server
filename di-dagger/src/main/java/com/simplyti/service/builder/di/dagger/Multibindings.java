@@ -2,6 +2,7 @@ package com.simplyti.service.builder.di.dagger;
 
 import java.util.Set;
 
+import com.simplyti.service.Listener;
 import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.simplyti.service.api.filter.HttpResponseFilter;
 import com.simplyti.service.api.filter.OperationInboundFilter;
@@ -27,6 +28,8 @@ public abstract class Multibindings {
 	
 	@Multibinds abstract Set<ServerStartHook> serverStartHooks();
 	@Multibinds abstract Set<ServerStopHook> serverStopHooks();
+	
+	@Multibinds abstract Set<Listener> listeners();
 	
 	@BindsOptionalOf abstract SslHandlerFactory sslHandlerFactory();
 	@BindsOptionalOf abstract NativeIO nativeIO();

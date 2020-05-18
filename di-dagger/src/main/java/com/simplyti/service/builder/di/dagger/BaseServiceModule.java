@@ -1,8 +1,7 @@
 package com.simplyti.service.builder.di.dagger;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -70,19 +69,24 @@ public class BaseServiceModule {
 	@Singleton
 	public ServerConfig serverConfig(
 			@Nullable @Named("name") String name,
-			@Nullable @Named("blockingThreadPool") Integer blockingThreadPool, 
+			@Nullable @Named("blockingThreadPool") Integer blockingThreadPool,
+			Set<Listener> listeners,
 			@Nullable @Named("insecuredPort") Integer insecuredPort, 
 			@Nullable @Named("securedPort") Integer  securedPort,
 			@Nullable @Named("verbose") Boolean verbose) {
 		return new ServerConfig(name,
 				MoreObjects.firstNonNull(blockingThreadPool, DEFAULT_BLOCKING_THREAD_POOL),
-				listeners(insecuredPort,securedPort),
+				listeners(listeners,insecuredPort,securedPort),
 				false, 
 				MoreObjects.firstNonNull(verbose, false));
 	}
 	
-	private List<Listener> listeners(Integer insecuredPort, Integer securedPort) {
-		List<Listener> listeners = new ArrayList<>();
+	private Set<Listener> listeners(Set<Listener> listeners, Integer insecuredPort, Integer securedPort) {
+		if(!listeners.isEmpty()) {
+			return Collections.unmodifiableSet(listeners);
+		}
+		
+		listeners = new HashSet<>();
 		if(insecuredPort == null ) {
 			listeners.add(new Listener(DEFAULT_INSECURE_PORT,false));
 		} else if(insecuredPort>0) {
@@ -93,7 +97,7 @@ public class BaseServiceModule {
 		} else if(securedPort>0) {
 			listeners.add(new Listener(securedPort,true));
 		}
-		return Collections.unmodifiableList(listeners);
+		return Collections.unmodifiableSet(listeners);
 	}
 	
 	@Provides

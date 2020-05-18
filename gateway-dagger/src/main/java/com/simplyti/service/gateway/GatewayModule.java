@@ -32,7 +32,7 @@ public class GatewayModule {
 	
 	@Provides
 	public DefaultBackendRequestHandler defaultBackendRequestHandler(InternalClient client, ServiceDiscovery serviceDiscovery, ServerConfig config, GatewayConfig gatewayConfig) {
-		return new GatewayRequestHandler(client, serviceDiscovery, config, gatewayConfig);
+		return new GatewayRequestHandler(client, serviceDiscovery, gatewayConfig);
 	}
 	
 	@Provides
