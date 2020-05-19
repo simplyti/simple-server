@@ -35,7 +35,7 @@ services:
     - "3128:3128"
     
   etcd:
-    image: bitnami/etcd:3.3.15
+    image: quay.io/coreos/etcd:v3.3.1
     restart: on-failure
     command:
     - /usr/local/bin/etcd
