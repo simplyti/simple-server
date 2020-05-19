@@ -32,6 +32,8 @@ public abstract class AbstractFinishableHttpRequest implements FinishableHttpReq
 	private final ClientConfig config;
 	
 	private final Map<String,Object> params;
+
+	private int maxContentLength = 100000000;
 	
 	public AbstractFinishableHttpRequest(InternalClient client, boolean checkStatusCode, ClientConfig config) {
 		this.client = client;
@@ -44,6 +46,12 @@ public abstract class AbstractFinishableHttpRequest implements FinishableHttpReq
 		if(!request.headers().contains(HttpHeaderNames.HOST)) {
 			request.headers().set(HttpHeaderNames.HOST,config.endpoint().address().host());
 		}
+	}
+	
+	@Override
+	public FinishableHttpRequest withMaxContentLength(int maxContentLength) {
+		this.maxContentLength=maxContentLength;
+		return this;
 	}
 	
 	@Override
@@ -67,14 +75,14 @@ public abstract class AbstractFinishableHttpRequest implements FinishableHttpReq
 	@Override
 	public Future<FullHttpResponse> fullResponse() {
 		return client.channel(channel->{
-			channel.pipeline().addLast(new FullHttpResponseHandler<>(channel,checkStatusCode));
+			channel.pipeline().addLast(new FullHttpResponseHandler<>(channel,maxContentLength,checkStatusCode));
 		},request(),config);
 	}
 	
 	@Override
 	public <T> Future<T> fullResponse(Function<FullHttpResponse, T> function) {
 		return client.channel(channel->{
-			channel.pipeline().addLast(new DecodingFullHttpResponseHandler<>(function,channel,checkStatusCode));
+			channel.pipeline().addLast(new DecodingFullHttpResponseHandler<>(function,channel,maxContentLength,checkStatusCode));
 		},request(),config);
 	}
 

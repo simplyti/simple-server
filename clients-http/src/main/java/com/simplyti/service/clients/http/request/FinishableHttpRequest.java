@@ -31,5 +31,7 @@ public interface FinishableHttpRequest {
 	FinishableHttpRequest param(String name);
 
 	FinishableHttpRequest param(String name, Object value);
+	
+	FinishableHttpRequest withMaxContentLength(int maxContentLength);
 
 }

@@ -11,8 +11,8 @@ public class DecodingFullHttpResponseHandler<T> extends FullHttpResponseHandler<
 	private final Function<FullHttpResponse, T> function;
 
 
-	public DecodingFullHttpResponseHandler(Function<FullHttpResponse,T> function, ClientRequestChannel<T> clientChannel, boolean checkStatusCode) {
-		super(clientChannel,checkStatusCode);
+	public DecodingFullHttpResponseHandler(Function<FullHttpResponse,T> function, ClientRequestChannel<T> clientChannel, int maxContentLength, boolean checkStatusCode) {
+		super(clientChannel,maxContentLength, checkStatusCode);
 		this.function=function;
 	}
 	

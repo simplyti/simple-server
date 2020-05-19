@@ -21,8 +21,8 @@ public class FullHttpResponseHandler<T> extends HttpObjectAggregator {
 	private final ClientRequestChannel<T> clientChannel;
 	private final boolean checkStatusCode;
 
-	public FullHttpResponseHandler(ClientRequestChannel<T> clientChannel, boolean checkStatusCode) {
-		super(52428800);
+	public FullHttpResponseHandler(ClientRequestChannel<T> clientChannel, int maxContentLength, boolean checkStatusCode) {
+		super(maxContentLength);
 		this.checkStatusCode = checkStatusCode;
 		this.clientChannel = clientChannel;
 	}
