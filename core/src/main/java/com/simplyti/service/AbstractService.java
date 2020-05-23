@@ -18,6 +18,9 @@ import io.netty.util.concurrent.PromiseCombiner;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
+import sun.misc.Signal;
+
+@SuppressWarnings("restriction")
 public abstract class AbstractService<T extends Service<T>> implements Service<T> {
 	
 	private final Thread jvmShutdownHook = new Thread(() -> {
@@ -45,6 +48,8 @@ public abstract class AbstractService<T extends Service<T>> implements Service<T
 			Set<ServerStartHook> serverStartHook,
 			Set<ServerStopHook> serverStopHook,
 			ServerConfig config){
+		Signal.handle(new Signal("INT"), sig -> System.exit(0));
+		Signal.handle(new Signal("TERM"), sig -> System.exit(0));
 		Runtime.getRuntime().addShutdownHook(jvmShutdownHook);
 		this.eventLoopGroup=eventLoopGroup;
 		this.startStopLoop=startStopLoop;
