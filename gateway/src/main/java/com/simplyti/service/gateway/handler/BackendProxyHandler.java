@@ -66,14 +66,16 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
         if(msg instanceof HttpRequest) {
         	HttpRequest request = (HttpRequest) msg;
         	InetSocketAddress inetSocket = (InetSocketAddress) frontendChannel.remoteAddress();
-        	if(request.headers().contains(HttpHeaderNames.HOST)) {
+        	if(!request.headers().contains(X_FORWARDED_HOST) && request.headers().contains(HttpHeaderNames.HOST)) {
         		request.headers().set(X_FORWARDED_HOST,request.headers().get(HttpHeaderNames.HOST));
         	}
+        	if(!request.headers().contains(X_FORWARDED_PROTO)) {
+        		request.headers().set(X_FORWARDED_PROTO,frontSsl?HttpScheme.HTTPS.name():HttpScheme.HTTP.name());
+        	}
+        	request.headers().set(X_FORWARDED_FOR,inetSocket.getHostString());
         	if(!config.keepOriginalHost()) {
         		request.headers().set(HttpHeaderNames.HOST,endpoint.address().host());
         	}
-        	request.headers().set(X_FORWARDED_FOR,inetSocket.getHostString());
-        	request.headers().set(X_FORWARDED_PROTO,frontSsl?HttpScheme.HTTPS.name():HttpScheme.HTTP.name());
         	msg = serviceMatch.rewrite((HttpRequest) msg);
         }
         ctx.write(msg, promise);
