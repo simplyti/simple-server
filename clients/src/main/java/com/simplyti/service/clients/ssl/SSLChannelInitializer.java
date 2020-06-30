@@ -28,7 +28,7 @@ public class SSLChannelInitializer extends AbstractChannelPoolHandler{
 		if(endpoint instanceof SSLEndpoint) {
 			this.requireClientAuth=true;
 			SSLEndpoint sslEndpoint = (SSLEndpoint) endpoint;
-			builder.keyManager(sslEndpoint.key(),sslEndpoint.certs());
+			builder.keyManager(sslEndpoint.keyManager());
 		} else {
 			this.requireClientAuth = false;
 		}

@@ -4,6 +4,8 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.List;
 
+import javax.net.ssl.X509KeyManager;
+
 import com.simplyti.service.clients.Address;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.clients.Schema;
@@ -17,15 +19,14 @@ import lombok.experimental.Accessors;
 @Accessors(fluent = true)
 public class SSLEndpoint extends Endpoint {
 
-	private final PrivateKey key;
-	private final X509Certificate[] certs;
 	private final String name;
+	private final X509KeyManager keyManager;
 
 	public SSLEndpoint(Schema schema, Address address, PrivateKey key, List<X509Certificate> certs) {
 		super(schema, address);
-		this.key=key;
-		this.certs=certs.toArray(new X509Certificate[0]);
-		this.name=this.certs[0].getSubjectDN().getName();
+		X509Certificate[] certArray = certs.toArray(new X509Certificate[0]);
+		this.keyManager=new BasicKeyManager(key,certArray);
+		this.name=certArray[0].getSubjectDN().getName();
 	}
 
 }
