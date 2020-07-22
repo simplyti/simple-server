@@ -20,13 +20,25 @@ import lombok.experimental.Accessors;
 public class SSLEndpoint extends Endpoint {
 
 	private final String name;
+	private final String sniHostName;
 	private final X509KeyManager keyManager;
-
+	
 	public SSLEndpoint(Schema schema, Address address, PrivateKey key, List<X509Certificate> certs) {
+		this(schema,address,null,key,certs);
+	}
+
+	public SSLEndpoint(Schema schema, Address address, String sniHostName, PrivateKey key, List<X509Certificate> certs) {
 		super(schema, address);
-		X509Certificate[] certArray = certs.toArray(new X509Certificate[0]);
-		this.keyManager=new BasicKeyManager(key,certArray);
-		this.name=certArray[0].getSubjectDN().getName();
+		this.sniHostName=sniHostName;
+		if(key!=null && certs!=null) {
+			X509Certificate[] certArray = certs.toArray(new X509Certificate[0]);
+			this.keyManager=new BasicKeyManager(key,certArray);
+			this.name=certArray[0].getSubjectDN().getName();
+		} else {
+			this.keyManager=null;
+			this.name=null;
+		}
+		
 	}
 
 }

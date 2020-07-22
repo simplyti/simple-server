@@ -1,6 +1,10 @@
 package com.simplyti.service.clients.ssl;
 
+import java.util.Collections;
+
+import javax.net.ssl.SNIHostName;
 import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLParameters;
 
 import com.simplyti.service.clients.Endpoint;
 
@@ -19,18 +23,20 @@ public class SSLChannelInitializer extends AbstractChannelPoolHandler{
 	private final SslContext sslCtx;
 	private final ChannelPoolHandler nestedInitializer;
 	private final Endpoint endpoint;
-	private final boolean requireClientAuth;
+	private final String sniHostName;
 
 	@SneakyThrows
 	public SSLChannelInitializer(SslProvider sslProvider, ChannelPoolHandler nestedInitializer, Endpoint endpoint) {
 		SslContextBuilder builder = SslContextBuilder
 				.forClient();
 		if(endpoint instanceof SSLEndpoint) {
-			this.requireClientAuth=true;
 			SSLEndpoint sslEndpoint = (SSLEndpoint) endpoint;
-			builder.keyManager(sslEndpoint.keyManager());
+			if(sslEndpoint.keyManager() != null) {
+				builder.keyManager(sslEndpoint.keyManager());
+			}
+			this.sniHostName=sslEndpoint.sniHostName();
 		} else {
-			this.requireClientAuth = false;
+			this.sniHostName=null;
 		}
 		this.sslCtx = builder
 				.sslProvider(sslProvider)
@@ -42,8 +48,14 @@ public class SSLChannelInitializer extends AbstractChannelPoolHandler{
 	
 	@Override
 	public void channelCreated(Channel ch) throws Exception {
-		SSLEngine engine = sslCtx.newEngine(ch.alloc(),endpoint.address().host(),endpoint.address().port());
-		engine.setNeedClientAuth(requireClientAuth);
+	    SSLEngine engine = sslCtx.newEngine(ch.alloc(),endpoint.address().host(),endpoint.address().port());
+	    
+	    if(sniHostName!=null) {
+	    	SSLParameters sslParameters = new SSLParameters();
+		    sslParameters.setServerNames(Collections.singletonList(new SNIHostName(sniHostName)));
+		    engine.setSSLParameters(sslParameters);
+	    }
+	    
 		SslHandler context = new SslHandler(engine);
 		ch.pipeline().addLast(context);
 		nestedInitializer.channelCreated(ch);
