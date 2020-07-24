@@ -1,7 +1,7 @@
 package com.simplyti.service.gateway;
 
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.MoreObjects;
@@ -43,8 +43,8 @@ public class BackendService implements Comparable<BackendService>{
 	
 	private ServiceBalancer loadBalander;
 
-	public BackendService(String host, HttpMethod method, String path, String rewrite, boolean tlsEnabled, Set<HttpRequestFilter> filters, Collection<Endpoint> endpoints) {
-		this.loadBalander = new RoundRobinLoadBalancer(endpoints);
+	public BackendService(String host, HttpMethod method, String path, String rewrite, boolean tlsEnabled, Set<HttpRequestFilter> filters, List<Endpoint> endpoints) {
+		this.loadBalander = RoundRobinLoadBalancer.of(endpoints);
 		this.host=host;
 		this.method=method;
 		this.path=path;

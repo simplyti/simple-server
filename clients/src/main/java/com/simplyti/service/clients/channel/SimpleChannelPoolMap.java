@@ -33,6 +33,8 @@ public class SimpleChannelPoolMap extends AbstractChannelPoolMap<Endpoint, Chann
 			ChannelFactory<Channel> channelFactory, PoolConfig pool) {
 		this.bootstrap = new Bootstrap().group(eventLoopGroup)
 				.channelFactory(channelFactory)
+				.option(ChannelOption.SO_KEEPALIVE, true)
+				.option(ChannelOption.SO_REUSEADDR, true)
 				.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
 				.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 		this.initializer = poolHandler;

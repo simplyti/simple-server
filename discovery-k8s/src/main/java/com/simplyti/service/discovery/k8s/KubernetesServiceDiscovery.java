@@ -1,7 +1,6 @@
 package com.simplyti.service.discovery.k8s;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -408,7 +407,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		return a.metadata().namespace().equals(b.metadata().namespace());
 	}
 
-	private Collection<com.simplyti.service.clients.Endpoint> endpoints(String namespace, Ingress ingress, IngressBackend backend) {
+	private List<com.simplyti.service.clients.Endpoint> endpoints(String namespace, Ingress ingress, IngressBackend backend) {
 		String serviceId = Joiner.on(':').join(namespace,backend.serviceName());
 		if(services.containsKey(serviceId) && endpoints.containsKey(serviceId)) {
 			return services.get(serviceId).spec().ports().stream()

@@ -88,7 +88,6 @@ public class InternalClient implements ClientMonitor, ClientMonitorHandler, Chan
 		long iddleTime = ChronoUnit.SECONDS.between(lastUsage, Instant.now());
 		if(iddleTime>this.poolConfig.maxIdle() ) {
 			return loop.newSucceededFuture(Boolean.FALSE);
-			
 		}
 		
 		return loop.newSucceededFuture(Boolean.TRUE);
