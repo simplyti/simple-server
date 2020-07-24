@@ -3,6 +3,7 @@ package com.simplyti.service.clients.k8s.pods.domain;
 import java.util.List;
 
 import com.dslplatform.json.CompiledJson;
+import com.simplyti.service.clients.k8s.pods.builder.ImagePullPolicy;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -13,6 +14,7 @@ public class Container {
 
 	private final String name;
 	private final String image;
+	private final ImagePullPolicy imagePullPolicy;
 	private final List<EnvironmentVariable> env;
 	private final String[] command;
 	private final Probe readinessProbe;
@@ -24,6 +26,7 @@ public class Container {
 	public Container(
 			String name,
 			String image,
+			ImagePullPolicy imagePullPolicy,
 			List<EnvironmentVariable> env,
 			String[] command,
 			Probe readinessProbe,
@@ -34,6 +37,7 @@ public class Container {
 		this.command=command;
 		this.env=env;
 		this.image=image;
+		this.imagePullPolicy=imagePullPolicy;
 		this.readinessProbe=readinessProbe;
 		this.resources=resources;
 		this.lifecycle = lifecycle;

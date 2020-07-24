@@ -1,15 +1,19 @@
-package com.simplyti.service.api.filter;
+package com.simplyti.service.filter;
 
 import java.util.Collection;
 import java.util.Iterator;
 
+import com.simplyti.util.concurrent.DefaultFuture;
+import com.simplyti.util.concurrent.Future;
+
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.Promise;
 
 public class FilterChain<T> implements FilterContext<T> {
 
+	private final EventExecutor loop;
 	private final Promise<Boolean> promise;
 	private final Iterator<? extends Filter<T>> iterator;
 	private final T msg;
@@ -18,6 +22,7 @@ public class FilterChain<T> implements FilterContext<T> {
 	private FilterChain(Collection<? extends Filter<T>> filters, ChannelHandlerContext ctx, T msg) {
 		this.iterator =  filters.iterator();
 		this.channel=ctx.channel();
+		this.loop = ctx.executor();
 		this.promise = ctx.executor().newPromise();
 		this.msg=msg;
 	}
@@ -28,7 +33,7 @@ public class FilterChain<T> implements FilterContext<T> {
 
 	public Future<Boolean> execute() {
 		iterator.next().execute(this);
-		return promise;
+		return new DefaultFuture<>(promise, loop);
 	}
 
 	@Override

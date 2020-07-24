@@ -24,7 +24,7 @@ public class SSLChannelInitializeHandler extends AbstractChannelPoolHandler {
 				.forClient();
 		if(endpoint instanceof SSLEndpoint) {
 			SSLEndpoint sslEndpoint = (SSLEndpoint) endpoint;
-			builder.keyManager(sslEndpoint.key(),sslEndpoint.certs());
+			builder.keyManager(sslEndpoint.keyManager());
 		}
 		this.sslCtx = builder
 				.sslProvider(sslProvider)

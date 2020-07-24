@@ -7,6 +7,8 @@ public interface ContainerBuilder<T> {
 
 	ContainerBuilder<T> withImage(String string);
 	
+	ContainerBuilder<T> withImagePullPolicy(ImagePullPolicy policy);
+
 	ContainerBuilder<T> withCommand(String... command);
 	
 	EnvironmentBuilder<T> withEnvironment();

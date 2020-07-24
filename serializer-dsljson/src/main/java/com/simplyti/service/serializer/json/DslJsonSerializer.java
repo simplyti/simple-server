@@ -39,14 +39,14 @@ public class DslJsonSerializer implements Json {
 		this.dslJson = new DslJson<Object>(settings);
 	}
 	
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked"})
 	@Override
 	@SneakyThrows
 	public <T> T deserialize(ByteBuf content, TypeLiteral<T> type) {
-		if(content.isReadable()) {
-			return (T) dslJson.deserialize(type.getType(), new ByteBufInputStream(content));
-		} else {
+		if(!content.isReadable()) {
 			return null;
+		} else {
+			return (T) dslJson.deserialize(type.getType(), new ByteBufInputStream(content));
 		}
 	}
 	

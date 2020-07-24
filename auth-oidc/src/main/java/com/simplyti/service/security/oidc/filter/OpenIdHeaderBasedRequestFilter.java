@@ -4,18 +4,18 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import com.simplyti.service.api.filter.FilterContext;
-import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.api.serializer.json.TypeLiteral;
 import com.simplyti.service.exception.ForbiddenException;
 import com.simplyti.service.exception.UnauthorizedException;
+import com.simplyti.service.filter.FilterContext;
+import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.service.security.oidc.key.resolver.SigningKeyResolverException;
 
 import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SigningKeyResolver;
+import io.jsonwebtoken.impl.DefaultJwtParserBuilder;
 import io.jsonwebtoken.security.SignatureException;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
@@ -51,9 +51,10 @@ public class OpenIdHeaderBasedRequestFilter implements HttpRequestFilter {
 	
 	private void checkToken(FilterContext<?> context, HttpRequest request, String token) {
 		try{
-			Jwts.parser().setSigningKeyResolver(keyResolver)
+			new DefaultJwtParserBuilder()
 				.deserializeJsonWith(data->json.deserialize(data, CLAIMS))
-				.parseClaimsJws(token);
+				.setSigningKeyResolver(keyResolver)
+				.build().parseClaimsJws(token);
 			request.headers().set(HttpHeaderNames.AUTHORIZATION,BEARER_PREFIX+" "+token);
 			context.done();
 		} catch (SignatureException| MalformedJwtException e) {

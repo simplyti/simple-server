@@ -12,9 +12,9 @@ import com.simplyti.service.clients.k8s.services.builder.ServiceBuilder;
 import com.simplyti.service.clients.k8s.services.domain.Service;
 import com.simplyti.service.clients.k8s.services.updater.DefaultServiceUpdater;
 import com.simplyti.service.clients.k8s.services.updater.ServicesUpdater;
+import com.simplyti.util.concurrent.Future;
 
 import io.netty.channel.EventLoopGroup;
-import io.netty.util.concurrent.Future;
 
 public class DefaultNamespacedServices extends DefaultNamespacedK8sApi<Service> implements NamespacedServices {
 

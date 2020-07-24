@@ -1,6 +1,28 @@
 @gateway
 Feature: Gateway
 
+@standalone
+Scenario: Simple gateway client closing connection
+	When I start a service "#serviceFuture" with options:
+		| option	 	| value |
+		| withApi		| com.simplyti.service.examples.api.APITest	|
+		| insecuredPort	| 4444	|
+		| securedPort	| -1 |
+	Then I check that "#serviceFuture" is success
+	And I start a service "#gateway" with options:
+		| option	 		| value |
+		| withModule		| com.simplyti.service.gateway.GatewayModule |
+		| withModule		| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| withLog4J2Logger	|		|
+	Then I check that "#gateway" is success
+	When I create a service with path "/hello" and backend "http://127.0.0.1:4444"
+	When I send a "GET /hello/close" getting "#response"
+	Then I check that "#response" is equals to "Hello!"
+	And I check that "#response" has status code 200
+	When I send a "GET /hello/close" getting "#response"
+	Then I check that "#response" is equals to "Hello!"
+	And I check that "#response" has status code 200
+	
 Scenario: Simple gateway
 	When I start a service "#serviceFuture" with options:
 		| option	 		| value |

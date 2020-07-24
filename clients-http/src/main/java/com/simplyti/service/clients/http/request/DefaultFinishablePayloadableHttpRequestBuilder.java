@@ -1,5 +1,6 @@
 package com.simplyti.service.clients.http.request;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -8,6 +9,7 @@ import com.simplyti.service.clients.channel.ClientChannel;
 import com.simplyti.service.clients.http.sse.ServerSentEvents;
 import com.simplyti.service.clients.http.stream.HttpInputStream;
 import com.simplyti.service.clients.request.ChannelProvider;
+import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.ByteBuf;
@@ -21,8 +23,8 @@ public class DefaultFinishablePayloadableHttpRequestBuilder extends AbstractFini
 	private Consumer<ByteBuf> bodyBuilder;
 	private Function<ByteBufAllocator,ByteBuf> bodyBuilderSupplier;
 
-	public DefaultFinishablePayloadableHttpRequestBuilder(ChannelProvider channelProvider, HttpMethod method, String path, Map<String,Object> params, HttpHeaders headers, boolean checkStatus) {
-		super(channelProvider,method,path, params, headers, checkStatus);
+	public DefaultFinishablePayloadableHttpRequestBuilder(ChannelProvider channelProvider, HttpMethod method, String path, Map<String,Object> params, HttpHeaders headers, boolean checkStatus, List<HttpRequestFilter> filters) {
+		super(channelProvider,method,path, params, headers, checkStatus,filters);
 	}
 
 	@Override
@@ -126,12 +128,18 @@ public class DefaultFinishablePayloadableHttpRequestBuilder extends AbstractFini
 			target.withIgnoreStatusCode();
 			return this;
 		}
+		
+		@Override
+		public FinishableHttpRequestBuilder withFilter(HttpRequestFilter filter) {
+			target.withFilter(filter);
+			return this;
+		}
 
 		@Override
 		public ServerSentEvents sse() {
 			return target.sse();
 		}
-
+		
 		@Override
 		public FinishableHttpRequestBuilder withBasicAuth(String user, String pass) {
 			target.withBasicAuth(user, pass);

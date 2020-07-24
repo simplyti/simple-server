@@ -24,6 +24,13 @@
     		<artifactId>jakarta.inject-api</artifactId>
 		</dependency>
 		
+		<dependency>
+		    <groupId>com.oracle.substratevm</groupId>
+		    <artifactId>svm</artifactId>
+		    <version>19.2.1</version>
+		    <scope>provided</scope>
+		</dependency>
+		
 		<!-- Json -->
 		<dependency>
 			<groupId>com.simplyti.cloud</groupId>

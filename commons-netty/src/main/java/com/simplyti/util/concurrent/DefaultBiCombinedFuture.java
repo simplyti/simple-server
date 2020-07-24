@@ -29,8 +29,9 @@ public class DefaultBiCombinedFuture<T,U> implements BiCombinedFuture<T,U>{
 		return target.exceptionallyApply(fn);
 	}
 	
-	public Future<Void> onError(Consumer<Throwable> action){
-		return target.onError(action);
+	@SuppressWarnings("unchecked")
+	public Future<T> onError(Consumer<Throwable> action){
+		return (Future<T>) target.onError(action);
 	}
 
 	@SuppressWarnings("unchecked")

@@ -4,6 +4,7 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.crypto.BadPaddingException;
@@ -14,7 +15,6 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
 
-import com.google.common.collect.Maps;
 import com.simplyti.service.api.serializer.json.Json;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -59,7 +59,7 @@ public class DefaultFullOpenidHandler extends DefaultRedirectableOpenIdHandler i
 	}
 	
 	protected String state(HttpRequest request) {
-		Map<String, String> state = Maps.newHashMap();
+		Map<String, String> state = new HashMap<>();
 		state.put("redirectUri", "https://"+request.headers().get(HttpHeaderNames.HOST)+request.uri());
 		state.put("tokenEndpoint", tokenEndpoint());
 		state.put("clientId", clientId());

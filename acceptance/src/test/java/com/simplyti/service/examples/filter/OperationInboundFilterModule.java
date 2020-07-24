@@ -6,8 +6,8 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.simplyti.server.http.api.filter.OperationInboundFilter;
 import com.simplyti.server.http.api.handler.ApiInvocation;
-import com.simplyti.service.api.filter.FilterContext;
 import com.simplyti.service.exception.UnauthorizedException;
+import com.simplyti.service.filter.FilterContext;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 

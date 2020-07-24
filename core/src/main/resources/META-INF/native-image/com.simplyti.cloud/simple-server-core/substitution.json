@@ -1,0 +1,12 @@
+[
+  {
+    "annotatedClass": "com.simplyti.service.ssl.Target_com_simplyti_service_ssl_SslConfig",
+    "originalClass": "com.simplyti.service.ssl.SslConfig",
+    "methods": [
+      {
+        "annotatedName": "sslProvider",
+        "substitute": true
+      }
+    ]
+  }
+]

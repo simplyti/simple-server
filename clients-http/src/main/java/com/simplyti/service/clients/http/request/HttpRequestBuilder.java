@@ -7,7 +7,7 @@ import com.simplyti.service.clients.request.BaseClientRequestBuilder;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpRequest;
 
-public interface HttpRequestBuilder extends BaseClientRequestBuilder<HttpRequestBuilder>, HeaderAppendableRequestBuilder<HttpRequestBuilder>, StatusCheckableRequestBuilder<HttpRequestBuilder> {
+public interface HttpRequestBuilder extends BaseClientRequestBuilder<HttpRequestBuilder>, HeaderAppendableRequestBuilder<HttpRequestBuilder>, StatusCheckableRequestBuilder<HttpRequestBuilder>, FilterableRequestBuilder<HttpRequestBuilder> {
 
 	FinishableHttpRequestBuilder get(String path);
 	FinishableHttpRequestBuilder get();

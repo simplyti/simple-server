@@ -1,0 +1,20 @@
+[
+  {
+    "annotatedClass": "com.simplyti.service.clients.Target_com_simplyti_service_clients_AbstractClientBuilder",
+    "originalClass": "com.simplyti.service.clients.AbstractClientBuilder",
+    "methods": [
+      {
+        "annotatedName": "get",
+        "substitute": true
+      },
+      {
+        "annotatedName": "sslProvider",
+        "substitute": true
+      },
+      {
+        "annotatedName": "channelFactory",
+        "substitute": true
+      }
+    ]
+  }
+]

@@ -1,4 +1,4 @@
-package com.simplyti.service.api.filter;
+package com.simplyti.service.filter;
 
 import io.netty.channel.Channel;
 
@@ -8,9 +8,9 @@ public interface FilterContext<T> {
 		done(false);
 	}
 
-	public void done(boolean doContinue);
+	public void done(boolean breakFilter);
 
-	public void fail(Throwable unauthorizedException);
+	public void fail(Throwable cause);
 
 	public T object();
 	

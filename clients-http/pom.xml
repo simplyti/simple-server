@@ -24,6 +24,13 @@
 			<version>${project.version}</version>
 		</dependency>
 		
+		<!-- Filters -->
+		<dependency>
+			<groupId>com.simplyti.cloud</groupId>
+			<artifactId>simple-server-filters-http</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		
 		<!-- Networking -->
 		<dependency>
 			<groupId>io.netty</groupId>

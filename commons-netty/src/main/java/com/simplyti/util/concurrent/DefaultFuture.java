@@ -169,7 +169,7 @@ public class DefaultFuture<T> implements Future<T> {
 	}
 	
 	@Override
-	public Future<Void> onError(final Consumer<Throwable> action) {
+	public Future<T> onError(final Consumer<Throwable> action) {
 		if(target.isDone()) {
 			if(!target.isSuccess()) {
 				try{
@@ -179,10 +179,10 @@ public class DefaultFuture<T> implements Future<T> {
 					return new DefaultFuture<>(loop.newFailedFuture(new ExecutionException(cause)),loop);
 				}
 			} else {
-				return new DefaultFuture<>(loop.newSucceededFuture(null),loop);
+				return new DefaultFuture<>(target,loop);
 			}
 		} else {
-			Promise<Void> promise = loop.newPromise();
+			Promise<T> promise = loop.newPromise();
 			target.addListener(f->{
 				if(!f.isSuccess()) {
 					try{
@@ -192,7 +192,7 @@ public class DefaultFuture<T> implements Future<T> {
 						promise.setFailure(new ExecutionException(cause));
 					}
 				} else {
-					promise.setSuccess(null);
+					promise.setSuccess(target.getNow());
 				}
 			});
 			return new DefaultFuture<>(promise, loop);

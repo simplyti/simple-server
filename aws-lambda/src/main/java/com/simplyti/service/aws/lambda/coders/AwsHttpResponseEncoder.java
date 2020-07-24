@@ -1,6 +1,8 @@
 package com.simplyti.service.aws.lambda.coders;
 
-import com.google.common.collect.ImmutableMap;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.jsoniter.output.JsonStream;
 
 import io.netty.buffer.ByteBuf;
@@ -16,15 +18,15 @@ public class AwsHttpResponseEncoder extends MessageToByteEncoder<FullHttpRespons
 
 	@Override
 	protected void encode(ChannelHandlerContext ctx, FullHttpResponse msg, ByteBuf out) throws Exception {
-		ImmutableMap.Builder<String, Object> awsResponse = ImmutableMap.<String,Object>builder()
-				.put("statusCode",msg.status().code())
-				.put("body",msg.content().toString(CharsetUtil.UTF_8));
+		Map<String,Object> awsResponse = new HashMap<>();
+		awsResponse.put("statusCode",msg.status().code());
+		awsResponse.put("body",msg.content().toString(CharsetUtil.UTF_8));
 		
-		ImmutableMap.Builder<String, Object> headers = ImmutableMap.<String,Object>builder();
+		Map<String,Object> headers = new HashMap<>();
 		msg.headers().forEach(header->headers.put(header.getKey(), header.getValue()));
-		awsResponse.put("headers",headers.build());
+		awsResponse.put("headers",headers);
 		
-		JsonStream.serialize(awsResponse.build(), new ByteBufOutputStream(out));
+		JsonStream.serialize(awsResponse, new ByteBufOutputStream(out));
 	}
 
 }

@@ -2,16 +2,20 @@ package com.simplyti.server.http.api.builder;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import com.simplyti.server.http.api.builder.sse.ServerSentEventApiBuilder;
 import com.simplyti.server.http.api.builder.sse.ServerSentEventApiBuilderImpl;
+import com.simplyti.server.http.api.context.AnyApiContext;
 import com.simplyti.server.http.api.context.ApiContextFactory;
+import com.simplyti.server.http.api.futurehandler.AnyFutureHandle;
 import com.simplyti.server.http.api.operations.AnyApiOperation;
 import com.simplyti.server.http.api.operations.ApiOperations;
 import com.simplyti.server.http.api.pattern.ApiPattern;
 import com.simplyti.service.api.serializer.json.TypeLiteral;
 
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.util.concurrent.Future;
 
 public class ResponseBodyTypableApiBuilderImpl implements ResponseTypableApiBuilder {
 	
@@ -49,6 +53,11 @@ public class ResponseBodyTypableApiBuilderImpl implements ResponseTypableApiBuil
 	public void then(ApiContextConsumer consumer) {
 		ApiPattern apiPattern = ApiPattern.build(path);
 		operations.add(new AnyApiOperation(method,apiPattern,metadata,consumer,anyContextFactory, notFoundOnNull));
+	}
+	
+	@Override
+	public <T> void thenFuture(Function<AnyApiContext, Future<T>> futureSupplier) {
+		then(new AnyFutureHandle<>(futureSupplier));
 	}
 
 	@Override

@@ -150,7 +150,7 @@ public class IncompleteFuture<T> implements Future<T> {
 	}
 	
 	@Override
-	public Future<Void> onError(Consumer<Throwable> action) {
+	public Future<T> onError(Consumer<Throwable> action) {
 		return instance();
 	}
 	
@@ -185,7 +185,7 @@ public class IncompleteFuture<T> implements Future<T> {
 		}
 
 		@Override
-		public Future<Void> onError(Consumer<Throwable> action) {
+		public Future<A> onError(Consumer<Throwable> action) {
 			return IncompleteFuture.instance();
 		}
 

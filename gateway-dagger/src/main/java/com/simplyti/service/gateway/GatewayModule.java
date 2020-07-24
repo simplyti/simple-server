@@ -19,7 +19,7 @@ public class GatewayModule {
 	@Provides
 	@Singleton
 	public GatewayConfig gatewayConfig() {
-		return new GatewayConfig(10,false);
+		return new GatewayConfig(10,false,-1);
 	}
 	
 	@Provides

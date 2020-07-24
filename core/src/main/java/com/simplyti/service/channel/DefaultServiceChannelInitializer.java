@@ -7,11 +7,11 @@ import javax.inject.Inject;
 
 import com.simplyti.service.ServerConfig;
 import com.simplyti.service.StartStopMonitor;
-import com.simplyti.service.api.filter.HttpRequestFilter;
-import com.simplyti.service.api.filter.HttpResponseFilter;
 import com.simplyti.service.channel.handler.ChannelExceptionHandler;
 import com.simplyti.service.channel.handler.ClientChannelHandler;
 import com.simplyti.service.channel.handler.inits.HandlerInit;
+import com.simplyti.service.filter.http.HttpRequestFilter;
+import com.simplyti.service.filter.http.HttpResponseFilter;
 import com.simplyti.service.ssl.SslHandlerFactory;
 
 import io.netty.channel.ChannelInitializer;

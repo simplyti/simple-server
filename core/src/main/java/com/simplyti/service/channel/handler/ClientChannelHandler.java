@@ -5,14 +5,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.simplyti.service.StartStopMonitor;
-import com.simplyti.service.api.filter.FilterChain;
-import com.simplyti.service.api.filter.HttpRequestFilter;
-import com.simplyti.service.api.filter.HttpResponseFilter;
 import com.simplyti.service.channel.ClientChannelGroup;
 import com.simplyti.service.channel.handler.inits.HandlerInit;
 import com.simplyti.service.channel.pending.PendingMessages;
 import com.simplyti.service.exception.BadRequestException;
 import com.simplyti.service.exception.NotFoundException;
+import com.simplyti.service.filter.FilterChain;
+import com.simplyti.service.filter.http.HttpRequestFilter;
+import com.simplyti.service.filter.http.HttpResponseFilter;
 import com.simplyti.service.priority.Priorized;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -38,8 +38,8 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 
 	private final StartStopMonitor startStopMonitor;
 	
-	private final Set<HttpRequestFilter> requestFilters;
-	private final Set<HttpResponseFilter> responseFilters;
+	private final List<HttpRequestFilter> requestFilters;
+	private final List<HttpResponseFilter> responseFilters;
 
 	private final List<HandlerInit> handlers;
 	
@@ -57,8 +57,8 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 			Set<HttpRequestFilter> requestFilters,Set<HttpResponseFilter> responseFilters) {
 		this.startStopMonitor=startStopMonitor;
 		this.handlers=handlers.stream().sorted(Priorized.PRIORITY_ANN_ORDER).collect(Collectors.toList());
-		this.requestFilters=requestFilters;
-		this.responseFilters=responseFilters;
+		this.requestFilters=requestFilters.stream().sorted(Priorized.PRIORITY_ANN_ORDER).collect(Collectors.toList());
+		this.responseFilters=responseFilters.stream().sorted(Priorized.PRIORITY_ANN_ORDER).collect(Collectors.toList());;
 	}
 	
 	@Override

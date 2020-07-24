@@ -12,8 +12,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.Locale;
 
-import javax.activation.MimetypesFileTypeMap;
-
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpResponse;
@@ -32,7 +30,6 @@ public class FileServe {
 
 	private static final int HTTP_CACHE_SECONDS = 10;
 
-	private final MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
 	private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
 
 	public void serve(String path, Channel channel, HttpRequest request) throws IOException {
@@ -56,7 +53,7 @@ public class FileServe {
         long fileLength = raf.length();
         HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
         HttpUtil.setContentLength(response, fileLength);
-        response.headers().set(HttpHeaderNames.CONTENT_TYPE, mimeTypesMap.getContentType(file.getPath()));
+        response.headers().set(HttpHeaderNames.CONTENT_TYPE, MimeTypes.ofFile(file.getName()));
         ZonedDateTime now = LocalDateTime.now().atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneId.of("GMT"));
         response.headers().set(HttpHeaderNames.EXPIRES, dateFormatter.format(now.plusSeconds(HTTP_CACHE_SECONDS)));
         response.headers().set(HttpHeaderNames.CACHE_CONTROL, "private, max-age=" + HTTP_CACHE_SECONDS);

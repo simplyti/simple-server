@@ -22,7 +22,7 @@ public class IdleTimeoutHandler implements ChannelPoolHandler {
 	@Override
 	public void channelReleased(Channel ch) throws Exception {
 		this.target.channelReleased(ch);
-		this.schedule = ch.eventLoop().schedule(()->ch.close(), timeoutMullis, TimeUnit.MILLISECONDS);
+		this.schedule = ch.eventLoop().schedule(()->ch.close(), timeoutMullis, TimeUnit.SECONDS);
 	}
 
 	@Override

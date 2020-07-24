@@ -3,6 +3,8 @@ package com.simplyti.server.http.api.builder.jaxrs;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -16,8 +18,6 @@ import javax.ws.rs.QueryParam;
 
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.TypeResolver;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 import com.simplyti.server.http.api.context.ApiContext;
 import com.simplyti.server.http.api.context.ApiContextFactory;
 import com.simplyti.server.http.api.operations.ApiOperations;
@@ -57,7 +57,7 @@ public class JaxRSBuilder {
 		String path = path(clazz,method);
 		io.netty.handler.codec.http.HttpMethod httpMethod = method(method);
 		
-		Builder<Integer, RestParam> argumentIndexToRestParam = ImmutableMap.<Integer, RestParam>builder();
+		Map<Integer, RestParam> argumentIndexToRestParam = new HashMap<>();
 		Annotation[][] parameterAnnotations = method.getParameterAnnotations();
 		Type[] parametersTypes = method.getGenericParameterTypes();
 
@@ -80,19 +80,18 @@ public class JaxRSBuilder {
 		}
 		
 		ApiPattern apiPattern = ApiPattern.build(path);
-		Map<Integer, RestParam> parameters = argumentIndexToRestParam.build();
 		JaxRsMethodInvocation<?> consumer;
 		if(contexArgIndex==null) {
-			consumer = new JaxRsBlockingMethodInvocation<>(object,method,parameters,syncTaskSubmitter); 
+			consumer = new JaxRsBlockingMethodInvocation<>(object,method,Collections.unmodifiableMap(argumentIndexToRestParam),syncTaskSubmitter); 
 		} else {
-			consumer = new JaxRsAsyncMethodInvocation<>(object,method,parameters,contexArgIndex); 
+			consumer = new JaxRsAsyncMethodInvocation<>(object,method,Collections.unmodifiableMap(argumentIndexToRestParam),contexArgIndex); 
 		}
 		
 		
 		operations.add(new MethodInvocationOperation<>(httpMethod, apiPattern, bodyType, consumer, factory));
 	}
 	
-	private static boolean processQueryParam( Annotation[] parameterAnnotations, ResolvedType type, Builder<Integer, RestParam> argumentIndexToRestParam,int argIndex) {
+	private static boolean processQueryParam( Annotation[] parameterAnnotations, ResolvedType type, Map<Integer, RestParam> argumentIndexToRestParam,int argIndex) {
 		Optional<QueryParam> queryParam = Stream.of(parameterAnnotations)
 				.filter(ann -> ann.annotationType().equals(QueryParam.class)).findFirst()
 				.map(ann -> QueryParam.class.cast(ann));
@@ -110,7 +109,7 @@ public class JaxRSBuilder {
 		}
 	}
 	
-	private static boolean processPathParam(Annotation[] parameterAnnotations,ResolvedType type, Builder<Integer, RestParam> argumentIndexToRestParam,int argIndex) {
+	private static boolean processPathParam(Annotation[] parameterAnnotations,ResolvedType type, Map<Integer, RestParam> argumentIndexToRestParam,int argIndex) {
 		Optional<PathParam> pathParam = Stream.of(parameterAnnotations)
 				.filter(ann -> ann.annotationType().equals(PathParam.class)).findFirst()
 				.map(ann -> PathParam.class.cast(ann));
@@ -123,7 +122,7 @@ public class JaxRSBuilder {
 		}
 	}
 	
-	private static boolean processHeaderParam(Annotation[] parameterAnnotations,ResolvedType type, Builder<Integer, RestParam> argumentIndexToRestParam,int argIndex) {
+	private static boolean processHeaderParam(Annotation[] parameterAnnotations,ResolvedType type, Map<Integer, RestParam> argumentIndexToRestParam,int argIndex) {
 		Optional<HeaderParam> headerParam = Stream.of(parameterAnnotations)
 				.filter(ann -> ann.annotationType().equals(HeaderParam.class)).findFirst()
 				.map(ann -> HeaderParam.class.cast(ann));

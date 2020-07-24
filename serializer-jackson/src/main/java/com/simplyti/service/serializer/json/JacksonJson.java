@@ -41,10 +41,10 @@ public class JacksonJson implements Json {
 	@Override
 	@SneakyThrows
 	public <T> T deserialize(ByteBuf content, TypeLiteral<T> type) {
-		if(content.isReadable()) {
-			return mapper.readValue(new ByteBufInputStream(content), new TypeReferenceLiteral<T>(type.getType()));
-		}else {
+		if(!content.isReadable()) {
 			return null;
+		}else {
+			return mapper.readValue(new ByteBufInputStream(content), new TypeReferenceLiteral<T>(type.getType()));
 		}
 	}
 

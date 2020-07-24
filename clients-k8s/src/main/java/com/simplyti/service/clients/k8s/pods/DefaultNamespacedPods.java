@@ -45,7 +45,12 @@ public class DefaultNamespacedPods extends DefaultNamespacedK8sApi<Pod> implemen
 
 	@Override
 	public LogStream log(String name) {
-		return new DefaultLogStream(eventLoopGroup.next(), api,http,name,namespace,resource);
+		return new DefaultLogStream(eventLoopGroup.next(), api,http,name,null,namespace,resource);
+	}
+
+	@Override
+	public LogStream log(String pod, String container) {
+		return new DefaultLogStream(eventLoopGroup.next(), api, http, pod, container, namespace, resource);
 	}
 
 }

@@ -24,6 +24,11 @@
 		</dependency>
 		<dependency>
 			<groupId>com.simplyti.cloud</groupId>
+			<artifactId>simple-server-filters-http</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.simplyti.cloud</groupId>
 			<artifactId>simple-server-serializer-dsljson</artifactId>
 			<version>${project.version}</version>
 		</dependency>
@@ -71,10 +76,6 @@
 
 		<!-- Commons -->
 		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>com.fasterxml</groupId>
 			<artifactId>classmate</artifactId>
 		</dependency>
@@ -87,11 +88,6 @@
 		<dependency>
 			<groupId>jakarta.ws.rs</groupId>
     		<artifactId>jakarta.ws.rs-api</artifactId>
-		</dependency>
-		
-		<dependency>
-		    <groupId>jakarta.activation</groupId>
-    		<artifactId>jakarta.activation-api</artifactId>
 		</dependency>
 	</dependencies>
 

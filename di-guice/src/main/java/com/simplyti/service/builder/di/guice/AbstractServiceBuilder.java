@@ -1,7 +1,5 @@
 package com.simplyti.service.builder.di.guice;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -9,7 +7,6 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import com.google.common.base.MoreObjects;
 import com.google.inject.Module;
 import com.simplyti.service.ServerConfig;
 import com.simplyti.service.Service;
@@ -32,7 +29,6 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 	
 	private final Class<T> serviceClass;
 	
-	private String usingLogger;
 	private Collection<Class<? extends ApiProvider>> apiClasses;
 	private Collection<ApiProvider> apiProviders;
 	private Collection<Module> modules;
@@ -56,9 +52,9 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 	public T build() {
 		ServerConfig config = new ServerConfig(
 				name,
-				MoreObjects.firstNonNull(blockingThreadPool, DEFAULT_BLOCKING_THREAD_POOL),
-				MoreObjects.firstNonNull(insecuredPort, DEFAULT_INSECURE_PORT),
-				MoreObjects.firstNonNull(securedPort, DEFAULT_SECURE_PORT),eventLoopGroup!=null,
+				firstNonNull(blockingThreadPool, DEFAULT_BLOCKING_THREAD_POOL),
+				firstNonNull(insecuredPort, DEFAULT_INSECURE_PORT),
+				firstNonNull(securedPort, DEFAULT_SECURE_PORT),eventLoopGroup!=null,
 				verbose);
 		
 		Stream<Module> additinalModules = Optional.ofNullable(modules)
@@ -66,11 +62,18 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 				.orElse(Stream.<Module>empty());
 		
 		return build0(config, new SslConfig(sslProvider), fileServerConfig, serviceClass,additinalModules,
-				MoreObjects.firstNonNull(apiClasses, Collections.emptySet()),
-				MoreObjects.firstNonNull(apiProviders, Collections.emptySet()),
+				firstNonNull(apiClasses, Collections.emptySet()),
+				firstNonNull(apiProviders, Collections.emptySet()),
 				eventLoopGroup);
 	}
 	
+	private <Q> Q firstNonNull(Q obj1, Q obj2) {
+		if(obj1 !=null) {
+			return obj1;
+		} 
+		return obj2;
+	}
+
 	protected abstract T build0(ServerConfig config, SslConfig sslConfig, FileServeConfiguration fileServerConfig, Class<T> serviceClass, Stream<Module> additinalModules, Collection<Class<? extends ApiProvider>> apiClasses, Collection<ApiProvider> apiProviders,  EventLoopGroup eventLoopGroup);
 
 	@Override
@@ -105,17 +108,13 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 
 	@Override
 	public ServiceBuilder<T> withLog4J2Logger() {
-		checkState(usingLogger==null,String.format("Logger already stablished to %s", usingLogger));
 		InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE);
-		this.usingLogger="log4j2";
 		return this;
 	}
 	
 	@Override
 	public ServiceBuilder<T> withSlf4jLogger() {
-		checkState(usingLogger==null,String.format("Logger already stablished to %s", usingLogger));
 		InternalLoggerFactory.setDefaultFactory(Slf4JLoggerFactory.INSTANCE);
-		this.usingLogger="slf4j";
 		return this;
 	}
 

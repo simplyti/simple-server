@@ -4,8 +4,8 @@ import javax.inject.Inject;
 
 import com.simplyti.server.http.api.filter.OperationInboundFilter;
 import com.simplyti.server.http.api.handler.ApiInvocation;
-import com.simplyti.service.api.filter.FilterContext;
 import com.simplyti.service.api.serializer.json.Json;
+import com.simplyti.service.filter.FilterContext;
 import com.simplyti.service.security.oidc.handler.OpenIdHandler;
 
 import io.netty.handler.codec.http.HttpRequest;

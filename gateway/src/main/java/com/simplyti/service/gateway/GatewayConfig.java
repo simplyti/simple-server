@@ -12,5 +12,7 @@ public class GatewayConfig {
 	private final long maxChannelIdleTimeout;
 
 	private final boolean keepOriginalHost;
+	
+	private int releaseChannelGraceTime;
 
 }

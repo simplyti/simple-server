@@ -1,14 +1,14 @@
 package com.simplyti.service.gateway;
 
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.MoreObjects;
 import com.google.re2j.Pattern;
 import com.simplyti.service.api.builder.PathPattern;
-import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.simplyti.service.clients.endpoint.Endpoint;
+import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.service.gateway.balancer.RoundRobinLoadBalancer;
 import com.simplyti.service.gateway.balancer.ServiceBalancer;
 
@@ -43,8 +43,8 @@ public class BackendService implements Comparable<BackendService>{
 	
 	private ServiceBalancer loadBalander;
 
-	public BackendService(String host, HttpMethod method, String path, String rewrite, boolean tlsEnabled, Set<HttpRequestFilter> filters, Collection<Endpoint> endpoints) {
-		this.loadBalander = new RoundRobinLoadBalancer(endpoints);
+	public BackendService(String host, HttpMethod method, String path, String rewrite, boolean tlsEnabled, Set<HttpRequestFilter> filters, List<Endpoint> endpoints) {
+		this.loadBalander = RoundRobinLoadBalancer.of(endpoints);
 		this.host=host;
 		this.method=method;
 		this.path=path;

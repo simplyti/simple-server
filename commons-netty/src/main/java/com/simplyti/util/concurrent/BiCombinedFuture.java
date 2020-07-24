@@ -15,6 +15,6 @@ public interface BiCombinedFuture<T, U> {
 
 	<O> Future<O> exceptionallyApply(Function<Throwable, ? extends O> fn);
 	
-	Future<Void> onError(Consumer<Throwable> action);
+	Future<T> onError(Consumer<Throwable> action);
 
 }

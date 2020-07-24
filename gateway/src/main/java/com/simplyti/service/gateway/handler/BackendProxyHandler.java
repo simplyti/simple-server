@@ -1,6 +1,7 @@
 package com.simplyti.service.gateway.handler;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
 import com.simplyti.service.clients.channel.ClientChannel;
 import com.simplyti.service.clients.endpoint.Endpoint;
@@ -17,6 +18,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpScheme;
+import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.LastHttpContent;
 
 public class BackendProxyHandler extends ChannelDuplexHandler {
@@ -27,7 +29,7 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 	
 	private final GatewayConfig config;
 	private final Channel frontendChannel;
-	private final ClientChannel ClientChannel;
+	private final ClientChannel clientChannel;
 	private final boolean frontSsl;
 	private final boolean isContinueExpected;
 	private final BackendServiceMatcher serviceMatch;
@@ -35,12 +37,12 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 	
 	private boolean upgrading;
 	private boolean isContinuing;
+	private boolean keepAlive;
 	
-	
-	public BackendProxyHandler(GatewayConfig config, ClientChannel ClientChannel, Channel frontendChannel, Endpoint endpoint, boolean isContinueExpected, boolean frontSsl, BackendServiceMatcher serviceMatch) {
+	public BackendProxyHandler(GatewayConfig config, ClientChannel clientChannel, Channel frontendChannel, Endpoint endpoint, boolean isContinueExpected, boolean frontSsl, BackendServiceMatcher serviceMatch) {
 		this.config=config;
 		this.frontendChannel = frontendChannel;
-		this.ClientChannel = ClientChannel;
+		this.clientChannel = clientChannel;
 		this.frontSsl=frontSsl;
 		this.isContinueExpected=isContinueExpected;
 		this.serviceMatch=serviceMatch;
@@ -63,14 +65,16 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
         if(msg instanceof HttpRequest) {
         	HttpRequest request = (HttpRequest) msg;
         	InetSocketAddress inetSocket = (InetSocketAddress) frontendChannel.remoteAddress();
-        	if(request.headers().contains(HttpHeaderNames.HOST)) {
+        	if(!request.headers().contains(X_FORWARDED_HOST) && request.headers().contains(HttpHeaderNames.HOST)) {
         		request.headers().set(X_FORWARDED_HOST,request.headers().get(HttpHeaderNames.HOST));
         	}
+        	if(!request.headers().contains(X_FORWARDED_PROTO)) {
+        		request.headers().set(X_FORWARDED_PROTO,frontSsl?HttpScheme.HTTPS.name():HttpScheme.HTTP.name());
+        	}
+        	request.headers().set(X_FORWARDED_FOR,inetSocket.getHostString());
         	if(!config.keepOriginalHost()) {
         		request.headers().set(HttpHeaderNames.HOST,endpoint.address().host());
         	}
-        	request.headers().set(X_FORWARDED_FOR,inetSocket.getHostString());
-        	request.headers().set(X_FORWARDED_PROTO,frontSsl?HttpScheme.HTTPS.name():HttpScheme.HTTP.name());
         	msg = serviceMatch.rewrite((HttpRequest) msg);
         }
         ctx.write(msg, promise);
@@ -90,6 +94,11 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 			this.isContinuing=true;
 		}
 		
+		if(msg instanceof HttpResponse) {
+			this.keepAlive = HttpUtil.isKeepAlive((HttpResponse)msg);
+		}
+
+		
 		if(msg instanceof HttpResponse && "Upgrade".equalsIgnoreCase(((HttpResponse) msg).headers().get(HttpHeaderNames.CONNECTION))) {
 			this.upgrading=true;
 		} else if(upgrading && msg instanceof LastHttpContent) {
@@ -97,12 +106,23 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 		} else if(msg instanceof LastHttpContent) {
 			if (isContinuing) {
 				isContinuing=false;
-			}else {
+			} else if(keepAlive) {
 				ctx.pipeline().remove(this);
-				ClientChannel.release();
+				release(ctx.channel());
+			}else {
+				ctx.channel().close();
 			}
 		}
 	}
+	
+	private void release(Channel channel) {
+		if(config.releaseChannelGraceTime()>0) {
+			channel.eventLoop().schedule(()->clientChannel.release(), config.releaseChannelGraceTime(), TimeUnit.MILLISECONDS);
+		} else {
+			clientChannel.release();
+		}
+	}
+
 
 	private boolean isContinue(Object msg) {
 		return msg instanceof HttpResponse && ((HttpResponse) msg).status().equals(HttpResponseStatus.CONTINUE);

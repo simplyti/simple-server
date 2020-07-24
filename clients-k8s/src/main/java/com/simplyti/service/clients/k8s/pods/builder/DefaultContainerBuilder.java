@@ -18,6 +18,7 @@ public class DefaultContainerBuilder<T> implements ContainerBuilder<T>, Readines
 	private List<EnvironmentVariable> environments;
 	private Lifecycle lifecycle;
 	private List<VolumeMount> volumeMounts;
+	private ImagePullPolicy imagePullPolicy;
 
 	public DefaultContainerBuilder(T parent, ContainerHolder containerHolder) {
 		this.parent=parent;
@@ -27,6 +28,12 @@ public class DefaultContainerBuilder<T> implements ContainerBuilder<T>, Readines
 	@Override
 	public ContainerBuilder<T> withImage(String image) {
 		this.image=image;
+		return this;
+	}
+	
+	@Override
+	public ContainerBuilder<T> withImagePullPolicy(ImagePullPolicy policy) {
+		this.imagePullPolicy=policy;
 		return this;
 	}
 
@@ -49,7 +56,7 @@ public class DefaultContainerBuilder<T> implements ContainerBuilder<T>, Readines
 
 	@Override
 	public T build() {
-		containerHolder.addContainer(new Container(name,image,environments,command,readinessProbe,resources, lifecycle, volumeMounts));
+		containerHolder.addContainer(new Container(name,image,imagePullPolicy,environments,command,readinessProbe,resources, lifecycle, volumeMounts));
 		return parent;
 	}
 

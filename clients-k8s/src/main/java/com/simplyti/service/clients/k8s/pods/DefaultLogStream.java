@@ -17,7 +17,8 @@ import io.netty.util.concurrent.Promise;
 public class DefaultLogStream implements LogStream {
 
 	private final HttpClient http;
-	private final String name;
+	private final String pod;
+	private final String container;
 	private final K8sAPI api;
 	private final String namespace;
 	private final String resource;
@@ -25,9 +26,10 @@ public class DefaultLogStream implements LogStream {
 	private boolean closed;
 	private ClientChannel client;
 
-	public DefaultLogStream(EventLoop loop, K8sAPI api, HttpClient http, String name, String namespace, String resource) {
+	public DefaultLogStream(EventLoop loop, K8sAPI api, HttpClient http, String pod, String container,String namespace, String resource) {
 		this.http=http;
-		this.name=name;
+		this.pod = pod;
+		this.container = container;
 		this.api=api;
 		this.namespace=namespace;
 		this.resource=resource;
@@ -44,8 +46,12 @@ public class DefaultLogStream implements LogStream {
 	private Future<Void> followLog(Promise<Void> promise, boolean isContinue, Consumer<ByteBuf> consumer) {
 		FinishableHttpRequestBuilder builder = http.request()
 			.withReadTimeout(30000)
-			.get(String.format("%s/namespaces/%s/%s/%s/log",api.path(),namespace,resource,name))
+			.get(String.format("%s/namespaces/%s/%s/%s/log",api.path(),namespace,resource, pod))
 			.param("follow",true);
+		
+		if(this.container != null) {
+			builder.param("container", this.container);
+		}
 		
 		if(isContinue) {
 			builder.param("sinceSeconds",30);

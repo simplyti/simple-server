@@ -3,6 +3,7 @@ package com.simplyti.service.channel;
 import javax.inject.Inject;
 
 import io.netty.channel.ChannelPipeline;
+import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ public class DefaultHttpEntryChannelInit implements EntryChannelInit {
 	public void init(ChannelPipeline pipeline) {
 		pipeline.addLast("encoder", new HttpResponseEncoder());
 		pipeline.addLast("decoder", new HttpRequestDecoder(4096, 8192, 8192, false));
+		pipeline.addLast(new HttpContentDecompressor());
 	}
 
 }

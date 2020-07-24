@@ -1,20 +1,27 @@
 package com.simplyti.service.clients.http.request;
 
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.simplyti.service.clients.channel.ClientChannel;
 import com.simplyti.service.clients.http.handler.DecodingFullHttpResponseHandler;
 import com.simplyti.service.clients.http.handler.FullHttpResponseHandler;
+import com.simplyti.service.clients.http.handler.HttpRequestFilterHandler;
+import com.simplyti.service.clients.http.request.stream.DefaultStreamedBody;
+import com.simplyti.service.clients.http.request.stream.StreamedBody;
 import com.simplyti.service.clients.http.sse.DefaultServerSentEvents;
 import com.simplyti.service.clients.http.sse.ServerSentEvents;
 import com.simplyti.service.clients.http.stream.HttpDataStream;
 import com.simplyti.service.clients.http.stream.HttpInputStream;
 import com.simplyti.service.clients.request.ChannelProvider;
 import com.simplyti.service.clients.stream.PendingRequest;
+import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.ByteBuf;
@@ -32,7 +39,7 @@ import io.netty.handler.codec.http.QueryStringEncoder;
 import io.netty.util.CharsetUtil;
 import io.netty.util.concurrent.Promise;
 
-public abstract class AbstractFinishableHttpRequestBuilder<T> implements BaseFinishableHttpRequestBuilder<T>, HeaderAppendableRequestBuilder<T>, PendingRequest {
+public abstract class AbstractFinishableHttpRequestBuilder<T> implements BaseFinishableHttpRequestBuilder<T>, HeaderAppendableRequestBuilder<T>, FilterableRequestBuilder<T>, PendingRequest {
 
 	private static final String HANDLER = "handler";
 	
@@ -40,25 +47,41 @@ public abstract class AbstractFinishableHttpRequestBuilder<T> implements BaseFin
 	private final HttpMethod method;
 	private final String path;
 	
+	private List<HttpRequestFilter> filters;
+	
 	private boolean checkStatus;
 	private HttpHeaders headers;
 	private Map<String,Object> params;
 
-	public AbstractFinishableHttpRequestBuilder(ChannelProvider channelProvider, HttpMethod method, String path, Map<String,Object> params, HttpHeaders headers, boolean checkStatus) {
+	public AbstractFinishableHttpRequestBuilder(ChannelProvider channelProvider, HttpMethod method, String path, Map<String,Object> params, HttpHeaders headers, boolean checkStatus,
+			List<HttpRequestFilter> filters) {
 		this.channelProvider=channelProvider;
 		this.method=method;
 		this.path=path;
 		this.headers=headers;
 		this.params=params;
 		this.checkStatus=checkStatus;
+		this.filters=filters;
 	}
 
 	@Override
 	public Future<FullHttpResponse> fullResponse() {
 		return channelProvider.channel()
-				.thenCombine(ch->addHandlerAndSend(ch,request(ch), this::fullResponseHandler));
+				.thenCombine(channel->{
+					Promise<FullHttpResponse> promise = channel.eventLoop().newPromise();
+					channel.pipeline().addLast(HANDLER,new FullHttpResponseHandler(HANDLER,channel,checkStatus,promise));
+					addFilterHandlerIfNecessary(channel);
+					channel.writeAndFlush(request(channel)).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+					return promise;
+				});
 	}
 	
+	private void addFilterHandlerIfNecessary(ClientChannel channel) {
+		if(filters !=null) {
+			channel.pipeline().addLast(new HttpRequestFilterHandler(filters));
+		}
+	}
+
 	@Override
 	public <U> Future<U> fullResponse(Function<FullHttpResponse, U> fn) {
 		return channelProvider.channel()
@@ -144,6 +167,17 @@ public abstract class AbstractFinishableHttpRequestBuilder<T> implements BaseFin
 		return (T) this;
 	}
 	
+	@SuppressWarnings("unchecked")
+	@Override
+	public T withFilter(HttpRequestFilter filter) {
+		if(filters == null) {
+			this.filters = new ArrayList<>();
+		}
+		this.filters.add(filter);
+		return (T) this;
+	}
+
+	
 	private void initializeHeaders() {
 		if(headers==null) {
 			this.headers=new DefaultHttpHeaders();
@@ -192,12 +226,6 @@ public abstract class AbstractFinishableHttpRequestBuilder<T> implements BaseFin
 
 	protected abstract ByteBuf body(ClientChannel ch);
 
-	private io.netty.util.concurrent.Future<FullHttpResponse> fullResponseHandler(ClientChannel channel){
-		Promise<FullHttpResponse> promise = channel.eventLoop().newPromise();
-		channel.pipeline().addLast(HANDLER,new FullHttpResponseHandler(HANDLER,channel,checkStatus,promise));
-		return promise;
-	}
-	
 	@Override
 	public HttpInputStream stream() {
 		return new HttpDataStream(this);
@@ -206,6 +234,10 @@ public abstract class AbstractFinishableHttpRequestBuilder<T> implements BaseFin
 	@Override
 	public ServerSentEvents sse() {
 		return new DefaultServerSentEvents(this);
+	}
+	
+	public StreamedBody withStreamBody(Consumer<ClientChannel> initializer) {
+		return new DefaultStreamedBody(this,initializer);
 	}
 	
 	@Override

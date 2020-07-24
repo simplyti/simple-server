@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import com.google.common.base.MoreObjects;
 import com.simplyti.server.http.api.context.ApiContext;
 import com.simplyti.server.http.api.context.ApiContextFactory;
 import com.simplyti.server.http.api.pattern.ApiPattern;
@@ -39,7 +38,7 @@ public class ApiOperation<T extends ApiContext> {
 		this.pattern=pattern;
 		this.handler=handler;
 		this.contextFactory=contextFactory;
-		this.metadata=MoreObjects.firstNonNull(metadata, Collections.emptyMap());
+		this.metadata=firstNonNull(metadata, Collections.emptyMap());
 		this.streamedRequest=streamedRequest;
 		this.maxBodyLength=maxBodyLength>0?maxBodyLength:DEFAULT_MAX_BODY;
 		this.notFoundOnNull=notFoundOnNull;
@@ -56,6 +55,13 @@ public class ApiOperation<T extends ApiContext> {
 	
 	public boolean isStreamed() {
 		return this.streamedRequest;
+	}
+	
+	private static <Q> Q firstNonNull(Q obj1, Q obj2) {
+		if(obj1 !=null) {
+			return obj1;
+		} 
+		return obj2;
 	}
 
 }

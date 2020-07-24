@@ -2,11 +2,11 @@ package com.simplyti.service.clients.channel;
 
 import com.simplyti.service.clients.channel.proxy.NoResolvingSocketAddress;
 import com.simplyti.service.clients.endpoint.Endpoint;
+import com.simplyti.service.clients.endpoint.ssl.SSLEndpoint;
 import com.simplyti.service.clients.monitor.ClientMonitorHandler;
 import com.simplyti.service.clients.monitor.MonitoredHandler;
 import com.simplyti.service.clients.proxy.ProxiedEndpoint;
 import com.simplyti.service.clients.proxy.Proxy;
-import com.simplyti.service.commons.netty.Promises;
 import com.simplyti.util.concurrent.DefaultFuture;
 import com.simplyti.util.concurrent.Future;
 
@@ -41,7 +41,14 @@ public abstract class AbstractClientChannelPoolMap extends AbstractChannelPoolMa
 		EventLoop loop = eventLoopGroup.next();
 		Promise<ClientChannel> promise = loop.newPromise();
 		io.netty.util.concurrent.Future<Channel> futureChannel = pool.acquire();
-		Promises.ifSuccessMap(futureChannel, promise, ch->new PooledClientChannel(pool,endpoint.address(),ch, responseTimeoutMillis,readTimeoutMillis));
+		futureChannel.addListener(f->{
+			if(f.isSuccess()) {
+				futureChannel.getNow().pipeline().addLast(new ChannelInitializedHandler(futureChannel.getNow(), pool, endpoint, responseTimeoutMillis, readTimeoutMillis, promise));
+				futureChannel.getNow().pipeline().fireUserEventTriggered(ClientChannelEvent.INIT);
+			} else {
+				promise.setFailure(f.cause());
+			}
+		});
 		return new DefaultFuture<>(promise, loop);
 	}
 
@@ -65,11 +72,15 @@ public abstract class AbstractClientChannelPoolMap extends AbstractChannelPoolMa
 	}
 
 	private ChannelPoolHandler handler(Endpoint key) {
-		if(key.schema()!=null && key.schema().ssl() && !key.isProxied()) {
+		if(isSsl(key) && !key.isProxied()) {
 			return new SSLChannelInitializeHandler(sslProvider, handler, key);
 		}else {
 			return handler;
 		}
+	}
+
+	private boolean isSsl(Endpoint key) {
+		return (key.schema()!=null && key.schema().ssl()) || key instanceof SSLEndpoint;
 	}
 
 	protected abstract ChannelPool newPool(Bootstrap bootstrap, ChannelPoolHandler handler, Proxy proxy);

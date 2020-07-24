@@ -189,6 +189,9 @@ public class APITest implements ApiProvider {
 		builder.when().get("/close")
 			.then(ctx->ctx.close());
 		
+		builder.when().get("/hello/close")
+			.then(ctx->ctx.send("Hello!").addListener(f->ctx.executor().schedule(()->ctx.close(), 30, TimeUnit.MILLISECONDS)));
+		
 		builder.when().get("/remote")
 			.then(ctx->ctx.send(((InetSocketAddress)ctx.channel().remoteAddress()).getAddress().toString()));
 		

@@ -1,6 +1,8 @@
 package com.simplyti.service.clients;
 
 
+import java.util.concurrent.ThreadFactory;
+
 import com.simplyti.service.clients.channel.factory.DefaultChannelFactory;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.monitor.DefaultClientMonitor;
@@ -18,8 +20,11 @@ import io.netty.channel.kqueue.KQueue;
 import io.netty.channel.kqueue.KQueueEventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.handler.ssl.SslProvider;
+import io.netty.util.concurrent.DefaultThreadFactory;
 
 public abstract class AbstractClientBuilder<B,T extends Client<R>,R extends BaseClientRequestBuilder<R>> implements ClientBuilder<B,T,R>, EventLoopGroupFactory {
+	
+	private final String name;
 	
 	private EventLoopGroup eventLoopGroup;
 	private EventLoopGroupFactory eventLoopGroupFactory;
@@ -30,6 +35,14 @@ public abstract class AbstractClientBuilder<B,T extends Client<R>,R extends Base
 	private int poolSize;
 	private boolean unpooledChannels;
 	private long poolIdleTimeout;
+	
+	public AbstractClientBuilder() {
+		this("client");
+	}
+	
+	public AbstractClientBuilder(String name) {
+		this.name=name;
+	}
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -119,6 +132,8 @@ public abstract class AbstractClientBuilder<B,T extends Client<R>,R extends Base
 	private Bootstrap bootstrap(EventLoopGroup eventLoopGroup) {
 		return new Bootstrap().group(eventLoopGroup)
 			.channelFactory(channelFactory(eventLoopGroup))
+			.option(ChannelOption.SO_KEEPALIVE, true)
+			.option(ChannelOption.SO_REUSEADDR, true)
 			.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
 			.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 	}
@@ -152,12 +167,13 @@ public abstract class AbstractClientBuilder<B,T extends Client<R>,R extends Base
 	
 	@Override
 	public EventLoopGroup get() {
+		ThreadFactory threadFactory = new DefaultThreadFactory(name+"-pool", false);
 		if(Epoll.isAvailable()) {
-			return new EpollEventLoopGroup();
+			return new EpollEventLoopGroup(threadFactory);
 		}else if(KQueue.isAvailable()) {
-			return new KQueueEventLoopGroup();
+			return new KQueueEventLoopGroup(threadFactory);
 		}else {
-			return new NioEventLoopGroup();
+			return new NioEventLoopGroup(threadFactory);
 		}
 	}
 	

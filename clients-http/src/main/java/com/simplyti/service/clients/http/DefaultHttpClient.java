@@ -1,5 +1,7 @@
 package com.simplyti.service.clients.http;
 
+import java.util.List;
+
 import com.simplyti.service.clients.channel.ClientChannelFactory;
 import com.simplyti.service.clients.channel.FixedSizeClientChannelFactory;
 import com.simplyti.service.clients.channel.SimpleClientChannelFactory;
@@ -10,6 +12,7 @@ import com.simplyti.service.clients.http.request.DefaultHttpRequestBuilder;
 import com.simplyti.service.clients.http.request.HttpRequestBuilder;
 import com.simplyti.service.clients.monitor.ClientMonitor;
 import com.simplyti.service.clients.monitor.DefaultClientMonitor;
+import com.simplyti.service.filter.http.HttpRequestFilter;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -27,13 +30,14 @@ public class DefaultHttpClient extends AbstractChannelPoolHandler implements Htt
 	private final Endpoint endpoint;
 	private final EventLoopGroup eventLoopGroup;
 	private final boolean checkStatusCode;
+	private final List<HttpRequestFilter> filters;
 	private final HttpHeaders headers;
 	private final DefaultClientMonitor monitor;
 	
 	private final ChannelHandler setHostHeaderHandler;
 
 	public DefaultHttpClient(EventLoopGroup eventLoopGroup, Bootstrap bootstrap, Endpoint endpoint, HttpHeaders headers, SslProvider sslProvider, boolean checkStatusCode,
-			DefaultClientMonitor monitor, int poolSize, boolean unpooledChannels, long poolIdleTimeout) {
+			List<HttpRequestFilter> filters, DefaultClientMonitor monitor, int poolSize, boolean unpooledChannels, long poolIdleTimeout) {
 		if(unpooledChannels) { 
 			this.clientFactory=new UnpooledClientChannelFactory(bootstrap, eventLoopGroup, this, sslProvider, monitor);
 		} else if(poolSize>0) {
@@ -42,6 +46,7 @@ public class DefaultHttpClient extends AbstractChannelPoolHandler implements Htt
 			this.clientFactory=new SimpleClientChannelFactory(bootstrap, eventLoopGroup, poolIdleTimeout>0? new IdleTimeoutHandler(this,poolIdleTimeout):this, sslProvider,monitor);
 		}
 		this.monitor=monitor;
+		this.filters=filters;
 		this.eventLoopGroup=eventLoopGroup;
 		this.endpoint=endpoint;
 		this.headers=headers;
@@ -51,7 +56,7 @@ public class DefaultHttpClient extends AbstractChannelPoolHandler implements Htt
 
 	@Override
 	public HttpRequestBuilder request() {
-		return new DefaultHttpRequestBuilder(eventLoopGroup,clientFactory,endpoint,headers,checkStatusCode);
+		return new DefaultHttpRequestBuilder(eventLoopGroup,clientFactory,endpoint,headers,checkStatusCode, filters);
 	}
 
 	@Override

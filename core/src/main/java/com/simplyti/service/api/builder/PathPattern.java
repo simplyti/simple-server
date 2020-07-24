@@ -1,11 +1,11 @@
 package com.simplyti.service.api.builder;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 import com.google.re2j.Pattern;
 
 import io.netty.util.internal.StringUtil;
@@ -42,24 +42,23 @@ public class PathPattern {
 
 	public static PathPattern build(String uri) {
 		StringBuilder pathTemplateBuilder = new StringBuilder();
-		Builder<String, Integer> pathParamNameToGroupBuilder = ImmutableMap.<String, Integer>builder();
+		Map<String, Integer> pathParamNameToGroup = new HashMap<>();
 		AtomicInteger pathParamGroupCount = new AtomicInteger(1);
 		AtomicReference<StringBuilder> pathParamNameRef = new AtomicReference<>();
 		AtomicInteger literalCharsCount = new AtomicInteger();
 		
 		uri.replaceAll("^/+", StringUtil.EMPTY_STRING).replaceAll("/+$",  StringUtil.EMPTY_STRING).chars()
 			.mapToObj(i -> (char) i)
-			.forEach(character -> process(character, pathTemplateBuilder, pathParamNameToGroupBuilder, pathParamGroupCount,
+			.forEach(character -> process(character, pathTemplateBuilder, pathParamNameToGroup, pathParamGroupCount,
 				pathParamNameRef,literalCharsCount));
 		
 		pathTemplateBuilder.append("/?$").insert(0, "^/");
-		Map<String, Integer> pathParamNameToGroup = pathParamNameToGroupBuilder.build();
 		
-		return new PathPattern(uri,Pattern.compile(pathTemplateBuilder.toString()),pathParamNameToGroup,literalCharsCount.get());
+		return new PathPattern(uri,Pattern.compile(pathTemplateBuilder.toString()),Collections.unmodifiableMap(pathParamNameToGroup),literalCharsCount.get());
 	}
 	
 	private static void process(Character character, StringBuilder pathTemplateBuilder,
-			Builder<String, Integer> pathParamNameToGroup, AtomicInteger pathParamGroupCount,
+			Map<String, Integer> pathParamNameToGroup, AtomicInteger pathParamGroupCount,
 			AtomicReference<StringBuilder> pathParamNameRef, AtomicInteger literalCharsCount) {
 		if (character.equals('{')) {
 			pathParamNameRef.set(new StringBuilder());

@@ -13,9 +13,6 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.MoreObjects;
-import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.clients.endpoint.Address;
 import com.simplyti.service.clients.http.HttpClient;
@@ -40,6 +37,7 @@ import com.simplyti.service.clients.k8s.services.domain.ServicePort;
 import com.simplyti.service.discovery.k8s.oidc.K8sAutodiscoveredOpenIdHandler;
 import com.simplyti.service.discovery.k8s.oidc.K8sAutodiscoveredOpenIdProviderConfig;
 import com.simplyti.service.discovery.k8s.ssl.KubernetesCertificateProvider;
+import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.service.gateway.DefaultServiceDiscovery;
 import com.simplyti.service.gateway.BackendService;
 import com.simplyti.service.gateway.ServiceKey;
@@ -253,9 +251,9 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		boolean tlsEnabled = ingress.spec().tls()!=null;
 		if(type == EventType.ADDED){
 			ingresses.put(id, ingress);
-			MoreObjects.firstNonNull(ingress.spec().tls(), Collections.<IngressTls>emptyList()).stream()
+			firstNonNull(ingress.spec().tls(), Collections.<IngressTls>emptyList()).stream()
 				.forEach(tls->tls.hosts().stream().forEach(host->certificateProvider
-						.add(host,Joiner.on(':').join(ingress.metadata().namespace(),tls.secretName()))));
+						.add(host,String.join(":",ingress.metadata().namespace(),tls.secretName()))));
 			
 			ingress.spec().rules().stream().flatMap(rule->rule.http().paths().stream()
 					.map(path->new BackendService(rule.host(), null, path.path(),rewrite(ingress),tlsEnabled,securiFilters(ingress),
@@ -264,7 +262,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		}else if(type == EventType.DELETED) {
 			Ingress oldIngress = ingresses.remove(id);
 			
-			MoreObjects.firstNonNull(oldIngress.spec().tls(), Collections.<IngressTls>emptyList()).stream()
+			firstNonNull(oldIngress.spec().tls(), Collections.<IngressTls>emptyList()).stream()
 				.forEach(tls->tls.hosts().stream().forEach(certificateProvider::remove));
 			
 			oldIngress.spec().rules().stream().flatMap(rule->rule.http().paths().stream()
@@ -273,11 +271,11 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		} else if(type == EventType.MODIFIED) {
 			Ingress oldIngress = ingresses.put(id, ingress);
 			
-			MoreObjects.firstNonNull(ingress.spec().tls(), Collections.<IngressTls>emptyList()).stream()
+			firstNonNull(ingress.spec().tls(), Collections.<IngressTls>emptyList()).stream()
 			.forEach(tls->tls.hosts().stream().forEach(host->certificateProvider
-					.add(host,Joiner.on(':').join(ingress.metadata().namespace(),tls.secretName()))));
+					.add(host,String.join(":",ingress.metadata().namespace(),tls.secretName()))));
 			
-			MoreObjects.firstNonNull(oldIngress.spec().tls(), Collections.<IngressTls>emptyList()).stream()
+			firstNonNull(oldIngress.spec().tls(), Collections.<IngressTls>emptyList()).stream()
 			.forEach(tls->tls.hosts().stream().forEach(certificateProvider::remove));
 			
 			List<BackendService> oldBackends = oldIngress.spec().rules().stream().flatMap(rule->rule.http().paths().stream()
@@ -362,9 +360,9 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 	}
 
 	private List<EnpointAddress> address(Endpoint oldEndpoint) {
-		return MoreObjects.firstNonNull(oldEndpoint.subsets(), Collections.<Subset>emptyList()).stream()
+		return firstNonNull(oldEndpoint.subsets(), Collections.<Subset>emptyList()).stream()
 		.flatMap(subset->subset.ports().stream()
-				.flatMap(port->MoreObjects.firstNonNull(subset.addresses(), Collections.<com.simplyti.service.clients.k8s.endpoints.domain.Address>emptyList()).stream()
+				.flatMap(port->firstNonNull(subset.addresses(), Collections.<com.simplyti.service.clients.k8s.endpoints.domain.Address>emptyList()).stream()
 						.map(address->new EnpointAddress(port.name(),new Address(address.ip(), port.port())))))
 		.collect(Collectors.toList());
 	}
@@ -408,12 +406,12 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		return a.metadata().namespace().equals(b.metadata().namespace());
 	}
 
-	private Collection<com.simplyti.service.clients.endpoint.Endpoint> endpoints(String namespace, Ingress ingress, IngressBackend backend) {
-		String serviceId = Joiner.on(':').join(namespace,backend.serviceName());
+	private List<com.simplyti.service.clients.endpoint.Endpoint> endpoints(String namespace, Ingress ingress, IngressBackend backend) {
+		String serviceId = String.join(":",namespace,backend.serviceName());
 		if(services.containsKey(serviceId) && endpoints.containsKey(serviceId)) {
 			return services.get(serviceId).spec().ports().stream()
 					.filter(port->isTargetPort(port,backend.servicePort()))
-					.flatMap(servicePort-> MoreObjects.firstNonNull(endpoints.get(serviceId).subsets(), Collections.<Subset>emptyList())
+					.flatMap(servicePort-> firstNonNull(endpoints.get(serviceId).subsets(), Collections.<Subset>emptyList())
 					.stream().flatMap(subset->subset.ports().stream().filter(port->port.port().equals(servicePort.targetPort()))
 						.flatMap(port->subset.addresses().stream()
 								.map(address->endpoint(ingress,address,port))))
@@ -459,7 +457,14 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 	}
 
 	private String resourceId(Metadata metadata) {
-		return Joiner.on(':').join(metadata.namespace(), metadata.name());
+		return String.join(":",metadata.namespace(), metadata.name());
+	}
+	
+	private static <Q> Q firstNonNull(Q obj1, Q obj2) {
+		if(obj1 !=null) {
+			return obj1;
+		} 
+		return obj2;
 	}
 
 }

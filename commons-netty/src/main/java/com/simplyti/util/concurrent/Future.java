@@ -15,6 +15,6 @@ public interface Future<T> extends io.netty.util.concurrent.Future<T> {
 	
 	<O> Future<O> exceptionallyApply(Function<Throwable, ? extends O> fn);
 	
-	Future<Void> onError(Consumer<Throwable> action);
+	Future<T> onError(Consumer<Throwable> action);
 	
 }

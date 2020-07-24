@@ -1,9 +1,8 @@
 package com.simplyti.service.security.oidc.filter;
 
-
-import com.simplyti.service.api.filter.FilterContext;
-import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.simplyti.service.api.serializer.json.Json;
+import com.simplyti.service.filter.FilterContext;
+import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.service.security.oidc.handler.OpenIdHandler;
 
 import io.netty.handler.codec.http.HttpRequest;

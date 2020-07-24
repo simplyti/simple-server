@@ -2,11 +2,9 @@ package com.simplyti.service.gateway.balancer;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.List;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.simplyti.service.clients.endpoint.Endpoint;
 
@@ -17,12 +15,15 @@ public class RoundRobinLoadBalancer implements ServiceBalancer {
 	
 	private static final RoundRobinLoadBalancer EMPTY = new RoundRobinLoadBalancer(null);
 
-	private final Iterator<Endpoint> iterator;
-	private final Collection<Endpoint> endpoints;
+	private final List<Endpoint> endpoints;
+	private Integer position = 0;
+	
+	private RoundRobinLoadBalancer() {
+		this.endpoints = Collections.emptyList();
+	}
 
-	public RoundRobinLoadBalancer(Collection<Endpoint> endpoints) {
-		this.endpoints=MoreObjects.firstNonNull(endpoints, Collections.emptyList());
-		this.iterator = Iterables.cycle(this.endpoints).iterator();
+	private RoundRobinLoadBalancer(List<Endpoint> endpoints) {
+		this.endpoints=endpoints;
 	}
 	
 	@Override
@@ -32,27 +33,68 @@ public class RoundRobinLoadBalancer implements ServiceBalancer {
 
 	@Override
 	public Endpoint next() {
-		try {
-			return iterator.next();
-		}catch (NoSuchElementException ex) {
-			return null;
+		final Endpoint target;
+        synchronized (position) {
+            if (position > endpoints.size() - 1) {
+                position = 0;
+            }
+            target = endpoints.get(0);
+            position++;
+        }
+        return target;
+	}
+	
+	public static ServiceBalancer of(List<Endpoint> endpoints) {
+		if(endpoints==null || endpoints.isEmpty()) {
+			return Empty.INSTANCE;
+		} else if (endpoints.size() == 1) {
+			return new Single(Iterables.get(endpoints, 0));
+		} else {
+			return new RoundRobinLoadBalancer(endpoints);
 		}
 	}
 
 	@Override
 	public ServiceBalancer add(Endpoint endpoint) {
-		return new RoundRobinLoadBalancer(ImmutableSet.<Endpoint>builder().addAll(endpoints).add(endpoint).build());
+		return of(ImmutableList.<Endpoint>builder().addAll(endpoints).add(endpoint).build());
 	}
 
 	@Override
 	public ServiceBalancer delete(Endpoint endpoint) {
-		return new RoundRobinLoadBalancer(endpoints.stream().filter(edp->!edp.equals(endpoint))
-				.collect(ImmutableSet.toImmutableSet()));
+		return of(endpoints.stream().filter(edp->!edp.equals(endpoint))
+				.collect(ImmutableList.toImmutableList()));
 	}
 
 	@Override
 	public ServiceBalancer clear() {
 		return EMPTY;
 	}
+	
+	private static class Empty extends RoundRobinLoadBalancer {
+		
+		private static final ServiceBalancer INSTANCE = new Empty();
 
+		@Override
+		public Endpoint next() {
+			return null;
+		}
+
+	}
+	
+	private static class Single extends RoundRobinLoadBalancer {
+		
+		private final Endpoint endpoint;
+
+		public Single(Endpoint endpoint) {
+			super(Collections.singletonList(endpoint));
+			this.endpoint=endpoint;
+		}
+
+		@Override
+		public Endpoint next() {
+			return endpoint;
+		}
+
+	}
+	
 }

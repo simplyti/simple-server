@@ -8,12 +8,9 @@ import javax.annotation.Nullable;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import com.google.common.base.MoreObjects;
 import com.simplyti.service.DefaultStartStopMonitor;
 import com.simplyti.service.ServerConfig;
 import com.simplyti.service.StartStopMonitor;
-import com.simplyti.service.api.filter.HttpRequestFilter;
-import com.simplyti.service.api.filter.HttpResponseFilter;
 import com.simplyti.service.builder.di.EventLoopGroupProvider;
 import com.simplyti.service.builder.di.ExecutorServiceProvider;
 import com.simplyti.service.builder.di.NativeIO;
@@ -32,6 +29,8 @@ import com.simplyti.service.channel.handler.ServerHeadersHandler;
 import com.simplyti.service.channel.handler.inits.HandlerInit;
 import com.simplyti.service.exception.DefaultExceptionHandler;
 import com.simplyti.service.exception.ExceptionHandler;
+import com.simplyti.service.filter.http.HttpRequestFilter;
+import com.simplyti.service.filter.http.HttpResponseFilter;
 import com.simplyti.service.json.DslJsonModule;
 import com.simplyti.service.ssl.SslHandlerFactory;
 import com.simplyti.service.sync.DefaultSyncTaskSubmitter;
@@ -67,13 +66,20 @@ public class BaseServiceModule {
 			@Nullable @Named("securedPort") Integer  securedPort,
 			@Nullable @Named("verbose") Boolean verbose) {
 		return new ServerConfig(name,
-				MoreObjects.firstNonNull(blockingThreadPool, 500),
-				MoreObjects.firstNonNull(insecuredPort, 8080),
-				MoreObjects.firstNonNull(securedPort, 8443), 
+				firstNonNull(blockingThreadPool, 500),
+				firstNonNull(insecuredPort, 8080),
+				firstNonNull(securedPort, 8443), 
 				false, 
-				MoreObjects.firstNonNull(verbose, false));
+				firstNonNull(verbose, false));
 	}
 	
+	private static <T> T firstNonNull(T o1, T o2) {
+		if(o1 != null){
+			return o1;
+		}
+		return o2;
+	}
+
 	@Provides
 	@Singleton
 	public ChannelFactory<ServerChannel> channelFactory(Optional<NativeIO> nativeIO) {

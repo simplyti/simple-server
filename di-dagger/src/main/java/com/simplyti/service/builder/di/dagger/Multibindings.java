@@ -3,10 +3,10 @@ package com.simplyti.service.builder.di.dagger;
 import java.util.Set;
 
 import com.simplyti.server.http.api.filter.OperationInboundFilter;
-import com.simplyti.service.api.filter.HttpRequestFilter;
-import com.simplyti.service.api.filter.HttpResponseFilter;
 import com.simplyti.service.builder.di.NativeIO;
 import com.simplyti.service.channel.handler.inits.HandlerInit;
+import com.simplyti.service.filter.http.HttpRequestFilter;
+import com.simplyti.service.filter.http.HttpResponseFilter;
 import com.simplyti.service.hook.ServerStartHook;
 import com.simplyti.service.hook.ServerStopHook;
 import com.simplyti.service.ssl.SslHandlerFactory;

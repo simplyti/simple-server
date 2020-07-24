@@ -223,7 +223,12 @@
 			<artifactId>simple-server-serializer-jsoniter</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
+		
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+		</dependency>
+		
 		<!-- Integration Tests -->
 		<dependency>
 			<groupId>junit</groupId>

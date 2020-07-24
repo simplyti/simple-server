@@ -14,8 +14,8 @@ import com.simplyti.server.http.api.context.WithBodyApiContext;
 import com.simplyti.server.http.api.filter.OperationInboundFilter;
 import com.simplyti.server.http.api.operations.ApiOperation;
 import com.simplyti.server.http.api.request.FullApiInvocation;
-import com.simplyti.service.api.filter.FilterChain;
 import com.simplyti.service.exception.ExceptionHandler;
+import com.simplyti.service.filter.FilterChain;
 import com.simplyti.service.priority.Priorized;
 import com.simplyti.service.sync.SyncTaskSubmitter;
 

@@ -1,13 +1,6 @@
 @serverBuilder @standalone
 Feature: Builder
 
-Scenario: I cannot specify logger factory twice
-	When I try to start a service "#serviceFuture" with options getting error "#error":
-		| option	 		| value |
-		| withLog4J2Logger	|		|
-		| withLog4J2Logger	|		|
-	Then I check that error "#error" contains message "Logger already stablished to log4j2"
-	
 Scenario: I cannot start servers on same port
 	When I start a service "#serviceFuture" with options:
 		| option	 		| value |

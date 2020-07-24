@@ -1,4 +1,4 @@
-package com.simplyti.service.api.filter;
+package com.simplyti.service.filter;
 
 public interface Filter<T> {
 	
