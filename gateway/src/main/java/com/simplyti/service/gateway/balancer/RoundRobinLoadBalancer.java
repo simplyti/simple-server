@@ -13,8 +13,6 @@ import lombok.ToString;
 @ToString(of="endpoints")
 public class RoundRobinLoadBalancer implements ServiceBalancer {
 	
-	private static final RoundRobinLoadBalancer EMPTY = new RoundRobinLoadBalancer(null);
-
 	private final List<Endpoint> endpoints;
 	private Integer position = 0;
 	
@@ -67,7 +65,7 @@ public class RoundRobinLoadBalancer implements ServiceBalancer {
 
 	@Override
 	public ServiceBalancer clear() {
-		return EMPTY;
+		return Empty.INSTANCE;
 	}
 	
 	private static class Empty extends RoundRobinLoadBalancer {

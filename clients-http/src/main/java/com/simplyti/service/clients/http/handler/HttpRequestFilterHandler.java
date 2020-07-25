@@ -23,7 +23,13 @@ public class HttpRequestFilterHandler extends ChannelOutboundHandlerAdapter {
 	public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
 		FilterChain<HttpRequest> chain = FilterChain.of(filters,ctx,(HttpRequest)msg);
 		chain.execute()
-			.thenAccept(f->ctx.write(msg, promise))
+			.thenAccept(handled->{
+				if(!handled) {
+					ctx.write(msg, promise);
+				} else {
+					promise.setSuccess(null);
+				}
+			})
 			.onError(promise::setFailure);
 	}
 

@@ -81,15 +81,15 @@ public class DefaultKubeClient implements KubeClient {
 				.withBearerAuth(token!=null?token:readFile(DEFAULT_TOKEN_FILE))
 				.build();
 		Json json = new DslJsonSerializer(Collections.singleton(new K8sDomainConfiguration()));
-		this.pods = new DefaultPods(eventLoopGroup,http,json);
-		this.jobs = new DefaultJobs(eventLoopGroup,http,json);
-		this.services = new DefaultServices(eventLoopGroup,http,json);
-		this.ingresses = new DefaultIngresses(eventLoopGroup,http,json);
-		this.endpoints = new DefaultEndpoints(eventLoopGroup,http,json);
-		this.secrets = new DefaultSecrets(eventLoopGroup,http,json);
-		this.serviceAccounts = new DefaultServiceAccounts(eventLoopGroup,http,json);
-		this.namespaces = new DefaultNamespaces(eventLoopGroup,http,json);
-		this.configMaps = new DefaultConfigMaps(eventLoopGroup, http, json);
+		this.pods = new DefaultPods(http.eventLoopGroup(),http,json);
+		this.jobs = new DefaultJobs(http.eventLoopGroup(),http,json);
+		this.services = new DefaultServices(http.eventLoopGroup(),http,json);
+		this.ingresses = new DefaultIngresses(http.eventLoopGroup(),http,json);
+		this.endpoints = new DefaultEndpoints(http.eventLoopGroup(),http,json);
+		this.secrets = new DefaultSecrets(http.eventLoopGroup(),http,json);
+		this.serviceAccounts = new DefaultServiceAccounts(http.eventLoopGroup(),http,json);
+		this.namespaces = new DefaultNamespaces(http.eventLoopGroup(),http,json);
+		this.configMaps = new DefaultConfigMaps(http.eventLoopGroup(), http, json);
 	}
 
 	private String readFile(String fileName) {

@@ -18,9 +18,11 @@ public class FilterChain<T> implements FilterContext<T> {
 	private final Iterator<? extends Filter<T>> iterator;
 	private final T msg;
 	private final Channel channel;
+	private final ChannelHandlerContext channelContext;
 
 	private FilterChain(Collection<? extends Filter<T>> filters, ChannelHandlerContext ctx, T msg) {
 		this.iterator =  filters.iterator();
+		this.channelContext=ctx;
 		this.channel=ctx.channel();
 		this.loop = ctx.executor();
 		this.promise = ctx.executor().newPromise();
@@ -58,6 +60,11 @@ public class FilterChain<T> implements FilterContext<T> {
 	@Override
 	public Channel channel() {
 		return channel;
+	}
+
+	@Override
+	public ChannelHandlerContext channelContext() {
+		return channelContext;
 	}
 
 }

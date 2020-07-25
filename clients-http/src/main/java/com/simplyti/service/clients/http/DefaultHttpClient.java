@@ -75,4 +75,9 @@ public class DefaultHttpClient extends AbstractChannelPoolHandler implements Htt
 		return monitor.idleChannels().close();
 	}
 
+	@Override
+	public EventLoopGroup eventLoopGroup() {
+		return eventLoopGroup;
+	}
+
 }
