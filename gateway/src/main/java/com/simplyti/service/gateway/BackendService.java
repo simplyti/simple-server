@@ -11,6 +11,7 @@ import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.simplyti.service.clients.Endpoint;
 import com.simplyti.service.gateway.balancer.RoundRobinLoadBalancer;
 import com.simplyti.service.gateway.balancer.ServiceBalancer;
+import com.simplyti.service.gateway.filter.BackendHttpRequestListener;
 
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.util.internal.StringUtil;
@@ -36,6 +37,7 @@ public class BackendService implements Comparable<BackendService>{
 	private final String path;
 	private final Rewrite rewrite;
 	private final Set<HttpRequestFilter> filters;
+	private final Set<BackendHttpRequestListener> requestListener;
 	private final Pattern pattern;
 	private final PathPattern pathPattern;
 	private final int literalCount;
@@ -44,6 +46,11 @@ public class BackendService implements Comparable<BackendService>{
 	private ServiceBalancer loadBalander;
 
 	public BackendService(String host, HttpMethod method, String path, String rewrite, boolean tlsEnabled, Set<HttpRequestFilter> filters, List<Endpoint> endpoints) {
+		this(host,method,path,rewrite,tlsEnabled,filters,endpoints,null);
+	}
+
+	public BackendService(String host, HttpMethod method, String path, String rewrite, boolean tlsEnabled, Set<HttpRequestFilter> filters, List<Endpoint> endpoints,
+			Set<BackendHttpRequestListener> requestListener) {
 		this.loadBalander = RoundRobinLoadBalancer.of(endpoints);
 		this.host=host;
 		this.method=method;
@@ -51,6 +58,7 @@ public class BackendService implements Comparable<BackendService>{
 		this.rewrite=rewrite==null?null:new Rewrite(rewrite);
 		this.tlsEnabled=tlsEnabled;
 		this.filters=MoreObjects.firstNonNull(filters, Collections.emptySet());
+		this.requestListener=MoreObjects.firstNonNull(requestListener, Collections.emptySet());;
 		if(path==null) {
 			this.pathPattern=null;
 			this.pattern = null;
@@ -150,14 +158,6 @@ public class BackendService implements Comparable<BackendService>{
 	public void clear() {
 		this.loadBalander = loadBalander.clear();
 		log.info("Cleared service endpoints");
-	}
-
-	public Set<HttpRequestFilter> filters() {
-		return filters;
-	}
-
-	public boolean tlsEnabled() {
-		return tlsEnabled;
 	}
 
 }

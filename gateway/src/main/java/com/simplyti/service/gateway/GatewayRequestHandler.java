@@ -178,7 +178,8 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 	private void handleBackendChannelFuture0(ChannelHandlerContext ctx, Future<Channel> backendChannelFuture,
 			ChannelPool pool, Endpoint endpoint, boolean isContinueExpected, BackendServiceMatcher serviceMatch) {
 		if (backendChannelFuture.isSuccess()) {
-			backendChannelFuture.getNow().pipeline().addLast(new BackendProxyHandler(gatewayConfig,pool, ctx.channel(),endpoint,isContinueExpected,frontSsl,serviceMatch));
+			notifyAcquired(ctx,backendChannelFuture.getNow(),serviceMatch.get());
+			backendChannelFuture.getNow().pipeline().addLast(new BackendProxyHandler(gatewayConfig,pool, ctx.channel(),endpoint,isContinueExpected,frontSsl,serviceMatch,serviceMatch.get().requestListener()));
 			this.backendChannel=backendChannelFuture.getNow();
 			pendingMessages.write(backendChannel).addListener(f->handleWriteFuture(ctx, f));
 		}else {
@@ -186,6 +187,12 @@ public class GatewayRequestHandler extends DefaultBackendRequestHandler {
 			ctx.fireExceptionCaught(new ServiceException(HttpResponseStatus.BAD_GATEWAY));
 			pendingMessages.fail(backendChannelFuture.cause());
 			ignoreNextMessages=true;
+		}
+	}
+
+	private void notifyAcquired(ChannelHandlerContext ctx, Channel channel, BackendService backendService) {
+		if(!backendService.requestListener().isEmpty()) {
+			backendService.requestListener().forEach(l->l.acquired(ctx,channel));
 		}
 	}
 
