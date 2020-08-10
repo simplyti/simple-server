@@ -7,9 +7,13 @@ import io.netty.handler.codec.http.HttpResponse;
 
 public interface BackendHttpRequestListener  {
 
-	void sentRequest(ChannelHandlerContext ctx, HttpRequest request);
+	void startRequest(ChannelHandlerContext ctx, HttpRequest request);
+	
+	void endRequest(ChannelHandlerContext ctx);
 
-	void receivedResponse(ChannelHandlerContext ctx, HttpResponse response);
+	void startResponse(ChannelHandlerContext ctx, HttpResponse response);
+	
+	void endResponse(ChannelHandlerContext ctx);
 
 	void acquired(ChannelHandlerContext ctx, Channel channel);
 

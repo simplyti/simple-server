@@ -45,9 +45,6 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 	private boolean upgrading;
 	private boolean isContinuing;
 	private boolean keepAlive;
-	private HttpRequest request;
-	private HttpResponse response;
-	
 	
 	public BackendProxyHandler(GatewayConfig config, ChannelPool backendChannelPool, Channel frontendChannel, Endpoint endpoint, boolean isContinueExpected, boolean frontSsl, BackendServiceMatcher serviceMatch,
 			Set<BackendHttpRequestListener> backendRequestListeners) {
@@ -75,7 +72,7 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 	@Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         if(msg instanceof HttpRequest) {
-        	this.request = (HttpRequest) msg;
+        	HttpRequest request = (HttpRequest) msg;
         	InetSocketAddress inetSocket = (InetSocketAddress) frontendChannel.remoteAddress();
         	if(!request.headers().contains(X_FORWARDED_HOST) && request.headers().contains(HttpHeaderNames.HOST)) {
         		request.headers().set(X_FORWARDED_HOST,request.headers().get(HttpHeaderNames.HOST));
@@ -88,6 +85,15 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
         		request.headers().set(HttpHeaderNames.HOST,endpoint.address().host());
         	}
         	msg = serviceMatch.rewrite((HttpRequest) msg);
+        	if(!this.backendRequestListeners.isEmpty()) {
+				this.backendRequestListeners.forEach(l->{
+					try {
+						l.startRequest(ctx, request);
+					} catch (Exception e) {
+						log.warn("Error handling request listener: {}", e.getMessage());
+					}
+				});
+			}
         }
         
         if(msg instanceof LastHttpContent && !this.backendRequestListeners.isEmpty()) {
@@ -95,7 +101,7 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
         		if(f.isSuccess()) {
         			this.backendRequestListeners.forEach(l->{
         				try {
-        					l.sentRequest(ctx, request);
+        					l.endRequest(ctx);
         				} catch (Exception e) {
 							log.warn("Error handling request listener: {}", e.getMessage());
 						}
@@ -123,7 +129,16 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 		
 		if(msg instanceof HttpResponse) {
 			this.keepAlive = HttpUtil.isKeepAlive((HttpResponse)msg);
-			this.response = (HttpResponse) msg;
+			HttpResponse response = (HttpResponse) msg;
+			if(!this.backendRequestListeners.isEmpty()) {
+				this.backendRequestListeners.forEach(l->{
+					try {
+						l.startResponse(ctx, response);
+					} catch (Exception e) {
+						log.warn("Error handling request listener: {}", e.getMessage());
+					}
+				});
+			}
 		}
 		
 		if(msg instanceof HttpResponse && "Upgrade".equalsIgnoreCase(((HttpResponse) msg).headers().get(HttpHeaderNames.CONNECTION))) {
@@ -142,7 +157,7 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 			if(!this.backendRequestListeners.isEmpty()) {
 				this.backendRequestListeners.forEach(l->{
 					try {
-						l.receivedResponse(ctx, response);
+						l.endResponse(ctx);
 					} catch (Exception e) {
 						log.warn("Error handling request listener: {}", e.getMessage());
 					}
