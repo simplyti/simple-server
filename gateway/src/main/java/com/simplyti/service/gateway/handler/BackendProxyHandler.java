@@ -11,11 +11,13 @@ import com.simplyti.service.gateway.filter.BackendHttpRequestListener;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.pool.ChannelPool;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -32,6 +34,7 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 	private static final String X_FORWARDED_FOR = "X-Forwarded-For";
 	private static final String X_FORWARDED_PROTO = "X-Forwarded-Proto";
 	private static final String X_FORWARDED_HOST = "X-Forwarded-Host";
+	private static final String UPGRADE = HttpHeaderValues.UPGRADE.toString();
 	
 	private final GatewayConfig config;
 	private final Channel frontendChannel;
@@ -45,6 +48,8 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 	private boolean upgrading;
 	private boolean isContinuing;
 	private boolean keepAlive;
+
+	private ChannelFuture pendingFrontWrite;
 	
 	public BackendProxyHandler(GatewayConfig config, ChannelPool backendChannelPool, Channel frontendChannel, Endpoint endpoint, boolean isContinueExpected, boolean frontSsl, BackendServiceMatcher serviceMatch,
 			Set<BackendHttpRequestListener> backendRequestListeners) {
@@ -66,7 +71,11 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 	
 	@Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		frontendChannel.close();
+		if(this.pendingFrontWrite ==null || this.pendingFrontWrite.isDone()) {
+			frontendChannel.close();
+		} else {
+			this.pendingFrontWrite.addListener(f->frontendChannel.close());
+		}
     }
 	
 	@Override
@@ -117,6 +126,11 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		if(msg instanceof HttpResponse) {
 			HttpResponse response = (HttpResponse) msg;
+			this.keepAlive = HttpUtil.isKeepAlive(response);
+			this.upgrading = UPGRADE.equalsIgnoreCase(((HttpResponse) msg).headers().get(HttpHeaderNames.CONNECTION));
+			if(isContinueExpected && response.status().equals(HttpResponseStatus.CONTINUE)) {
+				this.isContinuing=true;
+			}
 			if(!this.backendRequestListeners.isEmpty()) {
 				this.backendRequestListeners.forEach(l->{
 					try {
@@ -128,7 +142,7 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 			}
 		}
 		
-		frontendChannel.writeAndFlush(msg).addListener(f -> {
+		this.pendingFrontWrite = frontendChannel.writeAndFlush(msg).addListener(f -> {
 			if (f.isSuccess()) {
 				ctx.channel().read();
 			} else {
@@ -136,17 +150,7 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 			}
 		});
 		
-		if(isContinueExpected && isContinue(msg)) {
-			this.isContinuing=true;
-		}
-		
-		if(msg instanceof HttpResponse) {
-			this.keepAlive = HttpUtil.isKeepAlive((HttpResponse)msg);
-		}
-		
-		if(msg instanceof HttpResponse && "Upgrade".equalsIgnoreCase(((HttpResponse) msg).headers().get(HttpHeaderNames.CONNECTION))) {
-			this.upgrading=true;
-		} else if(upgrading && msg instanceof LastHttpContent) {
+		if(upgrading && msg instanceof LastHttpContent) {
 			ctx.pipeline().remove(HttpClientCodec.class);
 		} else if(msg instanceof LastHttpContent) {
 			if (isContinuing) {
@@ -177,8 +181,4 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 		}
 	}
 
-	private boolean isContinue(Object msg) {
-		return msg instanceof HttpResponse && ((HttpResponse) msg).status().equals(HttpResponseStatus.CONTINUE);
-	}
-	
 }
