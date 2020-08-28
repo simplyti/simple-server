@@ -26,5 +26,6 @@ public interface HttpRequestBuilder extends BaseClientRequestBuilder<HttpRequest
 	StreamedInputHttpRequestBuilder send(HttpRequest request);
 	
 	WebsocketClient websocket();
+	WebsocketClient websocket(String uri);
 
 }

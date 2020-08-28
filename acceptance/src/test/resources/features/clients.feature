@@ -1,7 +1,6 @@
-@clients
+@standalone @clients
 Feature: Clients
 
-@standalone
 Scenario: Connection is reused when using pooled client
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
@@ -13,8 +12,7 @@ Scenario: Connection is reused when using pooled client
 	Then I check that "#response" is success
 	And I check that http response "#response" has body "Hello!"
 	And I check that http client has 1 iddle connection
-	
-@standalone
+
 Scenario: New connection is created if needed when use unlimited pooled client
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
@@ -33,7 +31,6 @@ Scenario: New connection is created if needed when use unlimited pooled client
 	And I check that http client has 2 iddle connection
 	And I check that http client has 2 total connection
 	
-@standalone
 Scenario: No connection is created when reach maximun client pool size
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
@@ -57,7 +54,6 @@ Scenario: No connection is created when reach maximun client pool size
 	And I check that http client "#client" has 2 iddle connection
 	And I check that http client "#client" has 2 total connection
 	
-@standalone
 Scenario: Unpooled channel factory
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
@@ -81,7 +77,6 @@ Scenario: Unpooled channel factory
 	And I check that http client "#client" has 0 iddle connection
 	And I check that http client "#client" has 0 total connection
 
-@standalone	
 Scenario: Response timeout
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
@@ -92,7 +87,6 @@ Scenario: Response timeout
 	And I check that "#response" is success
 	And I check that http response "#response" has body "Hey!"
 	
-@standalone
 Scenario: Channel pool idle timeout
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
@@ -106,7 +100,6 @@ Scenario: Channel pool idle timeout
 	When I wait 350 milliseconds
 	Then I check that client "#client" has 0 iddle connection
 	
-@standalone	
 Scenario: Read timeout
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
@@ -117,13 +110,11 @@ Scenario: Read timeout
 	And I check that "#response" is success
 	And I check that http response "#response" has body "Hey!"
 
-@standalone	
 Scenario: Connection error
 	When I get "/hello" getting response "#response"
 	And I check that "#response" is failure
 	And I check that error cause of "#response" contains message "Connection refused: localhost/127.0.0.1:8080"
 
-@standalone	
 Scenario: Single thread client
 	Given a single thread event loop group "#eventLoopGroup"
 	When I create an http client "#client" with event loop group "#eventLoopGroup"
@@ -137,7 +128,6 @@ Scenario: Single thread client
 	And I check that http response "#response" has body "Hello!"
 	And I check that http client "#client" has 1 iddle connection
 
-@standalone	
 Scenario: Connection write stream with http objecs
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
@@ -159,7 +149,6 @@ Scenario: Connection write stream with http objecs
 	And I check that http response "#response" has body "Bye!"
 	And I check that http client has 1 iddle connection
 	
-@standalone
 Scenario: Single thread stream with http objects
 	Given a single thread event loop group "#eventLoopGroup"
 	When I create an http client "#client" with event loop group "#eventLoopGroup"
@@ -183,7 +172,6 @@ Scenario: Single thread stream with http objects
 	And I check that http response "#response" has body "Bye!"
 	And I check that http client "#client" has 1 iddle connection
 
-@standalone
 Scenario: Connection error when write stream
 	When I post "/echo" with body stream "#stream", content part "Hello", length of 6 getting response "#response"
 	And I check that "#response" is failure
@@ -193,7 +181,6 @@ Scenario: Connection error when write stream
 	Then I check that "#response" is failure
 	And I check that error cause of "#writeresult" contains message "Connection refused: localhost/127.0.0.1:8080"
 
-@standalone	
 Scenario: Connection closed
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
@@ -202,7 +189,6 @@ Scenario: Connection closed
 	And I check that "#response" has conention closed failure
 	And I check that error cause of "#response" is instancence of "java.nio.channels.ClosedChannelException"
 	
-@standalone
 Scenario: Client connections close
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
@@ -213,23 +199,4 @@ Scenario: Client connections close
 	When I close client connections "#closeFuture"
 	Then I check that "#closeFuture" is success
 	And I check that http client has 0 iddle connection
-	
-Scenario Outline: Client using <type> proxy
-	Given "<type>" proxy "<address>" as "#proxy"
-	When I get url "http://httpbin:80/status/204" through proxy "#proxy" getting response "#response"
-	Then I check that "#response" is success
-	And I check that http response "#response" has status code 204
-	And I check that http response "#response" has body ""
-	Examples:
-	| type 		| address 				|
-	| SOCKS5	| 127.0.0.1:1080		|
-	| HTTP		| 127.0.0.1:3128		|
-
-Scenario: Client using proxy with authentication
-	Given "SOCKS5" proxy "127.0.0.1:1081" as "#proxy"
-	When I get url "http://httpbin:80/status/204" through proxy "#proxy" with username "proxyuser" and password "123456" getting response "#response"
-	Then I check that "#response" is success
-	And I check that http response "#response" has status code 204
-	And I check that http response "#response" has body ""
-	
 	

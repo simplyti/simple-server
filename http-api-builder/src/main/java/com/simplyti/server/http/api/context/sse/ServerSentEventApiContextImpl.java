@@ -39,7 +39,7 @@ public class ServerSentEventApiContextImpl extends AbstractApiContext implements
 	
 	public ServerSentEventApiContextImpl(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler, ChannelHandlerContext ctx, HttpRequest request,
 			ApiMatchRequest matcher, ServerSentEventEncoder serverEventEncoder) {
-		super(syncTaskSubmitter, ctx.channel(), request, matcher);
+		super(syncTaskSubmitter, ctx, request, matcher);
 		this.ctx=ctx;
 		this.serverEventEncoder=serverEventEncoder;
 		this.exceptionHandler=exceptionHandler;

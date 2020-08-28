@@ -2,6 +2,7 @@ package com.simplyti.server.http.api.context.stream;
 
 import java.util.function.Consumer;
 
+import com.simplyti.server.http.api.builder.stream.StreamedResponseContextConsumer;
 import com.simplyti.server.http.api.context.AbstractApiContext;
 import com.simplyti.server.http.api.handler.StreamedApiInvocationHandler;
 import com.simplyti.server.http.api.handler.message.ApiResponse;
@@ -29,7 +30,7 @@ public class StreamRequestApiContextImpl extends AbstractApiContext implements S
 
 	public StreamRequestApiContextImpl(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler, ChannelHandlerContext ctx, HttpRequest request,
 			ApiMatchRequest matcher) {
-		super(syncTaskSubmitter, ctx.channel(), request, matcher);
+		super(syncTaskSubmitter, ctx, request, matcher);
 		this.exceptionHandler=exceptionHandler;
 		this.ctx=ctx;
 		this.isKeepAlive=HttpUtil.isKeepAlive(request);
@@ -139,6 +140,11 @@ public class StreamRequestApiContextImpl extends AbstractApiContext implements S
 		Promise<Void> promise = ctx.executor().newPromise();
 		ctx.pipeline().addLast(new StreamedApiInvocationHandler(consumer,promise));
 		return new DefaultFuture<>(promise, ctx.executor());
+	}
+	
+	@Override
+	public Future<Void> sendStreamed(StreamedResponseContextConsumer object) {
+		return null;
 	}
 
 }

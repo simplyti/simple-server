@@ -10,19 +10,19 @@ import io.netty.util.concurrent.ScheduledFuture;
 public class IdleTimeoutHandler implements ChannelPoolHandler {
 
 	private final ChannelPoolHandler target;
-	private final long timeoutMullis;
+	private final long timeoutMillis;
 	
 	private ScheduledFuture<ChannelFuture> schedule;
 
-	public IdleTimeoutHandler(ChannelPoolHandler target, long timeoutMullis) {
+	public IdleTimeoutHandler(ChannelPoolHandler target, long timeoutMillis) {
 		this.target=target;
-		this.timeoutMullis=timeoutMullis;
+		this.timeoutMillis=timeoutMillis;
 	}
 
 	@Override
 	public void channelReleased(Channel ch) throws Exception {
 		this.target.channelReleased(ch);
-		this.schedule = ch.eventLoop().schedule(()->ch.close(), timeoutMullis, TimeUnit.SECONDS);
+		this.schedule = ch.eventLoop().schedule(()->ch.close(), timeoutMillis, TimeUnit.MILLISECONDS);
 	}
 
 	@Override

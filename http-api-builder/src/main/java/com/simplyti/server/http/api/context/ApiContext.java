@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import com.simplyti.server.http.api.builder.ws.WebSocketApiContextConsumer;
 import com.simplyti.util.concurrent.Future;
 
 import io.netty.channel.Channel;
@@ -26,15 +27,14 @@ public interface ApiContext {
 	Integer pathParamAsInt(String key);
 	Long pathParamAsLong(String key);
 	
-	
 	HttpRequest request();
 	Channel channel();
-	
 	EventExecutor executor();
 	
 	Future<Void> failure(Throwable cause);
 	
 	Future<Void> close();
+	Future<Void> webSocket(WebSocketApiContextConsumer object);
 	
 	<T> Future<T> sync(Callable<T> task);
 	

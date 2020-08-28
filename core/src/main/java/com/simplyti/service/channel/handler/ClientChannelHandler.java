@@ -169,8 +169,10 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 			}else {
 				promise.addListener(f->{
 					if(upgrading) {
-						ctx.pipeline().remove("encoder");
-						ctx.pipeline().remove("decoder");
+						if(ctx.pipeline().get("decoder")!=null) {
+							ctx.pipeline().remove("encoder");
+							ctx.pipeline().remove("decoder");
+						}
 						ctx.pipeline().remove(this);
 					} else {
 						resetChannel(ctx.channel());

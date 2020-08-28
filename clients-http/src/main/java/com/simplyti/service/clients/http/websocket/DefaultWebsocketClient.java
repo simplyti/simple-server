@@ -18,13 +18,15 @@ public class DefaultWebsocketClient implements WebsocketClient {
 	
 	private final ChannelProvider channelProvider;
 	private final EventExecutor executor;
+	private final String uri;
 	
 	private Future<ClientChannel> futureChannel;
 	private StreamedOutput streamOutput;
 
-	public DefaultWebsocketClient(ChannelProvider channelProvider, EventExecutor executor) {
+	public DefaultWebsocketClient(String uri,ChannelProvider channelProvider, EventExecutor executor) {
 		this.channelProvider = channelProvider;
 		this.executor=executor;
+		this.uri=uri;
 	}
 	
 	@Override
@@ -44,7 +46,7 @@ public class DefaultWebsocketClient implements WebsocketClient {
 	private io.netty.util.concurrent.Future<ClientChannel> handshake(ClientChannel channel, Consumer<ByteBuf> consumer, Promise<Void> promise) {
 		Promise<ClientChannel> handshakeFuture = channel.eventLoop().newPromise();
 		channel.pipeline().addLast(new HttpObjectAggregator(65536));
-		channel.pipeline().addLast(new WebSocketChannelHandler(channel,handshakeFuture,consumer,promise));
+		channel.pipeline().addLast(new WebSocketChannelHandler(uri,channel,handshakeFuture,consumer,promise));
 		return handshakeFuture;
 	}
 

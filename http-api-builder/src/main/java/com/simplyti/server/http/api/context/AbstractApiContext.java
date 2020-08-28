@@ -6,13 +6,22 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 
+import com.simplyti.server.http.api.builder.ws.WebSocketApiContextConsumer;
+import com.simplyti.server.http.api.context.ws.WebSocketApiContextImpl;
 import com.simplyti.server.http.api.request.ApiMatchRequest;
 import com.simplyti.service.sync.SyncTaskSubmitter;
+import com.simplyti.util.concurrent.DefaultFuture;
 import com.simplyti.util.concurrent.Future;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
+import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.concurrent.EventExecutor;
+import io.netty.util.concurrent.Promise;
 
 public abstract class AbstractApiContext implements ApiContext {
 	
@@ -22,7 +31,7 @@ public abstract class AbstractApiContext implements ApiContext {
 	private static final String BOOLEAN = "boolean";
 	
 	private final SyncTaskSubmitter syncTaskSubmitter;
-	private final Channel channel;
+	private final ChannelHandlerContext ctx;
 	private final HttpRequest request;
 	private final ApiMatchRequest matcher;
 	
@@ -30,9 +39,9 @@ public abstract class AbstractApiContext implements ApiContext {
 	private final Map<String,Object> convertedQueryParams = new HashMap<>();
 
 
-	public AbstractApiContext(SyncTaskSubmitter syncTaskSubmitter, Channel channel, HttpRequest request, ApiMatchRequest matcher) {
+	public AbstractApiContext(SyncTaskSubmitter syncTaskSubmitter, ChannelHandlerContext ctx, HttpRequest request, ApiMatchRequest matcher) {
 		this.syncTaskSubmitter=syncTaskSubmitter;
-		this.channel=channel;
+		this.ctx=ctx;
 		this.request=request;
 		this.matcher=matcher;
 	}
@@ -119,12 +128,12 @@ public abstract class AbstractApiContext implements ApiContext {
 	
 	@Override
 	public Channel channel() {
-		return channel;
+		return ctx.channel();
 	}
 	
 	@Override
 	public EventExecutor executor() {
-		return channel.eventLoop();
+		return ctx.executor();
 	}
 
 	@Override
@@ -145,6 +154,41 @@ public abstract class AbstractApiContext implements ApiContext {
 	@Override
 	public <T> Future<T> sync(Callable<T> task) {
 		return syncTaskSubmitter.submit(executor(), task);
+	}
+	
+	@Override
+	public Future<Void> webSocket(WebSocketApiContextConsumer consumer) {
+		String location = this.request.headers().get(HttpHeaderNames.HOST) + this.request.uri();
+		WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(location, null, true);
+		WebSocketServerHandshaker handshaker = wsFactory.newHandshaker(this.request);
+		if (handshaker == null) {
+			return new DefaultFuture<>(this.ctx.executor().newFailedFuture(new RuntimeException()),this.ctx.executor());
+        } else {
+            ChannelFuture channelFuture = handshaker.handshake(this.ctx.channel(), this.request);
+            if(channelFuture.isDone()) {
+            	if(channelFuture.isSuccess()) {
+            		WebSocketApiContextImpl wsCtx = new WebSocketApiContextImpl(ctx);
+            		this.ctx.pipeline().addLast(wsCtx);
+            		consumer.accept(wsCtx);
+            		return new DefaultFuture<>(this.ctx.executor().newSucceededFuture(null),this.ctx.executor());
+            	} else {
+            		return new DefaultFuture<>(this.ctx.executor().newFailedFuture(new RuntimeException()),this.ctx.executor());
+            	}
+            } else {
+            	Promise<Void> promise = this.ctx.executor().newPromise();
+            	channelFuture.addListener(f->{
+            		if(f.isSuccess()) {
+            			WebSocketApiContextImpl wsCtx = new WebSocketApiContextImpl(ctx);
+                		this.ctx.pipeline().addLast(wsCtx);
+                		consumer.accept(wsCtx);
+            			promise.setSuccess(null);
+            		} else {
+            			promise.setFailure(new RuntimeException());
+            		}
+            	});
+            	return new DefaultFuture<>(promise,this.ctx.executor());
+            }
+        }
 	}
 
 }

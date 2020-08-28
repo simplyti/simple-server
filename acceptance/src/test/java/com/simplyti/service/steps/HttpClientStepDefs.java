@@ -27,6 +27,7 @@ import com.simplyti.service.clients.proxy.ProxiedEndpointBuilder;
 import com.simplyti.service.clients.proxy.Proxy;
 import com.simplyti.service.clients.proxy.Proxy.ProxyType;
 import com.simplyti.service.commons.netty.Promises;
+import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.util.concurrent.Future;
 import com.simplyti.service.clients.channel.ClientChannel;
 
@@ -528,8 +529,16 @@ public class HttpClientStepDefs {
 		assertThat(objects,hasSize(number));
 	}
 	
-	@Then("^I check that item (\\d+) of stream \"([^\"]*)\" is equals to$")
-	public void iCheckThatItemOfStreamIsEqualsTo(int item, String key, String expected) throws Exception {
+	@Then("^I check that item (\\d+) of stream \"([^\"]*)\" is equal to$")
+	public void iCheckThatItemOfStreamIsEqualTo(int item, String key, String expected) throws Exception {
+		@SuppressWarnings("unchecked")
+		List<ByteBuf> objects = (List<ByteBuf>) scenarioData.get(key);
+		ByteBuf data = objects.get(item);
+		assertThat(data.toString(CharsetUtil.UTF_8),equalTo(expected));
+	}
+	
+	@Then("^I check that item (\\d+) of stream \"([^\"]*)\" is equal to \"([^\"]*)\"$")
+	public void iCheckThatItemOfStreamIsEqualTo2(int item, String key, String expected) throws Exception {
 		@SuppressWarnings("unchecked")
 		List<ByteBuf> objects = (List<ByteBuf>) scenarioData.get(key);
 		ByteBuf data = objects.get(item);
@@ -551,6 +560,17 @@ public class HttpClientStepDefs {
 		StringBuilder data = new StringBuilder();
 		scenarioData.put(stream, data);
 		WebsocketClient ws = client.request().withEndpoint(endpoint).websocket();
+		ws.onData(buff->data.append(buff.toString(CharsetUtil.UTF_8)));
+		scenarioData.put(wsKey, ws);
+	}
+	
+	@When("^I connect to websocket \"([^\"]*)\" with uri \"([^\"]*)\" getting text stream \"([^\"]*)\"$")
+	public void iConnectToWebsocketWithUriGettingTextStream(String wsKey, String uri, String stream) throws Exception {
+		StringBuilder data = new StringBuilder();
+		scenarioData.put(stream, data);
+		WebsocketClient ws = client.request()
+				.withEndpoint(LOCAL_ENDPOINT)
+				.websocket(uri);
 		ws.onData(buff->data.append(buff.toString(CharsetUtil.UTF_8)));
 		scenarioData.put(wsKey, ws);
 	}
@@ -580,6 +600,20 @@ public class HttpClientStepDefs {
 	@When("^I close client connections \"([^\"]*)\"$")
 	public void iCloseClientConnections(String key) throws Exception {
 		scenarioData.put(key,sutClient.close());
+	}
+	
+	@When("^I crate http client filter \"([^\"]*)\" of class \"([^\"]*)\"$")
+	public void iCrateHttpClientFilterOfClass(String key, Class<?> clazz) throws Exception {
+		scenarioData.put(key, clazz.newInstance());
+	}
+	
+	@When("^I get \"([^\"]*)\" with filter \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	public void iGetWithFilterGettingResponse(String path, String filterKey, String resultKey) throws Exception {
+		Future<FullHttpResponse> response = sutClient.request()
+				.withEndpoint(LOCAL_ENDPOINT)
+				.withFilter((HttpRequestFilter) scenarioData.get(filterKey))
+				.get(path).fullResponse();
+		scenarioData.put(resultKey, response);
 	}
 	
 }

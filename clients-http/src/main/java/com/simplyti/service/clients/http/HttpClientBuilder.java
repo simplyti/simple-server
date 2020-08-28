@@ -12,6 +12,6 @@ public interface HttpClientBuilder extends ClientBuilder<HttpClientBuilder,HttpC
 
 	HttpClientBuilder withBasicAuth(String user, String password);
 
-	ClientBuilder<HttpClientBuilder, HttpClient, HttpRequestBuilder> withFilter(HttpRequestFilter filter);
+	HttpClientBuilder withFilter(HttpRequestFilter filter);
 
 }

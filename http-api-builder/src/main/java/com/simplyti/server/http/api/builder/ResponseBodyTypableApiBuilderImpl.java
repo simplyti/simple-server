@@ -71,7 +71,7 @@ public class ResponseBodyTypableApiBuilderImpl implements ResponseTypableApiBuil
 	}
 
 	@Override
-	public ResponseTypableApiBuilder withMeta(String key, String value) {
+	public ResponseTypableApiBuilder withMeta(String key, Object value) {
 		if(metadata==null) {
 			metadata = new HashMap<>();
 		}

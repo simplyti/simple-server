@@ -14,7 +14,7 @@ public class DefaultSslHandlerFactory implements SslHandlerFactory{
 
 	@Override
 	public SslHandler handler(Channel channel) {
-		return new SslHandler(sslCtx.newEngine(channel.alloc()));
+		return sslCtx.newHandler(channel.alloc());
 	}
 
 }

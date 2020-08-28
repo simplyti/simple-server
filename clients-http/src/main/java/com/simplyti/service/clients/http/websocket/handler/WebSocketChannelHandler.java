@@ -26,12 +26,12 @@ public class WebSocketChannelHandler extends SimpleChannelInboundHandler<Object>
 	
 	private final Consumer<ByteBuf> consumer;
 	
-	public WebSocketChannelHandler(ClientChannel channel, Promise<ClientChannel> handshakePromise, Consumer<ByteBuf> consumer, Promise<Void> promise) {
+	public WebSocketChannelHandler(String uri, ClientChannel channel, Promise<ClientChannel> handshakePromise, Consumer<ByteBuf> consumer, Promise<Void> promise) {
 		this.handshakePromise=handshakePromise;
 		this.channel=channel;
 		this.consumer=consumer;
 		this.promise=promise;
-		this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(URI.create("ws://"+channel.address().toString()+"/"), WebSocketVersion.V13, null, false, null, 1280000);
+		this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(URI.create("ws://"+channel.address().toString()+uri), WebSocketVersion.V13, null, false, null, 1280000);
 	}
 	
 	@Override

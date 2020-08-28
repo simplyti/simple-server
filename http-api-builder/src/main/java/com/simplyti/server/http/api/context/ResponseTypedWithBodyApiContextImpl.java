@@ -23,7 +23,7 @@ public class ResponseTypedWithBodyApiContextImpl<T> extends AbstractApiContext i
 	private final ApiOperation<?> operation;
 	
 	public ResponseTypedWithBodyApiContextImpl(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler, ChannelHandlerContext ctx, HttpRequest request, ByteBuf body, ApiMatchRequest match) {
-		super(syncTaskSubmitter, ctx.channel(), request, match);
+		super(syncTaskSubmitter, ctx, request, match);
 		this.ctx=ctx;
 		this.isKeepAlive=HttpUtil.isKeepAlive(request);
 		this.body=body;

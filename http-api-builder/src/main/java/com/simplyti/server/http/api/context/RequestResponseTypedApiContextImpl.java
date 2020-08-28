@@ -30,7 +30,7 @@ public class RequestResponseTypedApiContextImpl<T,U> extends AbstractApiContext 
 
 	public RequestResponseTypedApiContextImpl(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler, ChannelHandlerContext ctx, Json json, TypeLiteral<T> requestType, HttpRequest request, ByteBuf body,
 			ApiMatchRequest match) {
-		super(syncTaskSubmitter, ctx.channel(), request, match);
+		super(syncTaskSubmitter, ctx, request, match);
 		this.ctx=ctx;
 		this.exceptionHandler=exceptionHandler;
 		this.json=json;

@@ -6,13 +6,13 @@ Scenario: SSE server
 	Then I check that "#serviceFuture" is success
 	When I get url "http://127.0.0.1:8080/sse" getting stream "#stream"
 	Then I check that stream "#stream" contains 2 items
-	And I check that item 0 of stream "#stream" is equals to
+	And I check that item 0 of stream "#stream" is equal to
 	"""
 	data: Hello!
 	
 	
 	"""
-	And I check that item 1 of stream "#stream" is equals to
+	And I check that item 1 of stream "#stream" is equal to
 	"""
 	data: Bye!
 	
@@ -24,13 +24,13 @@ Scenario: SSE server using diferent threads
 	Then I check that "#serviceFuture" is success
 	When I get url "http://127.0.0.1:8080/sse/disrrupt" getting stream "#stream"
 	Then I check that stream "#stream" contains 2 items
-	And I check that item 0 of stream "#stream" is equals to
+	And I check that item 0 of stream "#stream" is equal to
 	"""
 	data: Hello!
 	
 	
 	"""
-	And I check that item 1 of stream "#stream" is equals to
+	And I check that item 1 of stream "#stream" is equal to
 	"""
 	data: Bye!
 	
@@ -47,13 +47,13 @@ Scenario: SSE server using diferent threads
 	Then I check that "#serviceFuture" is success
 	When I get url "http://127.0.0.1:8080/sse/disrrupt" getting stream "#stream"
 	Then I check that stream "#stream" contains 2 items
-	And I check that item 0 of stream "#stream" is equals to
+	And I check that item 0 of stream "#stream" is equal to
 	"""
 	data: Hello!
 	
 	
 	"""
-	And I check that item 1 of stream "#stream" is equals to
+	And I check that item 1 of stream "#stream" is equal to
 	"""
 	data: Bye!
 	

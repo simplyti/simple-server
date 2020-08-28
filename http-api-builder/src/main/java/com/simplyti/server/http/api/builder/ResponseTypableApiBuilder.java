@@ -20,7 +20,7 @@ public interface ResponseTypableApiBuilder {
 	<T> ResponseBodyTypedApiBuilder<T> withResponseBodyType(Class<T> clazz);
 	<T> ResponseBodyTypedApiBuilder<T> withResponseBodyType(TypeLiteral<T> clazz);
 
-	ResponseTypableApiBuilder withMeta(String key, String value);
+	ResponseTypableApiBuilder withMeta(String key, Object value);
 	ResponseTypableApiBuilder withNotFoundOnNull();
 
 	ServerSentEventApiBuilder asServerSentEvent();

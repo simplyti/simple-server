@@ -20,7 +20,7 @@ public class ResponseTypedApiContextImpl<T> extends AbstractApiContext implement
 	private final boolean notFoundOnNull;
 	
 	public ResponseTypedApiContextImpl(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler, ChannelHandlerContext ctx, HttpRequest request,ApiMatchRequest match) {
-		super(syncTaskSubmitter, ctx.channel(), request, match);
+		super(syncTaskSubmitter, ctx, request, match);
 		this.ctx=ctx;
 		this.exceptionHandler=exceptionHandler;
 		this.isKeepAlive=HttpUtil.isKeepAlive(request);

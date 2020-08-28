@@ -94,7 +94,12 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 	
 	@Override
 	public WebsocketClient websocket() {
-		return new DefaultWebsocketClient(this,eventLoopGroup.next());
+		return websocket(ROOT);
+	}
+	
+	@Override
+	public WebsocketClient websocket(String uri) {
+		return new DefaultWebsocketClient(uri,this,eventLoopGroup.next());
 	}
 	
 	@Override

@@ -32,7 +32,7 @@ public class FileUploadAnyApiContextImpl extends AbstractApiContext implements F
 	private boolean released;
 	
 	public FileUploadAnyApiContextImpl(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler, ChannelHandlerContext ctx, HttpRequest request, ByteBuf body, ApiMatchRequest match) {
-		super(syncTaskSubmitter, ctx.channel(), request, match);
+		super(syncTaskSubmitter, ctx, request, match);
 		this.ctx=ctx;
 		this.exceptionHandler=exceptionHandler;
 		this.isKeepAlive=HttpUtil.isKeepAlive(request);

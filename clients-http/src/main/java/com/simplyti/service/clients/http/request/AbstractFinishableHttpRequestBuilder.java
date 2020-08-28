@@ -77,7 +77,7 @@ public abstract class AbstractFinishableHttpRequestBuilder<T> implements BaseFin
 	}
 	
 	private void addFilterHandlerIfNecessary(ClientChannel channel) {
-		if(filters !=null) {
+		if(filters !=null && !filters.isEmpty()) {
 			channel.pipeline().addLast(new HttpRequestFilterHandler(filters));
 		}
 	}
@@ -85,7 +85,13 @@ public abstract class AbstractFinishableHttpRequestBuilder<T> implements BaseFin
 	@Override
 	public <U> Future<U> fullResponse(Function<FullHttpResponse, U> fn) {
 		return channelProvider.channel()
-				.thenCombine(ch->addHandlerAndSend(ch,request(ch), __->decodingFullResponseHandler(ch,fn)));
+				.thenCombine(channel->{
+					Promise<U> promise = channel.eventLoop().newPromise();
+					channel.pipeline().addLast(HANDLER,new DecodingFullHttpResponseHandler<U>(HANDLER,channel,promise,checkStatus,fn));
+					addFilterHandlerIfNecessary(channel);
+					channel.writeAndFlush(request(channel)).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+					return promise;
+				});
 	}
 	
 	@Override
@@ -248,12 +254,6 @@ public abstract class AbstractFinishableHttpRequestBuilder<T> implements BaseFin
 	@Override
 	public <U> Future<U> addHandlerAndSend(Future<ClientChannel> futureChannel,  Supplier<io.netty.util.concurrent.Future<U>> requestHandlerInit){
 		return futureChannel.thenCombine(ch->addHandlerAndSend(ch,request(ch),__->requestHandlerInit.get()));
-	}
-	
-	private <U> io.netty.util.concurrent.Future<U> decodingFullResponseHandler(ClientChannel channel, Function<FullHttpResponse, U> fn){
-		Promise<U> promise = channel.eventLoop().newPromise();
-		channel.pipeline().addLast(HANDLER,new DecodingFullHttpResponseHandler<U>(HANDLER,channel,promise,checkStatus,fn));
-		return promise;
 	}
 	
 	private static <U> io.netty.util.concurrent.Future<U> addHandlerAndSend(ClientChannel ch, HttpRequest request, Function<ClientChannel,io.netty.util.concurrent.Future<U>> requestHandlerInit) {

@@ -22,7 +22,7 @@ public class DefaultJaxRsApiContext<T> extends AbstractApiContext implements Jax
 
 	public DefaultJaxRsApiContext(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler, 
 			ChannelHandlerContext ctx, HttpRequest request,ApiMatchRequest match, Object body) {
-		super(syncTaskSubmitter, ctx.channel(), request, match);
+		super(syncTaskSubmitter, ctx, request, match);
 		this.ctx=ctx;
 		this.exceptionHandler=exceptionHandler;
 		this.isKeepAlive=HttpUtil.isKeepAlive(request);

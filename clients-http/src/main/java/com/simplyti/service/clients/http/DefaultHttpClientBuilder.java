@@ -5,7 +5,6 @@ import java.util.Base64;
 import java.util.List;
 
 import com.simplyti.service.clients.AbstractClientBuilder;
-import com.simplyti.service.clients.ClientBuilder;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.http.request.HttpRequestBuilder;
 import com.simplyti.service.clients.monitor.DefaultClientMonitor;
@@ -54,7 +53,7 @@ public class DefaultHttpClientBuilder extends AbstractClientBuilder<HttpClientBu
 	}
 	
 	@Override
-	public ClientBuilder<HttpClientBuilder, HttpClient, HttpRequestBuilder> withFilter(HttpRequestFilter filter) {
+	public HttpClientBuilder withFilter(HttpRequestFilter filter) {
 		if(this.filters==null) {
 			this.filters= new ArrayList<>();
 		}

@@ -1,5 +1,6 @@
 package com.simplyti.server.http.api.context;
 
+import com.simplyti.server.http.api.builder.stream.StreamedResponseContextConsumer;
 import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.ByteBuf;
@@ -18,5 +19,7 @@ public interface AnyApiContext extends ApiContext {
 	Future<Void> send(ByteBuf body);
 	Future<Void> send(HttpObject resp);
 	Future<Void> send(Object value);
-
+	
+	Future<Void> sendStreamed(StreamedResponseContextConsumer object);
+	
 }

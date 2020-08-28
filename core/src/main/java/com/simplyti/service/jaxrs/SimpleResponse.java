@@ -39,7 +39,7 @@ public class SimpleResponse extends Response {
 
 	@Override
 	public int getStatus() {
-		throw new UnsupportedOperationException();
+		return status.code();
 	}
 
 	@Override
