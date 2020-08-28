@@ -38,7 +38,6 @@ public class SSEApi implements ApiProvider{
 				eventLoopGroup.next().execute(()->ctx.send("Hello!")
 						.thenCombine(n->eventLoopGroup.next().schedule(()->ctx.send("Bye!"), 200,TimeUnit.MILLISECONDS))
 						.thenAccept(n->ctx.channel().close()));
-				;
 		});
 	}
 
