@@ -35,5 +35,11 @@ public class ChannelInitializedHandler extends ChannelInboundHandlerAdapter {
 			 ctx.fireUserEventTriggered(evt);
 		 }
 	}
+	 
+	@Override
+	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+		ctx.close();
+		promise.setFailure(cause);
+	}
 
 }

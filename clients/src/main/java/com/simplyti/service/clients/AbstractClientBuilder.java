@@ -167,7 +167,7 @@ public abstract class AbstractClientBuilder<B,T extends Client<R>,R extends Base
 	
 	@Override
 	public EventLoopGroup get() {
-		ThreadFactory threadFactory = new DefaultThreadFactory(name+"-pool", false);
+		ThreadFactory threadFactory = new DefaultThreadFactory(name+"-pool", true);
 		if(Epoll.isAvailable()) {
 			return new EpollEventLoopGroup(threadFactory);
 		}else if(KQueue.isAvailable()) {

@@ -10,6 +10,7 @@ public interface HeaderAppendableRequestBuilder<T> {
 	T withHeader(String name, CharSequence value);
 	
 	T withBasicAuth(String user, String pass);
+	T withBearerAuth(String token);
 	
 	T params(Map<String, String> params);
 	T param(String name, Object value);

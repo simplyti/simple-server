@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import com.simplyti.server.http.api.builder.sse.ServerSentEventApiContextConsumer;
+import com.simplyti.server.http.api.builder.stream.StreamedResponseContextConsumer;
 import com.simplyti.server.http.api.builder.ws.WebSocketApiContextConsumer;
 import com.simplyti.util.concurrent.Future;
 
@@ -34,7 +36,10 @@ public interface ApiContext {
 	Future<Void> failure(Throwable cause);
 	
 	Future<Void> close();
-	Future<Void> webSocket(WebSocketApiContextConsumer object);
+	
+	Future<Void> sendStreamed(StreamedResponseContextConsumer object);
+	Future<Void> webSocket(WebSocketApiContextConsumer ctx);
+	Future<Void> serverSentEvent(ServerSentEventApiContextConsumer ctx);
 	
 	<T> Future<T> sync(Callable<T> task);
 	

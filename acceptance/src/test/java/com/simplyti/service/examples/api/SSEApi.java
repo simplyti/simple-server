@@ -20,24 +20,26 @@ public class SSEApi implements ApiProvider{
 	@Override
 	public void build(ApiBuilder builder) {
 		builder.when().get("/sse")
-			.asServerSentEvent()
 			.then(ctx->{
-				Promise<Void> sendFuture = ctx.executor().newPromise();
-				PromiseCombiner combiner = new PromiseCombiner(ctx.channel().eventLoop());
-				combiner.add(ctx.send("Hello!"));
-				ctx.channel().eventLoop().schedule(()->{
-					combiner.add(ctx.send("Bye!"));
-					combiner.finish(sendFuture);
-				},200,TimeUnit.MILLISECONDS);
-				sendFuture.addListener(f->ctx.channel().close());
+				ctx.serverSentEvent(sse->{
+					Promise<Void> sendFuture = ctx.executor().newPromise();
+					PromiseCombiner combiner = new PromiseCombiner(ctx.channel().eventLoop());
+					combiner.add(sse.send("Hello!"));
+					ctx.channel().eventLoop().schedule(()->{
+						combiner.add(sse.send("Bye!"));
+						combiner.finish(sendFuture);
+					},200,TimeUnit.MILLISECONDS);
+					sendFuture.addListener(f->ctx.channel().close());
+				});
 			});
 		
 		builder.when().get("/sse/disrrupt")
-			.asServerSentEvent()
 			.then(ctx->{
-				eventLoopGroup.next().execute(()->ctx.send("Hello!")
-						.thenCombine(n->eventLoopGroup.next().schedule(()->ctx.send("Bye!"), 200,TimeUnit.MILLISECONDS))
-						.thenAccept(n->ctx.channel().close()));
+				ctx.serverSentEvent(sse->{
+					eventLoopGroup.next().execute(()->sse.send("Hello!")
+							.thenCombine(n->eventLoopGroup.next().schedule(()->sse.send("Bye!"), 200,TimeUnit.MILLISECONDS))
+							.thenAccept(n->ctx.channel().close()));
+				});
 		});
 	}
 

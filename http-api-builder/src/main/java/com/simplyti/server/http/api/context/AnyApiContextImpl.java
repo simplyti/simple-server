@@ -1,7 +1,5 @@
 package com.simplyti.server.http.api.context;
 
-import com.simplyti.server.http.api.builder.stream.StreamedResponseContextConsumer;
-import com.simplyti.server.http.api.context.stream.StreamedResponseContextImpl;
 import com.simplyti.server.http.api.handler.message.ApiResponse;
 import com.simplyti.server.http.api.operations.ApiOperation;
 import com.simplyti.server.http.api.request.ApiMatchRequest;
@@ -13,15 +11,9 @@ import com.simplyti.util.concurrent.Future;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.DefaultHttpResponse;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpResponse;
-import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpUtil;
-import io.netty.handler.codec.http.HttpVersion;
 
 public class AnyApiContextImpl extends AbstractApiContext implements AnyApiContext {
 	
@@ -138,11 +130,4 @@ public class AnyApiContextImpl extends AbstractApiContext implements AnyApiConte
 		return writeAndFlush(value);
 	}
 	
-	@Override
-	public Future<Void> sendStreamed(StreamedResponseContextConsumer consumer) {
-		HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
-	    response.headers().set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
-	    return writeAndFlush(response).thenAccept(f->consumer.accept(new StreamedResponseContextImpl(ctx)));
-	}
-
 }

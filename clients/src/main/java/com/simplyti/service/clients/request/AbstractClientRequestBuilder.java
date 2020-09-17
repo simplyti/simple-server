@@ -48,6 +48,10 @@ public abstract class AbstractClientRequestBuilder<T> implements BaseClientReque
 	}
 	
 	public Future<ClientChannel> channel() {
+		return channel(endpoint);
+	}
+	
+	public Future<ClientChannel> channel(Endpoint endpoint) {
 		return clientChannelFactory.channel(endpoint,responseTimeoutMillis,readTimeoutMillis);
 	}
 	

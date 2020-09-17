@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import com.simplyti.server.http.api.builder.sse.ServerSentEventApiBuilder;
-import com.simplyti.server.http.api.builder.sse.ServerSentEventApiBuilderImpl;
 import com.simplyti.server.http.api.context.AnyApiContext;
 import com.simplyti.server.http.api.context.ApiContextFactory;
 import com.simplyti.server.http.api.futurehandler.AnyFutureHandle;
@@ -24,19 +22,17 @@ public class ResponseBodyTypableApiBuilderImpl implements ResponseTypableApiBuil
 	private final String path;
 	private final ApiContextFactory responseTypeContextFactory;
 	private final ApiContextFactory anyContextFactory;
-	private final ApiContextFactory serverSentEventContextFactory;
 	
 	private Map<String,Object> metadata;
 	private boolean notFoundOnNull;
 
 	public ResponseBodyTypableApiBuilderImpl(ApiContextFactory anyContextFactory, ApiContextFactory responseTypeContextFactory,
-			ApiContextFactory serverSentEventContextFactory, ApiOperations operations, HttpMethod method, String path) {
+			ApiOperations operations, HttpMethod method, String path) {
 		this.operations=operations;
 		this.method=method;
 		this.path=path;
 		this.responseTypeContextFactory=responseTypeContextFactory;
 		this.anyContextFactory=anyContextFactory;
-		this.serverSentEventContextFactory=serverSentEventContextFactory;
 	}
 
 	@Override
@@ -83,11 +79,6 @@ public class ResponseBodyTypableApiBuilderImpl implements ResponseTypableApiBuil
 	public ResponseTypableApiBuilder withNotFoundOnNull() {
 		this.notFoundOnNull=true;
 		return this;
-	}
-
-	@Override
-	public ServerSentEventApiBuilder asServerSentEvent() {
-		return new ServerSentEventApiBuilderImpl(serverSentEventContextFactory,operations,method,path);
 	}
 
 }

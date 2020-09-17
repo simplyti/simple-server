@@ -9,6 +9,8 @@ import io.netty.util.CharsetUtil;
 @Sharable
 public class ServerSentEventEncoder extends MessageToByteEncoder<ServerEvent>{
 
+	public static final ServerSentEventEncoder INSTANCE = new ServerSentEventEncoder();
+
 	@Override
 	protected void encode(ChannelHandlerContext ctx, ServerEvent msg, ByteBuf out) throws Exception {
 		if(msg.id()!=null) {

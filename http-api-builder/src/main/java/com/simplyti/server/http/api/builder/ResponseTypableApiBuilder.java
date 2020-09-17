@@ -2,7 +2,6 @@ package com.simplyti.server.http.api.builder;
 
 import java.util.function.Function;
 
-import com.simplyti.server.http.api.builder.sse.ServerSentEventApiBuilder;
 import com.simplyti.server.http.api.context.AnyApiContext;
 import com.simplyti.service.api.serializer.json.TypeLiteral;
 
@@ -22,7 +21,5 @@ public interface ResponseTypableApiBuilder {
 
 	ResponseTypableApiBuilder withMeta(String key, Object value);
 	ResponseTypableApiBuilder withNotFoundOnNull();
-
-	ServerSentEventApiBuilder asServerSentEvent();
 
 }

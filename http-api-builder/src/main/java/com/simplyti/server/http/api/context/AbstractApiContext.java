@@ -6,9 +6,15 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 
+import com.simplyti.server.http.api.builder.sse.ServerSentEventApiContextConsumer;
+import com.simplyti.server.http.api.builder.stream.StreamedResponseContextConsumer;
 import com.simplyti.server.http.api.builder.ws.WebSocketApiContextConsumer;
+import com.simplyti.server.http.api.context.sse.ServerSentEventApiContextImpl;
+import com.simplyti.server.http.api.context.stream.StreamedResponseContextImpl;
 import com.simplyti.server.http.api.context.ws.WebSocketApiContextImpl;
 import com.simplyti.server.http.api.request.ApiMatchRequest;
+import com.simplyti.server.http.api.sse.ServerSentEventEncoder;
+import com.simplyti.service.channel.handler.ClientChannelHandler;
 import com.simplyti.service.sync.SyncTaskSubmitter;
 import com.simplyti.util.concurrent.DefaultFuture;
 import com.simplyti.util.concurrent.Future;
@@ -16,8 +22,14 @@ import com.simplyti.util.concurrent.Future;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.concurrent.EventExecutor;
@@ -29,6 +41,8 @@ public abstract class AbstractApiContext implements ApiContext {
 	private static final String INTEGER = "integer";
 	private static final String LONG = "long";
 	private static final String BOOLEAN = "boolean";
+	
+	private static final String EVENT_STREAM = "text/event-stream";
 	
 	private final SyncTaskSubmitter syncTaskSubmitter;
 	private final ChannelHandlerContext ctx;
@@ -189,6 +203,34 @@ public abstract class AbstractApiContext implements ApiContext {
             	return new DefaultFuture<>(promise,this.ctx.executor());
             }
         }
+	}
+	
+	@Override
+	public Future<Void> serverSentEvent(ServerSentEventApiContextConsumer consumer) {
+		HttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+		response.headers().set(HttpHeaderNames.CONTENT_TYPE, EVENT_STREAM);
+		ChannelFuture future = ctx.writeAndFlush(response)
+			.addListener(f-> {
+				if(f.isSuccess()) {
+					ctx.pipeline().remove("encoder");
+					ctx.pipeline().remove("decoder");
+					ctx.pipeline().addBefore(ClientChannelHandler.NAME,"sse-codec", ServerSentEventEncoder.INSTANCE);
+					consumer.accept(new ServerSentEventApiContextImpl(ctx));
+				}
+			});
+		return new DefaultFuture<>(future,this.ctx.executor());
+	}
+	
+	@Override
+	public Future<Void> sendStreamed(StreamedResponseContextConsumer consumer) {
+		HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+	    response.headers().set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
+	    ChannelFuture future = ctx.writeAndFlush(response).addListener(f->{
+	    	if(f.isSuccess()) {
+	    		consumer.accept(new StreamedResponseContextImpl(ctx));
+	    	}
+	    });
+	    return new DefaultFuture<>(future,this.ctx.executor());
 	}
 
 }

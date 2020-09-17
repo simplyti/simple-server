@@ -139,6 +139,13 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 	}
 	
 	@Override
+	public HttpRequestBuilder withBearerAuth(String token) {
+		initializeHeaders();
+		this.headers.set(HttpHeaderNames.AUTHORIZATION, "Bearer " + token);
+		return this;
+	}
+	
+	@Override
 	public HttpRequestBuilder params(Map<String, String> params) {
 		initializeParams();
 		this.params.putAll(params);

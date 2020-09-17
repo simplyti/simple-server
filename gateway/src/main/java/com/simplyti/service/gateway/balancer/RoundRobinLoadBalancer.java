@@ -14,7 +14,7 @@ import lombok.ToString;
 public class RoundRobinLoadBalancer implements ServiceBalancer {
 	
 	private final List<Endpoint> endpoints;
-	private Integer position = 0;
+	private int position = 0;
 	
 	private RoundRobinLoadBalancer() {
 		this.endpoints = Collections.emptyList();
@@ -30,15 +30,12 @@ public class RoundRobinLoadBalancer implements ServiceBalancer {
 	}
 
 	@Override
-	public Endpoint next() {
-		final Endpoint target;
-        synchronized (position) {
-            if (position > endpoints.size() - 1) {
-                position = 0;
-            }
-            target = endpoints.get(0);
-            position++;
+	public synchronized Endpoint next() {
+        if (position > endpoints.size() - 1) {
+            position = 0;
         }
+        final Endpoint target = endpoints.get(position);
+        position++;
         return target;
 	}
 	

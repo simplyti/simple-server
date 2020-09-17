@@ -137,6 +137,14 @@ public abstract class AbstractFinishableHttpRequestBuilder<T> implements BaseFin
 	
 	@Override
 	@SuppressWarnings("unchecked")
+	public T withBearerAuth(String token) {
+		initializeHeaders();
+		this.headers.set(HttpHeaderNames.AUTHORIZATION, "Bearer " + token);
+		return (T) this;
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
 	public T params(Map<String, String> params) {
 		initializeParams();
 		this.params.putAll(params);

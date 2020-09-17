@@ -145,6 +145,12 @@ public class DefaultFinishablePayloadableHttpRequestBuilder extends AbstractFini
 			target.withBasicAuth(user, pass);
 			return this;
 		}
+		
+		@Override
+		public FinishableHttpRequestBuilder withBearerAuth(String token) {
+			target.withBearerAuth(token);
+			return this;
+		}
 
 	}
 
