@@ -18,6 +18,7 @@ public class MimeTypes {
 	private static final String IMAGE_SVG = "image/svg+xml";
 	private static final String IMAGE_PNG = "image/png";
 	private static final String IMAGE_JPEG = "image/jpeg";
+	private static final String PASS_MIME_TYPE = "application/vnd.apple.pkpass";
 	static {
 		TYPES.put("json", APPLICATION_JSON);
 		TYPES.put("js", APPLICATION_JAVASCRIPT);
@@ -37,6 +38,7 @@ public class MimeTypes {
 		TYPES.put("jpeg", IMAGE_JPEG);
 		TYPES.put("jpg", IMAGE_JPEG);
 		TYPES.put("jpe", IMAGE_JPEG);
+		TYPES.put("pkpass", PASS_MIME_TYPE);
 	}
 
 	public static String ofFile(String filename) {
