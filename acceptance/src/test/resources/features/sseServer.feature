@@ -37,7 +37,7 @@ Scenario: SSE server using diferent threads
 	
 	"""
 	
-Scenario: SSE server using diferent threads
+Scenario: SSE server with async response filter
 	When I start a service "#serviceFuture" with options:
 		| option	 		| value |
 		| withApi			| com.simplyti.service.examples.api.SSEApi	|
