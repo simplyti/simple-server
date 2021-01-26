@@ -48,7 +48,7 @@ Scenario: No connection is created when reach maximun client pool size
 	And I check that http response "#response2" has body "Hey 2!"
 	And I check that http response "#response3" has body "Hey 3!"
 	And I check that http client "#client" has 2 iddle connection
-	When I post "/hello" using client "#client" getting response "#response"
+	When I get "/hello" using client "#client" getting response "#response"
 	Then I check that "#response" is success
 	And I check that http response "#response" has body "Hello!"
 	And I check that http client "#client" has 2 iddle connection
@@ -71,7 +71,7 @@ Scenario: Unpooled channel factory
 	And I check that http response "#response2" has body "Hey 2!"
 	And I check that http response "#response3" has body "Hey 3!"
 	And I check that http client "#client" has 0 iddle connection
-	When I post "/hello" using client "#client" getting response "#response"
+	When I get "/hello" using client "#client" getting response "#response"
 	Then I check that "#response" is success
 	And I check that http response "#response" has body "Hello!"
 	And I check that http client "#client" has 0 iddle connection
@@ -90,11 +90,12 @@ Scenario: Response timeout
 Scenario: Channel pool idle timeout
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
-	When I create an generic client "#client" with pool idle timeout 300
-	And I post "/echo/delay?millis=500" with body "Hello" using generic client "#client" getting response "#response"
+	When I create an http client "#client" with pool idle timeout 300
+	And I post "/echo/delay?millis=500" with body "Hello" using http client "#client" getting response "#response"
 	Then I check that client "#client" has 1 active connection
 	And I check that client "#client" has 0 iddle connection
 	And I check that "#response" is success
+	And I check that http response "#response" has body "Hello"
 	And I check that client "#client" has 0 active connection
 	And I check that client "#client" has 1 iddle connection
 	When I wait 350 milliseconds
@@ -103,12 +104,12 @@ Scenario: Channel pool idle timeout
 Scenario: Read timeout
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
-	When I post "/echo/delay?millis=500" with body "Hey!" and read timeout 200 getting response "#response"
-	Then I check that "#response" is failure
+	When I create an http client "#client" with read timeout 200
+	And I post "/echo/delay?millis=500" using client "#client" with body "Hey!" getting response "#response"
+	Then I check that client "#client" has 1 active connection
+	And I check that "#response" is failure
 	And I check that error cause of "#response" is instancence of "io.netty.handler.timeout.ReadTimeoutException"
-	When I post "/echo/delay?millis=500" with body "Hey!" and read timeout 700 getting response "#response"
-	And I check that "#response" is success
-	And I check that http response "#response" has body "Hey!"
+	And I check that client "#client" has 0 iddle connection
 
 Scenario: Connection error
 	When I get "/hello" getting response "#response"
@@ -120,67 +121,14 @@ Scenario: Single thread client
 	When I create an http client "#client" with event loop group "#eventLoopGroup"
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
-	When I get "/hello" using client "#client" in event loop "#eventLoopGroup" getting response "#response"
-	Then I check that "#response" is success
-	And I check that http response "#response" has body "Hello!"
-	When I get "/hello" using client "#client" in event loop "#eventLoopGroup" getting response "#response"
-	Then I check that "#response" is success
-	And I check that http response "#response" has body "Hello!"
-	And I check that http client "#client" has 1 iddle connection
-
-Scenario: Connection write stream with http objecs
-	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
-	Then I check that "#serviceFuture" is success
-	When I post "/echo" with body stream "#stream", content part "Hello ", length of 20 getting response "#response"
-	Then I check that "#response" is not complete
-	When I send "stream." to stream "#stream" getting result "#writeresult"
-	Then I check that "#writeresult" is success
-	Then I check that "#response" is not complete
-	When I send last content "The end" to http stream "#stream" getting "#writeresult"
-	Then I check that "#writeresult" is success
-	Then I check that "#response" is success
-	And I check that http response "#response" has body "Hello stream.The end"
-	And I check that http client has 1 iddle connection
-	When I post "/echo" with body stream "#stream", content part "Bye", length of 4 getting response "#response"
-	Then I check that "#response" is not complete
-	When I send last content "!" to http stream "#stream" getting "#writeresult"
-	Then I check that "#writeresult" is success
-	Then I check that "#response" is success
-	And I check that http response "#response" has body "Bye!"
-	And I check that http client has 1 iddle connection
+	When I post "/echo/delay?millis=500" using client "#client" with body "Hey 1!" getting response "#response1"
+	When I post "/echo/delay?millis=500" using client "#client" with body "Hey 2!" getting response "#response2"
+	Then I check that "#response1" is success
+	Then I check that "#response2" is success
+	And I check that http response "#response1" has body "Hey 1!"
+	And I check that http response "#response2" has body "Hey 2!"
+	And I check that http client "#client" has 2 iddle connection
 	
-Scenario: Single thread stream with http objects
-	Given a single thread event loop group "#eventLoopGroup"
-	When I create an http client "#client" with event loop group "#eventLoopGroup"
-	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
-	Then I check that "#serviceFuture" is success
-	When I post "/echo" using client "#client" with body stream "#stream", content part "Hello " from loop group "#eventLoopGroup", length of 20 getting response "#response"
-	Then I check that "#response" is not complete
-	When I send "stream." to stream "#stream" getting result "#writeresult"
-	Then I check that "#writeresult" is success
-	Then I check that "#response" is not complete
-	When I send last content "The end" to http stream "#stream" getting "#writeresult"
-	Then I check that "#writeresult" is success
-	And I check that "#response" is success
-	And I check that http response "#response" has body "Hello stream.The end"
-	And I check that http client "#client" has 1 iddle connection
-	When I post "/echo" using client "#client" with body stream "#stream", content part "Bye", length of 4 getting response "#response"
-	Then I check that "#response" is not complete
-	When I send last content "!" to http stream "#stream" getting "#writeresult"
-	Then I check that "#writeresult" is success
-	Then I check that "#response" is success
-	And I check that http response "#response" has body "Bye!"
-	And I check that http client "#client" has 1 iddle connection
-
-Scenario: Connection error when write stream
-	When I post "/echo" with body stream "#stream", content part "Hello", length of 6 getting response "#response"
-	And I check that "#response" is failure
-	When I send "!" to stream "#stream" getting result "#writeresult"
-	Then I check that "#writeresult" is failure
-	And I check that error cause of "#writeresult" contains message "Connection refused: localhost/127.0.0.1:8080"
-	Then I check that "#response" is failure
-	And I check that error cause of "#writeresult" contains message "Connection refused: localhost/127.0.0.1:8080"
-
 Scenario: Connection closed
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
@@ -199,4 +147,3 @@ Scenario: Client connections close
 	When I close client connections "#closeFuture"
 	Then I check that "#closeFuture" is success
 	And I check that http client has 0 iddle connection
-	
