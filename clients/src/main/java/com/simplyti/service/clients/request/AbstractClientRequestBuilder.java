@@ -12,7 +12,6 @@ public abstract class AbstractClientRequestBuilder<T> implements BaseClientReque
 	
 	private Endpoint endpoint;
 	private long responseTimeoutMillis;
-	private long readTimeoutMillis;
 
 	public AbstractClientRequestBuilder(ClientChannelFactory clientChannelFactory, Endpoint endpoint) {
 		this.clientChannelFactory=clientChannelFactory;
@@ -40,20 +39,12 @@ public abstract class AbstractClientRequestBuilder<T> implements BaseClientReque
 		return (T) this;
 	}
 	
-	@Override
-	@SuppressWarnings("unchecked")
-	public T withReadTimeout(long timeoutMillis) {
-		this.readTimeoutMillis = timeoutMillis;
-		return (T) this;
-	}
-	
 	public Future<ClientChannel> channel() {
 		return channel(endpoint);
 	}
 	
 	public Future<ClientChannel> channel(Endpoint endpoint) {
-		return clientChannelFactory.channel(endpoint,responseTimeoutMillis,readTimeoutMillis);
+		return clientChannelFactory.channel(endpoint,responseTimeoutMillis);
 	}
 	
-
 }

@@ -50,7 +50,7 @@ public class AbstractK8sResourceUpdater<T extends K8sResource> {
 		return client.request()
 				.withHeader(HttpHeaderNames.CONTENT_TYPE.toString(),"application/json-patch+json")
 				.patch(String.format("%s/namespaces/%s/%s/%s",api.path(),namespace,resource,name))
-				.withBody(this::body)
+				.withBodyWriter(this::body)
 				.fullResponse(f->response(f, type));
 	}
 	

@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.simplyti.server.http.api.context.ApiContext;
 import com.simplyti.server.http.api.operations.ApiOperation;
-import com.simplyti.server.http.api.pattern.ApiMatcher;
+import com.simplyti.service.matcher.ApiMatcher;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,7 +19,6 @@ public class ApiMatchRequest {
 	private final ApiOperation<? extends ApiContext> operation;
 	private final Map<String,List<String>> parameters;
 	private final ApiMatcher matcher;
-	
 	
 	public String group(int group) {
 		return matcher.group(group);

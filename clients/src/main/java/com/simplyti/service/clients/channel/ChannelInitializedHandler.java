@@ -1,36 +1,30 @@
 package com.simplyti.service.clients.channel;
 
-import com.simplyti.service.clients.endpoint.Endpoint;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.pool.ChannelPool;
+import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Promise;
 
 public class ChannelInitializedHandler extends ChannelInboundHandlerAdapter {
+	
+	private static final AttributeKey<Boolean> INITIALIZED = AttributeKey.valueOf("clients.init");
 
 	private final Promise<ClientChannel> promise;
-	private final Channel channel;
-	private final ChannelPool pool;
-	private final Endpoint endpoint;
-	private final long responseTimeoutMillis;
-	private final long readTimeoutMillis;
+	private final PooledClientChannel pooledClient;
 
-	public ChannelInitializedHandler(Channel channel, ChannelPool pool, Endpoint endpoint, long responseTimeoutMillis, long readTimeoutMillis, Promise<ClientChannel> promise) {
-		this.channel=channel;
-		this.pool=pool;
-		this.endpoint=endpoint;
-		this.responseTimeoutMillis=responseTimeoutMillis;
-		this.readTimeoutMillis=readTimeoutMillis;
+	public ChannelInitializedHandler(PooledClientChannel pooledClient, Promise<ClientChannel> promise) {
+		this.pooledClient=pooledClient;
 		this.promise=promise;
 	}
 	
 	 @Override
 	 public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
 		 if(evt==ClientChannelEvent.INIT) {
+			 pooledClient.attr(INITIALIZED).set(true);
 			 ctx.pipeline().remove(this);
-			 promise.setSuccess(new PooledClientChannel(pool,endpoint.address(), channel, responseTimeoutMillis,readTimeoutMillis));
+			 promise.setSuccess(pooledClient);
 		 } else {
 			 ctx.fireUserEventTriggered(evt);
 		 }
@@ -39,7 +33,12 @@ public class ChannelInitializedHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		ctx.close();
+		pooledClient.release();
 		promise.setFailure(cause);
+	}
+
+	public static boolean isNew(Channel channel) {
+		return channel.attr(INITIALIZED).get() != Boolean.TRUE;
 	}
 
 }

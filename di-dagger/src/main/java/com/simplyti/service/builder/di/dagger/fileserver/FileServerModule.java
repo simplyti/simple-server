@@ -8,13 +8,13 @@ import javax.annotation.Nullable;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import com.simplyti.service.channel.handler.FileServeHandler;
 import com.simplyti.service.channel.handler.ServerHeadersHandler;
-import com.simplyti.service.channel.handler.inits.FileServerHandlerInit;
-import com.simplyti.service.channel.handler.inits.HandlerInit;
+import com.simplyti.service.channel.handler.inits.ServiceHadlerInit;
 import com.simplyti.service.fileserver.DirectoryResolver;
 import com.simplyti.service.fileserver.FileServe;
 import com.simplyti.service.fileserver.FileServeConfiguration;
+import com.simplyti.service.fileserver.handler.FileServeHandler;
+import com.simplyti.service.fileserver.handler.init.FileServerHandlerInit;
 
 import dagger.Module;
 import dagger.Provides;
@@ -38,10 +38,10 @@ public class FileServerModule {
 
 	@Provides
 	@ElementsIntoSet
-	public Set<HandlerInit> apiRequestHandlerInit(FileServe fileServer, ServerHeadersHandler serverHeadersHandler,
+	public Set<ServiceHadlerInit> apiRequestHandlerInit(FileServe fileServer, ServerHeadersHandler serverHeadersHandler,
 			@Nullable FileServeConfiguration fileServerConfig) {
 		if(fileServerConfig!=null) {
-			return Collections.singleton(new FileServerHandlerInit(new FileServeHandler(fileServerConfig,fileServer),serverHeadersHandler,fileServerConfig));
+			return Collections.singleton(new FileServerHandlerInit(new FileServeHandler(fileServerConfig,fileServer)));
 		}else {
 			return Collections.emptySet();
 		}

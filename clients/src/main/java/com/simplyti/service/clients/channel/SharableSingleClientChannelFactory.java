@@ -18,8 +18,8 @@ public class SharableSingleClientChannelFactory implements ClientChannelFactory 
 	}
 
 	@Override
-	public Future<ClientChannel> channel(Endpoint endpoint, long responseTimeoutMillis, long readTimeoutMillis) {
-		return fixed.channel(endpoint,responseTimeoutMillis,readTimeoutMillis)
+	public Future<ClientChannel> channel(Endpoint endpoint, long responseTimeoutMillis) {
+		return fixed.channel(endpoint,responseTimeoutMillis)
 				.thenApply(this::release);
 	}
 	

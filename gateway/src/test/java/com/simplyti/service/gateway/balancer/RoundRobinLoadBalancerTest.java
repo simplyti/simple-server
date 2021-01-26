@@ -2,7 +2,7 @@ package com.simplyti.service.gateway.balancer;
 
 import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;

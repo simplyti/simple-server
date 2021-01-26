@@ -1,16 +1,17 @@
 package com.simplyti.service.clients.endpoint;
 
-
 import com.simplyti.service.clients.Schema;
 import com.simplyti.service.clients.proxy.ProxiedEndpoint;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
 
 @EqualsAndHashCode(of="address")
 @Getter
 @Accessors(fluent = true)
+@SuperBuilder
 public class Endpoint {
 	
 	private final Schema schema;

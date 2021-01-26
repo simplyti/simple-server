@@ -18,6 +18,7 @@ public class HttpClientProvider implements Provider<HttpClient>{
 				.withEventLoopGroup(eventLoopGroup)
 				.withMonitorEnabled()
 				.withCheckStatusCode()
+				.withChannelPoolSize(10)
 				.build();
 	}
 

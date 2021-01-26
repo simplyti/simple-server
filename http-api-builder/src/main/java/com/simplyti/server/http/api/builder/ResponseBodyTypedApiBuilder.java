@@ -8,10 +8,11 @@ import io.netty.util.concurrent.Future;
 
 public interface ResponseBodyTypedApiBuilder<T> {
 	
-	ResponseBodyTypedApiBuilder<T> withNotFoundOnNull();
-
 	void then(ResponseTypedApiContextConsumer<T> consumer);
 
 	void thenFuture(Function<ResponseTypedApiContext<T>,Future<T>> object);
+
+	ResponseBodyTypedApiBuilder<T> withMeta(String key, String value);
+	ResponseBodyTypedApiBuilder<T> withNotFoundOnNull();
 
 }

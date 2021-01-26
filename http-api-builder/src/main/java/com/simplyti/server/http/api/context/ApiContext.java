@@ -5,8 +5,9 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import com.simplyti.server.http.api.builder.sse.ServerSentEventApiContextConsumer;
-import com.simplyti.server.http.api.builder.stream.StreamedResponseContextConsumer;
+import com.simplyti.server.http.api.builder.stream.ChunkedResponseContextConsumer;
 import com.simplyti.server.http.api.builder.ws.WebSocketApiContextConsumer;
+import com.simplyti.service.sync.VoidCallable;
 import com.simplyti.util.concurrent.Future;
 
 import io.netty.channel.Channel;
@@ -37,10 +38,11 @@ public interface ApiContext {
 	
 	Future<Void> close();
 	
-	Future<Void> sendStreamed(StreamedResponseContextConsumer object);
+	Future<Void> sendChunked(ChunkedResponseContextConsumer object);
 	Future<Void> webSocket(WebSocketApiContextConsumer ctx);
 	Future<Void> serverSentEvent(ServerSentEventApiContextConsumer ctx);
 	
 	<T> Future<T> sync(Callable<T> task);
+	Future<Void> sync(VoidCallable task);
 	
 }

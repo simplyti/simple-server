@@ -25,11 +25,15 @@ public interface ClientBuilder<B,T extends Client<R>,R extends BaseClientRequest
 	
 	B withMonitorEnabled();
 	
+	B withMonitorEnabled(boolean enabled);
+	
 	B withChannelPoolSize(int poolSize);
 	
 	B withUnpooledChannels();
 	
 	B withChannelPoolIdleTimeout(long poolIdleTimeout);
+	
+	B withReadTimeout(long timeoutMillis);
 
 	T build();
 

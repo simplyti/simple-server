@@ -14,8 +14,8 @@ import io.netty.channel.EventLoopGroup;
 
 public class DefaultNamespacedConfigMaps extends DefaultNamespacedK8sApi<ConfigMap> implements NamespacedConfigMaps {
 
-    public DefaultNamespacedConfigMaps(EventLoopGroup eventLoopGroup, HttpClient http, Json json, K8sAPI api, String namespace, String resource, Class<ConfigMap> type, TypeLiteral<KubeList<ConfigMap>> listType, TypeLiteral<Event<ConfigMap>> eventType) {
-        super(eventLoopGroup, http, json, api, namespace, resource, type, listType, eventType);
+    public DefaultNamespacedConfigMaps(EventLoopGroup eventLoopGroup, HttpClient http, long timeoutMillis, Json json, K8sAPI api, String namespace, String resource, Class<ConfigMap> type, TypeLiteral<KubeList<ConfigMap>> listType, TypeLiteral<Event<ConfigMap>> eventType) {
+        super(eventLoopGroup, http, timeoutMillis, json, api, namespace, resource, type, listType, eventType);
     }
 
     @Override

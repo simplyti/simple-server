@@ -8,9 +8,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import com.google.inject.Module;
-import com.simplyti.service.ServerConfig;
-import com.simplyti.service.Service;
+import com.simplyti.service.DefaultServer;
 import com.simplyti.service.api.builder.ApiProvider;
+import com.simplyti.service.config.ServerConfig;
 import com.simplyti.service.fileserver.DirectoryResolver;
 import com.simplyti.service.fileserver.FileServeConfiguration;
 import com.simplyti.service.ssl.SslConfig;
@@ -21,16 +21,14 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Log4J2LoggerFactory;
 import io.netty.util.internal.logging.Slf4JLoggerFactory;
 
-public abstract class AbstractServiceBuilder<T extends Service<?>> implements ServiceBuilder<T>{
+public abstract class AbstractServiceBuilder implements ServiceBuilder {
 
 	private static final int DEFAULT_BLOCKING_THREAD_POOL = 500;
 	private static final int DEFAULT_INSECURE_PORT = 8080;
 	private static final int DEFAULT_SECURE_PORT = 8443;
-	
-	private final Class<T> serviceClass;
+	private static final int DEFAULT_MAX_BODY_SIZE = 10000000;
 	
 	private Collection<Class<? extends ApiProvider>> apiClasses;
-	private Collection<ApiProvider> apiProviders;
 	private Collection<Module> modules;
 	private Integer blockingThreadPool;
 	private Integer insecuredPort;
@@ -44,26 +42,25 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 	
 	private boolean verbose;
 	
-	public AbstractServiceBuilder(Class<T> serviceClass) {
-		this.serviceClass=serviceClass;
-	}
-
+	private Integer maxBodySize;
+	
 	@Override
-	public T build() {
+	public DefaultServer build() {
 		ServerConfig config = new ServerConfig(
 				name,
 				firstNonNull(blockingThreadPool, DEFAULT_BLOCKING_THREAD_POOL),
 				firstNonNull(insecuredPort, DEFAULT_INSECURE_PORT),
-				firstNonNull(securedPort, DEFAULT_SECURE_PORT),eventLoopGroup!=null,
-				verbose);
+				firstNonNull(securedPort, DEFAULT_SECURE_PORT),
+				eventLoopGroup!=null,
+				verbose,
+				firstNonNull(maxBodySize, DEFAULT_MAX_BODY_SIZE));
 		
 		Stream<Module> additinalModules = Optional.ofNullable(modules)
 				.map(Collection::stream)
 				.orElse(Stream.<Module>empty());
 		
-		return build0(config, new SslConfig(sslProvider), fileServerConfig, serviceClass,additinalModules,
+		return build0(config, new SslConfig(sslProvider), fileServerConfig,additinalModules,
 				firstNonNull(apiClasses, Collections.emptySet()),
-				firstNonNull(apiProviders, Collections.emptySet()),
 				eventLoopGroup);
 	}
 	
@@ -74,52 +71,52 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 		return obj2;
 	}
 
-	protected abstract T build0(ServerConfig config, SslConfig sslConfig, FileServeConfiguration fileServerConfig, Class<T> serviceClass, Stream<Module> additinalModules, Collection<Class<? extends ApiProvider>> apiClasses, Collection<ApiProvider> apiProviders,  EventLoopGroup eventLoopGroup);
+	protected abstract DefaultServer build0(ServerConfig config, SslConfig sslConfig, FileServeConfiguration fileServerConfig, Stream<Module> additinalModules, Collection<Class<? extends ApiProvider>> apiClasses, EventLoopGroup eventLoopGroup);
 
 	@Override
-	public ServiceBuilder<T> withBlockingThreadPoolSize(int blockingThreadPool) {
+	public ServiceBuilder withBlockingThreadPoolSize(int blockingThreadPool) {
 		this.blockingThreadPool=blockingThreadPool;
 		return this;
 	}
 	
 	@Override
-	public ServiceBuilder<T> insecuredPort(int port) {
+	public ServiceBuilder insecuredPort(int port) {
 		this.insecuredPort=port;
 		return this;
 	}
 	
 	@Override
-	public ServiceBuilder<T> disableInsecurePort() {
+	public ServiceBuilder disableInsecurePort() {
 		this.insecuredPort=-1;
 		return this;
 	}
 	
 	@Override
-	public ServiceBuilder<T> disableSecuredPort() {
+	public ServiceBuilder disableSecuredPort() {
 		this.securedPort=-1;
 		return this;
 	}
 	
 	@Override
-	public ServiceBuilder<T> securedPort(int port) {
+	public ServiceBuilder securedPort(int port) {
 		this.securedPort=port;
 		return this;
 	}
 
 	@Override
-	public ServiceBuilder<T> withLog4J2Logger() {
+	public ServiceBuilder withLog4J2Logger() {
 		InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE);
 		return this;
 	}
 	
 	@Override
-	public ServiceBuilder<T> withSlf4jLogger() {
+	public ServiceBuilder withSlf4jLogger() {
 		InternalLoggerFactory.setDefaultFactory(Slf4JLoggerFactory.INSTANCE);
 		return this;
 	}
 
 	@Override
-	public ServiceBuilder<T> withApi(Class<? extends ApiProvider> apiClass) {
+	public ServiceBuilder withApi(Class<? extends ApiProvider> apiClass) {
 		if(this.apiClasses==null){
 			this.apiClasses=new HashSet<>();
 		}
@@ -128,16 +125,7 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 	}
 	
 	@Override
-	public ServiceBuilder<T> withApi(ApiProvider provider) {
-		if(this.apiProviders==null){
-			this.apiProviders=new HashSet<>();
-		}
-		this.apiProviders.add(provider);
-		return this;
-	}
-
-	@Override
-	public ServiceBuilder<T> withModule(Module module) {
+	public ServiceBuilder withModule(Module module) {
 		if(this.modules==null) {
 			this.modules=new HashSet<>();
 		}
@@ -146,19 +134,19 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 	}
 	
 	@Override
-	public ServiceBuilder<T> withName(String name) {
+	public ServiceBuilder withName(String name) {
 		this.name=name;
 		return this;
 	}
 	
 	@Override
-	public ServiceBuilder<T> withSslProvider(SslProvider sslProvider) {
+	public ServiceBuilder withSslProvider(SslProvider sslProvider) {
 		this.sslProvider=sslProvider;
 		return this;
 	}
 	
 	@Override
-	public ServiceBuilder<T> withModule(Class<? extends Module> module) {
+	public ServiceBuilder withModule(Class<? extends Module> module) {
 		try {
 			return withModule(module.newInstance());
 		} catch (InstantiationException | IllegalAccessException e) {
@@ -167,20 +155,26 @@ public abstract class AbstractServiceBuilder<T extends Service<?>> implements Se
 	}
 
 	@Override
-	public ServiceBuilder<T> fileServe(String path, String directory) {
+	public ServiceBuilder fileServe(String path, String directory) {
 		this.fileServerConfig=new FileServeConfiguration(Pattern.compile("^"+path+"/(.*)$"),DirectoryResolver.literal(directory));
 		return this;
 	}
 
 	@Override
-	public ServiceBuilder<T> eventLoopGroup(EventLoopGroup eventLoopGroup) {
+	public ServiceBuilder eventLoopGroup(EventLoopGroup eventLoopGroup) {
 		this.eventLoopGroup=eventLoopGroup;
 		return this;
 	}
 
 	@Override
-	public ServiceBuilder<T> verbose() {
+	public ServiceBuilder verbose() {
 		this.verbose=true;
+		return this;
+	}
+	
+	@Override
+	public ServiceBuilder withMaxBodySize(int maxBodySize) {
+		this.maxBodySize=maxBodySize;
 		return this;
 	}
 

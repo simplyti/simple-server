@@ -154,6 +154,21 @@ public class IncompleteFuture<T> implements Future<T> {
 		return instance();
 	}
 	
+	@Override
+	public Future<Void> handle(BiConsumer<T, Throwable> consumer) {
+		return instance();
+	}
+
+	@Override
+	public <U> Future<U> handleCombine(BiFunction<? super T, Throwable, io.netty.util.concurrent.Future<U>> fn) {
+		return instance();
+	}
+
+	@Override
+	public Future<Void> exceptionally(Consumer<Throwable> consumer) {
+		return instance();
+	}
+	
 	@SuppressWarnings("unchecked")
 	public static <O> Future<O> instance() {
 		return INSTANCE;

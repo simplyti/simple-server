@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 
 import com.simplyti.server.http.api.context.ApiContext;
 import com.simplyti.server.http.api.context.ApiContextFactory;
-import com.simplyti.server.http.api.pattern.ApiPattern;
+import com.simplyti.service.matcher.ApiPattern;
 
 import io.netty.handler.codec.http.HttpMethod;
 import lombok.Getter;
@@ -29,7 +29,7 @@ public class ApiOperation<T extends ApiContext> {
 
 	public ApiOperation(HttpMethod method, ApiPattern pattern, Map<String,Object> metadata, Consumer<T> handler, ApiContextFactory contextFactory,
 			boolean streamedRequest, boolean notFoundOnNull) {
-		this(method, pattern, metadata, handler, contextFactory, streamedRequest, notFoundOnNull, 10000000);
+		this(method, pattern, metadata, handler, contextFactory, streamedRequest, notFoundOnNull, 0);
 	}
 	
 	public ApiOperation(HttpMethod method, ApiPattern pattern, Map<String,Object> metadata, Consumer<T> handler, ApiContextFactory contextFactory,

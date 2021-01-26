@@ -3,6 +3,8 @@ package com.simplyti.service.channel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.Optional;
 
+import javax.inject.Inject;
+
 import com.simplyti.service.builder.di.NativeIO;
 
 import io.netty.channel.ChannelFactory;
@@ -13,6 +15,7 @@ public class ServerSocketChannelFactory implements ChannelFactory<ServerChannel>
 
 	private final Optional<NativeIO> nativeIO;
 
+	@Inject
 	public ServerSocketChannelFactory(Optional<NativeIO> nativeIO) {
 		this.nativeIO=nativeIO;
 	}

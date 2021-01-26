@@ -11,5 +11,7 @@ public interface HttpMethodApiBuilder {
 	RequestTypableApiBuilder put(String path);
 	
 	RequestTypableApiBuilder patch(String path);
+	
+	RequestTypableApiBuilder options(String path);
 
 }

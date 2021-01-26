@@ -18,7 +18,13 @@ public class WebsocketsApi implements ApiProvider{
 			.then(ctx->{
 					ctx.webSocket(ws->{
 						ws.send("Hello!");
-						ws.onData((String data)->ws.send(data));
+						ws.onMessage((String data)->{
+							if(data.equals("Sayonara baby")) {
+								ws.close();
+							} else {
+								ws.send(data);
+							}
+						});
 					});
 			});
 		

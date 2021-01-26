@@ -5,12 +5,17 @@ import com.simplyti.util.concurrent.DefaultFuture;
 import com.simplyti.util.concurrent.Future;
 
 import io.netty.channel.Channel;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 import lombok.experimental.Delegate;
 
 public class UnpooledClientChannel implements ClientChannel {
 
 	@Delegate
 	private final Channel channel;
+	
+	@Getter
+	@Accessors( fluent = true)
 	private final Address address;
 
 	public UnpooledClientChannel(Channel channel, Address address) {
@@ -22,11 +27,6 @@ public class UnpooledClientChannel implements ClientChannel {
 	@Override
 	public Future<Void> release() {
 		return new DefaultFuture<>(channel.close(),channel.eventLoop());
-	}
-
-	@Override
-	public Address address() {
-		return address;
 	}
 
 }

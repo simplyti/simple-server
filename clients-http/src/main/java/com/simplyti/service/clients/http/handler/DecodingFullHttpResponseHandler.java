@@ -11,16 +11,18 @@ public class DecodingFullHttpResponseHandler<T> extends AbstractFullHttpResponse
 
 	private final Function<FullHttpResponse, T> fn;
 
-	public DecodingFullHttpResponseHandler(String handlerName, ClientChannel channel, Promise<T> promise, boolean checkStatus, Function<FullHttpResponse, T> fn) {
-		super(handlerName, channel, promise, checkStatus);
+	public DecodingFullHttpResponseHandler(ClientChannel channel, boolean checkStatus, Promise<T> promise, Function<FullHttpResponse, T> fn) {
+		super(channel, promise, checkStatus);
 		this.fn=fn;
 	}
 
 	@Override
 	protected T handle(FullHttpResponse msg) {
-		T result = fn.apply(msg);
-		msg.release();
-		return result;
+		try {
+			return fn.apply(msg);
+		} finally {
+			msg.release();
+		}
 	}
 
 }

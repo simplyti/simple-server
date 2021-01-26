@@ -3,7 +3,7 @@ package com.simplyti.server.http.api.builder.jaxrs;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-import com.simplyti.service.api.builder.jaxrs.RestParam;
+import com.simplyti.service.matcher.jaxrs.RestParam;
 import com.simplyti.service.sync.SyncTaskSubmitter;
 import com.simplyti.util.concurrent.Future;
 

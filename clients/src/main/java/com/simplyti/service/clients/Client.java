@@ -2,6 +2,7 @@ package com.simplyti.service.clients;
 
 import com.simplyti.service.clients.monitor.ClientMonitor;
 
+import io.netty.channel.EventLoopGroup;
 import io.netty.util.concurrent.Future;
 
 public interface Client<R> {
@@ -15,5 +16,7 @@ public interface Client<R> {
 	Future<Void> close();
 	
 	ClientMonitor monitor();
+
+	EventLoopGroup eventLoopGroup();
 
 }

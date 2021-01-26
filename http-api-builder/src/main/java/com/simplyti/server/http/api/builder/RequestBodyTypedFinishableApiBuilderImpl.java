@@ -5,8 +5,8 @@ import java.util.Map;
 import com.simplyti.server.http.api.context.ApiContextFactory;
 import com.simplyti.server.http.api.operations.ApiOperations;
 import com.simplyti.server.http.api.operations.RequestTypeApiOperation;
-import com.simplyti.server.http.api.pattern.ApiPattern;
 import com.simplyti.service.api.serializer.json.TypeLiteral;
+import com.simplyti.service.matcher.ApiPattern;
 
 import io.netty.handler.codec.http.HttpMethod;
 
@@ -46,6 +46,11 @@ public class RequestBodyTypedFinishableApiBuilderImpl<T> implements RequestBodyT
 	
 	@Override
 	public <U> RequestResponseBodyTypedFinishableApiBuilder<T, U> withResponseBodyType(Class<U> clazz) {
+		return withResponseType(clazz);
+	}
+	
+	@Override
+	public <U> RequestResponseBodyTypedFinishableApiBuilder<T, U> withResponseBodyType(TypeLiteral<U> clazz) {
 		return withResponseType(clazz);
 	}
 

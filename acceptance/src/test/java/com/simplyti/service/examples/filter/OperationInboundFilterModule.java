@@ -22,7 +22,7 @@ public class OperationInboundFilterModule extends AbstractModule implements Oper
 
 	@Override
 	public void execute(FilterContext<ApiInvocation> context) {
-		String authorization = context.object().headers().get(HttpHeaderNames.AUTHORIZATION);
+		String authorization = context.object().request().headers().get(HttpHeaderNames.AUTHORIZATION);
 		if(authorization==null) {
 			context.fail(new UnauthorizedException());
 		}else {

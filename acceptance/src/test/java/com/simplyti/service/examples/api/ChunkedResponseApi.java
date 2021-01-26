@@ -13,7 +13,7 @@ public class ChunkedResponseApi implements ApiProvider{
 		
 		builder.when().get("/stream/{n}")
 			.then(ctx->{
-				ctx.sendStreamed(s->{
+				ctx.sendChunked(s->{
 					AtomicInteger i = new AtomicInteger();
 					Runnable r = new Runnable() {
 						@Override

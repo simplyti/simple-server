@@ -6,6 +6,7 @@ public interface RequestBodyTypedFinishableApiBuilder<T> {
 	
 	<U> RequestResponseBodyTypedFinishableApiBuilder<T,U> withResponseType(Class<U> clazz);
 	<U> RequestResponseBodyTypedFinishableApiBuilder<T,U> withResponseBodyType(Class<U> clazz);
+	<U> RequestResponseBodyTypedFinishableApiBuilder<T,U> withResponseBodyType(TypeLiteral<U> clazz);
 	<U> RequestResponseBodyTypedFinishableApiBuilder<T,U> withResponseType(TypeLiteral<U> type);
 	
 	void then(RequestTypedApiContextConsumer<T> consumer);

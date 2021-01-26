@@ -1,6 +1,9 @@
 package com.simplyti.service.clients.channel;
 
+import java.security.cert.X509Certificate;
+
 import com.simplyti.service.clients.endpoint.Endpoint;
+import com.simplyti.service.clients.endpoint.ssl.BasicKeyManager;
 import com.simplyti.service.clients.endpoint.ssl.SSLEndpoint;
 
 import io.netty.channel.Channel;
@@ -24,7 +27,7 @@ public class SSLChannelInitializeHandler extends AbstractChannelPoolHandler {
 				.forClient();
 		if(endpoint instanceof SSLEndpoint) {
 			SSLEndpoint sslEndpoint = (SSLEndpoint) endpoint;
-			builder.keyManager(sslEndpoint.keyManager());
+			builder.keyManager(new BasicKeyManager(sslEndpoint.key(), sslEndpoint.certs().toArray(new X509Certificate[0])));
 		}
 		this.sslCtx = builder
 				.sslProvider(sslProvider)

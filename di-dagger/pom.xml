@@ -15,6 +15,11 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.simplyti.cloud</groupId>
+			<artifactId>simple-server-http-file-server</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.simplyti.cloud</groupId>
 			<artifactId>simple-server-http-api-builder</artifactId>
 			<version>${project.version}</version>
 		</dependency>

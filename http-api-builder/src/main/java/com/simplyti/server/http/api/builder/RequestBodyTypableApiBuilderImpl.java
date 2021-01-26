@@ -10,8 +10,8 @@ import com.simplyti.server.http.api.builder.stream.StreamedRequestResponseTypabl
 import com.simplyti.server.http.api.context.ApiContextFactory;
 import com.simplyti.server.http.api.operations.AnyWithBodyApiOperation;
 import com.simplyti.server.http.api.operations.ApiOperations;
-import com.simplyti.server.http.api.pattern.ApiPattern;
 import com.simplyti.service.api.serializer.json.TypeLiteral;
+import com.simplyti.service.matcher.ApiPattern;
 
 import io.netty.handler.codec.http.HttpMethod;
 
@@ -63,7 +63,12 @@ public class RequestBodyTypableApiBuilderImpl implements RequestTypableApiBuilde
 
 	@Override
 	public <T> RequestBodyTypableResponseTypedApiBuilder<T> withResponseType(Class<T> clazz) {
-		return new RequestBodyTypableResponseTypedApiBuilderImpl<>(responseTypedWithBodyContextFactory,requestResponseTypedContextFactory,operations,method,path,metadata,notFoundOnNull);
+		return new RequestBodyTypableResponseTypedApiBuilderImpl<>(responseTypedWithBodyContextFactory,requestResponseTypedContextFactory,operations,method,path,metadata,notFoundOnNull, maxBodyLength);
+	}
+	
+	@Override
+	public <T> RequestBodyTypableResponseTypedApiBuilder<T> withResponseBodyType(TypeLiteral<T> clazz) {
+		return new RequestBodyTypableResponseTypedApiBuilderImpl<>(responseTypedWithBodyContextFactory,requestResponseTypedContextFactory,operations,method,path,metadata,notFoundOnNull, maxBodyLength);
 	}
 	
 	@Override

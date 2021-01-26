@@ -11,32 +11,51 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpRequest;
 
 public class StreamInitialApiInvocationHandler extends SimpleChannelInboundHandler<HttpRequest> {
-
-	private final ApiMatchRequest apiMacher;
-	private final SyncTaskSubmitter syncTaskSubmitter;
+	
 	private final ExceptionHandler exceptionHandler;
+	private final SyncTaskSubmitter syncTaskSubmitter;
+	
+	private ApiMatchRequest matchRequest;
 
-	public StreamInitialApiInvocationHandler(ApiMatchRequest apiMacher,SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler) {
-		this.apiMacher=apiMacher;
-		this.syncTaskSubmitter=syncTaskSubmitter;
+	public StreamInitialApiInvocationHandler(ExceptionHandler exceptionHandler, SyncTaskSubmitter syncTaskSubmitter) {
+		super(false);
 		this.exceptionHandler=exceptionHandler;
+		this.syncTaskSubmitter=syncTaskSubmitter;
 	}
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, HttpRequest msg) throws Exception {
-		serviceProceed(apiMacher.operation(), context(ctx, msg));
+		if(matchRequest !=null) {
+			serviceProceed(this.matchRequest.operation(),context(ctx,msg));
+			this.matchRequest=null;
+		} else {
+			ctx.fireChannelRead(msg);
+		}
 	}
-	
+
+	private <T extends ApiContext> T context(ChannelHandlerContext ctx, HttpRequest msg) {
+		return this.matchRequest.operation().contextFactory().create(syncTaskSubmitter, exceptionHandler, ctx, matchRequest, msg, null);
+	}
+
 	private <T extends ApiContext> void serviceProceed(ApiOperation<T> operation, T ctx) {
 		try{
 			operation.handler().accept(ctx);
 		}catch(Throwable e) {
-			throw e;
+			ctx.failure(e);
 		}
 	}
-	
-	private <T extends ApiContext> T context(ChannelHandlerContext ctx, HttpRequest msg) {
-		return apiMacher.operation().contextFactory().create(syncTaskSubmitter, exceptionHandler, ctx, apiMacher, msg, null);
-	}
+
+	@Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+		if(evt instanceof ApiMatchRequest) {
+			if(((ApiMatchRequest) evt).operation().isStreamed()) {
+				this.matchRequest=(ApiMatchRequest) evt;
+			} else {
+				ctx.fireUserEventTriggered(evt);
+			}
+		} else {
+			ctx.fireUserEventTriggered(evt);
+		}
+    }
 
 }

@@ -18,9 +18,9 @@ import io.netty.channel.EventLoopGroup;
 
 public class DefaultNamespacedServices extends DefaultNamespacedK8sApi<Service> implements NamespacedServices {
 
-	public DefaultNamespacedServices(EventLoopGroup eventLoopGroup,HttpClient http,Json json, K8sAPI api, String resource,TypeLiteral<KubeList<Service>> listType,
+	public DefaultNamespacedServices(EventLoopGroup eventLoopGroup,HttpClient http, long timeoutMillis, Json json, K8sAPI api, String resource,TypeLiteral<KubeList<Service>> listType,
 			TypeLiteral<Event<Service>> eventType, String namespace) {
-		super(eventLoopGroup,http,json,api,namespace,resource,Service.class,listType,eventType);
+		super(eventLoopGroup,http,timeoutMillis,json,api,namespace,resource,Service.class,listType,eventType);
 	}
 
 	@Override
@@ -37,7 +37,7 @@ public class DefaultNamespacedServices extends DefaultNamespacedK8sApi<Service> 
 	public Future<Service> updateStatus(Service service) {
 		return http().request()
 				.put(String.format("%s/namespaces/%s/%s/%s/status",api().path(),namespace(),resource(),service.metadata().name()))
-				.withBody(buff->body(buff,service))
+				.withBodyWriter(buff->body(buff,service))
 				.fullResponse(f->response(f, Service.class));
 	}
 

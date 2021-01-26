@@ -1,5 +1,6 @@
 package com.simplyti.service.clients.k8s.pods;
 
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import com.simplyti.service.clients.channel.ClientChannel;
@@ -23,10 +24,12 @@ public class DefaultLogStream implements LogStream {
 	private final String namespace;
 	private final String resource;
 	private final EventLoop loop;
+	private final long readTimeoutSeconds;
+	
 	private boolean closed;
 	private ClientChannel client;
 
-	public DefaultLogStream(EventLoop loop, K8sAPI api, HttpClient http, String pod, String container,String namespace, String resource) {
+	public DefaultLogStream(EventLoop loop, K8sAPI api, HttpClient http, long readTimeoutMillis, String pod, String container,String namespace, String resource) {
 		this.http=http;
 		this.pod = pod;
 		this.container = container;
@@ -34,6 +37,7 @@ public class DefaultLogStream implements LogStream {
 		this.namespace=namespace;
 		this.resource=resource;
 		this.loop=loop;
+		this.readTimeoutSeconds = TimeUnit.MILLISECONDS.toSeconds(readTimeoutMillis);
 	}
 
 	@Override
@@ -45,7 +49,6 @@ public class DefaultLogStream implements LogStream {
 
 	private Future<Void> followLog(Promise<Void> promise, boolean isContinue, Consumer<ByteBuf> consumer) {
 		FinishableHttpRequestBuilder builder = http.request()
-			.withReadTimeout(30000)
 			.get(String.format("%s/namespaces/%s/%s/%s/log",api.path(),namespace,resource, pod))
 			.param("follow",true);
 		
@@ -54,14 +57,12 @@ public class DefaultLogStream implements LogStream {
 		}
 		
 		if(isContinue) {
-			builder.param("sinceSeconds",30);
+			builder.param("sinceSeconds",readTimeoutSeconds);
 		}
 		
-		builder.stream().withHandler(client->{
-				this.client=client;
-				checkClose();
-				client.pipeline().addLast(new LogStreamHandler(consumer));
-			})
+		builder.stream()
+		.onConnect(this::onConnect)
+		.forEach(consumer::accept)
 		.thenApply(promise::setSuccess)
 		.onError(cause->{
 			if(closed) {
@@ -74,8 +75,9 @@ public class DefaultLogStream implements LogStream {
 		});
 		return new DefaultFuture<>(promise, loop);
 	}
-
-	private void checkClose() {
+	
+	private void onConnect(ClientChannel ch) {
+		this.client=ch;
 		if(loop.inEventLoop()) {
 			checkClose0();
 		} else {

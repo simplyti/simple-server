@@ -1,4 +1,4 @@
-@k8sClient
+@k8sClients
 Feature: Kubernetes client
 
 Background:

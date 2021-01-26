@@ -63,5 +63,10 @@ public class HttpMethodApiBuilderImpl implements HttpMethodApiBuilder {
 	public RequestTypableApiBuilder patch(String path) {
 		return new RequestBodyTypableApiBuilderImpl(anyWithBodyContextFactory,requestTypedContextFactory,requestResponseTypedContextFactory,responseTypedWithBodyContextFactory,streamAnyContextFactory,fileUploadContextFactory,operations,HttpMethod.PATCH, path);
 	}
+	
+	@Override
+	public RequestTypableApiBuilder options(String path) {
+		return new RequestBodyTypableApiBuilderImpl(anyWithBodyContextFactory,requestTypedContextFactory,requestResponseTypedContextFactory,responseTypedWithBodyContextFactory,streamAnyContextFactory,fileUploadContextFactory,operations,HttpMethod.OPTIONS, path);
+	}
 
 }

@@ -5,10 +5,10 @@ import java.util.Set;
 import javax.inject.Inject;
 
 import com.simplyti.server.http.api.context.ApiContext;
-import com.simplyti.server.http.api.pattern.ApiMatcher;
 import com.simplyti.server.http.api.request.ApiMatchRequest;
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.ApiProvider;
+import com.simplyti.service.matcher.ApiMatcher;
 
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.QueryStringDecoder;
@@ -25,13 +25,14 @@ public class ApiOperationResolverImpl implements ApiOperationResolver {
 	}
 
 	@Override
-	public ApiMatchRequest resolveOperation(HttpMethod method, String path, QueryStringDecoder queryDecoder) {
+	public ApiMatchRequest resolveOperation(HttpMethod method, String uri) {
+		QueryStringDecoder queryDecoder = new QueryStringDecoder(uri);
 		for(ApiOperation<? extends ApiContext> operation:operations.getAll()) {
 			if(!method.equals(operation.method())) {
 				continue;
 			}
 			
-			ApiMatcher matcher = operation.pattern().matcher(path);
+			ApiMatcher matcher = operation.pattern().matcher(queryDecoder.path());
 			if(!matcher.matches()) {
 				continue;
 			}

@@ -7,18 +7,24 @@ import java.util.concurrent.Callable;
 import java.util.function.Function;
 
 import com.simplyti.server.http.api.builder.sse.ServerSentEventApiContextConsumer;
-import com.simplyti.server.http.api.builder.stream.StreamedResponseContextConsumer;
+import com.simplyti.server.http.api.builder.stream.ChunkedResponseContextConsumer;
 import com.simplyti.server.http.api.builder.ws.WebSocketApiContextConsumer;
+import com.simplyti.server.http.api.context.chunked.ChunkedResponseContextImpl;
 import com.simplyti.server.http.api.context.sse.ServerSentEventApiContextImpl;
-import com.simplyti.server.http.api.context.stream.StreamedResponseContextImpl;
 import com.simplyti.server.http.api.context.ws.WebSocketApiContextImpl;
+import com.simplyti.server.http.api.handler.message.ApiBufferResponse;
+import com.simplyti.server.http.api.handler.message.ApiCharSequenceResponse;
+import com.simplyti.server.http.api.handler.message.ApiObjectResponse;
+import com.simplyti.server.http.api.operations.ApiOperation;
 import com.simplyti.server.http.api.request.ApiMatchRequest;
 import com.simplyti.server.http.api.sse.ServerSentEventEncoder;
-import com.simplyti.service.channel.handler.ClientChannelHandler;
+import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.sync.SyncTaskSubmitter;
+import com.simplyti.service.sync.VoidCallable;
 import com.simplyti.util.concurrent.DefaultFuture;
 import com.simplyti.util.concurrent.Future;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
@@ -26,16 +32,18 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
+import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.Promise;
 
-public abstract class AbstractApiContext implements ApiContext {
+public abstract class AbstractApiContext<U> implements ApiContext {
 	
 	private static final String STRING = "string";
 	private static final String INTEGER = "integer";
@@ -46,18 +54,25 @@ public abstract class AbstractApiContext implements ApiContext {
 	
 	private final SyncTaskSubmitter syncTaskSubmitter;
 	private final ChannelHandlerContext ctx;
+	private final ExceptionHandler exceptionHandler;
 	private final HttpRequest request;
 	private final ApiMatchRequest matcher;
+	private final boolean isKeepAlive;
+	private final ApiOperation<?> operation;
 	
 	private final Map<String,Object> convertedPathParams = new HashMap<>();
 	private final Map<String,Object> convertedQueryParams = new HashMap<>();
 
 
-	public AbstractApiContext(SyncTaskSubmitter syncTaskSubmitter, ChannelHandlerContext ctx, HttpRequest request, ApiMatchRequest matcher) {
+	public AbstractApiContext(SyncTaskSubmitter syncTaskSubmitter, ChannelHandlerContext ctx, HttpRequest request, ApiMatchRequest matcher,
+			ExceptionHandler exceptionHandler) {
 		this.syncTaskSubmitter=syncTaskSubmitter;
 		this.ctx=ctx;
 		this.request=request;
 		this.matcher=matcher;
+		this.isKeepAlive=HttpUtil.isKeepAlive(request);
+		this.operation=matcher.operation();
+		this.exceptionHandler=exceptionHandler;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -111,7 +126,6 @@ public abstract class AbstractApiContext implements ApiContext {
 	public Long queryParamAsLong(String name, long defaultValue) {
 		return queryParam(name,LONG,Long::parseLong,defaultValue);
 	}
-
 	
 	@SuppressWarnings("unchecked")
 	private <T> T pathParam(String key, String type, Function<String,T> fn) {
@@ -171,6 +185,101 @@ public abstract class AbstractApiContext implements ApiContext {
 	}
 	
 	@Override
+	public Future<Void> sync(VoidCallable task) {
+		return syncTaskSubmitter.submit(executor(), task);
+	}
+	
+	@Override
+	public Future<Void> close() {
+		return new DefaultFuture<>(ctx.close(),ctx.executor());
+	}
+
+	@Override
+	public Future<Void> failure(Throwable cause) {
+		return exceptionHandler.exceptionCaught(ctx, cause);
+	}
+	
+	public Future<Void> writeAndFlush(U value) {
+		try {
+			ChannelFuture future = ctx.writeAndFlush(new ApiObjectResponse(value, isKeepAlive, operation.notFoundOnNull()))
+					.addListener(this::writeListener);
+			return new DefaultFuture<>(future,ctx.executor());
+		} catch(Exception cause) {
+			return new DefaultFuture<>(ctx.channel().eventLoop().newFailedFuture(cause), ctx.executor());
+		}
+	}
+	
+	public Future<Void> writeAndFlush(ByteBuf body) {
+		try {
+			ChannelFuture future = ctx.writeAndFlush(new ApiBufferResponse(body==null?null:body.retain(), isKeepAlive, operation.notFoundOnNull()))
+					.addListener(this::writeListener);
+			return new DefaultFuture<>(future,ctx.executor());
+		} catch(Exception cause) {
+			return new DefaultFuture<>(ctx.channel().eventLoop().newFailedFuture(cause), ctx.executor());
+		}
+	}
+	
+	public Future<Void> writeAndFlush(HttpObject response) {
+		try {
+			ChannelFuture future = ctx.writeAndFlush(response)
+					.addListener(this::writeListener);
+			return new DefaultFuture<>(future,ctx.executor());
+		} catch(Exception cause) {
+			return new DefaultFuture<>(ctx.channel().eventLoop().newFailedFuture(cause), ctx.executor());
+		}
+	}
+	
+	public Future<Void> writeAndFlushEmpty() {
+		try {
+			ChannelFuture future = ctx.writeAndFlush(new ApiObjectResponse(null, isKeepAlive, false))
+					.addListener(this::writeListener);
+			return new DefaultFuture<>(future,ctx.executor());
+		} catch(Exception cause) {
+			return new DefaultFuture<>(ctx.channel().eventLoop().newFailedFuture(cause), ctx.executor());
+		}
+	}
+	
+	public Future<Void> writeAndFlush(String message) {
+		try {
+			ChannelFuture future = ctx.writeAndFlush(new ApiCharSequenceResponse(message, isKeepAlive, operation.notFoundOnNull()))
+					.addListener(this::writeListener);
+			return new DefaultFuture<>(future,ctx.executor());
+		} catch(Exception cause) {
+			return new DefaultFuture<>(ctx.channel().eventLoop().newFailedFuture(cause), ctx.executor());
+		}
+	}
+	
+	public Future<Void> send(String message) {
+		return writeAndFlush(message);
+	}
+
+	public Future<Void> send(ByteBuf body) {
+		return writeAndFlush(body);
+	}
+
+	public Future<Void> send(HttpObject response) {
+		return writeAndFlush(response);
+	}
+
+	public Future<Void> sendEmpty() {
+		return writeAndFlushEmpty();
+	}
+	
+	public Future<Void> send(U value) {
+		return writeAndFlush(value);
+	}
+	
+	private void writeListener(io.netty.util.concurrent.Future<? super Void> future) {
+		if(future.isSuccess()) {
+			if(!isKeepAlive) {
+				ctx.channel().close();
+			}
+		} else {
+			failure(future.cause());
+		}
+	}
+	
+	@Override
 	public Future<Void> webSocket(WebSocketApiContextConsumer consumer) {
 		String location = this.request.headers().get(HttpHeaderNames.HOST) + this.request.uri();
 		WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(location, null, true);
@@ -182,7 +291,7 @@ public abstract class AbstractApiContext implements ApiContext {
             if(channelFuture.isDone()) {
             	if(channelFuture.isSuccess()) {
             		WebSocketApiContextImpl wsCtx = new WebSocketApiContextImpl(ctx);
-            		this.ctx.pipeline().addLast(wsCtx);
+            		this.ctx.pipeline().replace("default-handler","ws-handler",wsCtx);
             		consumer.accept(wsCtx);
             		return new DefaultFuture<>(this.ctx.executor().newSucceededFuture(null),this.ctx.executor());
             	} else {
@@ -193,7 +302,7 @@ public abstract class AbstractApiContext implements ApiContext {
             	channelFuture.addListener(f->{
             		if(f.isSuccess()) {
             			WebSocketApiContextImpl wsCtx = new WebSocketApiContextImpl(ctx);
-                		this.ctx.pipeline().addLast(wsCtx);
+            			this.ctx.pipeline().replace("default-handler","ws-handler",wsCtx);
                 		consumer.accept(wsCtx);
             			promise.setSuccess(null);
             		} else {
@@ -214,7 +323,7 @@ public abstract class AbstractApiContext implements ApiContext {
 				if(f.isSuccess()) {
 					ctx.pipeline().remove("encoder");
 					ctx.pipeline().remove("decoder");
-					ctx.pipeline().addBefore(ClientChannelHandler.NAME,"sse-codec", ServerSentEventEncoder.INSTANCE);
+					ctx.pipeline().addBefore("api-handler" ,"sse-codec", ServerSentEventEncoder.INSTANCE);
 					consumer.accept(new ServerSentEventApiContextImpl(ctx));
 				}
 			});
@@ -222,15 +331,15 @@ public abstract class AbstractApiContext implements ApiContext {
 	}
 	
 	@Override
-	public Future<Void> sendStreamed(StreamedResponseContextConsumer consumer) {
+	public Future<Void> sendChunked(ChunkedResponseContextConsumer consumer) {
 		HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
 	    response.headers().set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
 	    ChannelFuture future = ctx.writeAndFlush(response).addListener(f->{
 	    	if(f.isSuccess()) {
-	    		consumer.accept(new StreamedResponseContextImpl(ctx));
+	    		consumer.accept(new ChunkedResponseContextImpl(ctx));
 	    	}
 	    });
 	    return new DefaultFuture<>(future,this.ctx.executor());
 	}
-
+	
 }

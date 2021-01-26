@@ -1,20 +1,21 @@
 package com.simplyti.service.gateway;
 
-import com.google.re2j.Matcher;
+import com.simplyti.service.matcher.ApiMatcher;
+import com.simplyti.service.matcher.ApiPattern;
 
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.util.internal.StringUtil;
 
 public class DefaultBackendServiceMatcher implements BackendServiceMatcher {
 
-	private final Matcher matcher;
+	private final ApiMatcher matcher;
 	private final BackendService service;
 	private final String query;
 	private boolean rewritten;
 
 	public DefaultBackendServiceMatcher(BackendService service, String uri) {
 		this.service=service;
-		if(service.pattern()!=null) {
+		if(service.pathPattern()!=null) {
 			String path;
 			int queryDelimiter = uri.indexOf('?');
 			if(queryDelimiter==-1) {
@@ -24,8 +25,11 @@ public class DefaultBackendServiceMatcher implements BackendServiceMatcher {
 				path = uri.substring(0,queryDelimiter);
 				query=uri.substring(queryDelimiter);
 			}
-			this.matcher=service.pattern().matcher(path);
-		}else {
+			this.matcher=service.pathPattern().matcher(path);
+		} else if(service.path()!=null) {
+			this.matcher = new StartWithMatcher(service.path(),ApiPattern.normalize(uri));
+			this.query=null;
+		} else {
 			this.matcher=null;
 			this.query=null;
 		}
@@ -50,10 +54,10 @@ public class DefaultBackendServiceMatcher implements BackendServiceMatcher {
 		rewritten = true;
 		if(service.rewrite()==null) {
 			return request;
-		} else if(service.pathPattern()!=null || service.pattern()!=null) {
+		} else if(service.pathPattern()!=null) {
 			final String newpath = service.rewrite().doRewrite(matcher, service.pathPattern());
 			return request.setUri(newpath+query);
-		}else {
+		} else {
 			String root;
 			String resource;
 			if(request.uri().equals("/")) {

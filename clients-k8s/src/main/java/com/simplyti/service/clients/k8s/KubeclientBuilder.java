@@ -1,11 +1,14 @@
 package com.simplyti.service.clients.k8s;
 
+import com.simplyti.service.clients.endpoint.Endpoint;
+import com.simplyti.service.clients.http.HttpEndpoint;
+
 import io.netty.channel.EventLoopGroup;
 
 public class KubeclientBuilder {
 	
 	private EventLoopGroup eventLoopGroup;
-	private String server;
+	private Endpoint endpoint;
 	private String token;
 	
 	public KubeclientBuilder eventLoopGroup(EventLoopGroup eventLoopGroup) {
@@ -14,7 +17,12 @@ public class KubeclientBuilder {
 	}
 
 	public KubeclientBuilder server(String server) {
-		this.server=server;
+		this.endpoint=HttpEndpoint.of(server);
+		return this;
+	}
+	
+	public KubeclientBuilder withEndpoint(Endpoint endpoint) {
+		this.endpoint=endpoint;
 		return this;
 	}
 	
@@ -24,7 +32,7 @@ public class KubeclientBuilder {
 	}
 	
 	public KubeClient build() {
-		return new DefaultKubeClient(eventLoopGroup,server,token);
+		return new DefaultKubeClient(eventLoopGroup,endpoint,token);
 	}
 
 }

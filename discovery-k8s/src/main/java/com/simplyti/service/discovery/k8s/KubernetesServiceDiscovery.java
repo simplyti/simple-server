@@ -88,11 +88,11 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 	private final Map<String,OpenIdClientConfig> openIdClientSecrets;
 	private final Json json;
 	
-	private final com.simplyti.service.Service<?> server;
+	private final com.simplyti.service.Server server;
 	
 	@Inject
 	public KubernetesServiceDiscovery(EventLoopGroup eventLoopgroup,KubeClient client, HttpClient http, KubernetesCertificateProvider certificateProvider,
-			AutodiscoveredOpenIdConfig openIdConfig, Json json, com.simplyti.service.Service<?> server) {
+			AutodiscoveredOpenIdConfig openIdConfig, Json json, com.simplyti.service.Server server) {
 		this.client=client;
 		this.http=http;
 		this.eventLoop=eventLoopgroup.next();

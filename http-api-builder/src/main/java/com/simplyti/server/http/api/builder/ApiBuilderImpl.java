@@ -6,8 +6,8 @@ import com.simplyti.server.http.api.builder.jaxrs.JaxRSBuilder;
 import com.simplyti.server.http.api.builder.jaxrs.JaxRsApiContextFactory;
 import com.simplyti.server.http.api.operations.ApiOperations;
 import com.simplyti.service.api.builder.ApiBuilder;
-import com.simplyti.service.api.builder.di.InstanceProvider;
 import com.simplyti.service.api.serializer.json.Json;
+import com.simplyti.service.matcher.di.InstanceProvider;
 import com.simplyti.service.sync.SyncTaskSubmitter;
 
 import lombok.AllArgsConstructor;

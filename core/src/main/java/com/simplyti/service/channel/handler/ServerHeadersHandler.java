@@ -7,7 +7,7 @@ import java.util.TimeZone;
 
 import javax.inject.Inject;
 
-import com.simplyti.service.ServerConfig;
+import com.simplyti.service.config.ServerConfig;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;

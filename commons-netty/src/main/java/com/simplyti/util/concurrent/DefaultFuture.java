@@ -3,6 +3,8 @@ package com.simplyti.util.concurrent;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -29,7 +31,7 @@ public class DefaultFuture<T> implements Future<T> {
 				try{
 					return new DefaultFuture<>(loop.newSucceededFuture(fn.apply(target.getNow())), loop);
 				} catch(Throwable cause) {
-					return new DefaultFuture<>(loop.newFailedFuture(new ExecutionException(cause)), loop);
+					return new DefaultFuture<>(loop.newFailedFuture(cause), loop);
 				}
 			}else {
 				return new DefaultFuture<>(loop.newFailedFuture(target.cause()), loop);
@@ -41,7 +43,7 @@ public class DefaultFuture<T> implements Future<T> {
 					try{
 						promise.setSuccess(fn.apply(target.getNow()));
 					} catch(Throwable cause) {
-						promise.setFailure(new ExecutionException(cause));
+						promise.setFailure(cause);
 					}
 				} else {
 					promise.setFailure(target.cause());
@@ -60,7 +62,7 @@ public class DefaultFuture<T> implements Future<T> {
 					action.accept(target.getNow());
 					return new DefaultFuture<>(loop.newSucceededFuture(null), loop);
 				} catch(Throwable cause) {
-					return new DefaultFuture<>(loop.newFailedFuture(new ExecutionException(cause)), loop);
+					return new DefaultFuture<>(loop.newFailedFuture(cause), loop);
 				}
 			}else {
 				return new DefaultFuture<>(loop.newFailedFuture(target.cause()), loop);
@@ -73,10 +75,51 @@ public class DefaultFuture<T> implements Future<T> {
 						action.accept(target.getNow());
 						promise.setSuccess(null);
 					} catch(Throwable cause) {
-						promise.setFailure(new ExecutionException(cause));
+						promise.setFailure(cause);
 					}
 				} else {
 					promise.setFailure(target.cause());
+				}
+			});
+			return new DefaultFuture<>(promise, loop);
+		}
+	}
+	
+	@Override
+	public Future<Void> handle(BiConsumer<T, Throwable> action) {
+		if(target.isDone()) {
+			if(target.isSuccess()) {
+				try{
+					action.accept(target.getNow(),null);
+					return new DefaultFuture<>(loop.newSucceededFuture(null), loop);
+				} catch(Throwable cause) {
+					return new DefaultFuture<>(loop.newFailedFuture(cause), loop);
+				}
+			}else {
+				try{
+					action.accept(null,target.cause());
+					return new DefaultFuture<>(loop.newSucceededFuture(null), loop);
+				} catch(Throwable cause) {
+					return new DefaultFuture<>(loop.newFailedFuture(cause), loop);
+				}
+			}
+		} else {
+			Promise<Void> promise = loop.newPromise();
+			target.addListener(f->{
+				if(f.isSuccess()) {
+					try{
+						action.accept(target.getNow(),null);
+						promise.setSuccess(null);
+					} catch(Throwable cause) {
+						promise.setFailure(cause);
+					}
+				} else {
+					try{
+						action.accept(null, target.cause());
+						promise.setSuccess(null);
+					} catch(Throwable cause) {
+						promise.setFailure(cause);
+					}
 				}
 			});
 			return new DefaultFuture<>(promise, loop);
@@ -101,7 +144,7 @@ public class DefaultFuture<T> implements Future<T> {
 						return new DefaultFuture<>(promise, loop);
 					}
 				} catch(Throwable cause) {
-					return new DefaultFuture<>(loop.newFailedFuture(new ExecutionException(cause)), loop);
+					return new DefaultFuture<>(loop.newFailedFuture(cause), loop);
 				}
 			}else {
 				return new DefaultFuture<>(loop.newFailedFuture(target.cause()), loop);
@@ -122,10 +165,87 @@ public class DefaultFuture<T> implements Future<T> {
 							handleFuture(result,promise);
 						}
 					} catch(Throwable cause) {
-						promise.setFailure(new ExecutionException(cause));
+						promise.setFailure(cause);
 					}
 				} else {
 					promise.setFailure(target.cause());
+				}
+			});
+			return new DefaultFuture<>(promise, loop);
+		}
+	}
+	
+	@Override
+	public <U> Future<U> handleCombine(BiFunction<? super T, Throwable, io.netty.util.concurrent.Future<U>> fn) {
+		if(target.isDone()) {
+			if(target.isSuccess()) {
+				try{
+					io.netty.util.concurrent.Future<U> result =  fn.apply(target.getNow(),null);
+					if(result.isDone()) {
+						if(result.isSuccess()) {
+							return new DefaultFuture<>(loop.newSucceededFuture(result.getNow()), loop);
+						} else {
+							return new DefaultFuture<>(loop.newFailedFuture(result.cause()), loop);
+						}
+					} else {
+						Promise<U> promise = loop.newPromise();
+						handleFuture(result,promise);
+						return new DefaultFuture<>(promise, loop);
+					}
+				} catch(Throwable cause) {
+					return new DefaultFuture<>(loop.newFailedFuture(cause), loop);
+				}
+			}else {
+				try{
+					io.netty.util.concurrent.Future<U> result =  fn.apply(null,target.cause());
+					if(result.isDone()) {
+						if(result.isSuccess()) {
+							return new DefaultFuture<>(loop.newSucceededFuture(result.getNow()), loop);
+						} else {
+							return new DefaultFuture<>(loop.newFailedFuture(result.cause()), loop);
+						}
+					} else {
+						Promise<U> promise = loop.newPromise();
+						handleFuture(result,promise);
+						return new DefaultFuture<>(promise, loop);
+					}
+				} catch(Throwable cause) {
+					return new DefaultFuture<>(loop.newFailedFuture(cause), loop);
+				}
+			}
+		} else {
+			Promise<U> promise = loop.newPromise();
+			target.addListener(f->{
+				if(target.isSuccess()) {
+					try{
+						io.netty.util.concurrent.Future<U> result =  fn.apply(target.getNow(),null);
+						if(result.isDone()) {
+							if(result.isSuccess()) {
+								promise.setSuccess(result.getNow());
+							} else {
+								promise.setFailure(result.cause());
+							}
+						} else {
+							handleFuture(result,promise);
+						}
+					} catch(Throwable cause) {
+						promise.setFailure(cause);
+					}
+				} else {
+					try{
+						io.netty.util.concurrent.Future<U> result =  fn.apply(null,target.cause());
+						if(result.isDone()) {
+							if(result.isSuccess()) {
+								promise.setSuccess(result.getNow());
+							} else {
+								promise.setFailure(result.cause());
+							}
+						} else {
+							handleFuture(result,promise);
+						}
+					} catch(Throwable cause) {
+						promise.setFailure(cause);
+					}
 				}
 			});
 			return new DefaultFuture<>(promise, loop);
@@ -142,6 +262,7 @@ public class DefaultFuture<T> implements Future<T> {
 		});
 	}
 
+	@Override
 	public <O> Future<O> exceptionallyApply(final Function<Throwable, ? extends O> fn){
 		if(target.isDone()) {
 			if(target.isSuccess()) {
@@ -150,7 +271,7 @@ public class DefaultFuture<T> implements Future<T> {
 				try{
 					return new DefaultFuture<>(loop.newSucceededFuture(fn.apply(target.cause())), loop);
 				} catch (Throwable cause) {
-					return new DefaultFuture<>(loop.newFailedFuture(new ExecutionException(cause)), loop);
+					return new DefaultFuture<>(loop.newFailedFuture(cause), loop);
 				}
 			}
 		} else {
@@ -160,7 +281,36 @@ public class DefaultFuture<T> implements Future<T> {
 					try{
 						promise.setSuccess(fn.apply(target.cause()));
 					} catch(Throwable cause) {
-						promise.setFailure(new ExecutionException(cause));
+						promise.setFailure(cause);
+					}
+				}
+			});
+			return new DefaultFuture<>(promise, loop);
+		}
+	}
+	
+	@Override
+	public Future<Void> exceptionally(final Consumer<Throwable> consumer){
+		if(target.isDone()) {
+			if(target.isSuccess()) {
+				return IncompleteFuture.instance();
+			}else {
+				try{
+					consumer.accept(target.cause());
+					return new DefaultFuture<>(loop.newSucceededFuture(null), loop);
+				} catch (Throwable cause) {
+					return new DefaultFuture<>(loop.newFailedFuture(cause), loop);
+				}
+			}
+		} else {
+			Promise<Void> promise = loop.newPromise();
+			target.addListener(f->{
+				if(!f.isSuccess()) {
+					try{
+						consumer.accept(target.cause());
+						promise.setSuccess(null);
+					} catch(Throwable cause) {
+						promise.setFailure(cause);
 					}
 				}
 			});
@@ -176,7 +326,7 @@ public class DefaultFuture<T> implements Future<T> {
 					action.accept(target.cause());
 					return new DefaultFuture<>(loop.newFailedFuture(target.cause()),loop);
 				} catch (Throwable cause) {
-					return new DefaultFuture<>(loop.newFailedFuture(new ExecutionException(cause)),loop);
+					return new DefaultFuture<>(loop.newFailedFuture(cause),loop);
 				}
 			} else {
 				return new DefaultFuture<>(target,loop);
@@ -189,7 +339,7 @@ public class DefaultFuture<T> implements Future<T> {
 						action.accept(target.cause());
 						promise.setFailure(target.cause());
 					} catch(Throwable cause) {
-						promise.setFailure(new ExecutionException(cause));
+						promise.setFailure(cause);
 					}
 				} else {
 					promise.setSuccess(target.getNow());
@@ -321,7 +471,7 @@ public class DefaultFuture<T> implements Future<T> {
 				return promise;
 			}
 		} catch(Throwable cause) {
-			return loop.newFailedFuture(new ExecutionException(cause));
+			return loop.newFailedFuture(cause);
 		}
 	}
 
@@ -429,5 +579,5 @@ public class DefaultFuture<T> implements Future<T> {
 	public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
 		return target.get(timeout, unit);
 	}
-	
+
 }

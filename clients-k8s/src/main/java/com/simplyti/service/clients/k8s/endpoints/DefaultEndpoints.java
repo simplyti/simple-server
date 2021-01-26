@@ -19,13 +19,13 @@ public class DefaultEndpoints extends DefaultK8sApi<Endpoint> implements Endpoin
 	private static final TypeLiteral<KubeList<Endpoint>> LIST_TYPE = new TypeLiteral<KubeList<Endpoint>>() {};
 	private static final TypeLiteral<Event<Endpoint>> EVENT_TYPE = new TypeLiteral<Event<Endpoint>>() {};
 
-	public DefaultEndpoints(EventLoopGroup eventLoopGroup,HttpClient http, Json json) {
-		super(eventLoopGroup,http,json,K8sAPI.V1, RESOURCE,LIST_TYPE,EVENT_TYPE);
+	public DefaultEndpoints(EventLoopGroup eventLoopGroup,HttpClient http, long timeoutMillis, Json json) {
+		super(eventLoopGroup,http,timeoutMillis,json,K8sAPI.V1, RESOURCE,LIST_TYPE,EVENT_TYPE);
 	}
 
 	@Override
 	public NamespacedEndpoints namespace(String namespace) {
-		return new DefaultNamespacedEndpoints(eventLoopGroup(),http(),json(),K8sAPI.V1,RESOURCE,LIST_TYPE,EVENT_TYPE,namespace);
+		return new DefaultNamespacedEndpoints(eventLoopGroup(),http(),timeoutMillis(), json(),K8sAPI.V1,RESOURCE,LIST_TYPE,EVENT_TYPE,namespace);
 	}
 
 	@Override

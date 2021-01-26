@@ -67,7 +67,7 @@ public abstract class AbstractK8sResourceBuilder<B extends K8sResourceBuilder<B,
 	public Future<T> build() {
 		return client.request()
 			.post(String.format("%s/namespaces/%s/%s",api.path(),namespace,resource))
-			.withBody(this::body)
+			.withBodyWriter(this::body)
 			.fullResponse(f->response(f, type));
 	}
 	

@@ -1,12 +1,13 @@
 package com.simplyti.service.gateway.handler;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.TimeUnit;
 
 import com.simplyti.service.clients.channel.ClientChannel;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.gateway.BackendServiceMatcher;
 import com.simplyti.service.gateway.GatewayConfig;
+import com.simplyti.service.gateway.GatewayRequestHandlerOld;
+import com.simplyti.service.gateway.http.HttpGatewayRequestHandler;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
@@ -37,13 +38,16 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 	private final boolean isContinueExpected;
 	private final BackendServiceMatcher serviceMatch;
 	private final Endpoint endpoint;
+	private final GatewayRequestHandlerOld gatewayHandler;
 	
 	private boolean upgrading;
 	private boolean isContinuing;
 	private boolean keepAlive;
 	private ChannelFuture pendingFrontWrite;
 	
-	public BackendProxyHandler(GatewayConfig config, ClientChannel clientChannel, Channel frontendChannel, Endpoint endpoint, boolean isContinueExpected, boolean frontSsl, BackendServiceMatcher serviceMatch) {
+	private boolean initialSuccess;
+	
+	public BackendProxyHandler(GatewayConfig config, ClientChannel clientChannel, Channel frontendChannel, Endpoint endpoint, boolean isContinueExpected, boolean frontSsl, BackendServiceMatcher serviceMatch, GatewayRequestHandlerOld gatewayHandler) {
 		this.config=config;
 		this.frontendChannel = frontendChannel;
 		this.clientChannel = clientChannel;
@@ -51,23 +55,28 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 		this.isContinueExpected=isContinueExpected;
 		this.serviceMatch=serviceMatch;
 		this.endpoint=endpoint;
+		this.gatewayHandler=gatewayHandler;
 	}
 	
 	@Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-		ctx.channel().config().setAutoRead(false);
-		ctx.channel().read();
+		//ctx.channel().config().setAutoRead(false);
     }
 	
 	@Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+		if(!this.initialSuccess) {
+			return;
+		}
+		
 		if(this.pendingFrontWrite ==null || this.pendingFrontWrite.isDone()) {
-			frontendChannel.close();
+			this.frontendChannel.close();
 		} else {
-			this.pendingFrontWrite.addListener(f->frontendChannel.close());
+			this.pendingFrontWrite.addListener(f-> frontendChannel.close());
 		}
     }
 	
+
 	@Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         if(msg instanceof HttpRequest) {
@@ -84,8 +93,19 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
         		request.headers().set(HttpHeaderNames.HOST,endpoint.address().host());
         	}
         	msg = serviceMatch.rewrite((HttpRequest) msg);
+        	
+        	ctx.write(msg, promise).addListener(f->{
+        		if(f.isSuccess()) {
+        			this.initialSuccess = true;
+        		}
+        	});
+        } else {
+        	ctx.write(msg, promise);
         }
-        ctx.write(msg, promise);
+        
+        
+        
+        
     }
 
 	@Override
@@ -96,25 +116,33 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 		
 		this.pendingFrontWrite = frontendChannel.writeAndFlush(msg).addListener(f -> {
 			if (f.isSuccess()) {
-				ctx.channel().read();
+				if(msg instanceof LastHttpContent) {
+					System.out.println("#### ["+Thread.currentThread().getName()+"] LAST CONENT RESP "+ctx.channel().id());
+					if(ctx.channel().isActive()) {
+						ctx.pipeline().remove(this);
+					}
+					clientChannel.release();
+				}
+				//ctx.channel().read();
 			} else {
 				ctx.channel().close();
 			}
 		});
 		
 		if(msg instanceof LastHttpContent) {
-			handleLastHttpContent(ctx, (LastHttpContent)msg);
+			handleLastHttpContent(ctx);
 		}
 	}
 	
-	private void handleLastHttpContent(ChannelHandlerContext ctx, LastHttpContent msg) {
+	private void handleLastHttpContent(ChannelHandlerContext ctx) {
 		if(upgrading) {
 			ctx.pipeline().remove(HttpClientCodec.class);
 		} else if (isContinuing) {
 			isContinuing=false;
 		} else if(keepAlive) {
-			ctx.pipeline().remove(this);
-			release(ctx.channel());
+			//ctx.pipeline().remove(this);
+			//clientChannel.release();
+			//gatewayHandler.release();
 		} else {
 			ctx.channel().close();
 		}
@@ -127,13 +155,5 @@ public class BackendProxyHandler extends ChannelDuplexHandler {
 			this.isContinuing=true;
 		}
 	}
-
-	private void release(Channel channel) {
-		if(config.releaseChannelGraceTime()>0) {
-			channel.eventLoop().schedule(()->clientChannel.release(), config.releaseChannelGraceTime(), TimeUnit.MILLISECONDS);
-		} else {
-			clientChannel.release();
-		}
-	}
-
+	
 }

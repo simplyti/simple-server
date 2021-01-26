@@ -8,11 +8,11 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.fasterxml.classmate.ResolvedType;
-import com.simplyti.service.api.builder.jaxrs.NamedDefaultedRestParam;
-import com.simplyti.service.api.builder.jaxrs.RestHeaderParam;
-import com.simplyti.service.api.builder.jaxrs.RestParam;
-import com.simplyti.service.api.builder.jaxrs.RestPathParam;
-import com.simplyti.service.api.builder.jaxrs.RestQueryParam;
+import com.simplyti.service.matcher.jaxrs.NamedDefaultedRestParam;
+import com.simplyti.service.matcher.jaxrs.RestHeaderParam;
+import com.simplyti.service.matcher.jaxrs.RestParam;
+import com.simplyti.service.matcher.jaxrs.RestPathParam;
+import com.simplyti.service.matcher.jaxrs.RestQueryParam;
 
 public abstract class JaxRsMethodInvocation<T> implements Consumer<JaxRsApiContext<T>>{
 	

@@ -17,7 +17,7 @@ import io.netty.util.internal.shaded.org.jctools.queues.MessagePassingQueue.Supp
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class DefaultFutureTest {
 	

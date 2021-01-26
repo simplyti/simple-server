@@ -16,7 +16,7 @@ import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.pool.AbstractChannelPoolMap;
 import io.netty.channel.pool.ChannelPool;
-import io.netty.channel.pool.SimpleChannelPool;
+import io.netty.channel.pool.FixedChannelPool;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.Future;
 
@@ -38,11 +38,11 @@ public class ClientChannelPool extends AbstractChannelPoolMap<ServerAddress, Cha
 	@Override
 	protected ChannelPool newPool(ServerAddress key) {
 		if(key.isSsl()) {
-			return new SimpleChannelPool(bootstrap.clone().remoteAddress(key.getHost(),key.getPort()), 
-					new SSLClientChannelInitializer(key.getSni(),key.getPort(),initializer));
+			return new FixedChannelPool(bootstrap.clone().remoteAddress(key.getHost(),key.getPort()), 
+					new SSLClientChannelInitializer(key.getSni(),key.getPort(),initializer),50);
 		}else {
-			return new SimpleChannelPool(bootstrap.clone().remoteAddress(key.getHost(),key.getPort()), 
-					initializer);
+			return new FixedChannelPool(bootstrap.clone().remoteAddress(key.getHost(),key.getPort()), 
+					initializer,50);
 		}
 	}
 	

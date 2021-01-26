@@ -17,9 +17,9 @@ import io.netty.channel.EventLoopGroup;
 
 public class DefaultNamespacedIngresses extends DefaultNamespacedK8sApi<Ingress> implements NamespacedIngresses {
 
-	public DefaultNamespacedIngresses(EventLoopGroup eventLoopGroup,HttpClient http, Json json, K8sAPI api, String resource, TypeLiteral<KubeList<Ingress>> listType, 
+	public DefaultNamespacedIngresses(EventLoopGroup eventLoopGroup,HttpClient http, long timeoutMillis, Json json, K8sAPI api, String resource, TypeLiteral<KubeList<Ingress>> listType, 
 			TypeLiteral<Event<Ingress>> eventType, String namespace) {
-		super(eventLoopGroup,http,json,api,namespace,resource,Ingress.class,listType,eventType);
+		super(eventLoopGroup,http,timeoutMillis,json,api,namespace,resource,Ingress.class,listType,eventType);
 	}
 
 	@Override

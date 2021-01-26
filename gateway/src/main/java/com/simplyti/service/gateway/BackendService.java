@@ -5,15 +5,13 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.MoreObjects;
-import com.google.re2j.Pattern;
-import com.simplyti.service.api.builder.PathPattern;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.service.gateway.balancer.RoundRobinLoadBalancer;
 import com.simplyti.service.gateway.balancer.ServiceBalancer;
+import com.simplyti.service.matcher.ApiPattern;
 
 import io.netty.handler.codec.http.HttpMethod;
-import io.netty.util.internal.StringUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import lombok.AllArgsConstructor;
@@ -36,8 +34,7 @@ public class BackendService implements Comparable<BackendService>{
 	private final String path;
 	private final Rewrite rewrite;
 	private final Set<HttpRequestFilter> filters;
-	private final Pattern pattern;
-	private final PathPattern pathPattern;
+	private final ApiPattern pathPattern;
 	private final int literalCount;
 	private final boolean tlsEnabled;
 	
@@ -53,18 +50,15 @@ public class BackendService implements Comparable<BackendService>{
 		this.filters=MoreObjects.firstNonNull(filters, Collections.emptySet());
 		if(path==null) {
 			this.pathPattern=null;
-			this.pattern = null;
 			literalCount=0;
 		}else {
-			PathPattern thePattern = PathPattern.build(path);
+			ApiPattern thePattern = ApiPattern.build(path);
 			if(thePattern.pathParamNameToGroup().isEmpty()) {
 				this.pathPattern = null;
-				this.pattern = Pattern.compile(path.replaceAll("/+$",  StringUtil.EMPTY_STRING)+"/?(.*)");
-				this.literalCount = thePattern.literalCount();
+				this.literalCount = thePattern.literalCharsCount();
 			}else {
 				this.pathPattern = thePattern;
-				this.pattern = thePattern.pattern();
-				this.literalCount = thePattern.literalCount();
+				this.literalCount = thePattern.literalCharsCount();
 			}
 		}
 	}

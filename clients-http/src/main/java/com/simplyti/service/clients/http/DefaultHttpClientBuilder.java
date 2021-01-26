@@ -1,14 +1,11 @@
 package com.simplyti.service.clients.http;
 
-import java.util.ArrayList;
 import java.util.Base64;
-import java.util.List;
 
 import com.simplyti.service.clients.AbstractClientBuilder;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.http.request.HttpRequestBuilder;
 import com.simplyti.service.clients.monitor.DefaultClientMonitor;
-import com.simplyti.service.filter.http.HttpRequestFilter;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.EventLoopGroup;
@@ -26,8 +23,6 @@ public class DefaultHttpClientBuilder extends AbstractClientBuilder<HttpClientBu
 	private String basicUser;
 	private String basicPass;
 	
-	private List<HttpRequestFilter> filters;
-
 	@Override
 	public HttpClientBuilder withCheckStatusCode() {
 		this.checkStatus=true;
@@ -48,19 +43,10 @@ public class DefaultHttpClientBuilder extends AbstractClientBuilder<HttpClientBu
 	}
 	
 	@Override
-	protected HttpClient build0(EventLoopGroup eventLoopGroup, Bootstrap bootstrap, Endpoint endpoint, SslProvider sslProvider, DefaultClientMonitor monitor, int poolSize, boolean unpooledChannels, long poolIdleTimeout) {
-		return new DefaultHttpClient(eventLoopGroup, bootstrap, endpoint, headers(), sslProvider, checkStatus, filters, monitor, poolSize, unpooledChannels, poolIdleTimeout);
+	protected HttpClient build0(EventLoopGroup eventLoopGroup, Bootstrap bootstrap, Endpoint endpoint, SslProvider sslProvider, DefaultClientMonitor monitor, int poolSize, boolean unpooledChannels, long poolIdleTimeout, long readTimeoutMilis) {
+		return new DefaultHttpClient(eventLoopGroup, bootstrap, endpoint, headers(), sslProvider, checkStatus, monitor, poolSize, unpooledChannels, poolIdleTimeout, readTimeoutMilis);
 	}
 	
-	@Override
-	public HttpClientBuilder withFilter(HttpRequestFilter filter) {
-		if(this.filters==null) {
-			this.filters= new ArrayList<>();
-		}
-		this.filters.add(filter);
-		return this;
-	}
-
 	private HttpHeaders headers() {
 		if(bearerToken!=null) {
 			HttpHeaders headers = new DefaultHttpHeaders();

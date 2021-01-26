@@ -22,8 +22,8 @@ public class DefaultNamespaces extends DefaultK8sApi<Namespace> implements Names
 	private static final TypeLiteral<KubeList<Namespace>> LIST_TYPE = new TypeLiteral<KubeList<Namespace>>() {};
 	private static final TypeLiteral<Event<Namespace>> EVENT_TYPE = new TypeLiteral<Event<Namespace>>() {};
 
-	public DefaultNamespaces(EventLoopGroup eventLoopGroup, HttpClient http, Json json) {
-		super(eventLoopGroup,http,json,K8sAPI.V1, RESOURCE,LIST_TYPE,EVENT_TYPE);
+	public DefaultNamespaces(EventLoopGroup eventLoopGroup, HttpClient http,long timeoutMillis, Json json) {
+		super(eventLoopGroup,http,timeoutMillis,json,K8sAPI.V1, RESOURCE,LIST_TYPE,EVENT_TYPE);
 	}
 
 	@Override

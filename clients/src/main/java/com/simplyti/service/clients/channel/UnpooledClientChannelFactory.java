@@ -31,7 +31,7 @@ public class UnpooledClientChannelFactory extends ChannelInitializer<SocketChann
 		this.handler=monitor!=null?new MonitoredHandler(monitor,handler):handler;
 	}
 	
-	public Future<ClientChannel> channel(Endpoint endpoint, long responseTimeoutMillis, long readTimeoutMillis) {
+	public Future<ClientChannel> channel(Endpoint endpoint, long responseTimeoutMillis) {
 		EventLoop loop = eventLoopGroup.next();
 		ChannelFuture channelFuture = bootstrap.clone().handler(this)
 				.connect(new InetSocketAddress(endpoint.address().host(), endpoint.address().port()));

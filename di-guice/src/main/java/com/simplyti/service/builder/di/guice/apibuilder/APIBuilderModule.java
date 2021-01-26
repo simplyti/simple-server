@@ -8,8 +8,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.simplyti.server.http.api.builder.ApiBuilderImpl;
 import com.simplyti.server.http.api.handler.ApiInvocationHandler;
-import com.simplyti.server.http.api.handler.ApiRequestHandlerInit;
 import com.simplyti.server.http.api.handler.ApiResponseEncoder;
+import com.simplyti.server.http.api.handler.init.ApiHandlerInit;
 import com.simplyti.server.http.api.health.HealthApi;
 import com.simplyti.server.http.api.operations.ApiOperationResolver;
 import com.simplyti.server.http.api.operations.ApiOperationResolverImpl;
@@ -18,23 +18,21 @@ import com.simplyti.server.http.api.operations.ApiOperationsImpl;
 import com.simplyti.server.http.api.sse.ServerSentEventEncoder;
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.ApiProvider;
-import com.simplyti.service.api.builder.di.InstanceProvider;
-import com.simplyti.service.channel.handler.inits.HandlerInit;
+import com.simplyti.service.channel.handler.inits.ServiceHadlerInit;
+import com.simplyti.service.matcher.di.InstanceProvider;
 
 public class APIBuilderModule extends AbstractModule {
 	
-	private final Collection<ApiProvider> apiProviders;
 	private final Collection<Class<? extends ApiProvider>> apiClasses;
 	
-	
-	public APIBuilderModule(Collection<ApiProvider> apiProviders,Collection<Class<? extends ApiProvider>> apiClasses) {
-		this.apiProviders=apiProviders;
+	public APIBuilderModule(Collection<Class<? extends ApiProvider>> apiClasses) {
 		this.apiClasses=apiClasses;
 	}
 
 	@Override
 	public void configure() {
-		Multibinder.newSetBinder(binder(), HandlerInit.class).addBinding().to(ApiRequestHandlerInit.class).in(Singleton.class);
+		Multibinder.newSetBinder(binder(), ServiceHadlerInit.class).addBinding().to(ApiHandlerInit.class);
+		
 		bind(ApiInvocationHandler.class).in(Singleton.class);
 		bind(ApiResponseEncoder.class).in(Singleton.class);
 		bind(ServerSentEventEncoder.class).in(Singleton.class);
@@ -48,7 +46,6 @@ public class APIBuilderModule extends AbstractModule {
 		Multibinder<ApiProvider> apiBinder = Multibinder.newSetBinder(binder(), ApiProvider.class);
 		apiBinder.addBinding().to(HealthApi.class).in(Singleton.class);
 		
-		apiProviders.forEach(provider->apiBinder.addBinding().toInstance(provider));
 		apiClasses.forEach(apiClass->apiBinder.addBinding().to(apiClass).in(Singleton.class));
 	}
 

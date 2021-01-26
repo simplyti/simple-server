@@ -40,14 +40,23 @@ public class WebSocketApiContextImpl extends SimpleChannelInboundHandler<WebSock
 		ChannelFuture future =  ctx.writeAndFlush(new BinaryWebSocketFrame(data));
 		return new DefaultFuture<>(future,ctx.executor());
 	}
+	
+	@Override
+	public Future<Void> close() {
+		return close0().thenCombine(f->ctx.close());
+	}
+
+	private Future<Void> close0() {
+		return new DefaultFuture<>(ctx.writeAndFlush(new CloseWebSocketFrame()),ctx.executor());
+	}
 
 	@Override
-	public void onData(StringConsumer consumer) {
+	public void onMessage(StringConsumer consumer) {
 		this.stringConsumers.add(consumer);
 	}
 	
 	@Override
-	public void onData(ByteBufConsumer consumer) {
+	public void onMessage(ByteBufConsumer consumer) {
 		this.bytebufConsumers.add(consumer);
 	}
 

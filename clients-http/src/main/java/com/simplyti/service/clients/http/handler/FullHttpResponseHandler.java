@@ -7,8 +7,8 @@ import io.netty.util.concurrent.Promise;
 
 public class FullHttpResponseHandler extends AbstractFullHttpResponseHandler<FullHttpResponse> {
 
-	public FullHttpResponseHandler(String handlerName, ClientChannel channel, boolean checkStatus, Promise<FullHttpResponse> promise) {
-		super(handlerName, channel, promise, checkStatus);
+	public FullHttpResponseHandler(ClientChannel channel, boolean checkStatus, Promise<FullHttpResponse> promise) {
+		super(channel, promise, checkStatus);
 	}
 
 	@Override

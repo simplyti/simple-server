@@ -3,16 +3,13 @@ package com.simplyti.server.http.api.handler.message;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class ApiResponse {
+public abstract class ApiResponse {
 	
-	private final Object response;
 	private final boolean keepAlive;
 	private final boolean notFoundOnNull;
-
-	public Object response() {
-		return response;
-	}
 	
+	public abstract Object message();
+
 	public boolean isKeepAlive() {
 		return keepAlive;
 	}

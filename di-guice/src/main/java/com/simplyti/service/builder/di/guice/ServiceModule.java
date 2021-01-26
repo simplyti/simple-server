@@ -6,15 +6,13 @@ import java.util.concurrent.ExecutorService;
 import javax.inject.Singleton;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
 import com.simplyti.server.http.api.filter.OperationInboundFilter;
-import com.simplyti.service.DefaultService;
-import com.simplyti.service.DefaultStartStopMonitor;
-import com.simplyti.service.ServerConfig;
-import com.simplyti.service.Service;
-import com.simplyti.service.StartStopMonitor;
+import com.simplyti.service.DefaultServer;
+import com.simplyti.service.DefaultServerStopAdvisor;
+import com.simplyti.service.Server;
+import com.simplyti.service.ServerStopAdvisor;
 import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.builder.di.EventLoopGroupProvider;
 import com.simplyti.service.builder.di.ExecutorServiceProvider;
@@ -24,18 +22,20 @@ import com.simplyti.service.builder.di.StartStopLoopProvider;
 import com.simplyti.service.builder.di.guice.apibuilder.APIBuilderModule;
 import com.simplyti.service.builder.di.guice.defaultbackend.DefaultBackendModule;
 import com.simplyti.service.builder.di.guice.fileserver.FileServerModule;
-import com.simplyti.service.builder.di.guice.nativeio.NativeIOModule;
+import com.simplyti.service.builder.di.guice.nativeio.TransportModule;
 import com.simplyti.service.builder.di.guice.ssl.SSLModule;
 import com.simplyti.service.channel.ClientChannelGroup;
 import com.simplyti.service.channel.DefaultHttpEntryChannelInit;
 import com.simplyti.service.channel.DefaultServiceChannelInitializer;
 import com.simplyti.service.channel.EntryChannelInit;
-import com.simplyti.service.channel.ServerChannelFactoryProvider;
 import com.simplyti.service.channel.ServiceChannelInitializer;
 import com.simplyti.service.channel.handler.ServerHeadersHandler;
+import com.simplyti.service.channel.handler.inits.ServiceHadlerInit;
+import com.simplyti.service.config.ServerConfig;
 import com.simplyti.service.exception.DefaultExceptionHandler;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.fileserver.FileServeConfiguration;
+import com.simplyti.service.filter.http.FullHttpRequestFilter;
 import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.service.filter.http.HttpResponseFilter;
 import com.simplyti.service.hook.ServerStartHook;
@@ -46,10 +46,8 @@ import com.simplyti.service.ssl.SslHandlerFactory;
 import com.simplyti.service.sync.DefaultSyncTaskSubmitter;
 import com.simplyti.service.sync.SyncTaskSubmitter;
 
-import io.netty.channel.ChannelFactory;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.ServerChannel;
 
 public class ServiceModule extends AbstractModule {
 	
@@ -58,16 +56,14 @@ public class ServiceModule extends AbstractModule {
 	private final FileServeConfiguration fileServerConfig;
 	private final Collection<Class<? extends ApiProvider>> apiClasses;
 	private final EventLoopGroup eventLoopGroup;
-	private final Collection<ApiProvider> apiProviders;
 
 	public ServiceModule(ServerConfig config, SslConfig sslConfig, FileServeConfiguration fileServerConfig, 
-			Collection<Class<? extends ApiProvider>> apiClasses, Collection<ApiProvider> apiProviders,  
+			Collection<Class<? extends ApiProvider>> apiClasses,  
 			EventLoopGroup eventLoopGroup){
 		this.sslConfig=sslConfig;
 		this.config=config;
 		this.fileServerConfig=fileServerConfig;
 		this.apiClasses=apiClasses;
-		this.apiProviders=apiProviders;
 		this.eventLoopGroup=eventLoopGroup;
 	}
 
@@ -75,18 +71,18 @@ public class ServiceModule extends AbstractModule {
 	protected void configure() {
 		install(new DslJsonModule());
 		install(new SSLModule(sslConfig));
-		install(new NativeIOModule());
-		install(new APIBuilderModule(apiProviders,apiClasses));
+		install(new TransportModule());
+		install(new APIBuilderModule(apiClasses));
 		install(new DefaultBackendModule());
-		installFileServer();
+		install(new FileServerModule(fileServerConfig));
+		
 		bind(ServerConfig.class).toInstance(config);
 		
 		bindEventLoop();
 		OptionalBinder.newOptionalBinder(binder(), NativeIO.class);
 		bind(EventLoop.class).annotatedWith(StartStopLoop.class).toProvider(StartStopLoopProvider.class).in(Singleton.class);
-		bind(StartStopMonitor.class).to(DefaultStartStopMonitor.class).in(Singleton.class);
+		bind(ServerStopAdvisor.class).to(DefaultServerStopAdvisor.class).in(Singleton.class);
 		
-		bind(new TypeLiteral<ChannelFactory<ServerChannel>>() {}).toProvider(ServerChannelFactoryProvider.class).in(Singleton.class);
 		bind(ClientChannelGroup.class).in(Singleton.class);
 		bind(EntryChannelInit.class).to(DefaultHttpEntryChannelInit.class).in(Singleton.class);
 		
@@ -94,7 +90,9 @@ public class ServiceModule extends AbstractModule {
 		bind(ServiceChannelInitializer.class).to(DefaultServiceChannelInitializer.class).in(Singleton.class);
 		bind(ServerHeadersHandler.class).in(Singleton.class);
 		
-		bind(new TypeLiteral<Service<?>>() {}).to(DefaultService.class).in(Singleton.class);
+		Multibinder.newSetBinder(binder(), ServiceHadlerInit.class);
+		
+		bind(Server.class).to(DefaultServer.class).in(Singleton.class);
 		
 		// Exception Handler
 		bind(ExceptionHandler.class).to(DefaultExceptionHandler.class).in(Singleton.class);
@@ -105,6 +103,7 @@ public class ServiceModule extends AbstractModule {
 	
 		// Filters
 		Multibinder.newSetBinder(binder(), HttpRequestFilter.class);
+		Multibinder.newSetBinder(binder(), FullHttpRequestFilter.class);
 		Multibinder.newSetBinder(binder(), OperationInboundFilter.class);
 		Multibinder.newSetBinder(binder(), HttpResponseFilter.class);
 		
@@ -114,12 +113,6 @@ public class ServiceModule extends AbstractModule {
 		
 		OptionalBinder.newOptionalBinder(binder(), NativeIO.class);
 		OptionalBinder.newOptionalBinder(binder(), SslHandlerFactory.class);
-	}
-
-	private void installFileServer() {
-		if(fileServerConfig!=null) {
-			install(new FileServerModule(fileServerConfig));
-		}
 	}
 
 	private void bindEventLoop() {

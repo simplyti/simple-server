@@ -1,16 +1,13 @@
 package com.simplyti.service.clients.http.request;
 
-import com.simplyti.service.clients.http.stream.request.StreamedInputHttpRequestBuilder;
 import com.simplyti.service.clients.http.websocket.WebsocketClient;
 import com.simplyti.service.clients.request.BaseClientRequestBuilder;
 
 import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpRequest;
 
-public interface HttpRequestBuilder extends BaseClientRequestBuilder<HttpRequestBuilder>, HeaderAppendableRequestBuilder<HttpRequestBuilder>, StatusCheckableRequestBuilder<HttpRequestBuilder>, FilterableRequestBuilder<HttpRequestBuilder> {
+public interface HttpRequestBuilder extends BaseClientRequestBuilder<HttpRequestBuilder>, HeaderAppendableRequestBuilder<HttpRequestBuilder>, ParamAppendableRequestBuilder<HttpRequestBuilder>, StatusCheckableRequestBuilder<HttpRequestBuilder>, FilterableRequestBuilder<HttpRequestBuilder> {
 
 	FinishableHttpRequestBuilder get(String path);
-	FinishableHttpRequestBuilder get();
 	
 	FinishableHttpRequestBuilder delete(String path);
 	
@@ -23,9 +20,7 @@ public interface HttpRequestBuilder extends BaseClientRequestBuilder<HttpRequest
 	FinishablePayloadableHttpRequestBuilder options(String path);
 	
 	FinishedHttpRequestBuilder send(FullHttpRequest fullRequest);
-	StreamedInputHttpRequestBuilder send(HttpRequest request);
-	
-	WebsocketClient websocket();
-	WebsocketClient websocket(String uri);
 
+	WebsocketClient websocket(String uri);
+	
 }

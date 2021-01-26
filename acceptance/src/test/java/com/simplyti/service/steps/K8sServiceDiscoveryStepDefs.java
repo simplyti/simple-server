@@ -2,7 +2,7 @@ package com.simplyti.service.steps;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
@@ -52,6 +52,7 @@ import sun.security.x509.X500Name;
 import sun.security.x509.X509CertImpl;
 import sun.security.x509.X509CertInfo;
 
+@SuppressWarnings("restriction")
 public class K8sServiceDiscoveryStepDefs {
 	
 	private static final Endpoint LOCAL_ENDPOINT = HttpEndpoint.of("http://localhost:8080");

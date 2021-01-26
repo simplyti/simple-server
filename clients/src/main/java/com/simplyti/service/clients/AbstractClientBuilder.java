@@ -35,6 +35,7 @@ public abstract class AbstractClientBuilder<B,T extends Client<R>,R extends Base
 	private int poolSize;
 	private boolean unpooledChannels;
 	private long poolIdleTimeout;
+	private long readTimeoutMilis;
 	
 	public AbstractClientBuilder() {
 		this("client");
@@ -92,9 +93,14 @@ public abstract class AbstractClientBuilder<B,T extends Client<R>,R extends Base
 	}
 	
 	@Override
-	@SuppressWarnings("unchecked")
 	public B withMonitorEnabled() {
-		this.monitorEnabled=true;
+		return withMonitorEnabled(true);
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public B withMonitorEnabled(boolean enabled) {
+		this.monitorEnabled=enabled;
 		return (B) this;
 	}
 	
@@ -120,9 +126,16 @@ public abstract class AbstractClientBuilder<B,T extends Client<R>,R extends Base
 	}
 	
 	@Override
+	@SuppressWarnings("unchecked")
+	public B withReadTimeout(long timeoutMillis) {
+		this.readTimeoutMilis = timeoutMillis;
+		return (B) this;
+	}
+	
+	@Override
 	public T build() {
 		EventLoopGroup elg = eventLoopGroup();
-		return build0(elg, bootstrap(elg),endpoint, sslProvider(), monitorEnabled?new DefaultClientMonitor(elg):null,poolSize,unpooledChannels, poolIdleTimeout);
+		return build0(elg, bootstrap(elg),endpoint, sslProvider(), monitorEnabled?new DefaultClientMonitor(elg):null,poolSize,unpooledChannels, poolIdleTimeout, readTimeoutMilis);
 	}
 
 	private SslProvider sslProvider() {
@@ -147,7 +160,7 @@ public abstract class AbstractClientBuilder<B,T extends Client<R>,R extends Base
 	}
 
 	protected abstract T build0(EventLoopGroup eventLoopGroup, Bootstrap bootstrap, Endpoint endpoint, SslProvider sslProvider, DefaultClientMonitor monitor, 
-			int poolSize, boolean unpooledChannels, long poolIdleTimeout);
+			int poolSize, boolean unpooledChannels, long poolIdleTimeout, long readTimeoutMilis);
 	
 	private EventLoopGroup eventLoopGroup() {
 		if(eventLoopGroup!=null) {

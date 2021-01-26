@@ -9,7 +9,6 @@ import com.simplyti.util.concurrent.Future;
 import io.netty.channel.Channel;
 import io.netty.channel.pool.ChannelPool;
 import io.netty.handler.timeout.ReadTimeoutException;
-import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.util.concurrent.ScheduledFuture;
 import lombok.experimental.Delegate;
 
@@ -23,10 +22,7 @@ public class PooledClientChannel implements ClientChannel {
 
 	private final ScheduledFuture<?> releaseTimeoutSchedule;
 
-	private final boolean readTimeout;
-
-	
-	public PooledClientChannel(ChannelPool pool, Address address, Channel channel, long responseTimeoutMillis, long readTimeoutMillis) {
+	public PooledClientChannel(ChannelPool pool, Address address, Channel channel, long responseTimeoutMillis) {
 		this.pool=pool;
 		this.address=address;
 		this.channel=channel;
@@ -35,12 +31,6 @@ public class PooledClientChannel implements ClientChannel {
 			this.releaseTimeoutSchedule = this.channel.eventLoop().schedule(this::throwResponseTimeout, responseTimeoutMillis, TimeUnit.MILLISECONDS);
 		} else {
 			this.releaseTimeoutSchedule = null; 
-		}
-		if(readTimeoutMillis>0) {
-			this.readTimeout = true;
-			this.channel.pipeline().addFirst("read-timeout-handler",new ReadTimeoutHandler(readTimeoutMillis,TimeUnit.MILLISECONDS));
-		} else {
-			readTimeout = false;
 		}
 	}
 	
@@ -52,9 +42,6 @@ public class PooledClientChannel implements ClientChannel {
 	public Future<Void> release() {
 		if(this.releaseTimeoutSchedule!=null) {
 			this.releaseTimeoutSchedule.cancel(false);
-		}
-		if(readTimeout) {
-			this.channel.pipeline().remove("read-timeout-handler");
 		}
 		return new DefaultFuture<>(pool.release(channel),channel.eventLoop());
 	}

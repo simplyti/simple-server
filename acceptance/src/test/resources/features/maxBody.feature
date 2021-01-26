@@ -2,7 +2,7 @@
 Feature: Maximun body
 
 Scenario: Maximun body
-	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.MaximunBodyTestApi"
+	When I start a service "#serviceFuture" with max body size 10 with API "com.simplyti.service.examples.api.MaximunBodyTestApi"
 	Then I check that "#serviceFuture" is success
 	When I send a "POST /maximun10" with body "Hello!" getting "#response"
 	Then I check that "#response" has status code 200

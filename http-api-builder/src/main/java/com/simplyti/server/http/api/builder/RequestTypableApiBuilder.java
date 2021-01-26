@@ -14,6 +14,7 @@ public interface RequestTypableApiBuilder {
 
 	<T> RequestBodyTypableResponseTypedApiBuilder<T> withResponseType(Class<T> clazz);
 	<T> RequestBodyTypableResponseTypedApiBuilder<T> withResponseBodyType(Class<T> clazz);
+	<T> RequestBodyTypableResponseTypedApiBuilder<T> withResponseBodyType(TypeLiteral<T> clazz);
 
 	RequestTypableApiBuilder withMaximunBodyLength(int maxBodyLength);
 	RequestTypableApiBuilder withMeta(String key, String value);

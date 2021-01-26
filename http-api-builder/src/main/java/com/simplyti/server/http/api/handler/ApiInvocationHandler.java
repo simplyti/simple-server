@@ -1,8 +1,5 @@
 package com.simplyti.server.http.api.handler;
 
-
-import io.netty.channel.ChannelHandler.Sharable;
-
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -13,6 +10,7 @@ import com.simplyti.server.http.api.context.ApiContext;
 import com.simplyti.server.http.api.context.WithBodyApiContext;
 import com.simplyti.server.http.api.filter.OperationInboundFilter;
 import com.simplyti.server.http.api.operations.ApiOperation;
+import com.simplyti.server.http.api.request.ApiMatchRequest;
 import com.simplyti.server.http.api.request.FullApiInvocation;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.filter.FilterChain;
@@ -20,16 +18,17 @@ import com.simplyti.service.priority.Priorized;
 import com.simplyti.service.sync.SyncTaskSubmitter;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.util.concurrent.Future;
 
-@Sharable
-public class ApiInvocationHandler extends SimpleChannelInboundHandler<FullApiInvocation> {
+public class ApiInvocationHandler extends ChannelInboundHandlerAdapter {
 	
 	private final SyncTaskSubmitter syncTaskSubmitter;
 	private final Collection<OperationInboundFilter> filters;
 	private final ExceptionHandler exceptionHandler;
 	
+	private ApiMatchRequest matchRequest;
 	private ApiContext context;
 	
 	@Inject
@@ -40,24 +39,31 @@ public class ApiInvocationHandler extends SimpleChannelInboundHandler<FullApiInv
 	}
 	
 	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, FullApiInvocation msg) throws Exception {
-		invoke(ctx,msg);
+	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+		if(matchRequest !=null && msg instanceof FullHttpRequest) {
+			invoke(ctx, (FullHttpRequest) msg, matchRequest);
+			this.matchRequest=null;
+		} else {
+			ctx.fireChannelRead(msg);
+		}
 	}
 
-	private <I,O> void invoke(ChannelHandlerContext ctx, FullApiInvocation msg) {
+	private <I,O> void invoke(ChannelHandlerContext ctx, FullHttpRequest msg, ApiMatchRequest matchRequest) {
 		if(filters.isEmpty()) {
-			serviceProceed(msg.match().operation(),context(ctx, msg));
+			serviceProceed(matchRequest.operation(),context(ctx, msg, matchRequest));
 		}else {
-			Future<Boolean> futureHandled = FilterChain.of(filters,ctx,msg).execute();
+			FullApiInvocation request = FullApiInvocation.newInstance(msg,matchRequest);
+			Future<Boolean> futureHandled = FilterChain.of(filters,ctx,request).execute();
 			futureHandled.addListener(result->{
+					request.recycle();
 					if(result.isSuccess()) {
 						if(!futureHandled.getNow()) {
-							serviceProceed(msg.match().operation(),context(ctx, msg));
+							serviceProceed(matchRequest.operation(),context(ctx, msg, matchRequest));
 						} else {
-							msg.request().release();
+							msg.release();
 						}
 					}else {
-						msg.request().release();
+						msg.release();
 						ctx.fireExceptionCaught(result.cause());
 					}
 				});
@@ -72,8 +78,8 @@ public class ApiInvocationHandler extends SimpleChannelInboundHandler<FullApiInv
 		}
 	}
 
-	private <T extends ApiContext> T context(ChannelHandlerContext ctx, FullApiInvocation msg) {
-		T context = msg.match().operation().contextFactory().create(syncTaskSubmitter, exceptionHandler, ctx, msg.match(), msg.request(), msg.request().content());
+	private <T extends ApiContext> T context(ChannelHandlerContext ctx, FullHttpRequest msg, ApiMatchRequest matchRequest) {
+		T context = matchRequest.operation().contextFactory().create(syncTaskSubmitter, exceptionHandler, ctx, matchRequest, msg, msg.content());
 		this.context = context;
 		return context;
 	}
@@ -83,6 +89,15 @@ public class ApiInvocationHandler extends SimpleChannelInboundHandler<FullApiInv
         if(this.context instanceof WithBodyApiContext) {
         	((WithBodyApiContext)this.context).release();
         }
+    }
+	
+	@Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+		if(evt instanceof ApiMatchRequest) {
+			this.matchRequest=(ApiMatchRequest) evt;
+		} else {
+			ctx.fireUserEventTriggered(evt);
+		}
     }
 
 }

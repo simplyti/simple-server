@@ -2,38 +2,6 @@ version: '3'
 
 services:
 
-  httpbin:
-    image: kennethreitz/httpbin
-    ports:
-    - "8081:80"
-    
-  ssl-httpbin:
-    image: foxylion/nginx-self-signed-https:latest
-    environment:
-    - REMOTE_URL=http://httpbin:80
-    ports:
-    - "2223:443"
-    
-  ws:
-    image: jmalloc/echo-server
-    ports:
-    - "8010:8080"
-
-  socks5:
-    image: wernight/dante
-    ports:
-    - "1080:1080"
-    
-  socks5auth:
-    build: ./danteAuth
-    ports:
-    - "1081:1080"
-    
-  http:
-    image: minimum2scp/squid
-    ports:
-    - "3128:3128"
-    
   etcd:
     image: quay.io/coreos/etcd:v3.3.1
     restart: on-failure

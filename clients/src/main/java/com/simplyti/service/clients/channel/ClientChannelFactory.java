@@ -5,6 +5,6 @@ import com.simplyti.util.concurrent.Future;
 
 public interface ClientChannelFactory {
 
-	Future<ClientChannel> channel(Endpoint endpoint, long responseTimeoutMillis, long readTimeoutMillis);
+	Future<ClientChannel> channel(Endpoint endpoint, long responseTimeoutMillis);
 
 }

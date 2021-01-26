@@ -26,6 +26,10 @@ public class ProxiedEndpointBuilder {
 	public ProxiedEndpoint throughSocks5(String host, int port) {
 		return through(host,port,ProxyType.SOCKS5);
 	}
+	
+	public ProxiedEndpoint throughSocks4(String host, int port) {
+		return through(host,port,ProxyType.SOCKS4);
+	}
 
 	public ProxiedEndpoint throughHTTP(String host, int port) {
 		return through(host,port,ProxyType.HTTP);

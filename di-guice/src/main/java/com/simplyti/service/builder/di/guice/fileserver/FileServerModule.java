@@ -4,11 +4,11 @@ import javax.inject.Singleton;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-import com.simplyti.service.channel.handler.FileServeHandler;
-import com.simplyti.service.channel.handler.inits.FileServerHandlerInit;
-import com.simplyti.service.channel.handler.inits.HandlerInit;
+import com.simplyti.service.channel.handler.inits.ServiceHadlerInit;
 import com.simplyti.service.fileserver.FileServe;
 import com.simplyti.service.fileserver.FileServeConfiguration;
+import com.simplyti.service.fileserver.handler.FileServeHandler;
+import com.simplyti.service.fileserver.handler.init.FileServerHandlerInit;
 
 public class FileServerModule extends AbstractModule {
 
@@ -20,10 +20,12 @@ public class FileServerModule extends AbstractModule {
 
 	@Override
 	public void configure() {
-		bind(FileServeConfiguration.class).toInstance(fileServerConfig);
-		Multibinder.newSetBinder(binder(), HandlerInit.class).addBinding().to(FileServerHandlerInit.class).in(Singleton.class);
-		bind(FileServeHandler.class).in(Singleton.class);
-		bind(FileServe.class).in(Singleton.class);
+		if(fileServerConfig!=null) {
+			bind(FileServeConfiguration.class).toInstance(fileServerConfig);
+			Multibinder.newSetBinder(binder(), ServiceHadlerInit.class).addBinding().to(FileServerHandlerInit.class).in(Singleton.class);
+			bind(FileServeHandler.class).in(Singleton.class);
+			bind(FileServe.class).in(Singleton.class);
+		}
 	}
 
 }

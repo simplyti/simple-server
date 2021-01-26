@@ -25,6 +25,7 @@ public interface ServiceBuilder {
 		@BindsInstance Builder insecuredPort(@Nullable @Named("insecuredPort") int insecuredPort);
 		@BindsInstance Builder securedPort(@Nullable @Named("securedPort") int securedPort);
 		@BindsInstance Builder verbose(@Nullable @Named("verbose") boolean verbose);
+		@BindsInstance Builder maxBodySize(@Nullable @Named("maxBodySize") int maxBodySize);
 		
 		ServiceBuilder build();
 

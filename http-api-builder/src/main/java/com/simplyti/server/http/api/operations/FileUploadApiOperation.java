@@ -5,7 +5,7 @@ import java.util.Map;
 import com.simplyti.server.http.api.builder.fileupload.FileUploadAnyApiContextConsumer;
 import com.simplyti.server.http.api.context.ApiContextFactory;
 import com.simplyti.server.http.api.context.fileupload.FileUploadAnyApiContext;
-import com.simplyti.server.http.api.pattern.ApiPattern;
+import com.simplyti.service.matcher.ApiPattern;
 
 import io.netty.handler.codec.http.HttpMethod;
 

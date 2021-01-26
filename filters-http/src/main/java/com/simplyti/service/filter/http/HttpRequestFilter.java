@@ -4,6 +4,6 @@ import com.simplyti.service.filter.Filter;
 
 import io.netty.handler.codec.http.HttpRequest;
 
-public interface HttpRequestFilter extends Filter<HttpRequest>{
+public interface HttpRequestFilter extends Filter<HttpRequest> {
 
 }

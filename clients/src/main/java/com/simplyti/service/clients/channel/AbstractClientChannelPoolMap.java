@@ -1,5 +1,7 @@
 package com.simplyti.service.clients.channel;
 
+import java.nio.channels.ClosedChannelException;
+
 import com.simplyti.service.clients.channel.proxy.NoResolvingSocketAddress;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.endpoint.ssl.SSLEndpoint;
@@ -36,15 +38,26 @@ public abstract class AbstractClientChannelPoolMap extends AbstractChannelPoolMa
 	}
 
 	@Override
-	public Future<ClientChannel> channel(Endpoint endpoint, long responseTimeoutMillis, long readTimeoutMillis) {
+	public Future<ClientChannel> channel(Endpoint endpoint, long responseTimeoutMillis) {
 		ChannelPool pool = get(endpoint);
 		EventLoop loop = eventLoopGroup.next();
 		Promise<ClientChannel> promise = loop.newPromise();
 		io.netty.util.concurrent.Future<Channel> futureChannel = pool.acquire();
 		futureChannel.addListener(f->{
 			if(f.isSuccess()) {
-				futureChannel.getNow().pipeline().addLast(new ChannelInitializedHandler(futureChannel.getNow(), pool, endpoint, responseTimeoutMillis, readTimeoutMillis, promise));
-				futureChannel.getNow().pipeline().fireUserEventTriggered(ClientChannelEvent.INIT);
+				Channel channel = futureChannel.getNow();
+				if(channel.isActive()) {
+					PooledClientChannel pooledClient = new PooledClientChannel(pool,endpoint.address(), channel, responseTimeoutMillis);
+					if(ChannelInitializedHandler.isNew(channel)) {
+						channel.pipeline().addLast(new ChannelInitializedHandler(pooledClient, promise));
+						channel.pipeline().fireUserEventTriggered(ClientChannelEvent.INIT);
+					} else {
+						promise.setSuccess(pooledClient);
+					}
+				} else {
+					pool.release(futureChannel.getNow());
+					promise.setFailure(new ClosedChannelException());
+				}
 			} else {
 				promise.setFailure(f.cause());
 			}

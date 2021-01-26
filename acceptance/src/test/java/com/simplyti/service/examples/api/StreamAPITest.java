@@ -4,34 +4,20 @@ package com.simplyti.service.examples.api;
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.ApiProvider;
 
-import io.netty.handler.codec.http.DefaultHttpContent;
-import io.netty.handler.codec.http.DefaultHttpResponse;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpResponse;
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpVersion;
-import io.netty.handler.codec.http.LastHttpContent;
-
 public class StreamAPITest implements ApiProvider{
 	
-
 	@Override
 	public void build(ApiBuilder builder) {
-		builder.when().post("/streamed")
-			.withStreamedInput()
-			.then(ctx->{
-				HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1,HttpResponseStatus.OK);
-				response.headers().set(HttpHeaderNames.CONTENT_LENGTH,ctx.request().headers().get(HttpHeaderNames.CONTENT_LENGTH));
-				ctx.send(response);
-				ctx.stream(content->ctx.send(new DefaultHttpContent(content).retain()))
-					.addListener(f->ctx.send(LastHttpContent.EMPTY_LAST_CONTENT));
-			});
+		builder.when().post("/echo/chunked")
+		.withStreamedInput()
+		.then(ctx->
+			ctx.sendChunked(chunked->
+				ctx.stream(data->chunked.send(data.retain()))
+				.thenAccept(v->chunked.finish())));
 		
 		builder.when().post("/streamed/error")
 			.withStreamedInput()
-			.then(ctx->{
-				ctx.failure(new RuntimeException("This is an error"));
-			});
+			.then(ctx->ctx.failure(new RuntimeException("This is an error")));
 	}
 
 }

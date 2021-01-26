@@ -1,15 +1,7 @@
 package com.simplyti.service.channel.handler;
 
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.ChannelHandler;
 
-public abstract class DefaultBackendRequestHandler extends SimpleChannelInboundHandler<Object> {
-	
-	public DefaultBackendRequestHandler() {
-		this(true);
-	}
-	
-	public DefaultBackendRequestHandler(boolean autoRelease) {
-		super(autoRelease);
-	}
+public interface DefaultBackendRequestHandler extends ChannelHandler {
 	
 }

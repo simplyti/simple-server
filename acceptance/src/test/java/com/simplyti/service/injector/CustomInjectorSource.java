@@ -12,12 +12,13 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
-import com.simplyti.service.DefaultService;
+import com.simplyti.service.Server;
 import com.simplyti.service.aws.lambda.AWSLambda;
 import com.simplyti.service.client.DefaultSimpleHttpClient;
 import com.simplyti.service.client.SimpleHttpClient;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.k8s.KubeClient;
+import com.simplyti.service.proxy.ProxyServer;
 
 import cucumber.runtime.java.guice.InjectorSource;
 import cucumber.runtime.java.guice.ScenarioScoped;
@@ -45,13 +46,15 @@ public class CustomInjectorSource extends AbstractModule implements InjectorSour
 		bind(SimpleHttpClient.class).toInstance(new DefaultSimpleHttpClient(eventLoopGroup));
 		
 		bind(new TypeLiteral<Map<String,Object>>(){}).toProvider(Maps::newHashMap).in(ScenarioScoped.class);
-		bind(new TypeLiteral<List<Future<DefaultService>>>(){}).toProvider(ArrayList::new).in(ScenarioScoped.class);
+		bind(new TypeLiteral<List<Future<Server>>>(){}).toProvider(ArrayList::new).in(ScenarioScoped.class);
 		bind(new TypeLiteral<List<AWSLambda>>(){}).toProvider(ArrayList::new).in(ScenarioScoped.class);
 		bind(KubeClient.class)
-		.toInstance(KubeClient.builder()
-			.eventLoopGroup(eventLoopGroup)
-			.server("http://localhost:8082")
-		.build());
+			.toInstance(KubeClient.builder()
+				.eventLoopGroup(eventLoopGroup)
+				.server("http://localhost:8082")
+			.build());
+		
+		bind(ProxyServer.class).asEagerSingleton();
 	}
 	
 

@@ -32,6 +32,9 @@ public interface AbstractServiceBuilder<T extends AbstractServiceBuilder<T,O>,O 
 	@BindsInstance
 	T verbose(@Nullable @Named("verbose") boolean verbose);
 	
+	@BindsInstance
+	T withMaxBodySize(@Nullable @Named("maxBodySize") int maxBodySize);
+	
 	O build();
 
 }

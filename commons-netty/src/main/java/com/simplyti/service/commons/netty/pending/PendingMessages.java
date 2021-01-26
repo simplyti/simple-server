@@ -12,7 +12,7 @@ public class PendingMessages {
 	private PendingMessage tail;
 	
 	public void pending(Promise<Void> future, Object msg) {
-		PendingMessage message = PendingMessage.newInstance(future,msg);
+		PendingMessage message = PendingMessage.newInstance(future, msg);
 		PendingMessage currentTail = tail;
 		if (currentTail == null) {
 			tail = head = message;

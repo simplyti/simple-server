@@ -9,9 +9,10 @@ public interface WebSocketApiContext {
 	Future<Void> send(String data);
 	Future<Void> send(ByteBuf data);
 
-	void onData(StringConsumer consumer);
+	void onMessage(StringConsumer consumer);
 
-	void onData(ByteBufConsumer consumer);
-
+	void onMessage(ByteBufConsumer consumer);
+	
+	Future<Void> close();
 	
 }

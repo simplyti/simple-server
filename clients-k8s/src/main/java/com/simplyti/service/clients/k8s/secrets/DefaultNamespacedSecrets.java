@@ -15,9 +15,9 @@ import io.netty.channel.EventLoopGroup;
 
 public class DefaultNamespacedSecrets extends DefaultNamespacedK8sApi<Secret> implements NamespacedSecrets {
 
-	public DefaultNamespacedSecrets(EventLoopGroup eventLoopGroup,HttpClient http,Json json, K8sAPI api, String resource, TypeLiteral<KubeList<Secret>> listType, 
+	public DefaultNamespacedSecrets(EventLoopGroup eventLoopGroup,HttpClient http, long timeoutMillis, Json json, K8sAPI api, String resource, TypeLiteral<KubeList<Secret>> listType, 
 			TypeLiteral<Event<Secret>> eventType, String namespace) {
-		super(eventLoopGroup,http,json,api,namespace,resource,Secret.class,listType,eventType);
+		super(eventLoopGroup,http,timeoutMillis,json,api,namespace,resource,Secret.class,listType,eventType);
 	}
 
 	@Override

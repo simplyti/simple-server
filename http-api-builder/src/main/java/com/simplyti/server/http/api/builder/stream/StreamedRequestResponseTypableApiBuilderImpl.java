@@ -3,7 +3,7 @@ package com.simplyti.server.http.api.builder.stream;
 import com.simplyti.server.http.api.context.ApiContextFactory;
 import com.simplyti.server.http.api.operations.ApiOperations;
 import com.simplyti.server.http.api.operations.StreamAnyApiOperation;
-import com.simplyti.server.http.api.pattern.ApiPattern;
+import com.simplyti.service.matcher.ApiPattern;
 
 import io.netty.handler.codec.http.HttpMethod;
 

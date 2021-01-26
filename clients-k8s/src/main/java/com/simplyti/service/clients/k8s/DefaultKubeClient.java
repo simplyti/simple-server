@@ -73,23 +73,25 @@ public class DefaultKubeClient implements KubeClient {
 	private final HttpClient http;
 
 
-	public DefaultKubeClient(EventLoopGroup eventLoopGroup, String endpoint, String token) {
+	public DefaultKubeClient(EventLoopGroup eventLoopGroup, Endpoint endpoint, String token) {
+		long timeoutMillis = 30000;
 		this.http = HttpClient.builder()
+				.withReadTimeout(timeoutMillis)
 				.withEventLoopGroup(eventLoopGroup)
 				.withCheckStatusCode()
 				.withEndpoint(apiserver(endpoint))
 				.withBearerAuth(token!=null?token:readFile(DEFAULT_TOKEN_FILE))
 				.build();
 		Json json = new DslJsonSerializer(Collections.singleton(new K8sDomainConfiguration()));
-		this.pods = new DefaultPods(http.eventLoopGroup(),http,json);
-		this.jobs = new DefaultJobs(http.eventLoopGroup(),http,json);
-		this.services = new DefaultServices(http.eventLoopGroup(),http,json);
-		this.ingresses = new DefaultIngresses(http.eventLoopGroup(),http,json);
-		this.endpoints = new DefaultEndpoints(http.eventLoopGroup(),http,json);
-		this.secrets = new DefaultSecrets(http.eventLoopGroup(),http,json);
-		this.serviceAccounts = new DefaultServiceAccounts(http.eventLoopGroup(),http,json);
-		this.namespaces = new DefaultNamespaces(http.eventLoopGroup(),http,json);
-		this.configMaps = new DefaultConfigMaps(http.eventLoopGroup(), http, json);
+		this.pods = new DefaultPods(http.eventLoopGroup(),http,timeoutMillis,json);
+		this.jobs = new DefaultJobs(http.eventLoopGroup(),http,timeoutMillis,json);
+		this.services = new DefaultServices(http.eventLoopGroup(),http,timeoutMillis,json);
+		this.ingresses = new DefaultIngresses(http.eventLoopGroup(),http,timeoutMillis,json);
+		this.endpoints = new DefaultEndpoints(http.eventLoopGroup(),http,timeoutMillis,json);
+		this.secrets = new DefaultSecrets(http.eventLoopGroup(),http,timeoutMillis,json);
+		this.serviceAccounts = new DefaultServiceAccounts(http.eventLoopGroup(),http,timeoutMillis,json);
+		this.namespaces = new DefaultNamespaces(http.eventLoopGroup(),http,timeoutMillis,json);
+		this.configMaps = new DefaultConfigMaps(http.eventLoopGroup(), http,timeoutMillis, json);
 	}
 
 	private String readFile(String fileName) {
@@ -105,9 +107,9 @@ public class DefaultKubeClient implements KubeClient {
 		}
 	}
 
-	private Endpoint apiserver(String endpoint) {
+	private Endpoint apiserver(Endpoint endpoint) {
 		if(endpoint!=null) {
-			return HttpEndpoint.of(endpoint);
+			return endpoint;
 		}
 		return new HttpEndpoint(HttpEndpoint.HTTPS_SCHEMA, new Address("kubernetes.default",HttpEndpoint.HTTPS_SCHEMA.defaultPort()),null);
 	}
