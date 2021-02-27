@@ -198,6 +198,16 @@ public class APITest implements ApiProvider {
 		builder.when().post("/echo")
 			.then(ctx->ctx.send(ctx.body().copy()));
 		
+		builder.when().post("/header/echo")
+			.then(ctx->{
+				ByteBuf buff = ctx.channel().alloc().buffer();
+				buff.writeBytes(ctx.body());
+				if(ctx.request().headers().contains("x-req-filter")) {
+					buff.writeCharSequence(" "+ctx.request().headers().get("x-req-filter"), CharsetUtil.UTF_8);
+				}
+				ctx.send(buff);
+			});
+		
 		builder.when().post("/echo/request")
 			.then(ctx->ctx.send(RequestDto.builder()
 					.body(ctx.body().toString(CharsetUtil.UTF_8))

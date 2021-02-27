@@ -1,4 +1,4 @@
-@websockets @standalone
+@standalone @clients @httpClient @httpClientWebsocket
 Feature: Http client webSockets
 
 Scenario: WebSocket client

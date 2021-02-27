@@ -9,8 +9,8 @@ import io.netty.util.concurrent.Promise;
 
 public class StreamedByteBufResponseHandler extends AbstractStreamedResponseHandler<ByteBuf> {
 
-	public StreamedByteBufResponseHandler(ClientChannel channel, Promise<Void> promise, Consumer<ByteBuf> consumer) {
-		super(channel, promise, consumer);
+	public StreamedByteBufResponseHandler(ClientChannel channel, ByteBuf content, Promise<Void> promise, Consumer<ByteBuf> consumer) {
+		super(channel, content, promise, consumer);
 	}
 
 }

@@ -3,7 +3,6 @@ package com.simplyti.util.concurrent;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import io.netty.util.concurrent.EventExecutor;
 
@@ -25,10 +24,6 @@ public class DefaultBiCombinedFuture<T,U> implements BiCombinedFuture<T,U>{
 		return target.thenApply(arr->action.apply((T)arr[0], (U)arr[1]));
 	}
 
-	public <O> Future<O> exceptionallyApply(Function<Throwable, ? extends O> fn) {
-		return target.exceptionallyApply(fn);
-	}
-	
 	@SuppressWarnings("unchecked")
 	public Future<T> onError(Consumer<Throwable> action){
 		return (Future<T>) target.onError(action);

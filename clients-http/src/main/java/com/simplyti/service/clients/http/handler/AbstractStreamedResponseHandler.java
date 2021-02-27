@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 import com.simplyti.service.clients.channel.ClientChannel;
 import com.simplyti.service.clients.http.HttpClientStreamEvent;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.ReferenceCountUtil;
@@ -18,8 +19,8 @@ public abstract class AbstractStreamedResponseHandler<T> extends AbstractBaseHtt
 	
 	private int customHandlerCount = 0;
 
-	public AbstractStreamedResponseHandler(ClientChannel channel, Promise<Void> promise, Consumer<T> consumer) {
-		super(channel,promise);
+	public AbstractStreamedResponseHandler(ClientChannel channel, ByteBuf content, Promise<Void> promise, Consumer<T> consumer) {
+		super(channel,content,promise);
 		this.channel=channel;
 		this.promise=promise;
 		this.consumer=consumer;
@@ -40,7 +41,7 @@ public abstract class AbstractStreamedResponseHandler<T> extends AbstractBaseHtt
 	
 
 	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, T msg) throws Exception {
+	protected void channelRead1(ChannelHandlerContext ctx, T msg) throws Exception {
 		consumer.accept(msg);
 		ReferenceCountUtil.release(msg);
 	}
@@ -48,8 +49,7 @@ public abstract class AbstractStreamedResponseHandler<T> extends AbstractBaseHtt
 	@Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
 		if(evt instanceof HttpClientStreamEvent && ((HttpClientStreamEvent) evt).type() == HttpClientStreamEvent.Type.STOP) {
-			channel.pipeline().remove(this);
-			channel.release();
+			lastInput();
 			promise.trySuccess(null);
 		}
 		ctx.fireUserEventTriggered(evt);

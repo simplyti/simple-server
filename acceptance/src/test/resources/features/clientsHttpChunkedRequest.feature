@@ -1,4 +1,4 @@
-@standalone @clients @httpClient
+@standalone @clients @httpClient @httpClientChunkedRequest
 Feature: Http Client sending chunked request
 
 Scenario: Send streamed data

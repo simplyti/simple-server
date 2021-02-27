@@ -36,7 +36,7 @@ public class HttpRequestFilterHandler extends ChannelInboundHandlerAdapter {
 			this.readPending=new PendingMessages();
 			futureHandled.addListener(f->handleRequestFilter(futureHandled,ctx,(HttpRequest) msg));
 		} else if(readPending!=null) {
-			this.readPending.pending(msg);
+			this.readPending.pending(msg,ctx.newPromise());
 		} else {
 			ctx.fireChannelRead(msg);
 		}
@@ -50,13 +50,13 @@ public class HttpRequestFilterHandler extends ChannelInboundHandlerAdapter {
 				readPending=null;
 			}else {
 				ReferenceCountUtil.release(request);
-				readPending.release();
+				readPending.successDiscard();
 				readPending=null;
 				this.discardPerpetually = true;
 			}
 		}else {
 			ReferenceCountUtil.release(request);
-			readPending.release();
+			readPending.successDiscard();
 			ctx.fireExceptionCaught(future.cause());
 			readPending=null;
 			this.discardPerpetually = true;

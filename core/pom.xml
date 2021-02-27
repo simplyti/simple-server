@@ -79,10 +79,6 @@
 			<groupId>com.fasterxml</groupId>
 			<artifactId>classmate</artifactId>
 		</dependency>
-		<dependency>
-		    <groupId>jakarta.annotation</groupId>
-    		<artifactId>jakarta.annotation-api</artifactId>
-		</dependency>
 
 		<!-- JAX-RS -->
 		<dependency>

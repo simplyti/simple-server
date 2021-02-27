@@ -43,6 +43,7 @@ public class PooledClientChannel implements ClientChannel {
 		if(this.releaseTimeoutSchedule!=null) {
 			this.releaseTimeoutSchedule.cancel(false);
 		}
+		pipeline().fireUserEventTriggered(ClientChannelEvent.RELEASED);
 		return new DefaultFuture<>(pool.release(channel),channel.eventLoop());
 	}
 

@@ -3,6 +3,7 @@ package com.simplyti.service.clients.http.request;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.ByteBuf;
@@ -24,6 +25,11 @@ public class DefaultFinishablePayloadHttpRequestBuilder implements FinishableHtt
 	@Override
 	public <T> Future<T> fullResponse(Function<FullHttpResponse, T> fn) {
 		return target.fullResponse(fn);
+	}
+	
+	@Override
+	public ServerSentEventRequestBuilder serverSentEvents() {
+		return target.serverSentEvents();
 	}
 	
 	@Override
@@ -76,6 +82,12 @@ public class DefaultFinishablePayloadHttpRequestBuilder implements FinishableHtt
 	@Override
 	public FinishableHttpRequestBuilder withIgnoreStatusCode() {
 		target.withIgnoreStatusCode();
+		return this;
+	}
+
+	@Override
+	public FinishableHttpRequestBuilder withFilter(HttpRequestFilter filter) {
+		target.withFilter(filter);
 		return this;
 	}
 

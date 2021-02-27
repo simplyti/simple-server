@@ -219,30 +219,14 @@ public class DefaultFuture<T> implements Future<T> {
 				if(target.isSuccess()) {
 					try{
 						io.netty.util.concurrent.Future<U> result =  fn.apply(target.getNow(),null);
-						if(result.isDone()) {
-							if(result.isSuccess()) {
-								promise.setSuccess(result.getNow());
-							} else {
-								promise.setFailure(result.cause());
-							}
-						} else {
-							handleFuture(result,promise);
-						}
+						handleResult(result,promise);
 					} catch(Throwable cause) {
 						promise.setFailure(cause);
 					}
 				} else {
 					try{
 						io.netty.util.concurrent.Future<U> result =  fn.apply(null,target.cause());
-						if(result.isDone()) {
-							if(result.isSuccess()) {
-								promise.setSuccess(result.getNow());
-							} else {
-								promise.setFailure(result.cause());
-							}
-						} else {
-							handleFuture(result,promise);
-						}
+						handleResult(result,promise);
 					} catch(Throwable cause) {
 						promise.setFailure(cause);
 					}
@@ -252,6 +236,18 @@ public class DefaultFuture<T> implements Future<T> {
 		}
 	}
 	
+	private <U> void handleResult(io.netty.util.concurrent.Future<U> result, Promise<U> promise) {
+		if(result.isDone()) {
+			if(result.isSuccess()) {
+				promise.setSuccess(result.getNow());
+			} else {
+				promise.setFailure(result.cause());
+			}
+		} else {
+			handleFuture(result,promise);
+		}
+	}
+
 	private <O> void handleFuture(final io.netty.util.concurrent.Future<O> result, Promise<O> promise) {
 		result.addListener(f->{
 			if(f.isSuccess()) {
@@ -263,10 +259,10 @@ public class DefaultFuture<T> implements Future<T> {
 	}
 
 	@Override
-	public <O> Future<O> exceptionallyApply(final Function<Throwable, ? extends O> fn){
+	public Future<T> exceptionallyApply(final Function<Throwable, ? extends T> fn){
 		if(target.isDone()) {
 			if(target.isSuccess()) {
-				return IncompleteFuture.instance();
+				return this;
 			}else {
 				try{
 					return new DefaultFuture<>(loop.newSucceededFuture(fn.apply(target.cause())), loop);
@@ -275,7 +271,7 @@ public class DefaultFuture<T> implements Future<T> {
 				}
 			}
 		} else {
-			Promise<O> promise = loop.newPromise();
+			Promise<T> promise = loop.newPromise();
 			target.addListener(f->{
 				if(!f.isSuccess()) {
 					try{
@@ -283,6 +279,8 @@ public class DefaultFuture<T> implements Future<T> {
 					} catch(Throwable cause) {
 						promise.setFailure(cause);
 					}
+				} else {
+					promise.setSuccess(target.getNow());
 				}
 			});
 			return new DefaultFuture<>(promise, loop);
@@ -290,10 +288,10 @@ public class DefaultFuture<T> implements Future<T> {
 	}
 	
 	@Override
-	public Future<Void> exceptionally(final Consumer<Throwable> consumer){
+	public Future<T> exceptionally(final Consumer<Throwable> consumer){
 		if(target.isDone()) {
 			if(target.isSuccess()) {
-				return IncompleteFuture.instance();
+				return this;
 			}else {
 				try{
 					consumer.accept(target.cause());
@@ -303,7 +301,7 @@ public class DefaultFuture<T> implements Future<T> {
 				}
 			}
 		} else {
-			Promise<Void> promise = loop.newPromise();
+			Promise<T> promise = loop.newPromise();
 			target.addListener(f->{
 				if(!f.isSuccess()) {
 					try{
@@ -312,6 +310,8 @@ public class DefaultFuture<T> implements Future<T> {
 					} catch(Throwable cause) {
 						promise.setFailure(cause);
 					}
+				} else {
+					promise.setSuccess(target.getNow());
 				}
 			});
 			return new DefaultFuture<>(promise, loop);

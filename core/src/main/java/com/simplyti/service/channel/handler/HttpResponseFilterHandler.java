@@ -10,6 +10,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.util.concurrent.Future;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
@@ -29,7 +30,9 @@ public class HttpResponseFilterHandler extends ChannelOutboundHandlerAdapter {
 	
 	@Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-		if(msg instanceof HttpResponse) {
+		if(isContinue(msg)) {
+			ctx.write(msg, promise);
+		} else if(msg instanceof HttpResponse) {
 			HttpResponse response = (HttpResponse) msg;
 			Future<Boolean> futureHandled = FilterChain.of(filters, ctx, response).execute();
 			this.writePending=new PendingMessages();
@@ -41,6 +44,10 @@ public class HttpResponseFilterHandler extends ChannelOutboundHandlerAdapter {
 		}
     }
 	
+	private boolean isContinue(Object msg) {
+		return msg instanceof HttpResponse && ((HttpResponse)msg).status().equals(HttpResponseStatus.CONTINUE);
+	}
+
 	@Override
     public void flush(ChannelHandlerContext ctx) throws Exception {
 		if(writePending==null) {

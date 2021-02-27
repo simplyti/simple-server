@@ -1,6 +1,8 @@
 package com.simplyti.service.gateway.http;
 
 
+import java.net.InetSocketAddress;
+
 import javax.inject.Inject;
 
 import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;
@@ -8,7 +10,9 @@ import com.simplyti.service.clients.GenericClient;
 import com.simplyti.service.clients.channel.ClientChannel;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.commons.netty.pending.PendingMessages;
+import com.simplyti.service.config.ServerConfig;
 import com.simplyti.service.gateway.BackendServiceMatcher;
+import com.simplyti.service.gateway.GatewayConfig;
 import com.simplyti.service.gateway.ServiceDiscovery;
 
 import io.netty.buffer.Unpooled;
@@ -30,17 +34,29 @@ public class HttpGatewayRequestHandler extends ChannelDuplexHandler implements D
 	
 	private final ServiceDiscovery serviceDiscovery;
 	private final GenericClient httpGateway;
+	private final ServerConfig config;
+	private final GatewayConfig gatewayConfig;
 	private final PendingMessages pendingMessages;
+	
+	private boolean frontSsl;
 	
 	private boolean failurePerpetially;
 	private Channel gateway;
 	
 	@Inject
-	public HttpGatewayRequestHandler(@HttpGatewayClient GenericClient httpGateway, ServiceDiscovery serviceDiscovery) {
+	public HttpGatewayRequestHandler(@HttpGatewayClient GenericClient httpGateway, ServiceDiscovery serviceDiscovery, ServerConfig config, GatewayConfig gatewayConfig) {
 		this.httpGateway = httpGateway;
 		this.serviceDiscovery=serviceDiscovery;
 		this.pendingMessages = new PendingMessages();
+		this.config=config;
+		this.gatewayConfig=gatewayConfig;
 	}
+	
+	@Override
+    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+		InetSocketAddress localAddress = (InetSocketAddress) ctx.channel().localAddress();
+		this.frontSsl = config.securedPort()==localAddress.getPort();
+    }
 	
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -98,7 +114,7 @@ public class HttpGatewayRequestHandler extends ChannelDuplexHandler implements D
 			.channel()
 			.thenAccept(ch->{
 				if(ch.isActive()) {
-					ch.pipeline().addLast(new HttpGatewayUpstreamHandler(service,ctx.channel(), ch));
+					ch.pipeline().addLast(new HttpGatewayUpstreamHandler(service, endpoint, ctx.channel(), ch, gatewayConfig, frontSsl));
 					ch.writeAndFlush(request).addListener(f->handleInitialWrite(ctx,service,request,ch,retries,f));
 				} else {
 					failurePrematurelyAndCloseBackend(ctx,HttpResponseStatus.SERVICE_UNAVAILABLE,ch);

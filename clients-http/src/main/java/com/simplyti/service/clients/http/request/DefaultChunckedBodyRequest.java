@@ -9,6 +9,7 @@ import io.netty.handler.codec.http.DefaultHttpContent;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.CharsetUtil;
+import io.netty.util.concurrent.EventExecutor;
 
 
 public class DefaultChunckedBodyRequest implements ChunckedBodyRequest {
@@ -30,6 +31,11 @@ public class DefaultChunckedBodyRequest implements ChunckedBodyRequest {
 	@Override
 	public Future<Void> end() {
 		return new DefaultFuture<>(this.channel.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT),this.channel.eventLoop());
+	}
+
+	@Override
+	public EventExecutor executor() {
+		return channel.eventLoop();
 	}
 	
 }

@@ -25,11 +25,13 @@ import com.simplyti.service.clients.endpoint.ssl.SSLEndpoint;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.clients.http.request.ChunckedBodyRequest;
+import com.simplyti.service.clients.http.sse.domain.ServerEvent;
 import com.simplyti.service.clients.http.websocket.WebsocketClient;
 import com.simplyti.service.clients.proxy.ProxiedEndpoint;
 import com.simplyti.service.clients.proxy.ProxiedEndpointBuilder;
 import com.simplyti.service.clients.proxy.Proxy;
 import com.simplyti.service.clients.proxy.Proxy.ProxyType;
+import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.util.concurrent.Future;
 
 import cucumber.api.java.en.Given;
@@ -86,6 +88,16 @@ public class HttpClientStepDefs {
 			.withEventLoopGroup(eventloop)
 			.withMonitorEnabled()
 			.withCheckStatusCode()
+			.build());
+	}
+	
+	@When("^I create an http client \"([^\"]*)\" with pool size (\\d+) and filter \"([^\"]*)\"$")
+	public void iCreateAnHttpClientWithFilter(String key, int pool, Class<? extends HttpRequestFilter> clazz) throws Exception {
+		scenarioData.put(key,HttpClient.builder()
+			.withMonitorEnabled()
+			.withFilter(clazz.newInstance())
+			.withCheckStatusCode()
+			.withChannelPoolSize(pool)
 			.build());
 	}
 	
@@ -182,6 +194,59 @@ public class HttpClientStepDefs {
 		scenarioData.put(streamKey, ref.get());
 	}
 	
+	@When("^I post \"([^\"]*)\" using client \"([^\"]*)\" with body stream \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	public void iPostUsingClientWithBodyStreamGettingResponse(String path, String client, String streamKey, String resultKey) throws Exception {
+		AtomicReference<ChunckedBodyRequest> ref = new AtomicReference<>();
+		Future<FullHttpResponse> response = ((HttpClient)scenarioData.get(client)).request().withEndpoint(LOCAL_ENDPOINT)
+			.post(path)
+			.withChunkedBody(ref::set)
+			.fullResponse();
+		Awaitility.await().until(()->ref.get()!=null);
+		scenarioData.put(resultKey, response);
+		scenarioData.put(streamKey, ref.get());
+	}
+	
+	@When("^I post \"([^\"]*)\" with filter \"([^\"]*)\" using client \"([^\"]*)\" with body stream \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	public void iPostWithFilterUsingClientWithBodyStreamGettingResponse(String path, Class<? extends HttpRequestFilter> clazz, String client, String streamKey, String resultKey) throws Exception {
+		AtomicReference<ChunckedBodyRequest> ref = new AtomicReference<>();
+		Future<FullHttpResponse> response = ((HttpClient)scenarioData.get(client)).request().withEndpoint(LOCAL_ENDPOINT)
+			.withFilter(clazz.newInstance())
+			.post(path)
+			.withChunkedBody(ref::set)
+			.fullResponse();
+		Awaitility.await().until(()->ref.get()!=null);
+		scenarioData.put(resultKey, response);
+		scenarioData.put(streamKey, ref.get());
+	}
+
+	
+	@When("^I post \"([^\"]*)\" using client \"([^\"]*)\" with header \"([^\"]*)\" \"([^\"]*)\" body stream \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	public void iPostUsingClientWithHeaderBodyStreamGettingResponse(String path, String client, String header, String value, String streamKey, String resultKey) throws Exception {
+		AtomicReference<ChunckedBodyRequest> ref = new AtomicReference<>();
+		Future<FullHttpResponse> response = ((HttpClient)scenarioData.get(client)).request().withEndpoint(LOCAL_ENDPOINT)
+			.post(path)
+			.withHeader(header, value)
+			.withChunkedBody(ref::set)
+			.fullResponse();
+		Awaitility.await().until(()->ref.get()!=null);
+		scenarioData.put(resultKey, response);
+		scenarioData.put(streamKey, ref.get());
+	}
+	
+	@When("^I post \"([^\"]*)\" with filter \"([^\"]*)\" using client \"([^\"]*)\" with header \"([^\"]*)\" \"([^\"]*)\" body stream \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	public void iPostWithFilterUsingClientWithHeaderBodyStreamGettingResponse(String path, Class<? extends HttpRequestFilter> clazz, String client, String header, String value, String streamKey, String resultKey) throws Exception {
+		AtomicReference<ChunckedBodyRequest> ref = new AtomicReference<>();
+		Future<FullHttpResponse> response = ((HttpClient)scenarioData.get(client)).request().withEndpoint(LOCAL_ENDPOINT)
+			.withFilter(clazz.newInstance())
+			.post(path)
+			.withHeader(header, value)
+			.withChunkedBody(ref::set)
+			.fullResponse();
+		Awaitility.await().until(()->ref.get()!=null);
+		scenarioData.put(resultKey, response);
+		scenarioData.put(streamKey, ref.get());
+	}
+	
 	@When("^I send \"([^\"]*)\" to stream \"([^\"]*)\" getting result \"([^\"]*)\"$")
 	public void iSendToStreamGettingResult(String content, String streamKey, String resultKey) throws Exception {
 		ChunckedBodyRequest stream = (ChunckedBodyRequest) scenarioData.get(streamKey);
@@ -218,6 +283,14 @@ public class HttpClientStepDefs {
 	@When("^I get \"([^\"]*)\" using client \"([^\"]*)\" getting response \"([^\"]*)\"$")
 	public void iGetUsingClientGettingResponse(String path, String clientKey, String resultKey) throws Exception {
 		Future<FullHttpResponse> response = ((HttpClient)scenarioData.get(clientKey)).request().withEndpoint(LOCAL_ENDPOINT)
+				.get(path).fullResponse();
+		scenarioData.put(resultKey, response);
+	}
+	
+	@When("^I get \"([^\"]*)\" with filter \"([^\"]*)\" using client \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	public void iGetWithFilterUsingClientGettingResponse(String path, Class<? extends HttpRequestFilter> clazz, String clientKey, String resultKey) throws Exception {
+		Future<FullHttpResponse> response = ((HttpClient)scenarioData.get(clientKey)).request().withEndpoint(LOCAL_ENDPOINT)
+				.withFilter(clazz.newInstance())
 				.get(path).fullResponse();
 		scenarioData.put(resultKey, response);
 	}
@@ -474,6 +547,15 @@ public class HttpClientStepDefs {
 		scenarioData.put(resultKey, response);
 	}
 	
+	@When("^I post \"([^\"]*)\" with body \"([^\"]*)\" getting json response \"([^\"]*)\"$")
+	public void iPostWithBodyGettingJsonResponse(String path, String body, String resultKey) throws Exception {
+		Future<Any> response =  sutClient.request().withEndpoint(LOCAL_ENDPOINT)
+				.post(path)
+				.withBodyWriter(buffer->buffer.writeCharSequence(body, CharsetUtil.UTF_8))
+				.fullResponse(this::toAny);
+		scenarioData.put(resultKey, response);
+	}
+	
 	@When("^I send a full post request \"([^\"]*)\" with body \"([^\"]*)\" getting response \"([^\"]*)\"$")
 	public void iSendAFullPostRequestWithBodyGettingResponse(String path, String body, String resultKey) throws Exception {
 		FullHttpRequest fullRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, path, Unpooled.copiedBuffer(body, CharsetUtil.UTF_8));
@@ -585,16 +667,6 @@ public class HttpClientStepDefs {
 		assertThat(objects,hasSize(number));
 	}
 	
-	
-//	@When("^I get url \"([^\"]*)\" getting sse stream \"([^\"]*)\"$")
-//	public void iGetUrlGettingSSEStream(String endpointUrl, String resultKey) throws Exception {
-//		HttpEndpoint endpoint = HttpEndpoint.of(endpointUrl);
-//		List<ServerEvent> stream = new ArrayList<>();
-//		sutClient.request().withEndpoint(endpoint).get(endpoint.path())
-//				.sse().onEvent(event->stream.add(event)).sync();
-//		scenarioData.put(resultKey, stream);
-//	}
-	
 	@SuppressWarnings("unchecked")
 	@Then("^I check that stream \"([^\"]*)\" contains (\\d+) items$")
 	public void iCheckThatStreamContainsItems(String key, int number) throws Exception {
@@ -606,9 +678,9 @@ public class HttpClientStepDefs {
 	@Then("^I check that item (\\d+) of stream \"([^\"]*)\" is equal to$")
 	public void iCheckThatItemOfStreamIsEqualTo(int item, String key, String expected) throws Exception {
 		@SuppressWarnings("unchecked")
-		List<ByteBuf> objects = (List<ByteBuf>) scenarioData.get(key);
-		ByteBuf data = objects.get(item);
-		assertThat(data.toString(CharsetUtil.UTF_8),equalTo(expected));
+		List<String> objects = (List<String>) scenarioData.get(key);
+		String data = objects.get(item);
+		assertThat(data,equalTo(expected));
 	}
 	
 	@Then("^I check that item (\\d+) of stream \"([^\"]*)\" is equal to \"([^\"]*)\"$")
@@ -693,15 +765,6 @@ public class HttpClientStepDefs {
 	public void iCrateHttpClientFilterOfClass(String key, Class<?> clazz) throws Exception {
 		scenarioData.put(key, clazz.newInstance());
 	}
-	
-//	@When("^I get \"([^\"]*)\" with filter \"([^\"]*)\" getting response \"([^\"]*)\"$")
-//	public void iGetWithFilterGettingResponse(String path, String filterKey, String resultKey) throws Exception {
-//		Future<FullHttpResponse> response = sutClient.request()
-//				.withEndpoint(LOCAL_ENDPOINT)
-//				.withFilter((HttpRequestFilter) scenarioData.get(filterKey))
-//				.get(path).fullResponse();
-//		scenarioData.put(resultKey, response);
-//	}
 	
 	@Given("^an ssl endpoint \"([^\"]*)\" for \"([^\"]*)\" using certificate \"([^\"]*)\" and private key from key pair \"([^\"]*)\"$")
 	public void anSslEndpointForUsingCertificateAndPrivateKeyFromKeyPair(String resultKey, String url, String certKey, String keyPairKey) throws Exception {
@@ -803,6 +866,28 @@ public class HttpClientStepDefs {
 	public void iCheckThatObjectListHasSize(String key, int expected) throws Exception {
 		List<?> list = (List<?>) scenarioData.get(key);
 		assertThat(list,hasSize(expected));
+	}
+	
+	@Then("^I check that http response \"([^\"]*)\" contains header \"([^\"]*)\" equals to \"([^\"]*)\"$")
+	public void iCheckThatHttpResponseContainsHeaderEqualsTo(String key, String name, String value) throws Exception {
+		@SuppressWarnings("unchecked")
+		Future<FullHttpResponse> response = (Future<FullHttpResponse>) scenarioData.get(key);
+		List<String> values = response.getNow().headers().getAll(name);
+		assertThat(values, hasSize(1));
+		assertThat(values.get(0), equalTo(value));
+	}
+	
+	@Then("^I get \"([^\"]*)\" getting sse stream \"([^\"]*)\" and result \"([^\"]*)\"$")
+	public void iGetGettingSseStreamAndResult(String path, String streamKey, String resultKey) throws Exception {
+		List<ServerEvent> stream = new ArrayList<>();
+		Future<Void> result = sutClient.request()
+			.withEndpoint(LOCAL_ENDPOINT)
+			.get(path)
+			.serverSentEvents()
+				.forEach(stream::add);
+		
+		scenarioData.put(resultKey, result);
+		scenarioData.put(streamKey, stream);
 	}
 
 }

@@ -1,12 +1,15 @@
 package com.simplyti.service.clients.http;
 
 
+import java.util.List;
+
 import com.simplyti.service.clients.AbstractClient;
 import com.simplyti.service.clients.channel.ClientChannelFactory;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.http.request.DefaultHttpRequestBuilder;
 import com.simplyti.service.clients.http.request.HttpRequestBuilder;
 import com.simplyti.service.clients.monitor.DefaultClientMonitor;
+import com.simplyti.service.filter.http.HttpRequestFilter;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.EventLoopGroup;
@@ -20,8 +23,8 @@ public class DefaultHttpClient extends AbstractClient<HttpRequestBuilder> implem
 	private final HttpHeaders headers;
 	
 	public DefaultHttpClient(EventLoopGroup eventLoopGroup, Bootstrap bootstrap, Endpoint endpoint, HttpHeaders headers, SslProvider sslProvider, boolean checkStatusCode,
-			DefaultClientMonitor monitor, int poolSize, boolean unpooledChannels, long poolIdleTimeout, long readTimeoutMillis) {
-		super(bootstrap,eventLoopGroup,unpooledChannels, new HttpClientChannelPoolHandler(readTimeoutMillis), sslProvider, monitor , monitor, poolSize, poolIdleTimeout);
+			DefaultClientMonitor monitor, int poolSize, boolean unpooledChannels, long poolIdleTimeout, long readTimeoutMillis, List<HttpRequestFilter> filters) {
+		super(bootstrap,eventLoopGroup,unpooledChannels, new HttpClientChannelPoolHandler(readTimeoutMillis,filters), sslProvider, monitor , monitor, poolSize, poolIdleTimeout);
 		this.endpoint=endpoint;
 		this.headers=headers;
 		this.checkStatusCode=checkStatusCode;

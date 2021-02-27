@@ -1,5 +1,6 @@
 package com.simplyti.service.clients.http.request;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 import com.simplyti.service.clients.channel.ClientChannel;
@@ -8,6 +9,7 @@ import com.simplyti.service.clients.http.handler.ClientChannelInitializer;
 import com.simplyti.service.clients.http.handler.StreamedByteBufResponseHandler;
 import com.simplyti.service.clients.request.ChannelProvider;
 import com.simplyti.service.clients.stream.ClientRequestProvider;
+import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.ByteBuf;
@@ -19,18 +21,20 @@ public class DefaultStreamedHandledHttpRequestBuilder implements StreamedHandled
 	private final ClientRequestProvider pending;
 	private final Consumer<ChunckedBodyRequest> chunkedConsumer;
 	private final boolean checkStatus;
+	private final List<HttpRequestFilter> filters;
 	private Consumer<ClientChannel> connnectConsumer;
 
-	public DefaultStreamedHandledHttpRequestBuilder(ChannelProvider channelProvider, Consumer<ChunckedBodyRequest> chunkedConsumer, ClientRequestProvider pending, boolean checkStatus) {
+	public DefaultStreamedHandledHttpRequestBuilder(ChannelProvider channelProvider, Consumer<ChunckedBodyRequest> chunkedConsumer, ClientRequestProvider pending, boolean checkStatus, List<HttpRequestFilter> filters) {
 		this.channelProvider=channelProvider;
 		this.pending=pending;
 		this.checkStatus=checkStatus;
 		this.chunkedConsumer=chunkedConsumer;
+		this.filters=filters;
 	}
 	
 	@Override
 	public <U> StreamedFinalHandledHttpRequestBuilder<U> withInitializer(ClientChannelInitializer initializer) {
-		return new UnsafeTypeStreamedHandledHttpRequestBuilder<>(initializer, channelProvider, pending, connnectConsumer, checkStatus);
+		return new UnsafeTypeStreamedHandledHttpRequestBuilder<>(initializer, channelProvider, pending, connnectConsumer, checkStatus, filters);
 	}
 
 	@Override
@@ -41,16 +45,21 @@ public class DefaultStreamedHandledHttpRequestBuilder implements StreamedHandled
 				if(this.connnectConsumer!=null) {
 					this.connnectConsumer.accept(channel);
 				}
+				if(filters!=null) {
+					channel.pipeline().fireUserEventTriggered(new HttpRequestFilterEvent(filters));
+				}
 				Promise<Void> promise = channel.eventLoop().newPromise();
-				channel.pipeline().addLast(new StreamedByteBufResponseHandler(channel, promise, consumer));
-				channel.writeAndFlush(pending.request(channel)).addListener(f->hadleWriteFuture(f,channel,promise));
+				channel.pipeline().addLast(new StreamedByteBufResponseHandler(channel, null, promise, consumer));
+				channel.writeAndFlush(pending.request(false,null)).addListener(f->hadleWriteFuture(f,channel,promise));
 				return promise;
 			});
 	}
 	
 	private void hadleWriteFuture(io.netty.util.concurrent.Future<? super Void> future, ClientChannel channel, Promise<?> promise) {
 		if(future.isSuccess()) {
-			chunkedConsumer.accept(new DefaultChunckedBodyRequest(channel));
+			if(chunkedConsumer!=null) {
+				chunkedConsumer.accept(new DefaultChunckedBodyRequest(channel));
+			}
 		} else {
 			channel.close().addListener(f->channel.release());
 			promise.tryFailure(future.cause());

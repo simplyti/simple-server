@@ -2,6 +2,7 @@ package com.simplyti.service.clients.http;
 
 import com.simplyti.service.clients.ClientBuilder;
 import com.simplyti.service.clients.http.request.HttpRequestBuilder;
+import com.simplyti.service.filter.http.HttpRequestFilter;
 
 public interface HttpClientBuilder extends ClientBuilder<HttpClientBuilder,HttpClient,HttpRequestBuilder> {
 
@@ -10,5 +11,7 @@ public interface HttpClientBuilder extends ClientBuilder<HttpClientBuilder,HttpC
 	HttpClientBuilder withBearerAuth(String token);
 
 	HttpClientBuilder withBasicAuth(String user, String password);
+
+	HttpClientBuilder withFilter(HttpRequestFilter filter);
 
 }

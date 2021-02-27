@@ -1,4 +1,4 @@
-@standalone @clients @httpClient
+@standalone @clients @httpClient @httpClientStreamResponse
 Feature: Http Client streamed response handle
 
 Scenario: Http request streamed response handled

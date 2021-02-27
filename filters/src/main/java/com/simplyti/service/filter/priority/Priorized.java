@@ -1,4 +1,4 @@
-package com.simplyti.service.priority;
+package com.simplyti.service.filter.priority;
 
 import java.util.Comparator;
 import java.util.Optional;

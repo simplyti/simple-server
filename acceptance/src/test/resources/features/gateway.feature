@@ -376,7 +376,28 @@ Scenario: Prematurely failed request discards nexts http parts
 	
 # TODO: check proxy req adapt
 
-Scenario: Handling big payloads with a gateway service and the own API
+Scenario: Http Continue handle
+	When I start a service "#serviceFuture" with options:
+		| option	 	| value |
+		| withApi		| com.simplyti.service.examples.api.APITest	|
+		| insecuredPort	| 4444	|
+		| securedPort	| -1 |
+	Then I check that "#serviceFuture" is success
+	When I start a service "#gatewayeFuture" with options:
+		| option	 		| value |
+		| withModule		| com.simplyti.service.gateway.GatewayModule |
+		| withModule		| com.simplyti.service.discovery.TestServiceDiscoveryModule |
+		| withLog4J2Logger	|		|
+	Then I check that "#gatewayeFuture" is success
+	When I create a service with path "/echo" and backend "http://127.0.0.1:4444"
+	When I create a service with path "/hello" and backend "http://127.0.0.1:4444"
+	And I post "/echo" with 100 bytes random body an continue expected getting "#response"
+	Then I check that http response "#response" has status code 200
+	When I send a "GET /hello" getting "#response"
+	Then I check that "#response" has status code 200
+	And I check that "#response" is equals to "Hello!"
+
+Scenario: Handling big payloads with a gateway service and an own API
 	When I start a service "#serviceFuture" with options:
 		| option	 		| value |
 		| withApi			| com.simplyti.service.examples.api.APITest |
@@ -405,7 +426,7 @@ Scenario: Handling big payloads with a gateway service and the own API
 	Then I check that http response "#response" has status code 200
 	And I check that http response "#response" has a body with size of 5.0 mb
 
-Scenario: Web socket backend
+Scenario: Websocket backend
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.WebsocketsApi	|
@@ -428,7 +449,7 @@ Scenario: Web socket backend
 	Then I check that "#writeFuture" is success
 	And I check that text stream "#stream" is equals to "Bye WS!"
 	
-Scenario: Web socket service connection error
+Scenario: Websocket service connection error
 	When I start a service "#serviceFuture" with options:
 		| option	 		| value |
 		| withModule		| com.simplyti.service.gateway.GatewayModule |

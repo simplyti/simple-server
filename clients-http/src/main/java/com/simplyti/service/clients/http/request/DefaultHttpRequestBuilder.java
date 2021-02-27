@@ -1,10 +1,14 @@
 package com.simplyti.service.clients.http.request;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.simplyti.service.clients.channel.ClientChannelFactory;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.http.websocket.DefaultWebsocketClient;
 import com.simplyti.service.clients.http.websocket.WebsocketClient;
 import com.simplyti.service.clients.request.AbstractClientRequestBuilder;
+import com.simplyti.service.filter.http.HttpRequestFilter;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -23,6 +27,7 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 	private final EventLoopGroup eventLoopGroup;
 	
 	private boolean checkStatus;
+	private List<HttpRequestFilter> filters;
 
 	
 	public DefaultHttpRequestBuilder(EventLoopGroup eventLoopGroup, ClientChannelFactory clientChannelFactory, Endpoint endpoint, HttpHeaders headers, boolean checkStatus) {
@@ -35,32 +40,32 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 
 	@Override
 	public FinishableHttpRequestBuilder get(String path) {
-		return new DefaultFinishableHttpRequestBuilder(this, eventLoopGroup, HttpMethod.GET,path,paramsAppend.getParams(),headerAppend.getHeaders(),checkStatus);
+		return new DefaultFinishableHttpRequestBuilder(this, eventLoopGroup, HttpMethod.GET,path,paramsAppend.getParams(),headerAppend.getHeaders(),checkStatus, filters);
 	}
 	
 	@Override
 	public FinishableHttpRequestBuilder delete(String path) {
-		return new DefaultFinishableHttpRequestBuilder(this,eventLoopGroup,HttpMethod.DELETE,path,paramsAppend.getParams(),headerAppend.getHeaders(),checkStatus);
+		return new DefaultFinishableHttpRequestBuilder(this,eventLoopGroup,HttpMethod.DELETE,path,paramsAppend.getParams(),headerAppend.getHeaders(),checkStatus, filters);
 	}
 
 	@Override
 	public FinishablePayloadableHttpRequestBuilder post(String path) {
-		return new DefaultFinishablePayloadableHttpRequestBuilder(this,eventLoopGroup,HttpMethod.POST,path,paramsAppend.getParams(),headerAppend.getHeaders(),checkStatus);
+		return new DefaultFinishablePayloadableHttpRequestBuilder(this,eventLoopGroup,HttpMethod.POST,path,paramsAppend.getParams(),headerAppend.getHeaders(),checkStatus, filters);
 	}
 	
 	@Override
 	public FinishablePayloadableHttpRequestBuilder put(String path) {
-		return new DefaultFinishablePayloadableHttpRequestBuilder(this,eventLoopGroup,HttpMethod.PUT,path,paramsAppend.getParams(),headerAppend.getHeaders(),checkStatus);
+		return new DefaultFinishablePayloadableHttpRequestBuilder(this,eventLoopGroup,HttpMethod.PUT,path,paramsAppend.getParams(),headerAppend.getHeaders(),checkStatus, filters);
 	}
 	
 	@Override
 	public FinishablePayloadableHttpRequestBuilder patch(String path) {
-		return new DefaultFinishablePayloadableHttpRequestBuilder(this,eventLoopGroup,HttpMethod.PATCH,path,paramsAppend.getParams(),headerAppend.getHeaders(),checkStatus);
+		return new DefaultFinishablePayloadableHttpRequestBuilder(this,eventLoopGroup,HttpMethod.PATCH,path,paramsAppend.getParams(),headerAppend.getHeaders(),checkStatus, filters);
 	}
 	
 	@Override
 	public FinishablePayloadableHttpRequestBuilder options(String path) {
-		return new DefaultFinishablePayloadableHttpRequestBuilder(this,eventLoopGroup,HttpMethod.OPTIONS,path,paramsAppend.getParams(),headerAppend.getHeaders(),checkStatus);
+		return new DefaultFinishablePayloadableHttpRequestBuilder(this,eventLoopGroup,HttpMethod.OPTIONS,path,paramsAppend.getParams(),headerAppend.getHeaders(),checkStatus, filters);
 	}
 	
 	@Override
@@ -79,10 +84,21 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 		this.checkStatus=false;
 		return this;
 	}
+	
+	@Override
+	public HttpRequestBuilder withFilter(HttpRequestFilter filter) {
+		if(filter != null) {
+			if(filters==null) {
+				filters = new ArrayList<>();
+			}
+			filters.add(filter);
+		}
+		return this;
+	}
 
 	@Override
 	public WebsocketClient websocket(String uri) {
 		return new DefaultWebsocketClient(uri, eventLoopGroup.next(), this);
 	}
-	
+
 }

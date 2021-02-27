@@ -1,11 +1,13 @@
 package com.simplyti.service.clients.http.request;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.simplyti.service.clients.channel.ClientChannel;
 import com.simplyti.service.clients.request.ChannelProvider;
+import com.simplyti.service.filter.http.HttpRequestFilter;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
@@ -15,16 +17,11 @@ import io.netty.handler.codec.http.HttpMethod;
 
 public class DefaultFinishablePayloadableHttpRequestBuilder extends AbstractFinishableHttpRequestBuilder<FinishablePayloadableHttpRequestBuilder> implements FinishablePayloadableHttpRequestBuilder {
 
-	private final Map<String, Object> params;
-	private final HttpHeaders headers;
-
 	private Consumer<ByteBuf> bobyWriter;
 	private Function<ByteBufAllocator,ByteBuf> bodySupplier;
 
-	public DefaultFinishablePayloadableHttpRequestBuilder(ChannelProvider channelProvider, EventLoopGroup eventLoopGroup, HttpMethod method, String path, Map<String,Object> params, HttpHeaders headers, boolean checkStatus) {
-		super(channelProvider,method,path, params, headers, checkStatus);
-		this.params=params;
-		this.headers=headers;
+	public DefaultFinishablePayloadableHttpRequestBuilder(ChannelProvider channelProvider, EventLoopGroup eventLoopGroup, HttpMethod method, String path, Map<String,Object> params, HttpHeaders headers, boolean checkStatus, List<HttpRequestFilter> filters) {
+		super(channelProvider,method,path, params, headers, checkStatus, filters);
 	}
 	
 	@Override
@@ -33,9 +30,10 @@ public class DefaultFinishablePayloadableHttpRequestBuilder extends AbstractFini
 		return new DefaultFinishablePayloadHttpRequestBuilder(this);
 	}
 	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public FinishableHttpRequestBuilder withChunkedBody(Consumer<ChunckedBodyRequest> chunkedConsumer) {
-		return new DefaultFinishableChunkedPayloadHttpRequestBuilder(chunkedConsumer,channelProvider, path, method, params,headers,checkStatus);
+		return new DefaultFinishableChunkedPayloadHttpRequestBuilder(chunkedConsumer,channelProvider, path, method, (ParamsAppendBuilder) paramsAppend, (HeaderAppendBuilder) headerAppend,checkStatus,filters);
 	}
 
 	@Override

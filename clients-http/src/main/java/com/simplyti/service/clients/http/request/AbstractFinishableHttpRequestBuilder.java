@@ -1,5 +1,7 @@
 package com.simplyti.service.clients.http.request;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -8,13 +10,15 @@ import com.simplyti.service.clients.http.handler.DecodingFullHttpResponseHandler
 import com.simplyti.service.clients.http.handler.FullHttpResponseHandler;
 import com.simplyti.service.clients.request.ChannelProvider;
 import com.simplyti.service.clients.stream.ClientRequestProvider;
+import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
-import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
@@ -25,39 +29,61 @@ import lombok.experimental.Delegate;
 public abstract class AbstractFinishableHttpRequestBuilder<T> implements BaseFinishableHttpRequestBuilder<T>, HeaderAppendableRequestBuilder<T>, ParamAppendableRequestBuilder<T>, FilterableRequestBuilder<T>, ClientRequestProvider {
 
 	@Delegate(excludes = ParamsAppendBuilder.class)
-	private final HeaderAppendBuilder<T> headerAppend;
+	protected final HeaderAppendBuilder<T> headerAppend;
 	
 	@Delegate(excludes = HeaderAppendBuilder.class)
-	private final ParamsAppendBuilder<T> paramsAppend;
+	protected final ParamsAppendBuilder<T> paramsAppend;
 	
 	protected final ChannelProvider channelProvider;
 	protected final HttpMethod method;
 	protected final String path;
+	
 	protected boolean checkStatus;
+	protected List<HttpRequestFilter> filters;
 
-	@SuppressWarnings("unchecked")
 	public AbstractFinishableHttpRequestBuilder(ChannelProvider channelProvider, HttpMethod method, String path, Map<String,Object> params, HttpHeaders headers, boolean checkStatus) {
+		this(channelProvider, method, path, params, headers, checkStatus, null);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public AbstractFinishableHttpRequestBuilder(ChannelProvider channelProvider, HttpMethod method, String path, Map<String,Object> params, HttpHeaders headers, boolean checkStatus, List<HttpRequestFilter> filters) {
 		this.headerAppend=new HeaderAppendBuilder<T>(headers, (T) this);
 		this.paramsAppend=new ParamsAppendBuilder<>(params, (T) this);
 		this.channelProvider=channelProvider;
 		this.method=method;
 		this.path=path;
 		this.checkStatus=checkStatus;
+		this.filters=filters;
+	}
+	
+	protected AbstractFinishableHttpRequestBuilder(ChannelProvider channelProvider, HttpMethod method, String path, ParamsAppendBuilder<T> paramsAppend, HeaderAppendBuilder<T> headerAppend, boolean checkStatus, List<HttpRequestFilter> filters) {
+		this.headerAppend=headerAppend;
+		this.paramsAppend=paramsAppend;
+		this.channelProvider=channelProvider;
+		this.method=method;
+		this.path=path;
+		this.checkStatus=checkStatus;
+		this.filters=filters;
 	}
 	
 	@Override
 	public Future<FullHttpResponse> fullResponse() {
 		return channelProvider.channel()
 				.thenCombine(channel->{
-					HttpRequest request;
+					if(filters!=null) {
+						channel.pipeline().fireUserEventTriggered(new HttpRequestFilterEvent(filters));
+					}
+					ByteBuf buff;
 					try{
-						request = request(channel);
+						buff = body(channel);
 					}catch (Throwable e) {
 						channel.release();
 						return channel.eventLoop().newFailedFuture(e);
 					}
+					boolean expectedContinue = headerAppend.values() !=null && headerAppend.values().contains(HttpHeaderNames.EXPECT, HttpHeaderValues.CONTINUE, true);
+					HttpRequest request = request(expectedContinue, buff);
 					Promise<FullHttpResponse> promise = channel.eventLoop().newPromise();
-					channel.pipeline().addLast(new FullHttpResponseHandler(channel,checkStatus,promise));
+					channel.pipeline().addLast(new FullHttpResponseHandler(channel,expectedContinue?buff:null,checkStatus,promise));
 					channel.writeAndFlush(request).addListener(f->hadleWriteFuture(f,channel,promise));
 					return promise;
 				});
@@ -67,15 +93,20 @@ public abstract class AbstractFinishableHttpRequestBuilder<T> implements BaseFin
 	public <U> Future<U> fullResponse(Function<FullHttpResponse, U> fn) {
 		return channelProvider.channel()
 				.thenCombine(channel->{
-					HttpRequest request;
+					if(filters!=null) {
+						channel.pipeline().fireUserEventTriggered(new HttpRequestFilterEvent(filters));
+					}
+					ByteBuf buff;
 					try{
-						request = request(channel);
+						buff = body(channel);
 					}catch (Throwable e) {
 						channel.release();
 						return channel.eventLoop().newFailedFuture(e);
 					}
+					boolean expectedContinue = headerAppend.values() !=null && headerAppend.values().contains(HttpHeaderNames.EXPECT, HttpHeaderValues.CONTINUE, true);
+					HttpRequest request = request(expectedContinue, buff);
 					Promise<U> promise = channel.eventLoop().newPromise();
-					channel.pipeline().addLast(new DecodingFullHttpResponseHandler<>(channel,checkStatus,promise, fn));
+					channel.pipeline().addLast(new DecodingFullHttpResponseHandler<>(channel,expectedContinue?buff:null,checkStatus,promise, fn));
 					channel.writeAndFlush(request).addListener(f->hadleWriteFuture(f,channel,promise));
 					return promise;
 				});
@@ -97,10 +128,15 @@ public abstract class AbstractFinishableHttpRequestBuilder<T> implements BaseFin
 	protected void connectSuccess(ClientChannel channel) {
 		// No-op
 	}
+	
+	@Override
+	public ServerSentEventRequestBuilder serverSentEvents() {
+		return new DefaultServerSentEventRequestBuilder(channelProvider, null, this, checkStatus, filters);
+	}
 
 	@Override
 	public StreamedHandledHttpRequestBuilder<ByteBuf> stream() {
-		return new DefaultStreamedHandledHttpRequestBuilder(channelProvider, null, this, checkStatus);
+		return new DefaultStreamedHandledHttpRequestBuilder(channelProvider, null, this, checkStatus, filters);
 	}
 	
 	@Override
@@ -118,24 +154,34 @@ public abstract class AbstractFinishableHttpRequestBuilder<T> implements BaseFin
 	}
 	
 	@Override
-	public HttpRequest request(ClientChannel ch) {
-		FullHttpRequest request = buildRequest(ch);
-		return setHeaders(request,ch).setUri(paramsAppend.withParams(request.uri()));
-	}
-
-	protected FullHttpRequest buildRequest(ClientChannel ch) {
-		ByteBuf buff = body(ch);
-		if(buff!=null) {
-			return new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, method, path, buff);
+	public HttpRequest request(boolean expectedContinue, ByteBuf buff) {
+		HttpRequest request;
+		if(expectedContinue) {
+			request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, method, path);
+		} else if(buff!=null) {
+			request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, method, path, buff);
 		} else {
-			return new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, method, path);
+			request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, method, path);
 		}
+		return setHeaders(request,buff).setUri(paramsAppend.withParams(request.uri()));
 	}
-
-	private FullHttpRequest setHeaders(FullHttpRequest request,ClientChannel ch) {
+	
+	protected HttpRequest setHeaders(HttpRequest request, ByteBuf buff) {
 		this.headerAppend.withHeaders(request);
-		request.headers().set(HttpHeaderNames.CONTENT_LENGTH,request.content().readableBytes());
+		request.headers().set(HttpHeaderNames.CONTENT_LENGTH,buff==null?0:buff.readableBytes());
 		return request;
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public T withFilter(HttpRequestFilter filter) {
+		if(filter != null) {
+			if(filters==null) {
+				filters = new ArrayList<>();
+			}
+			filters.add(filter);
+		}
+		return (T) this;
 	}
 
 	protected abstract ByteBuf body(ClientChannel ch);

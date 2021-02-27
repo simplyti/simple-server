@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.security.cert.X509Certificate;
 
 import org.apache.commons.io.FileUtils;
@@ -35,6 +36,9 @@ import com.simplyti.service.builder.di.guice.GuiceService;
 import com.simplyti.service.builder.di.guice.GuiceServiceBuilder;
 import com.simplyti.service.client.SimpleHttpClient;
 import com.simplyti.service.client.SimpleHttpResponse;
+import com.simplyti.service.clients.endpoint.Endpoint;
+import com.simplyti.service.clients.http.HttpClient;
+import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.clients.http.exception.HttpException;
 import com.simplyti.service.examples.hook.TestServerStopHookModule;
 
@@ -46,7 +50,9 @@ import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.DefaultHttpRequest;
+import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
@@ -79,12 +85,17 @@ import static org.hamcrest.Matchers.instanceOf;
 
 public class ServiceBuilderStepDefs {
 	
+	private static final Endpoint LOCAL_ENDPOINT = HttpEndpoint.of("http://localhost:8080");
 	private static final DateTimeFormatter CACHE_DATE_PATTERN = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
 
 	private String tempDir = System.getProperty("user.dir")+"/target/tempDir";
 	
 	@Inject
 	private  SimpleHttpClient client;
+	
+	@Inject
+	@Named("singleton")
+	private HttpClient http;
 	
 	@Inject
 	private Map<String,Object> scenarioData;
@@ -458,6 +469,25 @@ public class ServiceBuilderStepDefs {
 		scenarioData.put(resultKey, send(null,method,path,body,null).get());
 	}
 	
+	@When("^I post \"([^\"]*)\" with (\\d+) bytes random body an continue expected getting \"([^\"]*)\"$")
+	public void iSendAWithBytesRandomBodyAnConueExpectedGetting(String path, int size, String resultKey) throws Exception {
+	    Future<FullHttpResponse> result = http.request().withEndpoint(LOCAL_ENDPOINT)
+	    		.post(path)
+		    	.withBodyWriter(b->b.writeCharSequence(random(size), CharsetUtil.UTF_8))
+		    	.withHeader(HttpHeaderNames.EXPECT, HttpHeaderValues.CONTINUE)
+		    	.fullResponse();
+	    scenarioData.put(resultKey, result);
+	}
+	
+	@Then("^I check that response \"([^\"]*)\" has body size (\\d+)$")
+	public void iCheckThatResponseHasBodySize(String key, int size) throws Exception {
+		@SuppressWarnings("unchecked")
+		Future<FullHttpResponse> result = (Future<FullHttpResponse>) scenarioData.get(key);
+		assertThat(result.getNow().content().readableBytes(), equalTo(size));
+		result.getNow().release();
+	}
+
+	
 	private String random(int targetStringLength) {
 		int leftLimit = 97; // letter 'a'
 	    int rightLimit = 122; // letter 'z'
@@ -569,6 +599,13 @@ public class ServiceBuilderStepDefs {
 		}
 		assertThat(futureService.isSuccess(),equalTo(true));
 	}
+	
+	@Then("^I check that \"([^\"]*)\" is finished$")
+	public void iCheckThatIsFinished(String key) throws Exception {
+		Future<?> futureService = (Future<?>) scenarioData.get(key);
+		Awaitility.await().until(futureService::isDone);
+	}
+
 	
 	@Then("^I check that \"([^\"]*)\" is failure$")
 	public void iCheckThatIsFailure(String key) throws Exception {

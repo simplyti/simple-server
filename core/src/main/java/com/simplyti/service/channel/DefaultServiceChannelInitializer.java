@@ -23,7 +23,7 @@ import com.simplyti.service.config.ServerConfig;
 import com.simplyti.service.filter.http.FullHttpRequestFilter;
 import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.service.filter.http.HttpResponseFilter;
-import com.simplyti.service.priority.Priorized;
+import com.simplyti.service.filter.priority.Priorized;
 import com.simplyti.service.ssl.SslHandlerFactory;
 
 import io.netty.channel.ChannelInitializer;

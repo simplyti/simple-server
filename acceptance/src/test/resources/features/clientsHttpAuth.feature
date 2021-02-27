@@ -1,4 +1,4 @@
-@standalone @httpClientAuth
+@standalone @clients @httpClient @httpClientAuth
 Feature: Http Client auth
 
 Scenario: Http client with basic auth

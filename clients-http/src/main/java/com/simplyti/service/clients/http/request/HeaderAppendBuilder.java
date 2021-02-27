@@ -57,4 +57,8 @@ public class HeaderAppendBuilder<T> implements HeaderAppendableRequestBuilder<T>
 		}
 	}
 
+	public HttpHeaders values() {
+		return headers;
+	}
+
 }

@@ -9,6 +9,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpRequest;
 
 public class DefaultFinishedHttpRequestBuilder extends AbstractFinishableHttpRequestBuilder<FinishedHttpRequestBuilder> implements FinishedHttpRequestBuilder {
 
@@ -19,8 +20,9 @@ public class DefaultFinishedHttpRequestBuilder extends AbstractFinishableHttpReq
 		this.request=request;
 	}
 	
-	protected FullHttpRequest buildRequest(ClientChannel ch) {
-		return request;
+	@Override
+	public HttpRequest request(boolean expectedContinue, ByteBuf buff) {
+		return setHeaders(request, request.content());
 	}
 
 	@Override

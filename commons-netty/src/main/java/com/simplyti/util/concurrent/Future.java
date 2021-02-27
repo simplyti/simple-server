@@ -19,9 +19,9 @@ public interface Future<T> extends io.netty.util.concurrent.Future<T> {
 	
 	<U> Future<U> handleCombine(BiFunction<? super T, Throwable, io.netty.util.concurrent.Future<U>> fn);
 	
-	<O> Future<O> exceptionallyApply(Function<Throwable, ? extends O> fn);
+	Future<T> exceptionallyApply(Function<Throwable, ? extends T> fn);
 	
-	Future<Void> exceptionally(final Consumer<Throwable> consumer);
+	Future<T> exceptionally(final Consumer<Throwable> consumer);
 	
 	Future<T> onError(Consumer<Throwable> action);
 

@@ -26,7 +26,7 @@ public class WebSocketChannelHandler extends AbstractBaseHttpResponseHandler<Obj
 	private final Promise<Void> closePromise;
 	
 	public WebSocketChannelHandler(String uri, ClientChannel channel, Promise<ClientChannel> promise, Promise<Void> closePromise, Consumer<WebSocketFrame> frameConsumer) {
-		super(channel,promise);
+		super(channel,null,promise);
 		this.channel=channel;
 		this.promise=promise;
 		this.closePromise=closePromise;
@@ -58,6 +58,11 @@ public class WebSocketChannelHandler extends AbstractBaseHttpResponseHandler<Obj
 			frameConsumer.accept((WebSocketFrame) msg);
 		}
 		ReferenceCountUtil.release(msg);
+	}
+
+	@Override
+	protected void channelRead1(ChannelHandlerContext ctx, Object msg) throws Exception {
+		// NO-OP
 	}
 	
 }

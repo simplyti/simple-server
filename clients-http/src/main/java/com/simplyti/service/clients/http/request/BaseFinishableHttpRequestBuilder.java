@@ -15,4 +15,6 @@ public interface BaseFinishableHttpRequestBuilder<O> extends StatusCheckableRequ
 	
 	StreamedHandledHttpRequestBuilder<ByteBuf> stream();
 	
+	ServerSentEventRequestBuilder serverSentEvents();
+	
 }

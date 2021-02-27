@@ -7,7 +7,6 @@ Scenario: Basic Http Request filter
 		| withApi			| com.simplyti.service.examples.api.APITest	|
 		| withModule		| com.simplyti.service.examples.filter.BasicHttpRequestFilterModule |
 		| withLog4J2Logger	|		|
-		| verbose			|	|
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /hello/1" getting "#response"
 	And I check that "#response" has status code 200
@@ -21,7 +20,6 @@ Scenario: Async Http Request filter
 		| withApi			| com.simplyti.service.examples.api.APITest	|
 		| withModule		| com.simplyti.service.examples.filter.AsyncHttpRequestFilterModule |
 		| withLog4J2Logger	|		|
-		| verbose			|	|
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /hello/1" getting "#response"
 	And I check that "#response" has status code 200
@@ -36,8 +34,8 @@ Scenario: Basic Http Request filter with buffered body
 		| withModule		| com.simplyti.service.examples.filter.BasicHttpRequestFilterModule |
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
-	#When I send a "POST /echo/1" with 9216 bytes random body getting "#response"
-	#And I check that "#response" has status code 200
+	When I send a "POST /echo/1" with 9216 bytes random body getting "#response"
+	And I check that "#response" has status code 200
 	When I send a "POST /echo/bad" with 9216 bytes random body getting "#response"
 	And I check that "#response" has status code 400
 
@@ -59,7 +57,6 @@ Scenario: Full Http Request filter
 		| withApi			| com.simplyti.service.examples.api.APITest	|
 		| withModule		| com.simplyti.service.examples.filter.FullHttpRequestFilterModule |
 		| withLog4J2Logger	|		|
-		| verbose			|	|
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /hello/1" getting "#response"
 	And I check that "#response" has status code 200
