@@ -102,6 +102,12 @@ public class DefaultHttpRequestBuilder extends AbstractClientRequestBuilder<Http
 		FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.OPTIONS, uri, Unpooled.EMPTY_BUFFER, headers,EmptyHttpHeaders.INSTANCE);
 		return new DefaultFinishableHttpRequest(client,checkStatusCode,request,config());
 	}
+	
+	@Override
+	public FinishableHttpRequest head(String uri) {
+		FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.HEAD, uri, Unpooled.EMPTY_BUFFER, headers,EmptyHttpHeaders.INSTANCE);
+		return new DefaultFinishableHttpRequest(client,checkStatusCode,request,config());
+	}
 
 	@Override
 	public FinishableHttpRequest sendFull(FullHttpRequest request) {
