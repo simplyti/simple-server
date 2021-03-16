@@ -20,13 +20,7 @@ import io.netty.util.concurrent.FastThreadLocal;
 @Sharable
 public class ServerHeadersHandler extends ChannelOutboundHandlerAdapter {
 
-	private final FastThreadLocal<SimpleDateFormat> dateFormatter = new FastThreadLocal<SimpleDateFormat>() {
-		protected SimpleDateFormat initialValue() throws Exception {
-			SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
-			format.setTimeZone(TimeZone.getTimeZone("GMT"));
-			return format;
-		}
-	};
+	private final FastThreadLocal<SimpleDateFormat> dateFormatter = new ThreadLocalSimpleDateFormat();
 	
 	private final ServerConfig config;
 	
@@ -66,5 +60,16 @@ public class ServerHeadersHandler extends ChannelOutboundHandlerAdapter {
 	private boolean isDateValid(long time) {
 		return time<dateValidUntil;
 	}
+	
+	static class ThreadLocalSimpleDateFormat extends FastThreadLocal<SimpleDateFormat> {
+		
+        @Override 
+        protected SimpleDateFormat initialValue() {
+        	SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+			format.setTimeZone(TimeZone.getTimeZone("GMT"));
+			return format;
+        }
+        
+    }
 	
 }

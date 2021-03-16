@@ -25,7 +25,7 @@ public class HttpGatewayUpstreamHandler extends ChannelDuplexHandler {
 	
 	private static final String X_FORWARDED_FOR = "x-forwarded-for";
 	private static final String X_FORWARDED_PROTO = "x-forwarded-proto";
-	private static final String X_FORWARDED_HOST = "x-forwarded-host";
+	public static final String X_FORWARDED_HOST = "x-forwarded-host";
 	private static final String UPGRADE = HttpHeaderValues.UPGRADE.toString();
 
 	private final GatewayConfig config;

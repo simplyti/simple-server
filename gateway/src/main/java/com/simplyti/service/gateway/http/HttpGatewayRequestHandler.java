@@ -2,6 +2,7 @@ package com.simplyti.service.gateway.http;
 
 
 import java.net.InetSocketAddress;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
 
@@ -11,6 +12,7 @@ import com.simplyti.service.clients.channel.ClientChannel;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.commons.netty.pending.PendingMessages;
 import com.simplyti.service.config.ServerConfig;
+import com.simplyti.service.filter.FilterChain;
 import com.simplyti.service.gateway.BackendServiceMatcher;
 import com.simplyti.service.gateway.GatewayConfig;
 import com.simplyti.service.gateway.ServiceDiscovery;
@@ -39,7 +41,6 @@ public class HttpGatewayRequestHandler extends ChannelDuplexHandler implements D
 	private final PendingMessages pendingMessages;
 	
 	private boolean frontSsl;
-	
 	private boolean failurePerpetially;
 	private Channel gateway;
 	
@@ -77,7 +78,7 @@ public class HttpGatewayRequestHandler extends ChannelDuplexHandler implements D
 	}
 
 	private void handleHttpRequest(ChannelHandlerContext ctx, HttpRequest request) {
-		Future<BackendServiceMatcher> backendFuture = serviceDiscovery.get(request.headers().get(HttpHeaderNames.HOST),request.method(), request.uri(),ctx.executor());
+		Future<BackendServiceMatcher> backendFuture = serviceDiscovery.get(host(ctx,request),request.method(), request.uri(),ctx.executor());
 		if(backendFuture.isDone()) {
 			handleBackendMatch(backendFuture,ctx,request);
 		}else {
@@ -87,22 +88,47 @@ public class HttpGatewayRequestHandler extends ChannelDuplexHandler implements D
 	
 	private void handleBackendMatch(Future<BackendServiceMatcher> backendFuture, ChannelHandlerContext ctx, HttpRequest request) {
 		if(!backendFuture.isSuccess()) {
-			failurePrematurely(ctx,HttpResponseStatus.SERVICE_UNAVAILABLE);
+			failurePrematurely(ctx, ()->response(HttpResponseStatus.SERVICE_UNAVAILABLE));
 			return;
 		}
 		
 		BackendServiceMatcher service = backendFuture.getNow();
 		if(service == null) {
-			failurePrematurely(ctx, HttpResponseStatus.NOT_FOUND);
+			failurePrematurely(ctx, ()->response(HttpResponseStatus.NOT_FOUND));
+			return;
+		}
+		
+		if(service.get().tlsEnabled() && !frontSsl) {
+			failurePrematurely(ctx, ()->redirect(ctx,request));
+			return;
+		}
+		
+		if(!service.get().filters().isEmpty()){
+			Future<Boolean> futureHandled = FilterChain.of(service.get().filters(), ctx, request).execute();
+			futureHandled.addListener(f->handleRequestFilter(futureHandled,ctx, service, request));
+			return;
+		}
+		
+		serviceProceed(ctx,service,request, 1);
+	}
+
+	private void handleRequestFilter(Future<Boolean> future, ChannelHandlerContext ctx, BackendServiceMatcher service, HttpRequest request) {
+		if(future.isSuccess()) {
+			if(!future.getNow()) {
+				serviceProceed(ctx,service,request, 1);
+			} else{
+				ignoreNextMessages(ctx);
+			}
 		} else {
-			serviceProceed(ctx,service,request, 1);
+			ignoreNextMessages(ctx);
+			ctx.fireExceptionCaught(future.cause());
 		}
 	}
 
 	private void serviceProceed(ChannelHandlerContext ctx, BackendServiceMatcher service, HttpRequest request, int retries) {
 		Endpoint endpoint = service.get().loadBalander().next();
 		if (endpoint == null) {
-			failurePrematurely(ctx,HttpResponseStatus.SERVICE_UNAVAILABLE);
+			failurePrematurely(ctx, ()->response(HttpResponseStatus.SERVICE_UNAVAILABLE));
 		} else {
 			serviceProceed(ctx, endpoint,service, request, retries);
 		}
@@ -119,7 +145,7 @@ public class HttpGatewayRequestHandler extends ChannelDuplexHandler implements D
 				} else {
 					failurePrematurelyAndCloseBackend(ctx,HttpResponseStatus.SERVICE_UNAVAILABLE,ch);
 				}
-			}).exceptionally(err->failurePrematurely(ctx,HttpResponseStatus.BAD_GATEWAY));
+			}).exceptionally(err->failurePrematurely(ctx, ()->response(HttpResponseStatus.BAD_GATEWAY)));
 	}
 
 	private void handleInitialWrite(ChannelHandlerContext ctx, BackendServiceMatcher service, HttpRequest request, ClientChannel ch, int retries, Future<?> writeFuture) {
@@ -159,22 +185,36 @@ public class HttpGatewayRequestHandler extends ChannelDuplexHandler implements D
 	}
 	
 	private void failurePrematurelyAndCloseBackend(ChannelHandlerContext ctx, HttpResponseStatus status, ClientChannel ch) {
-		failurePrematurely(ctx,status);
+		failurePrematurely(ctx,()->response(status));
 		ch.close().addListener(f->ch.release());
 	}
-
-	private void failurePrematurely(ChannelHandlerContext ctx, HttpResponseStatus status) {
+	
+	private void ignoreNextMessages(ChannelHandlerContext ctx) {
 		if(ctx.executor().inEventLoop()) {
-			failurePrematurely0(ctx, status);
+			ignoreNextMessages0(ctx);
 		} else {
-			ctx.executor().execute(()->failurePrematurely0(ctx, status));
+			ctx.executor().execute(()->ignoreNextMessages0(ctx));
 		}
 	}
 
-	private void failurePrematurely0(ChannelHandlerContext ctx, HttpResponseStatus status) {
+	private void ignoreNextMessages0(ChannelHandlerContext ctx) {
+		this.failurePerpetially=true;
+		pendingMessages.successDiscard();
+		ctx.channel().config().setAutoRead(true);
+	}
+
+	private void failurePrematurely(ChannelHandlerContext ctx, Supplier<FullHttpResponse> responseSupplier) {
+		if(ctx.executor().inEventLoop()) {
+			failurePrematurely0(ctx, responseSupplier);
+		} else {
+			ctx.executor().execute(()->failurePrematurely0(ctx, responseSupplier));
+		}
+	}
+	
+	private void failurePrematurely0(ChannelHandlerContext ctx, Supplier<FullHttpResponse> responseSupplier) {
 		this.failurePerpetially=true;
 		pendingMessages.fail(new RuntimeException("Prematurely failure"));
-		ctx.writeAndFlush(response(status)).addListener(f->{
+		ctx.writeAndFlush(responseSupplier.get()).addListener(f->{
 			if(f.isSuccess()) {
 				ctx.channel().config().setAutoRead(true);
 			} else {
@@ -187,6 +227,31 @@ public class HttpGatewayRequestHandler extends ChannelDuplexHandler implements D
 		FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, statusCode, Unpooled.EMPTY_BUFFER, new DefaultHttpHeaders(false), EmptyHttpHeaders.INSTANCE);
 		response.headers().set(HttpHeaderNames.CONTENT_LENGTH, 0);
 		return response;
+	}
+	
+	private FullHttpResponse redirect(ChannelHandlerContext ctx, HttpRequest request) {
+		FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.MOVED_PERMANENTLY, Unpooled.EMPTY_BUFFER, new DefaultHttpHeaders(false), EmptyHttpHeaders.INSTANCE);
+		response.headers().set(HttpHeaderNames.CONTENT_LENGTH, 0);
+		response.headers().set(HttpHeaderNames.LOCATION,"https://"+host(ctx, request)+request.uri());
+		return response;
+	}
+
+	private String host(ChannelHandlerContext ctx, HttpRequest request) {
+		if(request.headers().contains(HttpGatewayUpstreamHandler.X_FORWARDED_HOST)) {
+			return host(request.headers().get(HttpGatewayUpstreamHandler.X_FORWARDED_HOST));
+		}
+		if(request.headers().contains(HttpHeaderNames.HOST)) {
+			return host(request.headers().get(HttpHeaderNames.HOST));
+		}
+		return ctx.channel().localAddress().toString();
+	}
+
+	private String host(String host) {
+		if(host.contains(":")) {
+			return host.split(":")[0];
+		} else {
+			return host;
+		}
 	}
 
 

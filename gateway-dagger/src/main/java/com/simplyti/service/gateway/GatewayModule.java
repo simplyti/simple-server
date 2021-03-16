@@ -6,6 +6,7 @@ import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;
 import com.simplyti.service.clients.GenericClient;
 import com.simplyti.service.clients.channel.factory.DefaultChannelFactory;
 import com.simplyti.service.config.ServerConfig;
+import com.simplyti.service.gateway.http.HttpGatewayClient;
 import com.simplyti.service.gateway.http.HttpGatewayRequestHandler;
 
 import dagger.Module;
@@ -25,13 +26,14 @@ public class GatewayModule {
 	
 	@Provides
 	@Singleton
+	@HttpGatewayClient
 	public GenericClient internalClient(EventLoopGroup eventLoopGroup, GatewayConfig config, ChannelFactory<Channel> channelFactory) {
 		return new HttpClientProvider(eventLoopGroup,config,channelFactory).get();
 	}
 	
 	@Provides
-	public DefaultBackendRequestHandler defaultBackendRequestHandler(GenericClient client, ServiceDiscovery serviceDiscovery, ServerConfig config, GatewayConfig gatewayConfig) {
-		return new HttpGatewayRequestHandler(client, serviceDiscovery);
+	public DefaultBackendRequestHandler defaultBackendRequestHandler(@HttpGatewayClient GenericClient httpGateway, ServiceDiscovery serviceDiscovery, ServerConfig config, GatewayConfig gatewayConfig) {
+		return new HttpGatewayRequestHandler(httpGateway, serviceDiscovery,config,gatewayConfig);
 	}
 	
 	@Provides

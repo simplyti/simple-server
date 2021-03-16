@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -15,6 +16,7 @@ import javax.inject.Inject;
 import com.simplyti.service.client.SimpleHttpResponse;
 import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.discovery.TestServiceDiscovery;
+import com.simplyti.service.filter.http.HttpRequestFilter;
 
 import cucumber.api.java.After;
 import cucumber.api.java.en.Then;
@@ -36,6 +38,16 @@ public class ServiceDiscoveryStepDefs {
 	@When("^I create a service with path \"([^\"]*)\" and backend \"([^\"]*)\"$")
 	public void iCreateAServiceWithPathAndBackend(String path, String target) throws Exception {
 		TestServiceDiscovery.getInstance().addService(null, null, path, null, HttpEndpoint.of(target));
+	}
+	
+	@When("^I create an ssl service with path \"([^\"]*)\" and backend \"([^\"]*)\"$")
+	public void iCreateAnSslServiceWithPathAndBackend(String path, String target) throws Exception {
+		TestServiceDiscovery.getInstance().addSslService(null, null, path, null, HttpEndpoint.of(target));
+	}
+	
+	@When("^I create a service with path \"([^\"]*)\" with filter \"([^\"]*)\" and backend \"([^\"]*)\"$")
+	public void iCreateAServiceWithPathWithFilterAndBackend(String path, Class<? extends HttpRequestFilter> clazz, String target) throws Exception {
+		TestServiceDiscovery.getInstance().addService(null, null, path, null, Collections.singletonList(clazz.newInstance()), HttpEndpoint.of(target));
 	}
 	
 	@When("^I create a service with method \"([^\"]*)\" with path \"([^\"]*)\" and backend \"([^\"]*)\"$")

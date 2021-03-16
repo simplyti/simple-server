@@ -10,7 +10,9 @@ import io.netty.channel.EventLoop;
 import io.netty.channel.group.ChannelMatcher;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.AttributeKey;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = true)
 public class ClientChannelGroup extends DefaultChannelGroup {
 	
 	public static final AttributeKey<Boolean> IN_PROGRESS = AttributeKey.valueOf("client.request.in.progess");

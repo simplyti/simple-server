@@ -1,8 +1,8 @@
 package com.simplyti.service.gateway;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.base.MoreObjects;
 import com.simplyti.service.clients.endpoint.Endpoint;
@@ -33,14 +33,14 @@ public class BackendService implements Comparable<BackendService>{
 	private final HttpMethod method;
 	private final String path;
 	private final Rewrite rewrite;
-	private final Set<HttpRequestFilter> filters;
+	private final Collection<HttpRequestFilter> filters;
 	private final ApiPattern pathPattern;
 	private final int literalCount;
 	private final boolean tlsEnabled;
 	
 	private ServiceBalancer loadBalander;
 
-	public BackendService(String host, HttpMethod method, String path, String rewrite, boolean tlsEnabled, Set<HttpRequestFilter> filters, List<Endpoint> endpoints) {
+	public BackendService(String host, HttpMethod method, String path, String rewrite, boolean tlsEnabled, Collection<HttpRequestFilter> filters, List<Endpoint> endpoints) {
 		this.loadBalander = RoundRobinLoadBalancer.of(endpoints);
 		this.host=host;
 		this.method=method;
@@ -146,7 +146,7 @@ public class BackendService implements Comparable<BackendService>{
 		log.info("Cleared service endpoints");
 	}
 
-	public Set<HttpRequestFilter> filters() {
+	public Collection<HttpRequestFilter> filters() {
 		return filters;
 	}
 

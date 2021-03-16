@@ -32,6 +32,8 @@ public class AddHTTPHeadereFilter implements HttpRequestFilter {
 				context.object().headers().set("x-filter-name-delay","Delayed: Pepe");
 				context.done();
 			}, 500, TimeUnit.MILLISECONDS);
+		} else {
+			context.done();
 		}
 	}
 
