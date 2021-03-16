@@ -73,7 +73,7 @@ public class DefaultServerTest {
 		assertTrue(futureStop.isSuccess());
 		assertTrue(repeatedStop.isDone());
 		assertTrue(repeatedStop.isSuccess());
-		assertTrue(this.eventLoopGroup.isShutdown());
+		await().until(startStopLoop::isShutdown);
 		await().until(startStopLoop::isShutdown);
 	}
 	
@@ -86,7 +86,7 @@ public class DefaultServerTest {
 		assertTrue(futureStart.isDone());
 		assertFalse(futureStart.isSuccess());
 		assertThat(futureStart.cause().getMessage(),equalTo("Transport error"));
-		assertTrue(this.eventLoopGroup.isShutdown());
+		await().until(startStopLoop::isShutdown);
 		await().until(startStopLoop::isShutdown);
 	}
 	
@@ -113,7 +113,7 @@ public class DefaultServerTest {
 		assertTrue(futureStart.isDone());
 		assertFalse(futureStart.isSuccess());
 		assertThat(futureStart.cause().getMessage(),equalTo("Transport error"));
-		assertTrue(this.eventLoopGroup.isShutdown());
+		await().until(startStopLoop::isShutdown);
 		await().until(startStopLoop::isShutdown);
 	}
 	
@@ -144,7 +144,7 @@ public class DefaultServerTest {
 		Future<Void> futureStop = service.stop().await();
 		assertTrue(futureStop.isDone());
 		assertTrue(futureStop.isSuccess());
-		assertTrue(this.eventLoopGroup.isShutdown());
+		await().until(startStopLoop::isShutdown);
 		await().until(startStopLoop::isShutdown);
 		assertFalse(clientChannel.isActive());
 	}

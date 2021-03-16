@@ -24,6 +24,8 @@ public class DefaultBackendServiceMatcherTest {
 	public static Collection<Object[]> data() {
 		return Arrays.asList(new Object[][] { 
 			{ "/myservice", "/other", "/myservice/resource" , "/other/resource" },
+			{ "/myservice", "/other/", "/myservice/resource" , "/other/resource" },
+			{ "/myservice", "/other", "/myservice/resource/" , "/other/resource/" },
 			{ "/myservice", "/", "/myservice/resource" , "/resource" },
 			{ "/myservice", "/", "/myservice/resource/" , "/resource/" },
 			{ "/getstatus/{status}", "/status", "/getstatus/200" , "/status/200" },

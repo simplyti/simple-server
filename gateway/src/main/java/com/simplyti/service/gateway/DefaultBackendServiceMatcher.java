@@ -65,7 +65,11 @@ public class DefaultBackendServiceMatcher implements BackendServiceMatcher {
 				resource = "";
 			}else {
 				root = service.rewrite().rewrite().replaceAll("/$", StringUtil.EMPTY_STRING);
-				resource =request.uri();
+				if(service.path() != null) {
+					resource = request.uri().replace(service.path(), StringUtil.EMPTY_STRING);
+				} else {
+					resource =request.uri();
+				}
 			}
 			return request.setUri(root+resource);
 		}

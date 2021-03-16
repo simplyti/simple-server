@@ -23,6 +23,7 @@ import com.simplyti.server.http.api.context.ResponseTypedApiContext;
 import com.simplyti.server.http.api.context.chunked.ChunkedResponseContext;
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.ApiProvider;
+import com.simplyti.service.exception.BadRequestException;
 import com.simplyti.service.exception.UnauthorizedException;
 
 import io.netty.buffer.ByteBuf;
@@ -343,9 +344,14 @@ public class APITest implements ApiProvider {
 		
 		builder.when().get("/responsecode/{status}")
 			.then(ctx->{
-				FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,HttpResponseStatus.valueOf(Integer.parseInt(ctx.pathParam("status"))),Unpooled.EMPTY_BUFFER);
-				response.headers().set(HttpHeaderNames.CONTENT_LENGTH,0);
-				ctx.send(response);
+				try{
+					int status = Integer.parseInt(ctx.pathParam("status"));
+					FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,HttpResponseStatus.valueOf(status),Unpooled.EMPTY_BUFFER);
+					response.headers().set(HttpHeaderNames.CONTENT_LENGTH,0);
+					ctx.send(response);
+				}catch (NumberFormatException  e) {
+					ctx.failure(new BadRequestException());
+				}
 			});
 		
 		builder.when().post("/responsecode/{status}")
@@ -354,6 +360,9 @@ public class APITest implements ApiProvider {
 				response.headers().set(HttpHeaderNames.CONTENT_LENGTH,ctx.body().readableBytes());
 				ctx.send(response);
 			});
+		
+		builder.when().get("/base64/{data}")
+			.then(ctx-> ctx.send(new String(Base64.getDecoder().decode(ctx.pathParam("data")))));
 		
 		builder.when().get("/user/{id}")
 			.withMeta("serviceId", "GetUser")
