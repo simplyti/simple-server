@@ -4,7 +4,7 @@ import java.util.Map;
 
 public interface ParamAppendableRequestBuilder<T> {
 	
-	T params(Map<String, String> params);
+	T params(Map<String, ?> params);
 	T param(String name, Object value);
 	T param(String name);
 

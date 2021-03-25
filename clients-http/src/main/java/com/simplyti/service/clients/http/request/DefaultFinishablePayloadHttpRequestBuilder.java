@@ -62,7 +62,7 @@ public class DefaultFinishablePayloadHttpRequestBuilder implements FinishableHtt
 	}
 
 	@Override
-	public FinishableHttpRequestBuilder params(Map<String, String> params) {
+	public FinishableHttpRequestBuilder params(Map<String, ?> params) {
 		target.params(params);
 		return this;
 	}

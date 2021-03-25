@@ -1,6 +1,7 @@
 package com.simplyti.service.clients.http.request;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import io.netty.handler.codec.http.QueryStringEncoder;
@@ -17,7 +18,7 @@ public class ParamsAppendBuilder<T> implements ParamAppendableRequestBuilder<T>{
 	}
 
 	@Override
-	public T params(Map<String, String> params) {
+	public T params(Map<String, ?> params) {
 		initializeParams();
 		this.params.putAll(params);
 		return parent;
@@ -52,8 +53,18 @@ public class ParamsAppendBuilder<T> implements ParamAppendableRequestBuilder<T>{
 			return uri;
 		}
 		QueryStringEncoder encoder = new QueryStringEncoder(uri);
-		params.forEach((name,value)->encoder.addParam(name, value!=null?value.toString():null));
+		params.forEach((name,value)->{
+			if(value instanceof List) {
+				((List<?>) value).forEach(v-> addParam(encoder,name,v));
+			} else {
+				addParam(encoder,name,value);
+			}
+		});
 		return encoder.toString();
+	}
+
+	private void addParam(QueryStringEncoder encoder, String name, Object value) {
+		encoder.addParam(name, value!=null?value.toString():null);
 	}
 
 }
