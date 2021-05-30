@@ -36,7 +36,7 @@ public class ProxiedEndpointBuilder {
 	}
 	
 	public ProxiedEndpoint through(String host, int port, ProxyType type) {
-		return new ProxiedEndpoint(target.schema(),target.address(),new Proxy(host, port, type, username, password));
+		return new ProxiedEndpoint(target.scheme(),target.address(),new Proxy(host, port, type, username, password));
 	}
 
 }

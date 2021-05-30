@@ -1,7 +1,7 @@
 package com.simplyti.service.discovery.k8s;
 
 
-import com.simplyti.service.clients.endpoint.Address;
+import com.simplyti.service.clients.endpoint.TcpAddress;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,6 +13,6 @@ import lombok.experimental.Accessors;
 public class EnpointAddress {
 	
 	private final String portName;
-	private final Address address;
+	private final TcpAddress address;
 
 }

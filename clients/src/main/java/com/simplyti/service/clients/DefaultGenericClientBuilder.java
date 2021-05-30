@@ -17,8 +17,9 @@ public class DefaultGenericClientBuilder extends AbstractClientBuilder<GenericCl
 
 	@Override
 	protected GenericClient build0(EventLoopGroup eventLoopGroup, Bootstrap bootstrap, Endpoint endpoint, SslProvider sslProvider, DefaultClientMonitor monitor, int poolSize, boolean unpooledChannels,
-			long poolIdleTimeout, long readTimeoutMilis) {
-		return new DefaultGenericClient(eventLoopGroup, bootstrap, endpoint, sslProvider, monitor, poolSize, unpooledChannels, poolIdleTimeout, readTimeoutMilis, init);
+			long poolIdleTimeout, long readTimeoutMilis,
+			boolean verbose) {
+		return new DefaultGenericClient(eventLoopGroup, bootstrap, endpoint, sslProvider, monitor, poolSize, unpooledChannels, poolIdleTimeout, readTimeoutMilis, verbose, init);
 	}
 
 	@Override

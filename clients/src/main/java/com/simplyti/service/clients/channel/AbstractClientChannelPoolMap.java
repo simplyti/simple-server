@@ -3,7 +3,9 @@ package com.simplyti.service.clients.channel;
 import java.nio.channels.ClosedChannelException;
 
 import com.simplyti.service.clients.channel.proxy.NoResolvingSocketAddress;
+import com.simplyti.service.clients.endpoint.Address;
 import com.simplyti.service.clients.endpoint.Endpoint;
+import com.simplyti.service.clients.endpoint.TcpAddress;
 import com.simplyti.service.clients.endpoint.ssl.SSLEndpoint;
 import com.simplyti.service.clients.monitor.ClientMonitorHandler;
 import com.simplyti.service.clients.monitor.MonitoredHandler;
@@ -69,18 +71,18 @@ public abstract class AbstractClientChannelPoolMap extends AbstractChannelPoolMa
 	protected ChannelPool newPool(Endpoint key) {
 		if(key.isProxied()) {
 			ProxiedEndpoint proxy = (ProxiedEndpoint) key;
-			return newPool(remoteAddress(key), handler(key),proxy.proxy());
+			return newPool(remoteAddress(key), handler(key), key.address(), proxy.proxy());
 		} else {
-			return newPool(remoteAddress(key), handler(key),null);
+			return newPool(remoteAddress(key), handler(key), key.address(), null);
 		}
 		
 	}
 
 	private Bootstrap remoteAddress(Endpoint key) {
-		if(key.isProxied()) {
-			return bootstrap.clone().remoteAddress(new NoResolvingSocketAddress(key.address()));
+		if(key.isProxied() && key.address() instanceof TcpAddress) {
+			return bootstrap.clone().remoteAddress(new NoResolvingSocketAddress((TcpAddress) key.address()));
 		} else {
-			return bootstrap.clone().remoteAddress(key.address().host(), key.address().port());
+			return bootstrap.clone().remoteAddress(key.address().toSocketAddress());
 		}
 	}
 
@@ -93,9 +95,9 @@ public abstract class AbstractClientChannelPoolMap extends AbstractChannelPoolMa
 	}
 
 	private boolean isSsl(Endpoint key) {
-		return (key.schema()!=null && key.schema().ssl()) || key instanceof SSLEndpoint;
+		return (key.scheme()!=null && key.scheme().ssl()) || key instanceof SSLEndpoint;
 	}
 
-	protected abstract ChannelPool newPool(Bootstrap bootstrap, ChannelPoolHandler handler, Proxy proxy);
+	protected abstract ChannelPool newPool(Bootstrap bootstrap, ChannelPoolHandler handler, Address address, Proxy proxy);
 
 }

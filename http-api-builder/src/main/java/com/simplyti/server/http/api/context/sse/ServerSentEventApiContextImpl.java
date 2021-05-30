@@ -6,6 +6,7 @@ import com.simplyti.util.concurrent.Future;
 
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.util.concurrent.EventExecutor;
 
 public class ServerSentEventApiContextImpl implements ServerSentEventApiContext {
 
@@ -23,6 +24,11 @@ public class ServerSentEventApiContextImpl implements ServerSentEventApiContext 
 	private Future<Void> send(ServerEvent event) {
 		ChannelFuture future = ctx.writeAndFlush(event);
 		return new DefaultFuture<>(future,ctx.executor());
+	}
+
+	@Override
+	public EventExecutor executor() {
+		return ctx.executor();
 	}
 
 }

@@ -1,5 +1,7 @@
 package com.simplyti.service.builder.di.dagger;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -25,6 +27,7 @@ import com.simplyti.service.channel.ClientChannelGroup;
 import com.simplyti.service.channel.DefaultHttpEntryChannelInit;
 import com.simplyti.service.channel.DefaultServiceChannelInitializer;
 import com.simplyti.service.channel.EntryChannelInit;
+import com.simplyti.service.channel.ServerDomainSocketChannelFactory;
 import com.simplyti.service.channel.ServerSocketChannelFactory;
 import com.simplyti.service.channel.ServiceChannelInitializer;
 import com.simplyti.service.channel.handler.ChannelExceptionHandler;
@@ -45,7 +48,9 @@ import com.simplyti.service.json.DslJsonModule;
 import com.simplyti.service.ssl.SslHandlerFactory;
 import com.simplyti.service.sync.DefaultSyncTaskSubmitter;
 import com.simplyti.service.sync.SyncTaskSubmitter;
+import com.simplyti.service.transport.Listener;
 import com.simplyti.service.transport.ServerTransport;
+import com.simplyti.service.transport.tcp.TcpListener;
 
 import dagger.Module;
 import dagger.Provides;
@@ -53,23 +58,23 @@ import io.netty.channel.ChannelFactory;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
+import io.netty.channel.unix.ServerDomainSocketChannel;
 
 @Module(includes= { Multibindings.class, APIBuilderModule.class, DslJsonModule.class, DefaultBackendOptionals.class})
 public class BaseServiceModule {
 	
 	private static final int DEFAULT_BLOCKING_THREAD_POOL = 500;
-	private static final int DEFAULT_INSECURE_PORT = 8080;
-	private static final int DEFAULT_SECURE_PORT = 8443;
+	private static final Collection<Listener> DEFAULT_LISTENERS = Arrays.asList(new TcpListener(8080,false),new TcpListener(8443,true));
 	private static final int DEFAULT_MAX_BODY_SIZE = 10000000;
 	
 	@Provides
 	@Singleton
-	public EventLoopGroup eventLoopGroup(Optional<NativeIO> nativeIO) {
+	public EventLoopGroup eventLoopGroup(Provider<Optional<NativeIO>> nativeIO) {
 		return new EventLoopGroupProvider(nativeIO).get();
 	}
 	
 	@Provides @Singleton @StartStopLoop
-	public EventLoop startStopLoop(ServerConfig config, Optional<NativeIO> nativeIO) {
+	public EventLoop startStopLoop(ServerConfig config, Provider<Optional<NativeIO>> nativeIO) {
 		return new StartStopLoopProvider(nativeIO).get();
 	}
 	
@@ -84,8 +89,7 @@ public class BaseServiceModule {
 			@Nullable @Named("maxBodySize") Integer maxBodySize) {
 		return new ServerConfig(name,
 				firstNonNull(blockingThreadPool, DEFAULT_BLOCKING_THREAD_POOL),
-				firstNonNull(insecuredPort, DEFAULT_INSECURE_PORT),
-				firstNonNull(securedPort, DEFAULT_SECURE_PORT), 
+				DEFAULT_LISTENERS, 
 				false, 
 				firstNonNull(verbose, false),
 				firstNonNull(maxBodySize, DEFAULT_MAX_BODY_SIZE));
@@ -100,8 +104,14 @@ public class BaseServiceModule {
 
 	@Provides
 	@Singleton
-	public ChannelFactory<ServerChannel> channelFactory(Optional<NativeIO> nativeIO) {
+	public ChannelFactory<ServerChannel> channelFactory(Provider<Optional<NativeIO>> nativeIO) {
 		return new ServerSocketChannelFactory(nativeIO);
+	}
+	
+	@Provides
+	@Singleton
+	public ChannelFactory<ServerDomainSocketChannel> channelDomainFactory(Provider<Optional<NativeIO>> nativeIO) {
+		return new ServerDomainSocketChannelFactory(nativeIO);
 	}
 	
 	@Provides
@@ -119,8 +129,8 @@ public class BaseServiceModule {
 
 	@Provides
 	@Singleton
-	public ClientChannelGroup clientChannelGroup(@StartStopLoop EventLoop startStopLoop) {
-		return new ClientChannelGroup(startStopLoop);
+	public ClientChannelGroup clientChannelGroup(@StartStopLoop Provider<EventLoop> startStopLoop) {
+		return new ClientChannelGroup(startStopLoop.get());
 	}
 
 	@Provides
@@ -155,7 +165,7 @@ public class BaseServiceModule {
 	
 	@Provides
 	@Singleton
-	public ServiceChannelInitializer serviceChannelInitializer(ClientChannelGroup clientChannelGroup,
+	public ServiceChannelInitializer serviceChannelInitializer(Provider<ClientChannelGroup> clientChannelGroup,
 			Optional<SslHandlerFactory> sslHandlerFactory, 
 			ServerStopAdvisor startStopMonitor,
 			ChannelExceptionHandler channelExceptionHandler,
@@ -173,20 +183,20 @@ public class BaseServiceModule {
 	
 	@Provides
 	@Singleton
-	public ServerTransport serverTransport(Optional<NativeIO> nativeIO,EventLoopGroup eventLoopGroup, @StartStopLoop EventLoop startStopLoop,
-			ChannelFactory<ServerChannel> channelFactory, Optional<SslHandlerFactory> sslHandlerFactory, 
+	public Set<ServerTransport> serverTransport(Provider<Optional<NativeIO>> nativeIO,Provider<EventLoopGroup> eventLoopGroup, @StartStopLoop Provider<EventLoop> startStopLoop,
+			ChannelFactory<ServerChannel> channelFactory, ChannelFactory<ServerDomainSocketChannel> domainChannelFactory, Optional<SslHandlerFactory> sslHandlerFactory, 
 			ServiceChannelInitializer serviceChannelInitializer, ServerConfig config) {
-		return new ServerTransportProvider(nativeIO, eventLoopGroup, startStopLoop, channelFactory, sslHandlerFactory, serviceChannelInitializer, config)
+		return new ServerTransportProvider(nativeIO, eventLoopGroup, startStopLoop, channelFactory, domainChannelFactory, sslHandlerFactory, serviceChannelInitializer, config)
 				.get();
 	}
 	
 	@Provides
 	@Singleton
-	public Server server(EventLoopGroup eventLoopGroup, @StartStopLoop EventLoop startStopLoop,
+	public Server server(Provider<EventLoopGroup> eventLoopGroup, @StartStopLoop Provider<EventLoop> startStopLoop,
 			ServerStopAdvisor startStopMonitor,
-			ClientChannelGroup clientChannelGroup, ServerConfig config,
+			Provider<ClientChannelGroup> clientChannelGroup, ServerConfig config,
 			Set<ServerStartHook> serverStartHook, Set<ServerStopHook> serverStopHook,
-			ServerTransport transport) {
+			Set<ServerTransport> transport) {
 		return new DefaultServer(eventLoopGroup, startStopMonitor, startStopLoop, clientChannelGroup, serverStartHook, serverStopHook, config, transport, null);
 	}
 	

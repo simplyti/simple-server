@@ -4,7 +4,7 @@ Feature: Http chunked response body api
 Scenario: Send chunked response while stream request processing
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.StreamAPITest"
 	Then I check that "#serviceFuture" is success
-	When I post "/echo/chunked" with body stream "#stream" handling objects "#objects" and getting response "#response"
+	When I post "/echo/chunked" with chunked body stream "#stream" handling objects "#objects" and getting response "#response"
 	Then I check that "#response" is not complete
 	When I send "Hello stream 1!" to stream "#stream" getting result "#writeresult"
 	Then I check that "#writeresult" is success
@@ -22,4 +22,6 @@ Scenario: Basic Http handle error
 	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.StreamAPITest"
 	Then I check that "#serviceFuture" is success
 	When I send a "POST /streamed/error" with body "Hello!" getting "#response"
-	And I check that "#response" has status code 500
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 500
+	And I check that http response "#response" has body ""

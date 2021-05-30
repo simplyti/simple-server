@@ -10,6 +10,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultHttpContent;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.CharsetUtil;
+import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.Promise;
 
 public class ChunkedResponseContextImpl implements ChunkedResponseContext {
@@ -93,6 +94,11 @@ public class ChunkedResponseContextImpl implements ChunkedResponseContext {
 				return null;
 			}
 		}
+	}
+
+	@Override
+	public EventExecutor executor() {
+		return ctx.executor();
 	}
 
 }

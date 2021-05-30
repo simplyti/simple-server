@@ -7,7 +7,7 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Getter
 @Accessors(fluent = true)
-public class Schema {
+public class Scheme {
 	
 	private final String name;
 	private final boolean ssl;

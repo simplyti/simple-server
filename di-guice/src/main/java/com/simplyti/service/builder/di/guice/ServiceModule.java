@@ -111,7 +111,10 @@ public class ServiceModule extends AbstractModule {
 		Multibinder.newSetBinder(binder(), ServerStartHook.class);
 		Multibinder.newSetBinder(binder(), ServerStopHook.class);
 		
-		OptionalBinder.newOptionalBinder(binder(), NativeIO.class);
+		if(eventLoopGroup == null) {
+			bind(NativeIO.class).in(Singleton.class);
+		} 
+
 		OptionalBinder.newOptionalBinder(binder(), SslHandlerFactory.class);
 	}
 

@@ -1,6 +1,7 @@
 package com.simplyti.service.clients.channel;
 
 import com.simplyti.service.clients.channel.proxy.FixedProxiedChannelPool;
+import com.simplyti.service.clients.endpoint.Address;
 import com.simplyti.service.clients.monitor.ClientMonitorHandler;
 import com.simplyti.service.clients.proxy.Proxy;
 
@@ -21,13 +22,12 @@ public class FixedSizeClientChannelFactory extends AbstractClientChannelPoolMap 
 	}
 	
 	@Override
-	protected ChannelPool newPool(Bootstrap bootstrap, ChannelPoolHandler handler, Proxy proxy) {
+	protected ChannelPool newPool(Bootstrap bootstrap, ChannelPoolHandler handler, Address address, Proxy proxy) {
 		if(proxy!=null) {
 			return new FixedProxiedChannelPool(bootstrap, handler, size, proxy);
 		} else {
 			return new FixedChannelPool(bootstrap, handler, size);
 		}
 	}
-
 
 }

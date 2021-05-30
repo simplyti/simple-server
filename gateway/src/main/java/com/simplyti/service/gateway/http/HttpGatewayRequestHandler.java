@@ -1,7 +1,5 @@
 package com.simplyti.service.gateway.http;
 
-
-import java.net.InetSocketAddress;
 import java.util.function.Supplier;
 
 import javax.inject.Inject;
@@ -11,11 +9,11 @@ import com.simplyti.service.clients.GenericClient;
 import com.simplyti.service.clients.channel.ClientChannel;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.commons.netty.pending.PendingMessages;
-import com.simplyti.service.config.ServerConfig;
 import com.simplyti.service.filter.FilterChain;
 import com.simplyti.service.gateway.BackendServiceMatcher;
 import com.simplyti.service.gateway.GatewayConfig;
 import com.simplyti.service.gateway.ServiceDiscovery;
+import com.simplyti.service.transport.ServerTransport;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -36,7 +34,6 @@ public class HttpGatewayRequestHandler extends ChannelDuplexHandler implements D
 	
 	private final ServiceDiscovery serviceDiscovery;
 	private final GenericClient httpGateway;
-	private final ServerConfig config;
 	private final GatewayConfig gatewayConfig;
 	private final PendingMessages pendingMessages;
 	
@@ -45,18 +42,16 @@ public class HttpGatewayRequestHandler extends ChannelDuplexHandler implements D
 	private Channel gateway;
 	
 	@Inject
-	public HttpGatewayRequestHandler(@HttpGatewayClient GenericClient httpGateway, ServiceDiscovery serviceDiscovery, ServerConfig config, GatewayConfig gatewayConfig) {
+	public HttpGatewayRequestHandler(@HttpGatewayClient GenericClient httpGateway, ServiceDiscovery serviceDiscovery, GatewayConfig gatewayConfig) {
 		this.httpGateway = httpGateway;
 		this.serviceDiscovery=serviceDiscovery;
 		this.pendingMessages = new PendingMessages();
-		this.config=config;
 		this.gatewayConfig=gatewayConfig;
 	}
 	
 	@Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-		InetSocketAddress localAddress = (InetSocketAddress) ctx.channel().localAddress();
-		this.frontSsl = config.securedPort()==localAddress.getPort();
+		this.frontSsl = ctx.channel().parent().attr(ServerTransport.LISTENER).get().ssl();
     }
 	
 	@Override
@@ -76,7 +71,7 @@ public class HttpGatewayRequestHandler extends ChannelDuplexHandler implements D
 			}
 		}
 	}
-
+	
 	private void handleHttpRequest(ChannelHandlerContext ctx, HttpRequest request) {
 		Future<BackendServiceMatcher> backendFuture = serviceDiscovery.get(host(ctx,request),request.method(), request.uri(),ctx.executor());
 		if(backendFuture.isDone()) {
@@ -88,18 +83,18 @@ public class HttpGatewayRequestHandler extends ChannelDuplexHandler implements D
 	
 	private void handleBackendMatch(Future<BackendServiceMatcher> backendFuture, ChannelHandlerContext ctx, HttpRequest request) {
 		if(!backendFuture.isSuccess()) {
-			failurePrematurely(ctx, ()->response(HttpResponseStatus.SERVICE_UNAVAILABLE));
+			failurePrematurely(ctx, request, ()->response(HttpResponseStatus.SERVICE_UNAVAILABLE));
 			return;
 		}
 		
 		BackendServiceMatcher service = backendFuture.getNow();
 		if(service == null) {
-			failurePrematurely(ctx, ()->response(HttpResponseStatus.NOT_FOUND));
+			failurePrematurely(ctx, request, ()->response(HttpResponseStatus.NOT_FOUND));
 			return;
 		}
 		
 		if(service.get().tlsEnabled() && !frontSsl) {
-			failurePrematurely(ctx, ()->redirect(ctx,request));
+			failurePrematurely(ctx, request, ()->redirect(ctx,request));
 			return;
 		}
 		
@@ -128,7 +123,7 @@ public class HttpGatewayRequestHandler extends ChannelDuplexHandler implements D
 	private void serviceProceed(ChannelHandlerContext ctx, BackendServiceMatcher service, HttpRequest request, int retries) {
 		Endpoint endpoint = service.get().loadBalander().next();
 		if (endpoint == null) {
-			failurePrematurely(ctx, ()->response(HttpResponseStatus.SERVICE_UNAVAILABLE));
+			failurePrematurely(ctx, request, ()->response(HttpResponseStatus.SERVICE_UNAVAILABLE));
 		} else {
 			serviceProceed(ctx, endpoint,service, request, retries);
 		}
@@ -143,9 +138,9 @@ public class HttpGatewayRequestHandler extends ChannelDuplexHandler implements D
 					ch.pipeline().addLast(new HttpGatewayUpstreamHandler(service, endpoint, ctx.channel(), ch, gatewayConfig, frontSsl));
 					ch.writeAndFlush(request).addListener(f->handleInitialWrite(ctx,service,request,ch,retries,f));
 				} else {
-					failurePrematurelyAndCloseBackend(ctx,HttpResponseStatus.SERVICE_UNAVAILABLE,ch);
+					failurePrematurelyAndCloseBackend(ctx, request, HttpResponseStatus.SERVICE_UNAVAILABLE,ch);
 				}
-			}).exceptionally(err->failurePrematurely(ctx, ()->response(HttpResponseStatus.BAD_GATEWAY)));
+			}).exceptionally(err->failurePrematurely(ctx, request, ()->response(HttpResponseStatus.BAD_GATEWAY)));
 	}
 
 	private void handleInitialWrite(ChannelHandlerContext ctx, BackendServiceMatcher service, HttpRequest request, ClientChannel ch, int retries, Future<?> writeFuture) {
@@ -158,7 +153,7 @@ public class HttpGatewayRequestHandler extends ChannelDuplexHandler implements D
 		} else if(retries>0){
 			serviceProceed(ctx, service, request, retries-1);
 		} else {
-			failurePrematurelyAndCloseBackend(ctx,HttpResponseStatus.SERVICE_UNAVAILABLE,ch);
+			failurePrematurelyAndCloseBackend(ctx, request, HttpResponseStatus.SERVICE_UNAVAILABLE,ch);
 		}
 	}
 	
@@ -184,8 +179,8 @@ public class HttpGatewayRequestHandler extends ChannelDuplexHandler implements D
 		}
 	}
 	
-	private void failurePrematurelyAndCloseBackend(ChannelHandlerContext ctx, HttpResponseStatus status, ClientChannel ch) {
-		failurePrematurely(ctx,()->response(status));
+	private void failurePrematurelyAndCloseBackend(ChannelHandlerContext ctx, HttpRequest request, HttpResponseStatus status, ClientChannel ch) {
+		failurePrematurely(ctx, request, ()->response(status));
 		ch.close().addListener(f->ch.release());
 	}
 	
@@ -203,7 +198,8 @@ public class HttpGatewayRequestHandler extends ChannelDuplexHandler implements D
 		ctx.channel().config().setAutoRead(true);
 	}
 
-	private void failurePrematurely(ChannelHandlerContext ctx, Supplier<FullHttpResponse> responseSupplier) {
+	private void failurePrematurely(ChannelHandlerContext ctx, HttpRequest request, Supplier<FullHttpResponse> responseSupplier) {
+		ReferenceCountUtil.release(request);
 		if(ctx.executor().inEventLoop()) {
 			failurePrematurely0(ctx, responseSupplier);
 		} else {

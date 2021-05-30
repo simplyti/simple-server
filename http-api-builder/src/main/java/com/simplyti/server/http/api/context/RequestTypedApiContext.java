@@ -12,6 +12,7 @@ public interface RequestTypedApiContext<T> extends WithBodyApiContext, ApiContex
 	Future<Void> writeAndFlush(String message);
 	Future<Void> writeAndFlush(ByteBuf body);
 	Future<Void> writeAndFlush(HttpObject response);
+	Future<Void> send(Object value);
 	Future<Void> writeAndFlushEmpty();
 
 	Future<Void> send(String message);

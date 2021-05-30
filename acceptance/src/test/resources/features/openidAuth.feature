@@ -1,4 +1,4 @@
-@openid @standalone 
+@openid @standalone
 Feature: OpenId 
 
 Scenario: Request without JWT gets 401 status 
@@ -11,7 +11,9 @@ Scenario: Request without JWT gets 401 status
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success 
 	When I send a "GET /hello" getting "#response" 
-	And I check that "#response" has status code 401 
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 401
+	And I check that http response "#response" has body ""
 	
 Scenario: Request with valid JWT gets 200 status 
 	Given a JWT sign key "#key" 
@@ -25,7 +27,7 @@ Scenario: Request with valid JWT gets 200 status
 	When I send a "GET /hello" with jwt token "#token" getting "#response" 
 	And I check that "#response" has status code 200 
 	Then I check that "#response" is equals to "Hello OIDC!" 
-	
+
 Scenario: Request with an invalid JWT gets 403 status 
 	Given a JWT sign key "#key" 
 	And an invalid JWT token "#token" signed with alg "HS512" 
@@ -59,8 +61,9 @@ Scenario: Request with no auth required gets 200
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success 
 	When I send a "GET /noauth/hello" getting "#response" 
-	And I check that "#response" has status code 200 
-	Then I check that "#response" is equals to "Hello!" 
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 200
+	And I check that http response "#response" has body "Hello!"
 	
 Scenario: Service should redirect to openid provider when configuration is provided 
 	Given a JWT sign key "#key" 
@@ -71,7 +74,10 @@ Scenario: Service should redirect to openid provider when configuration is provi
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success 
 	When I send a "GET /hello" getting "#response" 
-	Then I check that "#response" has status code 302 with location starting with "https://localhost:7443/auth" 
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 302
+	And I check that http response "#response" has body ""
+	And I check that http response "#response" contains header "location" starts with "https://localhost:7443/auth"
 	And I check that "#response" redirect location contains params: 
 		| redirect_uri		| https://example.org/callback	|
 		| response_type		| code | 
@@ -79,7 +85,7 @@ Scenario: Service should redirect to openid provider when configuration is provi
 		| scope				| openid email profile groups		|
 		| approval_prompt	| force 								|
 		| access_type		| offline							|
-		
+	
 Scenario: Service performs full openid flow when all parameters are provided 
 	Given a selfsigned certificate "#certificate" 
 	And a JWT sign key "#key" from self signed ccertificate "#certificate" 
@@ -91,7 +97,10 @@ Scenario: Service performs full openid flow when all parameters are provided
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success 
 	When I send a "GET /hello" getting "#response" 
-	Then I check that "#response" has status code 302 with location starting with "https://localhost:7443/auth" 
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 302
+	And I check that http response "#response" has body ""
+	And I check that http response "#response" contains header "location" starts with "https://localhost:7443/auth"
 	And I check that "#response" redirect location contains params: 
 		| redirect_uri		| https://localhost/_api/callback	|
 		| response_type		| code | 
@@ -104,8 +113,8 @@ Scenario: Service performs full openid flow when all parameters are provided
 	And I check that "#response" has location header "https://localhost/hello" 
 	And I check that "#response" has cookie "JWT-SESSION" 
 	When I send a "GET /hello" with cookies from response "#response" getting "#response" 
-	Then I check that "#response" has status code 200 
-	And I check that "#response" is equals to "Hello OIDC!" 
+	And I check that "#response" has status code 200 
+	Then I check that "#response" is equals to "Hello OIDC!" 
 	
 Scenario: Wellknown OpenId provider configuration 
 	Given a selfsigned certificate "#certificate" 
@@ -118,7 +127,9 @@ Scenario: Wellknown OpenId provider configuration
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success 
 	When I send a "GET /hello" getting "#response" with status code 302 eventually 
-	Then I check that "#response" has status code 302 with location starting with "https://localhost:7443/authorize" 
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 302
+	And I check that http response "#response" contains header "location" starts with "https://localhost:7443/authorize"
 	And I check that "#response" redirect location contains params: 
 		| redirect_uri		| https://localhost/_api/callback	|
 		| response_type		| code | 
@@ -144,7 +155,9 @@ Scenario: Wellknown OpenId provider configuration with delay
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success 
 	When I send a "GET /hello" getting "#response" 
-	And I check that "#response" has status code 401 
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 401
+	And I check that http response "#response" has body ""
 	
 Scenario: Wellknown OpenId provider configuration with jwks service delay 
 	Given a selfsigned certificate "#certificate" 
@@ -157,7 +170,9 @@ Scenario: Wellknown OpenId provider configuration with jwks service delay
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success 
 	When I send a "GET /hello" getting "#response" with status code 302 eventually 
-	Then I check that "#response" has status code 302 with location starting with "https://localhost:7443/authorize" 
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 302
+	And I check that http response "#response" contains header "location" starts with "https://localhost:7443/authorize"
 	And I check that "#response" redirect location contains params: 
 		| redirect_uri		| https://localhost/_api/callback	|
 		| response_type		| code | 
@@ -184,8 +199,9 @@ Scenario: Wellknown OpenId provider configuration with delay
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success 
 	When I send a "GET /hello" getting "#response" 
-	And I check that "#response" has status code 401 
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 401
+	And I check that http response "#response" has body ""
 	When I send a "GET /hello" with jwt token "#token" getting "#response" 
 	And I check that "#response" has status code 200 
 	Then I check that "#response" is equals to "Hello OIDC!" 
-	

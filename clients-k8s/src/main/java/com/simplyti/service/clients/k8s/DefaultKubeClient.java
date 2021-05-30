@@ -8,8 +8,8 @@ import java.nio.file.Paths;
 import java.util.Collections;
 
 import com.simplyti.service.api.serializer.json.Json;
-import com.simplyti.service.clients.endpoint.Address;
 import com.simplyti.service.clients.endpoint.Endpoint;
+import com.simplyti.service.clients.endpoint.TcpAddress;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.clients.k8s.configmaps.ConfigMaps;
@@ -111,7 +111,7 @@ public class DefaultKubeClient implements KubeClient {
 		if(endpoint!=null) {
 			return endpoint;
 		}
-		return new HttpEndpoint(HttpEndpoint.HTTPS_SCHEMA, new Address("kubernetes.default",HttpEndpoint.HTTPS_SCHEMA.defaultPort()),null);
+		return new HttpEndpoint(HttpEndpoint.HTTPS_SCHEMA, new TcpAddress("kubernetes.default",HttpEndpoint.HTTPS_SCHEMA.defaultPort()),null);
 	}
 
 	@Override

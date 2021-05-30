@@ -38,6 +38,7 @@ import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.api.serializer.json.TypeLiteral;
 
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.util.concurrent.ImmediateEventExecutor;
 
 @RunWith(Parameterized.class)
 public class ApiBuilderTest {
@@ -79,41 +80,69 @@ public class ApiBuilderTest {
 	@Parameters
 	public static Collection<Object[]> builderTest() {
 		return Arrays.asList(new Object[][] { 
+			
 			// Any type
 			{ (ApiProvider) b -> b.when().get("/resource").then(ctx->ctx.send("OK")), HttpMethod.GET, "/resource", AnyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()},
+			{ (ApiProvider) b -> b.when().get("/resource").thenFuture(ctx->ctx.executor().newSucceededFuture("OK")), HttpMethod.GET, "/resource", AnyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()},
 			{ (ApiProvider) b -> b.when().post("/resource").then(ctx->ctx.send("OK")), HttpMethod.POST, "/resource", AnyWithBodyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap() },
+			{ (ApiProvider) b -> b.when().post("/resource").thenFuture(ctx->ctx.executor().newSucceededFuture("OK")), HttpMethod.POST, "/resource", AnyWithBodyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap() },
 			{ (ApiProvider) b -> b.when().delete("/resource").then(ctx->ctx.send("OK")), HttpMethod.DELETE, "/resource", AnyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap() },
+			{ (ApiProvider) b -> b.when().delete("/resource").thenFuture(ctx->ctx.executor().newSucceededFuture("OK")), HttpMethod.DELETE, "/resource", AnyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap() },
 			{ (ApiProvider) b -> b.when().put("/resource").then(ctx->ctx.send("OK")), HttpMethod.PUT, "/resource", AnyWithBodyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap() },
+			{ (ApiProvider) b -> b.when().put("/resource").thenFuture(ctx->ctx.executor().newSucceededFuture("OK")), HttpMethod.PUT, "/resource", AnyWithBodyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap() },
 			{ (ApiProvider) b -> b.when().patch("/resource").then(ctx->ctx.send("OK")), HttpMethod.PATCH, "/resource", AnyWithBodyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap() },
+			{ (ApiProvider) b -> b.when().patch("/resource").thenFuture(ctx->ctx.executor().newSucceededFuture("OK")), HttpMethod.PATCH, "/resource", AnyWithBodyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap() },
 			
 			// Typed
 			{ (ApiProvider) b -> b.when().get("/resource").withResponseBodyType(Integer.class).then(ctx->ctx.send(1)), HttpMethod.GET, "/resource", ResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap() },
+			{ (ApiProvider) b -> b.when().get("/resource").withResponseBodyType(Integer.class).thenFuture(ctx->ctx.executor().newSucceededFuture(1)), HttpMethod.GET, "/resource", ResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap() },
 			{ (ApiProvider) b -> b.when().post("/resource").withResponseBodyType(Integer.class).then(ctx->ctx.send(1)), HttpMethod.POST, "/resource", ResponseTypedWithBodyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap() },
+			{ (ApiProvider) b -> b.when().post("/resource").withResponseBodyType(Integer.class).thenFuture(ctx->ctx.executor().newSucceededFuture(1)), HttpMethod.POST, "/resource", ResponseTypedWithBodyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap() },
 			{ (ApiProvider) b -> b.when().delete("/resource").withResponseBodyType(Integer.class).then(ctx->ctx.send(1)), HttpMethod.DELETE, "/resource", ResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap() },
+			{ (ApiProvider) b -> b.when().delete("/resource").withResponseBodyType(Integer.class).thenFuture(ctx->ctx.executor().newSucceededFuture(1)), HttpMethod.DELETE, "/resource", ResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap() },
 			{ (ApiProvider) b -> b.when().put("/resource").withResponseBodyType(Integer.class).then(ctx->ctx.send(1)), HttpMethod.PUT, "/resource", ResponseTypedWithBodyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
+			{ (ApiProvider) b -> b.when().put("/resource").withResponseBodyType(Integer.class).thenFuture(ctx->ctx.executor().newSucceededFuture(1)), HttpMethod.PUT, "/resource", ResponseTypedWithBodyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
 			{ (ApiProvider) b -> b.when().patch("/resource").withResponseBodyType(Integer.class).then(ctx->ctx.send(1)), HttpMethod.PATCH, "/resource", ResponseTypedWithBodyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
+			{ (ApiProvider) b -> b.when().patch("/resource").withResponseBodyType(Integer.class).thenFuture(ctx->ctx.executor().newSucceededFuture(1)), HttpMethod.PATCH, "/resource", ResponseTypedWithBodyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
 			
 			{ (ApiProvider) b -> b.when().post("/resource").withRequestBodyType(Integer.class).then(ctx->ctx.send(Integer.toString(ctx.body()))), HttpMethod.POST, "/resource", RequestTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
+			{ (ApiProvider) b -> b.when().post("/resource").withRequestBodyType(Integer.class).thenFuture(ctx->ctx.executor().newSucceededFuture(Integer.toString(ctx.body()))), HttpMethod.POST, "/resource", RequestTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
 			{ (ApiProvider) b -> b.when().put("/resource").withRequestBodyType(Integer.class).then(ctx->ctx.send(Integer.toString(ctx.body()))), HttpMethod.PUT, "/resource", RequestTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
+			{ (ApiProvider) b -> b.when().put("/resource").withRequestBodyType(Integer.class).thenFuture(ctx->ctx.executor().newSucceededFuture(Integer.toString(ctx.body()))), HttpMethod.PUT, "/resource", RequestTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
 			{ (ApiProvider) b -> b.when().patch("/resource").withRequestBodyType(Integer.class).then(ctx->ctx.send(Integer.toString(ctx.body()))), HttpMethod.PATCH, "/resource", RequestTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
+			{ (ApiProvider) b -> b.when().patch("/resource").withRequestBodyType(Integer.class).thenFuture(ctx->ctx.executor().newSucceededFuture(Integer.toString(ctx.body()))), HttpMethod.PATCH, "/resource", RequestTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
 			
 			{ (ApiProvider) b -> b.when().post("/resource").withRequestBodyType(Integer.class).withResponseBodyType(Integer.class).then(ctx->ctx.send(ctx.body())), HttpMethod.POST, "/resource", RequestResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
+			{ (ApiProvider) b -> b.when().post("/resource").withRequestBodyType(Integer.class).withResponseBodyType(Integer.class).thenFuture(ctx->ctx.executor().newSucceededFuture(ctx.body())), HttpMethod.POST, "/resource", RequestResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
 			{ (ApiProvider) b -> b.when().put("/resource").withRequestBodyType(Integer.class).withResponseBodyType(Integer.class).then(ctx->ctx.send(ctx.body())), HttpMethod.PUT, "/resource", RequestResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
+			{ (ApiProvider) b -> b.when().put("/resource").withRequestBodyType(Integer.class).withResponseBodyType(Integer.class).thenFuture(ctx->ctx.executor().newSucceededFuture(ctx.body())), HttpMethod.PUT, "/resource", RequestResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
 			{ (ApiProvider) b -> b.when().patch("/resource").withRequestBodyType(Integer.class).withResponseBodyType(Integer.class).then(ctx->ctx.send(ctx.body())), HttpMethod.PATCH, "/resource", RequestResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
+			{ (ApiProvider) b -> b.when().patch("/resource").withRequestBodyType(Integer.class).withResponseBodyType(Integer.class).thenFuture(ctx->ctx.executor().newSucceededFuture(ctx.body())), HttpMethod.PATCH, "/resource", RequestResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
 			{ (ApiProvider) b -> b.when().post("/resource").withResponseBodyType(Integer.class).withRequestBodyType(Integer.class).then(ctx->ctx.send(ctx.body())), HttpMethod.POST, "/resource", RequestResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
+			{ (ApiProvider) b -> b.when().post("/resource").withResponseBodyType(Integer.class).withRequestBodyType(Integer.class).thenFuture(ctx->ctx.executor().newSucceededFuture(ctx.body())), HttpMethod.POST, "/resource", RequestResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
 			{ (ApiProvider) b -> b.when().put("/resource").withResponseBodyType(Integer.class).withRequestBodyType(Integer.class).then(ctx->ctx.send(ctx.body())), HttpMethod.PUT, "/resource", RequestResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
+			{ (ApiProvider) b -> b.when().put("/resource").withResponseBodyType(Integer.class).withRequestBodyType(Integer.class).thenFuture(ctx->ctx.executor().newSucceededFuture(ctx.body())), HttpMethod.PUT, "/resource", RequestResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
 			{ (ApiProvider) b -> b.when().patch("/resource").withResponseBodyType(Integer.class).withRequestBodyType(Integer.class).then(ctx->ctx.send(ctx.body())), HttpMethod.PATCH, "/resource", RequestResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
+			{ (ApiProvider) b -> b.when().patch("/resource").withResponseBodyType(Integer.class).withRequestBodyType(Integer.class).thenFuture(ctx->ctx.executor().newSucceededFuture(ctx.body())), HttpMethod.PATCH, "/resource", RequestResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
 			
 			// Type Literals
 			{ (ApiProvider) b -> b.when().get("/resource").withResponseBodyType(new TypeLiteral<Integer>() {}).then(ctx->ctx.send(1)), HttpMethod.GET, "/resource", ResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
+			{ (ApiProvider) b -> b.when().get("/resource").withResponseBodyType(new TypeLiteral<Integer>() {}).thenFuture(ctx->ctx.executor().newSucceededFuture(1)), HttpMethod.GET, "/resource", ResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
 			{ (ApiProvider) b -> b.when().post("/resource").withResponseBodyType(new TypeLiteral<Integer>() {}).then(ctx->ctx.send(1)), HttpMethod.POST, "/resource", ResponseTypedWithBodyApiContext.class, DEFAULT_MAX_BODY , false, Collections.emptyMap() },
+			{ (ApiProvider) b -> b.when().post("/resource").withResponseBodyType(new TypeLiteral<Integer>() {}).thenFuture(ctx->ctx.executor().newSucceededFuture(1)), HttpMethod.POST, "/resource", ResponseTypedWithBodyApiContext.class, DEFAULT_MAX_BODY , false, Collections.emptyMap() },
 			{ (ApiProvider) b -> b.when().delete("/resource").withResponseBodyType(new TypeLiteral<Integer>() {}).then(ctx->ctx.send(1)), HttpMethod.DELETE, "/resource", ResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
+			{ (ApiProvider) b -> b.when().delete("/resource").withResponseBodyType(new TypeLiteral<Integer>() {}).thenFuture(ctx->ctx.executor().newSucceededFuture(1)), HttpMethod.DELETE, "/resource", ResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
 			{ (ApiProvider) b -> b.when().put("/resource").withResponseBodyType(new TypeLiteral<Integer>() {}).then(ctx->ctx.send(1)), HttpMethod.PUT, "/resource", ResponseTypedWithBodyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
+			{ (ApiProvider) b -> b.when().put("/resource").withResponseBodyType(new TypeLiteral<Integer>() {}).thenFuture(ctx->ctx.executor().newSucceededFuture(1)), HttpMethod.PUT, "/resource", ResponseTypedWithBodyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
 			{ (ApiProvider) b -> b.when().patch("/resource").withResponseBodyType(new TypeLiteral<Integer>() {}).then(ctx->ctx.send(1)), HttpMethod.PATCH, "/resource", ResponseTypedWithBodyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
+			{ (ApiProvider) b -> b.when().patch("/resource").withResponseBodyType(new TypeLiteral<Integer>() {}).thenFuture(ctx->ctx.executor().newSucceededFuture(1)), HttpMethod.PATCH, "/resource", ResponseTypedWithBodyApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
 			
 			{ (ApiProvider) b -> b.when().post("/resource").withRequestBodyType(new TypeLiteral<Integer>() {}).then(ctx->ctx.send(Integer.toString(ctx.body()))), HttpMethod.POST, "/resource", RequestTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
+			{ (ApiProvider) b -> b.when().post("/resource").withRequestBodyType(new TypeLiteral<Integer>() {}).thenFuture(ctx->ctx.executor().newSucceededFuture(Integer.toString(ctx.body()))), HttpMethod.POST, "/resource", RequestTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
 			{ (ApiProvider) b -> b.when().put("/resource").withRequestBodyType(new TypeLiteral<Integer>() {}).then(ctx->ctx.send(Integer.toString(ctx.body()))), HttpMethod.PUT, "/resource", RequestTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
+			{ (ApiProvider) b -> b.when().put("/resource").withRequestBodyType(new TypeLiteral<Integer>() {}).thenFuture(ctx->ctx.executor().newSucceededFuture(Integer.toString(ctx.body()))), HttpMethod.PUT, "/resource", RequestTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
 			{ (ApiProvider) b -> b.when().patch("/resource").withRequestBodyType(new TypeLiteral<Integer>() {}).then(ctx->ctx.send(Integer.toString(ctx.body()))), HttpMethod.PATCH, "/resource", RequestTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
+			{ (ApiProvider) b -> b.when().patch("/resource").withRequestBodyType(new TypeLiteral<Integer>() {}).thenFuture(ctx->ctx.executor().newSucceededFuture(Integer.toString(ctx.body()))), HttpMethod.PATCH, "/resource", RequestTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
 			
 			{ (ApiProvider) b -> b.when().post("/resource").withRequestBodyType(new TypeLiteral<Integer>() {}).withResponseBodyType(new TypeLiteral<Integer>() {}).then(ctx->ctx.send(ctx.body())), HttpMethod.POST, "/resource", RequestResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
 			{ (ApiProvider) b -> b.when().put("/resource").withRequestBodyType(new TypeLiteral<Integer>() {}).withResponseBodyType(new TypeLiteral<Integer>() {}).then(ctx->ctx.send(ctx.body())), HttpMethod.PUT, "/resource", RequestResponseTypedApiContext.class, DEFAULT_MAX_BODY, false, Collections.emptyMap()  },
@@ -162,6 +191,7 @@ public class ApiBuilderTest {
 		meta.forEach((k,v)->assertThat(operation.meta(k),equalTo(v)));
 		
 		ApiContext ctx = mock(contextClass);
+		when(ctx.executor()).thenReturn(ImmediateEventExecutor.INSTANCE);
 		if(ctx instanceof RequestTypedApiContext) {
 			when(((RequestTypedApiContext) ctx).body()).thenReturn(1);
 		}

@@ -9,9 +9,10 @@ Scenario: Basic Http Response filter
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /hello" getting "#response"
-	And I check that "#response" has status code 200
-	And I check that "#response" is equals to "Hello!"
-	And I check that "#response" contains header "x-filter" equals to "hello"
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 200
+	And I check that http response "#response" has body "Hello!"
+	And I check that http response "#response" contains header "x-filter" equals to "hello"
 	
 Scenario: Async Http Response filter
 	When I start a service "#serviceFuture" with options:
@@ -22,9 +23,9 @@ Scenario: Async Http Response filter
 		| verbose			|  |
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /hello" getting "#response"
-	And I check that "#response" has status code 200
-	And I check that "#response" is equals to "Hello!"
-	And I check that "#response" contains header "x-filter" equals to "hello"
+	And I check that http response "#response" has status code 200
+	And I check that http response "#response" has body "Hello!"
+	And I check that http response "#response" contains header "x-filter" equals to "hello"
 	
 Scenario: Basic Http Response filter with buffered body
 	When I start a service "#serviceFuture" with options:

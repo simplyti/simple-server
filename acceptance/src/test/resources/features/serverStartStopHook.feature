@@ -8,7 +8,9 @@ Scenario: Server start hook
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /hook" getting "#response"
-	And I check that "#response" is equals to "HOOK!"
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 200
+	And I check that http response "#response" has body "HOOK!"
 	
 Scenario: Server start hook failure
 	When I start a service "#serviceFuture" with options:

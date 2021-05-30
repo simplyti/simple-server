@@ -22,7 +22,7 @@ public class RequestTypedContextFactory implements ApiContextFactory {
 	@SuppressWarnings("unchecked")
 	public <T extends ApiContext> T create(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler, ChannelHandlerContext ctx, ApiMatchRequest match, HttpRequest request, ByteBuf body) {
 		RequestTypeApiOperation<?> requestOperation = (RequestTypeApiOperation<?>) match.operation();
-		return (T) new RequestResponseTypedApiContextImpl<>(syncTaskSubmitter, exceptionHandler, ctx,json,requestOperation.requestType(),request,body,match);
+		return (T) new RequestTypedApiContextImpl<>(syncTaskSubmitter, exceptionHandler, ctx,json,requestOperation.requestType(),request,body,match);
 	}
 
 }

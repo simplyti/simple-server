@@ -1,14 +1,19 @@
 package com.simplyti.server.http.api.builder;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import com.simplyti.server.http.api.context.ApiContextFactory;
+import com.simplyti.server.http.api.context.RequestTypedApiContext;
+import com.simplyti.server.http.api.futurehandler.RequestBodyTypedFutureHandle;
 import com.simplyti.server.http.api.operations.ApiOperations;
 import com.simplyti.server.http.api.operations.RequestTypeApiOperation;
 import com.simplyti.service.api.serializer.json.TypeLiteral;
 import com.simplyti.service.matcher.ApiPattern;
 
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.util.concurrent.Future;
 
 public class RequestBodyTypedFinishableApiBuilderImpl<T> implements RequestBodyTypedFinishableApiBuilder<T> {
 	
@@ -18,8 +23,9 @@ public class RequestBodyTypedFinishableApiBuilderImpl<T> implements RequestBodyT
 	private final TypeLiteral<T> requestType;
 	private final ApiContextFactory requestTypedContextFactory;
 	private final ApiContextFactory requestResponseTypedContextFactory;
-	private final Map<String, Object> metadata;
-	private final boolean notFoundOnNull;
+	
+	private Map<String, Object> metadata;
+	private boolean notFoundOnNull;
 
 	public RequestBodyTypedFinishableApiBuilderImpl(ApiOperations operations, HttpMethod method, String path, Map<String,Object> metadata, 
 			boolean notFoundOnNull, TypeLiteral<T> requestType, 
@@ -58,6 +64,26 @@ public class RequestBodyTypedFinishableApiBuilderImpl<T> implements RequestBodyT
 	public void then(RequestTypedApiContextConsumer<T> consumer) {
 		ApiPattern apiPattern = ApiPattern.build(path);
 		operations.add(new RequestTypeApiOperation<>(method,apiPattern,null,requestType,consumer,requestTypedContextFactory, notFoundOnNull));
+	}
+
+	@Override
+	public <U> void thenFuture(Function<RequestTypedApiContext<T>, Future<U>> object) {
+		then(new RequestBodyTypedFutureHandle<>(object));
+	}
+
+	@Override
+	public RequestBodyTypedFinishableApiBuilder<T> withMeta(String key, Object value) {
+		if(metadata==null) {
+			metadata = new HashMap<>();
+		}
+		metadata.put(key, value);
+		return this;
+	}
+
+	@Override
+	public RequestBodyTypedFinishableApiBuilder<T> withNotFoundOnNull() {
+		this.notFoundOnNull=true;
+		return this;
 	}
 
 }

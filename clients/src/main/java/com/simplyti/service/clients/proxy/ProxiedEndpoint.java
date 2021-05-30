@@ -1,6 +1,6 @@
 package com.simplyti.service.clients.proxy;
 
-import com.simplyti.service.clients.Schema;
+import com.simplyti.service.clients.Scheme;
 import com.simplyti.service.clients.endpoint.Address;
 import com.simplyti.service.clients.endpoint.Endpoint;
 
@@ -15,7 +15,7 @@ public class ProxiedEndpoint extends Endpoint {
 
 	private final Proxy proxy;
 
-	public ProxiedEndpoint(Schema schema, Address address, Proxy proxy) {
+	public ProxiedEndpoint(Scheme schema, Address address, Proxy proxy) {
 		super(schema, address);
 		this.proxy=proxy;
 	}

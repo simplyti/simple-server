@@ -7,7 +7,6 @@ import com.simplyti.service.exception.BadRequestException;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.ChannelDuplexHandler;
-import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -22,8 +21,6 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 	
 	private final ServerStopAdvisor startStopMonitor;
 	
-	private boolean upgrading;
-
 	public ClientChannelHandler(ServerStopAdvisor startStopMonitor) {
 		this.startStopMonitor=startStopMonitor;
 	}
@@ -50,10 +47,6 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 
 	@Override
 	public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-		if(msg instanceof HttpResponse && "Upgrade".equalsIgnoreCase(((HttpResponse) msg).headers().get(HttpHeaderNames.CONNECTION))) {
-			this.upgrading=true;
-		}
-		
 		if(msg instanceof LastHttpContent) {
 			if(!isContinue(msg)) {
 				handleLastContent(ctx,promise);
@@ -64,14 +57,6 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 	
 	private void handleLastContent(ChannelHandlerContext ctx, ChannelPromise promise) {
 		promise.addListener(f->{
-			if(upgrading) {
-				if(ctx.pipeline().get("decoder")!=null) {
-					ctx.pipeline().remove("encoder");
-					ctx.pipeline().remove("decoder");
-				}
-				ctx.pipeline().remove(this);
-			}
-			
 			ctx.channel().attr(ClientChannelGroup.IN_PROGRESS).set(false);
 			if(startStopMonitor.isStoping()){
 				log.info("Server is stopping, close channel");
@@ -79,7 +64,7 @@ public class ClientChannelHandler extends ChannelDuplexHandler {
 			}
 		});
 	}
-
+	
 	private boolean isContinue(Object msg) {
 		return msg instanceof HttpResponse && ((HttpResponse) msg).status().equals(HttpResponseStatus.CONTINUE);
 	}

@@ -12,20 +12,19 @@ import io.netty.handler.codec.http.HttpMethod;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
-@Getter
 @Accessors(fluent=true)
 public class ApiOperation<T extends ApiContext> {
 
 	private static final int DEFAULT_MAX_BODY = 10000000;
 	
-	private final HttpMethod method;
-	private final ApiPattern pattern;
-	private final Consumer<T> handler;
-	private final ApiContextFactory contextFactory;
-	private final Map<String,Object> metadata;
-	private final boolean streamedRequest;
-	private final int maxBodyLength;
-	private final boolean notFoundOnNull;
+	@Getter private final HttpMethod method;
+	@Getter private final ApiPattern pattern;
+	@Getter private final Consumer<T> handler;
+	@Getter private final ApiContextFactory contextFactory;
+	@Getter private final Map<String,Object> metadata;
+	@Getter private final boolean streamedRequest;
+	@Getter private final int maxBodyLength;
+	@Getter private final boolean notFoundOnNull;
 
 	public ApiOperation(HttpMethod method, ApiPattern pattern, Map<String,Object> metadata, Consumer<T> handler, ApiContextFactory contextFactory,
 			boolean streamedRequest, boolean notFoundOnNull) {
@@ -51,10 +50,6 @@ public class ApiOperation<T extends ApiContext> {
 
 	public Map<String, Integer> pathParamNameToGroup() {
 		return pattern.pathParamNameToGroup();
-	}
-	
-	public boolean isStreamed() {
-		return this.streamedRequest;
 	}
 	
 	private static <Q> Q firstNonNull(Q obj1, Q obj2) {

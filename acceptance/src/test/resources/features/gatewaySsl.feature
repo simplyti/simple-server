@@ -5,8 +5,7 @@ Scenario: Getting response redirect to https
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 4444	|
-		| securedPort	| -1 |
+		| listener		| 4444	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 		| value |

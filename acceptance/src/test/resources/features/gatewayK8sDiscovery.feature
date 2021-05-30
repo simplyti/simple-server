@@ -18,8 +18,7 @@ Scenario: Create service after ingress
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 8081	|
-		| securedPort	| -1 |
+		| listener		| 8081	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -33,15 +32,14 @@ Scenario: Create service after ingress
 	Then I check that exist 1 gateway services
 	And I check that exist a gateway service with targets "http://${local.address}:8081"
 	When I send a "GET /responsecode/200" getting "#response"
-	Then I check that "#response" has status code 200
-	And I check that "#response" is equals to ""
+	Then I check that http response "#response" has status code 200
+	And I check that http response "#response" has body ""
 
 Scenario: Ingress with service port name reference
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 8081	|
-		| securedPort	| -1 |
+		| listener		| 8081	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -55,15 +53,14 @@ Scenario: Ingress with service port name reference
 	Then I check that exist 1 gateway services
 	And I check that exist a gateway service with targets "http://${local.address}:8081"
 	When I send a "GET /responsecode/200" getting "#response"
-	Then I check that "#response" has status code 200
-	And I check that "#response" is equals to ""
+	Then I check that http response "#response" has status code 200
+	And I check that http response "#response" has body ""
 	
 Scenario: Create ingress after service
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 8081	|
-		| securedPort	| -1 |
+		| listener		| 8081	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -77,15 +74,14 @@ Scenario: Create ingress after service
 	Then I check that exist 1 gateway services
 	And I check that exist a gateway service with targets "http://${local.address}:8081"
 	When I send a "GET /responsecode/200" getting "#response"
-	Then I check that "#response" has status code 200
-	And I check that "#response" is equals to ""
+	Then I check that http response "#response" has status code 200
+	And I check that http response "#response" has body ""
 	
 Scenario: Create endpoint after service
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 8081	|
-		| securedPort	| -1 |
+		| listener		| 8081	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -99,15 +95,14 @@ Scenario: Create endpoint after service
 	Then I check that exist 1 gateway services
 	And I check that exist a gateway service with targets "http://${local.address}:8081"
 	When I send a "GET /responsecode/200" getting "#response"
-	Then I check that "#response" has status code 200
-	And I check that "#response" is equals to ""
+	Then I check that http response "#response" has status code 200
+	And I check that http response "#response" has body ""
 
 Scenario: Path specific gateway
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 8081	|
-		| securedPort	| -1 |
+		| listener		| 8081	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -121,18 +116,17 @@ Scenario: Path specific gateway
 	Then I check that exist 1 gateway services
 	And I check that exist a gateway service with targets "http://${local.address}:8081"
 	When I send a "GET /responsecode/200" getting "#response"
-	Then I check that "#response" has status code 200
-	And I check that "#response" is equals to ""
+	Then I check that http response "#response" has status code 200
+	And I check that http response "#response" has body ""
 	When I send a "GET /responsecode/badcode" getting "#response"
-	Then I check that "#response" has status code 400
-	And I check that "#response" is equals to ""
+	Then I check that http response "#response" has status code 400
+	And I check that http response "#response" has body ""
 
 Scenario: Not found service
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 8081	|
-		| securedPort	| -1 |
+		| listener		| 8081	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -146,14 +140,14 @@ Scenario: Not found service
 	Then I check that exist 1 gateway services
 	And I check that exist a gateway service with targets "http://${local.address}:8081"
 	When I send a "GET /other" getting "#response"
-	Then I check that "#response" has status code 404
+	Then I check that http response "#response" has status code 404
+	And I check that http response "#response" has body ""
 	
 Scenario: Found service without endpoints
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 8081	|
-		| securedPort	| -1 |
+		| listener		| 8081	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -165,14 +159,14 @@ Scenario: Found service without endpoints
 	And I create an ingress in namespace "acceptance" with name "httpbin", path "/status" and backend service "service:8080"
 	Then I check that exist 1 gateway services
 	When I send a "GET /status/200" getting "#response"
-	Then I check that "#response" has status code 503
+	Then I check that http response "#response" has status code 503
+	And I check that http response "#response" has body ""
 	
 Scenario: Delete ingress
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 8081	|
-		| securedPort	| -1 |
+		| listener		| 8081	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -188,14 +182,14 @@ Scenario: Delete ingress
 	When I delete ingress "httpbin" in namespace "acceptance"
 	Then I check that exist 0 gateway services
 	When I send a "GET /responsecode/200" getting "#response"
-	Then I check that "#response" has status code 404
+	Then I check that http response "#response" has status code 404
+	And I check that http response "#response" has body ""
 	
 Scenario: Delete endpoint
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 8081	|
-		| securedPort	| -1 |
+		| listener		| 8081	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -215,8 +209,7 @@ Scenario: Delete service
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 8081	|
-		| securedPort	| -1 |
+		| listener		| 8081	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -236,8 +229,7 @@ Scenario: Modify endpoint
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 8081	|
-		| securedPort	| -1 |
+		| listener		| 8081	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -259,8 +251,7 @@ Scenario: Modify service
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 8081	|
-		| securedPort	| -1 |
+		| listener		| 8081	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -280,8 +271,7 @@ Scenario: Modify ingress
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 8081	|
-		| securedPort	| -1 |
+		| listener		| 8081	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -295,20 +285,19 @@ Scenario: Modify ingress
 	Then I check that exist 1 gateway services
 	And I check that exist a gateway service with targets "http://${local.address}:8081"
 	When I send a "GET /responsecode/200" getting "#response"
-	Then I check that "#response" has status code 200
-	And I check that "#response" is equals to ""
-	When I update ingress "httpbin" in namespace "acceptance" adding path "/base64" and backend "service:8080"
+	Then I check that http response "#response" has status code 200
+	And I check that http response "#response" has body ""
+	When I update ingress "httpbin" in namespace "acceptance" adding path "/pathparam" and backend "service:8080"
 	Then I check that exist 2 gateway services
-	When I send a "GET /base64/SGVsbG8gR2F0ZXdheQ==" getting "#response"
-	Then I check that "#response" has status code 200
-	And I check that "#response" is equals to "Hello Gateway"
+	When I send a "GET /pathparam/Pablo" getting "#response"
+	Then I check that http response "#response" has status code 200
+	And I check that http response "#response" has body "Hello Pablo"
 
 Scenario: Secure backend
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| -1	|
-		| securedPort	| 2223 |
+		| listener		| ssl:2223 |
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -323,8 +312,8 @@ Scenario: Secure backend
 	Then I check that exist 1 gateway services
 	And I check that exist a gateway service with targets "https://${local.address}:2223"
 	When I send a "GET /responsecode/200" getting "#response"
-	Then I check that "#response" has status code 200
-	And I check that "#response" is equals to ""
+	Then I check that http response "#response" has status code 200
+	And I check that http response "#response" has body ""
 	
 Scenario: Ingress TLS
 	Given a key pair "#keypair" with algorithm "RSA" and bits 1024
@@ -332,8 +321,7 @@ Scenario: Ingress TLS
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 4444	|
-		| securedPort	| -1 |
+		| listener		| 4444	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -358,8 +346,7 @@ Scenario: Ingress TLS should redirect to HTTPS when request to insecure port
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 4444	|
-		| securedPort	| -1 |
+		| listener		| 4444	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -383,8 +370,7 @@ Scenario: Delete TLS secret
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 8081	|
-		| securedPort	| -1 |
+		| listener		| 8081	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -418,8 +404,7 @@ Scenario: OIDC auth ingress
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 8081	|
-		| securedPort	| -1 |
+		| listener		| 8081	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -436,7 +421,8 @@ Scenario: OIDC auth ingress
 	Then I check that exist 1 gateway services
 	And I check that exist a gateway service with targets "http://${local.address}:8081"
 	When I send a "GET /responsecode/200" getting "#response" with status code 302 eventually
-	Then I check that "#response" has status code 302 with location starting with "https://localhost:7443/authorize"
+	And I check that http response "#response" has status code 302
+	And I check that http response "#response" contains header "location" starts with "https://localhost:7443/authorize"
 	And I check that "#response" redirect location contains params:
 		| redirect_uri		| https://localhost/_api/callback	|
 		| response_type		| code | 
@@ -449,14 +435,14 @@ Scenario: OIDC auth ingress
 	And I check that "#response" has location header "https://localhost/responsecode/200"
 	And I check that "#response" has cookie "JWT-SESSION"
 	When I send a "GET /responsecode/200" with cookies from response "#response" getting "#response"
-	Then I check that "#response" has status code 200	
+	And I check that "#response" has status code 200 
+	Then I check that "#response" is equals to ""
 
 Scenario: Ingress rewrite
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 8081	|
-		| securedPort	| -1 |
+		| listener		| 8081	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -471,14 +457,14 @@ Scenario: Ingress rewrite
 	Then I check that exist 1 gateway services
 	And I check that exist a gateway service with targets "http://${local.address}:8081"
 	When I send a "GET /httpbinstatus/200" getting "#response"
-	Then I check that "#response" has status code 200
+	Then I check that http response "#response" has status code 200
+	And I check that http response "#response" has body ""
 	
 Scenario: Ingress rewrite with path params
 	When I start a service "#serviceFuture" with options:
 		| option	 	| value |
 		| withApi		| com.simplyti.service.examples.api.APITest	|
-		| insecuredPort	| 8081	|
-		| securedPort	| -1 |
+		| listener		| 8081	|
 	Then I check that "#serviceFuture" is success
 	When I start a service "#gatewayeFuture" with options:
 		| option	 			| value |
@@ -493,4 +479,5 @@ Scenario: Ingress rewrite with path params
 	Then I check that exist 1 gateway services
 	And I check that exist a gateway service with targets "http://${local.address}:8081"
 	When I send a "GET /httpbinstatus/200/get" getting "#response"
-	Then I check that "#response" has status code 200
+	Then I check that http response "#response" has status code 200
+	And I check that http response "#response" has body ""

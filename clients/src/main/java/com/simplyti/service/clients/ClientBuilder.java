@@ -34,6 +34,8 @@ public interface ClientBuilder<B,T extends Client<R>,R extends BaseClientRequest
 	B withChannelPoolIdleTimeout(long poolIdleTimeout);
 	
 	B withReadTimeout(long timeoutMillis);
+	
+	B verbose();
 
 	T build();
 

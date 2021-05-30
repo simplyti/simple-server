@@ -4,6 +4,7 @@ import java.nio.channels.spi.SelectorProvider;
 import java.util.Optional;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 import com.simplyti.service.builder.di.NativeIO;
 
@@ -13,16 +14,16 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 
 public class ServerSocketChannelFactory implements ChannelFactory<ServerChannel> {
 
-	private final Optional<NativeIO> nativeIO;
+	private final Provider<Optional<NativeIO>> nativeIO;
 
 	@Inject
-	public ServerSocketChannelFactory(Optional<NativeIO> nativeIO) {
+	public ServerSocketChannelFactory(Provider<Optional<NativeIO>> nativeIO) {
 		this.nativeIO=nativeIO;
 	}
 
 	@Override
 	public ServerChannel newChannel() {
-		return nativeIO.map(n->n.serverChannel())
+		return nativeIO.get().map(n->n.serverChannel())
 				.orElseGet(()->new NioServerSocketChannel(SelectorProvider.provider()));
 	}
 

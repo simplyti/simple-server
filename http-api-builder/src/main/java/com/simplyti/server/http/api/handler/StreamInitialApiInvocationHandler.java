@@ -48,7 +48,7 @@ public class StreamInitialApiInvocationHandler extends SimpleChannelInboundHandl
 	@Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
 		if(evt instanceof ApiMatchRequest) {
-			if(((ApiMatchRequest) evt).operation().isStreamed()) {
+			if(((ApiMatchRequest) evt).operation().streamedRequest()) {
 				this.matchRequest=(ApiMatchRequest) evt;
 			} else {
 				ctx.fireUserEventTriggered(evt);

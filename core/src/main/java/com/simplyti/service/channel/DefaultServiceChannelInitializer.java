@@ -1,6 +1,5 @@
 package com.simplyti.service.channel;
 
-import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -25,12 +24,12 @@ import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.service.filter.http.HttpResponseFilter;
 import com.simplyti.service.filter.priority.Priorized;
 import com.simplyti.service.ssl.SslHandlerFactory;
+import com.simplyti.service.transport.ServerTransport;
 
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler.Sharable;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
@@ -38,7 +37,7 @@ import io.netty.handler.logging.LoggingHandler;
 @Sharable
 public class DefaultServiceChannelInitializer extends ChannelInitializer<Channel> implements ServiceChannelInitializer  {
 
-	private final ClientChannelGroup clientChannelGroup;
+	private final Provider<ClientChannelGroup> clientChannelGroup;
 	private final ServerConfig serverConfig;
 	private final SslHandlerFactory sslHandlerFactory;
 	private final ServerStopAdvisor startStopMonitor;
@@ -54,7 +53,7 @@ public class DefaultServiceChannelInitializer extends ChannelInitializer<Channel
 	private final FullHttpRequestFilterHandler fullHttpRequestFilterHandler;
 	
 	@Inject
-	public DefaultServiceChannelInitializer(ClientChannelGroup clientChannelGroup, ServerConfig serverConfig,
+	public DefaultServiceChannelInitializer(Provider<ClientChannelGroup> clientChannelGroup, ServerConfig serverConfig,
 			SslHandlerFactory sslHandlerFactory, ServerStopAdvisor startStopMonitor, ChannelExceptionHandler channelExceptionHandler,
 			Set<HttpRequestFilter> requestFilters, Set<FullHttpRequestFilter> fullRequestFilters, Set<HttpResponseFilter> responseFilters,
 			 EntryChannelInit entryChannelInit, Set<ServiceHadlerInit> serviceHandlerInit,
@@ -79,10 +78,12 @@ public class DefaultServiceChannelInitializer extends ChannelInitializer<Channel
 	
 	@Override
 	protected void initChannel(Channel channel) throws Exception {
-		clientChannelGroup.add(channel);
-		ChannelPipeline pipeline = channel.pipeline();
+		clientChannelGroup.get().add(channel);
+		final ChannelPipeline pipeline = channel.pipeline();
+		Channel parent = channel.parent();
+		final boolean isSsl = parent==null ? false : parent.attr(ServerTransport.LISTENER).get().ssl();
 		
-		if(isSslChannel(channel)) {
+		if(isSsl) {
 			pipeline.addLast("ssl",sslHandlerFactory.handler(channel));
 		}
 		
@@ -90,7 +91,7 @@ public class DefaultServiceChannelInitializer extends ChannelInitializer<Channel
 			pipeline.addLast(new LoggingHandler(LogLevel.INFO));
 		}
 		
-		entryChannelInit.init(pipeline);	
+		entryChannelInit.init(pipeline,isSsl);	
 		
 		pipeline.addLast(new ClientChannelHandler(startStopMonitor));
 		if(!responseFilters.isEmpty()) {
@@ -127,10 +128,6 @@ public class DefaultServiceChannelInitializer extends ChannelInitializer<Channel
 		}
 		
 		pipeline.addLast(channelExceptionHandler);
-	}
-
-	private boolean isSslChannel(Channel channel) {
-		return channel instanceof SocketChannel &&  ((InetSocketAddress)channel.localAddress()).getPort()==serverConfig.securedPort();
 	}
 
 }

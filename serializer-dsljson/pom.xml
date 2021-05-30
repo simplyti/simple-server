@@ -25,10 +25,10 @@
 		</dependency>
 		
 		<dependency>
-		    <groupId>com.oracle.substratevm</groupId>
-		    <artifactId>svm</artifactId>
-		    <version>19.2.1</version>
-		    <scope>provided</scope>
+			<groupId>org.graalvm.nativeimage</groupId>
+			<artifactId>svm</artifactId>
+			<version>21.1.0</version>
+			<scope>provided</scope>
 		</dependency>
 		
 		<!-- Json -->

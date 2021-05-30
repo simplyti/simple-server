@@ -3,6 +3,7 @@ package com.simplyti.service.clients.channel;
 import java.security.cert.X509Certificate;
 
 import com.simplyti.service.clients.endpoint.Endpoint;
+import com.simplyti.service.clients.endpoint.TcpAddress;
 import com.simplyti.service.clients.endpoint.ssl.BasicKeyManager;
 import com.simplyti.service.clients.endpoint.ssl.SSLEndpoint;
 
@@ -40,8 +41,24 @@ public class SSLChannelInitializeHandler extends AbstractChannelPoolHandler {
 	
 	@Override
 	public void channelCreated(Channel ch) throws Exception {
-		ch.pipeline().addLast(sslCtx.newHandler(ch.alloc(),endpoint.address().host(),endpoint.address().port()));
+		if(endpoint.address() instanceof TcpAddress) {
+			TcpAddress address = (TcpAddress) endpoint.address();
+			ch.pipeline().addLast(sslCtx.newHandler(ch.alloc(), address.host(), address.port()));
+		} else {
+			ch.pipeline().addLast(sslCtx.newHandler(ch.alloc()));
+		}
+		
 		nestedInitializer.channelCreated(ch);
 	}
+	
+	@Override
+    public void channelAcquired(Channel ch) throws Exception {
+		nestedInitializer.channelAcquired(ch);
+    }
+
+    @Override
+    public void channelReleased(Channel ch) throws Exception {
+    	nestedInitializer.channelReleased(ch);
+    }
 	
 }

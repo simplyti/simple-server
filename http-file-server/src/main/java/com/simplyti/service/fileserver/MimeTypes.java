@@ -45,7 +45,7 @@ public class MimeTypes {
 	}
 
 	public static String ofFile(String filename) {
-		int dot_pos = filename.lastIndexOf("."); // period index
+		int dot_pos = filename.lastIndexOf(".");
 
 		if (dot_pos < 0) {
 			return DEFAULT_TYPE;

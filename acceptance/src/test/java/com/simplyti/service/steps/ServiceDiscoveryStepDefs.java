@@ -21,9 +21,11 @@ import com.simplyti.service.filter.http.HttpRequestFilter;
 import cucumber.api.java.After;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
+import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.util.concurrent.Future;
 
 public class ServiceDiscoveryStepDefs {
 	
@@ -88,16 +90,9 @@ public class ServiceDiscoveryStepDefs {
 		assertThat(response.headers().get(HttpHeaderNames.LOCATION), startsWith(location));
 	}
 	
-	@Then("^I check that \"([^\"]*)\" has location header starting with \"([^\"]*)\"$")
-	public void iCheckThatHasLocationHeaderStartingWith(String key, String location) throws Exception {
-		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(key);
-		assertThat(response.headers().get(HttpHeaderNames.LOCATION), startsWith(location));
-	}
-	
-	
 	@Then("^I check that \"([^\"]*)\" redirect location contains params:$")
 	public void iCheckThatRedirectLocationContainsParams(String key, Map<String,String> expectedParams) throws Exception {
-		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(key);
+		FullHttpResponse response = (FullHttpResponse) ((Future<?>) scenarioData.get(key)).get();
 		QueryStringDecoder decoder = new QueryStringDecoder(response.headers().get(HttpHeaderNames.LOCATION));
 		Map<String, List<String>> params = decoder.parameters();
 		for(Entry<String, String> expectedParam:expectedParams.entrySet()) {

@@ -22,7 +22,8 @@ public class RequestResponseBodyTypedFinishableApiBuilderImpl<T,U> implements Re
 	private final ApiContextFactory requestTypedContextFactory;
 	private final TypeLiteral<T> requestType;
 	private final Map<String, Object> metadata;
-	private final boolean notFoundOnNull;
+	
+	private boolean notFoundOnNull;
 
 	public RequestResponseBodyTypedFinishableApiBuilderImpl(ApiContextFactory requestTypedContextFactory,ApiOperations operations, HttpMethod method, String path, Map<String,Object> metadata, 
 			boolean notFoundOnNull, TypeLiteral<T> requestType) {
@@ -44,6 +45,12 @@ public class RequestResponseBodyTypedFinishableApiBuilderImpl<T,U> implements Re
 	@Override
 	public void thenFuture(Function<RequestResponseTypedApiContext<T, U>, Future<U>> futureSupplier) {
 		then(new RequestResponseBodyTypedFutureHandle<T,U>(futureSupplier));
+	}
+	
+	@Override
+	public RequestResponseBodyTypedFinishableApiBuilder<T, U> withNotFoundOnNull() {
+		this.notFoundOnNull=true;
+		return this;
 	}
 
 }

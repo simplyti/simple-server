@@ -13,6 +13,7 @@ import com.simplyti.service.filter.http.HttpRequestFilter;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.pool.ChannelPoolHandler;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.ssl.SslProvider;
 
@@ -23,11 +24,15 @@ public class DefaultHttpClient extends AbstractClient<HttpRequestBuilder> implem
 	private final HttpHeaders headers;
 	
 	public DefaultHttpClient(EventLoopGroup eventLoopGroup, Bootstrap bootstrap, Endpoint endpoint, HttpHeaders headers, SslProvider sslProvider, boolean checkStatusCode,
-			DefaultClientMonitor monitor, int poolSize, boolean unpooledChannels, long poolIdleTimeout, long readTimeoutMillis, List<HttpRequestFilter> filters) {
-		super(bootstrap,eventLoopGroup,unpooledChannels, new HttpClientChannelPoolHandler(readTimeoutMillis,filters), sslProvider, monitor , monitor, poolSize, poolIdleTimeout);
+			DefaultClientMonitor monitor, int poolSize, boolean unpooledChannels, long poolIdleTimeout, long readTimeoutMillis, boolean verbose, List<HttpRequestFilter> filters) {
+		super(bootstrap,eventLoopGroup,unpooledChannels, poolHandler(readTimeoutMillis, verbose, filters), sslProvider, monitor , monitor, poolSize, poolIdleTimeout, false);
 		this.endpoint=endpoint;
 		this.headers=headers;
 		this.checkStatusCode=checkStatusCode;
+	}
+
+	private static ChannelPoolHandler poolHandler(long readTimeoutMillis, boolean verbose, List<HttpRequestFilter> filters) {
+		return new HttpClientChannelPoolHandler(readTimeoutMillis, verbose, filters);
 	}
 
 	@Override

@@ -4,6 +4,7 @@ import java.net.InetSocketAddress;
 
 import com.simplyti.service.clients.channel.ClientChannel;
 import com.simplyti.service.clients.endpoint.Endpoint;
+import com.simplyti.service.clients.endpoint.TcpAddress;
 import com.simplyti.service.gateway.BackendServiceMatcher;
 import com.simplyti.service.gateway.GatewayConfig;
 
@@ -18,6 +19,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpScheme;
+import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.concurrent.Future;
 
@@ -99,7 +101,7 @@ public class HttpGatewayUpstreamHandler extends ChannelDuplexHandler {
 
 	private void setHost(HttpRequest request) {
     	if(!config.keepOriginalHost()) {
-    		request.headers().set(HttpHeaderNames.HOST,endpoint.address().host());
+    		request.headers().set(HttpHeaderNames.HOST, ((TcpAddress)endpoint.address()).host());
     	}
 	}
 
@@ -142,6 +144,9 @@ public class HttpGatewayUpstreamHandler extends ChannelDuplexHandler {
 	
 	private void handleFrontWrite(ChannelHandlerContext ctx, Object msg, Future<?> future) {
 		if(future.isSuccess()) {
+			if(upgrading && msg instanceof LastHttpContent) {
+				frontChannel.pipeline().remove(HttpServerCodec.class);
+			}
 			ctx.read();
 		} else {
 			new RuntimeException("Cannot write to front channel",future.cause()).printStackTrace();

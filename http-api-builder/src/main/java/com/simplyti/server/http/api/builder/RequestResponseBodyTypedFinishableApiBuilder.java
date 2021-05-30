@@ -12,4 +12,6 @@ public interface RequestResponseBodyTypedFinishableApiBuilder<T, U> {
 
 	void thenFuture(Function<RequestResponseTypedApiContext<T,U>,Future<U>> object);
 
+	RequestResponseBodyTypedFinishableApiBuilder<T, U> withNotFoundOnNull();
+
 }

@@ -1,12 +1,18 @@
 package com.simplyti.server.http.api.builder;
 
+import java.util.function.Function;
+
 import com.simplyti.server.http.api.builder.fileupload.FileUploadApiBuilder;
 import com.simplyti.server.http.api.builder.stream.StreamedRequestResponseTypableApiBuilder;
+import com.simplyti.server.http.api.context.AnyWithBodyApiContext;
 import com.simplyti.service.api.serializer.json.TypeLiteral;
+
+import io.netty.util.concurrent.Future;
 
 public interface RequestTypableApiBuilder {
 	
 	void then(ApiWithBodyContextConsumer consumer);
+	<U> void thenFuture(Function<AnyWithBodyApiContext, Future<U>> futureSupplier);
 
 	<T> RequestBodyTypedFinishableApiBuilder<T> withRequestType(Class<T> clazz);
 	<T> RequestBodyTypedFinishableApiBuilder<T> withRequestBodyType(Class<T> clazz);

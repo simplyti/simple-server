@@ -10,7 +10,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpRequest;
 
-public class RequestResponseTypedApiContextImpl<T,U> extends AbstractWithBodyApiContext<U> implements RequestTypedApiContext<T> , RequestResponseTypedApiContext<T, U> {
+public class RequestResponseTypedApiContextImpl<T,U> extends AbstractWithBodyApiContext<U> implements RequestResponseTypedApiContext<T, U> {
 
 	private final TypeLiteral<T> requestType;
 	private final ByteBuf body;

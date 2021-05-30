@@ -12,7 +12,7 @@ public class StartStopLoopProvider implements Provider<EventLoop>{
 	private final EventLoopGroupProvider eventLoopGroupProvider;
 	
 	@Inject
-	public StartStopLoopProvider(Optional<NativeIO> nativeIO) {
+	public StartStopLoopProvider(Provider<Optional<NativeIO>> nativeIO) {
 		this.eventLoopGroupProvider = new EventLoopGroupProvider(1,nativeIO);
 	}
 	

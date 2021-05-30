@@ -17,23 +17,15 @@ public interface ServiceBuilder {
 	
 	public ServiceBuilder withBlockingThreadPoolSize(int blockingThreadPoolSize);
 
-	public ServiceBuilder insecuredPort(int port);
-	
-	public ServiceBuilder securedPort(int port);
-
 	public ServiceBuilder withModule(Class<? extends Module> module);
 	
 	public ServiceBuilder withModule(Module module);
 
-	public ServiceBuilder fileServe(String path, String directory);
+	public ServiceBuilder withFileServe(String path, String directory);
 
 	public ServiceBuilder withSlf4jLogger();
 
-	public ServiceBuilder disableInsecurePort();
-	
-	public ServiceBuilder disableSecuredPort();
-
-	public ServiceBuilder eventLoopGroup(EventLoopGroup eventLoopGroup);
+	public ServiceBuilder withEventLoopGroup(EventLoopGroup eventLoopGroup);
 
 	public ServiceBuilder verbose();
 	
@@ -42,5 +34,7 @@ public interface ServiceBuilder {
 	public ServiceBuilder withName(String name);
 	
 	public ServiceBuilder withSslProvider(SslProvider sslProvider);
+
+	public ListenerBuilder withListener();
 
 }

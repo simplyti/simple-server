@@ -59,8 +59,8 @@ public class DefaultHttpClientBuilder extends AbstractClientBuilder<HttpClientBu
 	}
 	
 	@Override
-	protected HttpClient build0(EventLoopGroup eventLoopGroup, Bootstrap bootstrap, Endpoint endpoint, SslProvider sslProvider, DefaultClientMonitor monitor, int poolSize, boolean unpooledChannels, long poolIdleTimeout, long readTimeoutMilis) {
-		return new DefaultHttpClient(eventLoopGroup, bootstrap, endpoint, headers(), sslProvider, checkStatus, monitor, poolSize, unpooledChannels, poolIdleTimeout, readTimeoutMilis, filters);
+	protected HttpClient build0(EventLoopGroup eventLoopGroup, Bootstrap bootstrap, Endpoint endpoint, SslProvider sslProvider, DefaultClientMonitor monitor, int poolSize, boolean unpooledChannels, long poolIdleTimeout, long readTimeoutMilis, boolean verbose) {
+		return new DefaultHttpClient(eventLoopGroup, bootstrap, endpoint, headers(), sslProvider, checkStatus, monitor, poolSize, unpooledChannels, poolIdleTimeout, readTimeoutMilis, verbose, filters);
 	}
 	
 	private HttpHeaders headers() {

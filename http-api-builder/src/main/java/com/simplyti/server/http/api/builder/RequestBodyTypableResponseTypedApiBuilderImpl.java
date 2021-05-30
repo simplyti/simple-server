@@ -2,14 +2,18 @@ package com.simplyti.server.http.api.builder;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import com.simplyti.server.http.api.context.ApiContextFactory;
+import com.simplyti.server.http.api.context.ResponseTypedWithBodyApiContext;
+import com.simplyti.server.http.api.futurehandler.ResponseTypedWithBodyFutureHandle;
 import com.simplyti.server.http.api.operations.ApiOperations;
 import com.simplyti.server.http.api.operations.ResponseTypeWithBodyApiOperation;
 import com.simplyti.service.api.serializer.json.TypeLiteral;
 import com.simplyti.service.matcher.ApiPattern;
 
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.util.concurrent.Future;
 
 public class RequestBodyTypableResponseTypedApiBuilderImpl<T> implements RequestBodyTypableResponseTypedApiBuilder<T> {
 
@@ -59,6 +63,11 @@ public class RequestBodyTypableResponseTypedApiBuilderImpl<T> implements Request
 	public void then(ResponseTypedWithRequestApiContextConsumer<T> consumer) {
 		ApiPattern apiPattern = ApiPattern.build(path);
 		operations.add(new ResponseTypeWithBodyApiOperation<>(method,apiPattern,metadata,consumer,responseTypedWithBodyContextFactory, notFoundOnNull, maxBodyLength));
+	}
+	
+	@Override
+	public void thenFuture(Function<ResponseTypedWithBodyApiContext<T>, Future<T>> object) {
+		then(new ResponseTypedWithBodyFutureHandle<>(object));
 	}
 
 	@Override

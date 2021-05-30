@@ -11,21 +11,21 @@ import io.netty.channel.nio.NioEventLoopGroup;
 public class EventLoopGroupProvider implements Provider<EventLoopGroup>{
 	
 	private final int size;
-	private final Optional<NativeIO> nativeIO;
+	private final Provider<Optional<NativeIO>> nativeIO;
 
 	@Inject
-	public EventLoopGroupProvider(Optional<NativeIO> nativeIO) {
+	public EventLoopGroupProvider(Provider<Optional<NativeIO>> nativeIO) {
 		this(0,nativeIO);
 	}
 	
-	public EventLoopGroupProvider(int size,Optional<NativeIO> nativeIO) {
+	public EventLoopGroupProvider(int size, Provider<Optional<NativeIO>> nativeIO) {
 		this.size=size;
 		this.nativeIO=nativeIO;
 	}
 
 	@Override
 	public EventLoopGroup get() {
-		return nativeIO.map(n->n.eventLoopGroup(size))
+		return nativeIO.get().map(n->n.eventLoopGroup(size))
 			.orElseGet(()->new NioEventLoopGroup(size));
 	}
 

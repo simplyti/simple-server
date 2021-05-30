@@ -1,23 +1,9 @@
 package com.simplyti.service.clients.endpoint;
 
+import java.net.SocketAddress;
 
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.experimental.Accessors;
+public interface Address {
 
-@EqualsAndHashCode
-@AllArgsConstructor
-@Getter
-@Accessors(fluent = true)
-public class Address {
+	SocketAddress toSocketAddress();
 	
-	private final String host;
-	private final int port;
-	
-	@Override
-	public String toString() {
-		return host+":"+port;
-	}
-
 }

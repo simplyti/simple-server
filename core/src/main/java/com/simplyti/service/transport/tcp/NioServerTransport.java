@@ -3,6 +3,7 @@ package com.simplyti.service.transport.tcp;
 import java.util.Optional;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 import com.simplyti.service.builder.di.StartStopLoop;
 import com.simplyti.service.channel.ServiceChannelInitializer;
@@ -18,7 +19,7 @@ import io.netty.channel.ServerChannel;
 public class NioServerTransport extends AbstractTcpServerTransport {
 	
 	@Inject
-	public NioServerTransport(EventLoopGroup eventLoopGroup, @StartStopLoop EventLoop startStopLoop,
+	public NioServerTransport(Provider<EventLoopGroup> eventLoopGroup, @StartStopLoop Provider<EventLoop> startStopLoop,
 			ChannelFactory<ServerChannel> channelFactory, Optional<SslHandlerFactory> sslHandlerFactory, 
 			ServiceChannelInitializer serviceChannelInitializer, ServerConfig config) {
 		super(eventLoopGroup,startStopLoop,channelFactory,sslHandlerFactory,serviceChannelInitializer,config);

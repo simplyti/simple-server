@@ -1,9 +1,11 @@
 @standalone @clients @httpClient @httpClientWebsocket
 Feature: Http client webSockets
 
-Scenario: WebSocket client
-	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.WebsocketsApi"
+Background: Start Server
+  When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.WebsocketsApi"
 	Then I check that "#serviceFuture" is success
+	
+Scenario: WebSocket client
 	When I connect to websocket "#ws" with uri "/ws" getting text stream "#stream"
 	Then I check that text stream "#stream" is equals to "Hello!"
 	When I send message "Hello WS!" to websocket "#ws" getting "#writeFuture"
@@ -14,8 +16,6 @@ Scenario: WebSocket client
 	And I check that text stream "#stream" is equals to "Bye WS!"
 	
 Scenario: WebSocket client with inmediate sent
-	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.WebsocketsApi"
-	Then I check that "#serviceFuture" is success
 	When I connect to websocket "#ws" with uri "/ws" getting text objects stream "#objects"
 	When I send message "Hello WS!" to websocket "#ws" getting "#writeFuture1"
 	And I send message "Bye WS!" to websocket "#ws" getting "#writeFuture2"
@@ -26,8 +26,6 @@ Scenario: WebSocket client with inmediate sent
 	And I check that object 2 in list "#objects" is equals to "Bye WS!"
 	
 Scenario: WebSocket client handle server close request
-	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.WebsocketsApi"
-	Then I check that "#serviceFuture" is success
 	When I connect to websocket "#ws" with uri "/ws" getting text stream "#stream" and close future "#close"
 	Then I check that text stream "#stream" is equals to "Hello!"
 	When I send message "Hello WS!" to websocket "#ws" getting "#writeFuture"
@@ -38,8 +36,6 @@ Scenario: WebSocket client handle server close request
 	Then I check that "#close" is success
 	
 Scenario: WebSocket client error
-	When I start a service "#serviceFuture" with API "com.simplyti.service.examples.api.WebsocketsApi"
-	Then I check that "#serviceFuture" is success
 	When I connect to websocket "#ws" with uri "/ws/notfound" getting clonnection future "#connect"
 	And I send message "Hello WS!" to websocket "#ws" getting "#writeFuture"
 	Then I check that "#writeFuture" is failure

@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 import java.util.Set;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 import com.simplyti.service.builder.di.StartStopLoop;
 import com.simplyti.service.channel.ClientChannelGroup;
@@ -37,13 +38,13 @@ public class DefaultServer implements Server {
 	}, "server-shutdown-hook");
 	private static final InternalLogger log = InternalLoggerFactory.getInstance(DefaultServer.class);
 	
-	private final EventLoopGroup eventLoopGroup;
-	private final EventLoop startStopLoop;
-	private final ClientChannelGroup clientChannelGroup;
+	private final Provider<EventLoopGroup> eventLoopGroup;
+	private final Provider<EventLoop> startStopLoop;
+	private final Provider<ClientChannelGroup> clientChannelGroup;
 	private final Set<ServerStartHook> serverStartHook;
 	private final Set<ServerStopHook> serverStopHook;
 	private final ServerConfig config;
-	private final ServerTransport transport;
+	private final Set<ServerTransport> transport;
 	
 	private final ServerStopAdvisor startStopMonitor;
 	
@@ -53,15 +54,14 @@ public class DefaultServer implements Server {
 	private Promise<Void> stopPromise;
 	
 	@Inject
-	public DefaultServer(EventLoopGroup eventLoopGroup, ServerStopAdvisor startStopMonitor,
-			@StartStopLoop EventLoop startStopLoop, ClientChannelGroup clientChannelGroup,
+	public DefaultServer(Provider<EventLoopGroup> eventLoopGroup, ServerStopAdvisor startStopMonitor,
+			@StartStopLoop Provider<EventLoop> startStopLoop, Provider<ClientChannelGroup> clientChannelGroup,
 			Set<ServerStartHook> serverStartHook,
 			Set<ServerStopHook> serverStopHook,
-			ServerConfig config, ServerTransport transport,
+			ServerConfig config, Set<ServerTransport> transport,
 			InstanceProvider instanceProvider){
 		Signal.handle(new Signal("INT"), sig -> System.exit(0));
 		Signal.handle(new Signal("TERM"), sig -> System.exit(0));
-		Runtime.getRuntime().addShutdownHook(jvmShutdownHook);
 		this.eventLoopGroup=eventLoopGroup;
 		this.startStopLoop=startStopLoop;
 		this.startStopMonitor=startStopMonitor;
@@ -74,11 +74,11 @@ public class DefaultServer implements Server {
 	}
 	
 	public Future<Server> start() {
-		Promise<Server> startPromise = startStopLoop.newPromise();
-		if(startStopLoop.inEventLoop()) {
-			return start(startStopLoop,startPromise);
+		Promise<Server> startPromise = startStopLoop.get().newPromise();
+		if(startStopLoop.get().inEventLoop()) {
+			return start(startStopLoop.get(),startPromise);
 		}else {
-			startStopLoop.execute(()->start(startStopLoop,startPromise));
+			startStopLoop.get().execute(()->start(startStopLoop.get(),startPromise));
 		}
 		return startPromise;
 	}
@@ -89,9 +89,10 @@ public class DefaultServer implements Server {
 			return startPromise;
 		}
 		this.startPromise = startPromise;
+		Runtime.getRuntime().addShutdownHook(jvmShutdownHook);
 		if(serverStartHook.isEmpty()) {
 			start0(executor,startPromise);
-		}else {
+		} else {
 			executeStartHooks(executor).addListener(f->{
 				if(f.isSuccess()) {
 					start0(executor,startPromise);
@@ -104,17 +105,27 @@ public class DefaultServer implements Server {
 	}
 
 	private Future<Void> executeStartHooks(EventLoop executor) {
-		Promise<Void> hooksPromise = startStopLoop.newPromise();
+		Promise<Void> hooksPromise = startStopLoop.get().newPromise();
 		PromiseCombiner combiner = new PromiseCombiner(executor);
-		this.serverStartHook.forEach(hook->combiner.add(hook.executeStart(startStopLoop)));
+		this.serverStartHook.forEach(hook->combiner.add(hook.executeStart(startStopLoop.get())));
 		combiner.finish(hooksPromise);
 		return hooksPromise;
 	}
 
 	private void start0(EventLoop executor,Promise<Server> startPromise) {
-		transport.start(startStopLoop)
+		startTransport(executor)
 			.thenAccept(v->startPromise.setSuccess(this))
 			.exceptionally(err->stop().addListener(ignore -> startPromise.setFailure(err)));
+	}
+
+	private com.simplyti.util.concurrent.Future<Void> startTransport(EventLoop executor) {
+		PromiseCombiner combiner = new PromiseCombiner(executor);
+		transport.forEach(t->{
+			combiner.add(t.start(startStopLoop.get()));
+		});
+		Promise<Void> end = executor.newPromise();
+		combiner.finish(end);
+		return new DefaultFuture<>(end, executor);
 	}
 
 	public Future<Void> stop() {
@@ -126,11 +137,11 @@ public class DefaultServer implements Server {
 	}
 	
 	public Future<Void> stop(boolean loopsWait, boolean fromHook) {
-		Promise<Void> stopPromise = startStopLoop.newPromise();
-		if(startStopLoop.inEventLoop()){
-			return stop0(startStopLoop, stopPromise, loopsWait, fromHook);
+		Promise<Void> stopPromise = startStopLoop.get().newPromise();
+		if(startStopLoop.get().inEventLoop()){
+			return stop0(startStopLoop.get(), stopPromise, loopsWait, fromHook);
 		}else{
-			startStopLoop.execute(()->stop0(startStopLoop, stopPromise, loopsWait, fromHook));
+			startStopLoop.get().execute(()->stop0(startStopLoop.get(), stopPromise, loopsWait, fromHook));
 		}
 		return stopPromise;
 	}
@@ -147,36 +158,46 @@ public class DefaultServer implements Server {
 		}
 		this.startStopMonitor.stopAdvice();
 		log.info("Stopping server gracefully...");
-		transport.stop(executor)
+		stopTransport(executor)
 			.handleCombine((v,err)->closeClients(executor))
 			.handleCombine((v,err)->executeStopHooks(executor))
 			.handle((v,err)->stopEventLoops(loopsWait, stopPromise, executor));
 		return stopPromise;
 	}
 	
+	private com.simplyti.util.concurrent.Future<Void> stopTransport(EventLoop executor) {
+		PromiseCombiner combiner = new PromiseCombiner(executor);
+		transport.forEach(t->{
+			combiner.add(t.stop(startStopLoop.get()));
+		});
+		Promise<Void> end = executor.newPromise();
+		combiner.finish(end);
+		return new DefaultFuture<>(end, executor);
+	}
+	
 	private void stopEventLoops(boolean loopsWait, Promise<Void> stopPromise, EventLoop executor) {
 		if(config.externalEventLoopGroup()) {
-			startStopLoop.shutdownGracefully();
+			startStopLoop.get().shutdownGracefully();
 			stopPromise.setSuccess(null);
 		} else if(loopsWait){
-			eventLoopGroup.shutdownGracefully().addListener(f->{
-				startStopLoop.shutdownGracefully();
+			eventLoopGroup.get().shutdownGracefully().addListener(f->{
+				startStopLoop.get().shutdownGracefully();
 				stopPromise.setSuccess(null);
 			});
 		} else {
-			eventLoopGroup.shutdownGracefully();
-			startStopLoop.shutdownGracefully();
+			eventLoopGroup.get().shutdownGracefully();
+			startStopLoop.get().shutdownGracefully();
 			stopPromise.setSuccess(null);
 		}
 	}
 	
 	private com.simplyti.util.concurrent.Future<Void> closeClients(EventLoop executor) {
-		if(clientChannelGroup.isEmpty()) {
+		if(clientChannelGroup.get().isEmpty()) {
 			return new DefaultFuture<>(executor.newSucceededFuture(null),executor);
 		}else {
-			log.info("Active Clients: {}",clientChannelGroup.size());
-			ChannelGroupFuture future = clientChannelGroup.newCloseFuture();
-			clientChannelGroup.closeIddleChannels();
+			log.info("Active Clients: {}",clientChannelGroup.get().size());
+			ChannelGroupFuture future = clientChannelGroup.get().newCloseFuture();
+			clientChannelGroup.get().closeIddleChannels();
 			Promise<Void> promise = executor.newPromise();
 			future.addListener(f->promise.setSuccess(null));
 			return new DefaultFuture<>(promise,executor);
@@ -190,14 +211,14 @@ public class DefaultServer implements Server {
 		}
 		Promise<Void> promise = executor.newPromise();
 		PromiseCombiner combiner = new PromiseCombiner(executor);
-		this.serverStopHook.forEach(hook->combiner.add(hook.executeStop(startStopLoop)));
+		this.serverStopHook.forEach(hook->combiner.add(hook.executeStop(startStopLoop.get())));
 		combiner.finish(promise);
 		return promise;
 	}
 	
 	@Override
 	public Future<Void> stopFuture() {
-		return startStopLoop.newPromise();
+		return startStopLoop.get().newPromise();
 	}
 	
 	@Override

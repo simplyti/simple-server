@@ -13,6 +13,7 @@ import javax.inject.Inject;
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.api.serializer.json.Json;
+import com.simplyti.service.clients.endpoint.TcpAddress;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.security.oidc.OpenIdCallbackConfig;
@@ -69,7 +70,7 @@ public class OpenIdApi implements ApiProvider{
 				
 				HttpEndpoint tokenEndpoint = HttpEndpoint.of(state.tokenEndpoint().toString());
 				FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, tokenEndpoint.path(),Unpooled.wrappedBuffer(data.getBytes(CharsetUtil.UTF_8)));
-				request.headers().set(HttpHeaderNames.HOST,tokenEndpoint.address().host());
+				request.headers().set(HttpHeaderNames.HOST, ((TcpAddress)tokenEndpoint.address()).host());
 				request.headers().set(HttpHeaderNames.CONTENT_TYPE,HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED);
 				request.headers().set(HttpHeaderNames.CONTENT_LENGTH,request.content().readableBytes());
 				

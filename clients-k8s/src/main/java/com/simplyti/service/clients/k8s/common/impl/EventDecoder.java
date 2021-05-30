@@ -13,9 +13,11 @@ import com.simplyti.service.clients.k8s.common.watch.domain.EventType;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
 
+@Sharable
 public class EventDecoder<T extends K8sResource> extends ChannelInboundHandlerAdapter {
 	
 	private final Json json;

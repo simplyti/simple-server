@@ -9,8 +9,9 @@ Scenario: File server
 	When I start a service "#serviceFuture" with file serve "#tempdir/testfiles" on "/statics"
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /statics/hello.txt" getting "#response"
-	Then I check that "#response" is equals to "Hello!"
-	And I check that "#response" has status code 200
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 200
+	And I check that http response "#response" has body "Hello!"
 
 Scenario: File server cache handle
 	Given next file "#tempdir/testfiles/hello.txt" with createdDate "#createdDate" and content
@@ -20,7 +21,10 @@ Scenario: File server cache handle
 	When I start a service "#serviceFuture" with file serve "#tempdir/testfiles" on "/statics"
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /statics/hello.txt" getting "#response"
-	And I check that "#response" contains header "last-modified" equals to date "#createdDate"
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 200
+	And I check that http response "#response" has body "Hello!"
+	And I check that http response "#response" contains header "last-modified" equals to date "#createdDate"
 	When I send a "GET /statics/hello.txt" with if-modified-since header "#createdDate" getting "#response"
 	Then I check that "#response" has status code 304
 	When I send a "GET /statics/hello.txt" with if-modified-since header "#createdDate" minus 10 seconds getting "#response"
@@ -34,15 +38,17 @@ Scenario: Can only execute GET method to file server
 	When I start a service "#serviceFuture" with file serve "#tempdir/testfiles" on "/statics"
 	Then I check that "#serviceFuture" is success
 	When I send a "POST /statics/hello.txt" getting "#response"
-	Then I check that "#response" has status code 405
-	And I check that "#response" is equals to ""
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 405
+	And I check that http response "#response" has body ""
 	
 Scenario: Not found file
 	When I start a service "#serviceFuture" with file serve "#tempdir/testfiles" on "/statics"
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /statics/hello.txt" getting "#response"
-	Then I check that "#response" has status code 404
-	And I check that "#response" is equals to ""
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 404
+	And I check that http response "#response" has body ""
 	
 Scenario: Hidden file
 	Given next file "#tempdir/testfiles/.hello.txt" with createdDate "#createdDate" and content
@@ -52,8 +58,9 @@ Scenario: Hidden file
 	When I start a service "#serviceFuture" with file serve "#tempdir/testfiles" on "/statics"
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /statics/.hello.txt" getting "#response"
-	Then I check that "#response" has status code 404
-	And I check that "#response" is equals to ""
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 404
+	And I check that http response "#response" has body ""
 	
 Scenario: File server with API
 	Given next file "#tempdir/testfiles/hello.txt" with createdDate "#createdDate" and content
@@ -63,9 +70,13 @@ Scenario: File server with API
 	When I start a service "#serviceFuture" with file serve "#tempdir/testfiles" on "/statics" and API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /statics/hello.txt" getting "#response"
-	And I check that "#response" is equals to "Hello from file!"
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 200
+	And I check that http response "#response" has body "Hello from file!"
 	When I send a "GET /hello" getting "#response"
-	Then I check that "#response" is equals to "Hello!"
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 200
+	And I check that http response "#response" has body "Hello!"
 	
 Scenario: File server not match path
 	Given next file "#tempdir/testfiles/hello.txt" with createdDate "#createdDate" and content
@@ -75,8 +86,9 @@ Scenario: File server not match path
 	When I start a service "#serviceFuture" with file serve "#tempdir/testfiles" on "/statics" and API "com.simplyti.service.examples.api.APITest"
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /other/hello.txt" getting "#response"
-	Then I check that "#response" has status code 404
-	And I check that "#response" is equals to ""
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 404
+	And I check that http response "#response" has body ""
 	
 Scenario: Close connection when required
 	Given next file "#tempdir/testfiles/hello.txt" with createdDate "#createdDate" and content

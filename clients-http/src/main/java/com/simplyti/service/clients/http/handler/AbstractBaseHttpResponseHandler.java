@@ -14,6 +14,7 @@ import io.netty.handler.codec.http.DefaultLastHttpContent;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.LastHttpContent;
+import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Promise;
 
 public abstract class AbstractBaseHttpResponseHandler<T> extends SimpleChannelInboundHandler<T> implements ChannelOutboundHandler {
@@ -94,6 +95,7 @@ public abstract class AbstractBaseHttpResponseHandler<T> extends SimpleChannelIn
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, T msg) throws Exception {
 		if(isContinue(msg)) {
+			ReferenceCountUtil.release(msg);
 			ctx.channel().writeAndFlush(content==null?LastHttpContent.EMPTY_LAST_CONTENT:new DefaultLastHttpContent(content));
 			return;
 		} 

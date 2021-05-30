@@ -1,5 +1,6 @@
 package com.simplyti.service.builder.di.guice;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -14,6 +15,8 @@ import com.simplyti.service.config.ServerConfig;
 import com.simplyti.service.fileserver.DirectoryResolver;
 import com.simplyti.service.fileserver.FileServeConfiguration;
 import com.simplyti.service.ssl.SslConfig;
+import com.simplyti.service.transport.Listener;
+import com.simplyti.service.transport.tcp.TcpListener;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.handler.ssl.SslProvider;
@@ -21,27 +24,21 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Log4J2LoggerFactory;
 import io.netty.util.internal.logging.Slf4JLoggerFactory;
 
-public abstract class AbstractServiceBuilder implements ServiceBuilder {
+public abstract class AbstractServiceBuilder implements ServiceBuilder, Listenable {
 
 	private static final int DEFAULT_BLOCKING_THREAD_POOL = 500;
-	private static final int DEFAULT_INSECURE_PORT = 8080;
-	private static final int DEFAULT_SECURE_PORT = 8443;
+	private static final Collection<Listener> DEFAULT_LISTENERS = Arrays.asList(new TcpListener(8080,false),new TcpListener(8443,true));
 	private static final int DEFAULT_MAX_BODY_SIZE = 10000000;
 	
 	private Collection<Class<? extends ApiProvider>> apiClasses;
 	private Collection<Module> modules;
+	private Collection<Listener> listeners;
 	private Integer blockingThreadPool;
-	private Integer insecuredPort;
-	private Integer securedPort;
 	private String name;
-	
 	private SslProvider sslProvider;
-
 	private FileServeConfiguration fileServerConfig;
 	private EventLoopGroup eventLoopGroup;
-	
 	private boolean verbose;
-	
 	private Integer maxBodySize;
 	
 	@Override
@@ -49,8 +46,7 @@ public abstract class AbstractServiceBuilder implements ServiceBuilder {
 		ServerConfig config = new ServerConfig(
 				name,
 				firstNonNull(blockingThreadPool, DEFAULT_BLOCKING_THREAD_POOL),
-				firstNonNull(insecuredPort, DEFAULT_INSECURE_PORT),
-				firstNonNull(securedPort, DEFAULT_SECURE_PORT),
+				firstNonNull(listeners,DEFAULT_LISTENERS),
 				eventLoopGroup!=null,
 				verbose,
 				firstNonNull(maxBodySize, DEFAULT_MAX_BODY_SIZE));
@@ -79,30 +75,6 @@ public abstract class AbstractServiceBuilder implements ServiceBuilder {
 		return this;
 	}
 	
-	@Override
-	public ServiceBuilder insecuredPort(int port) {
-		this.insecuredPort=port;
-		return this;
-	}
-	
-	@Override
-	public ServiceBuilder disableInsecurePort() {
-		this.insecuredPort=-1;
-		return this;
-	}
-	
-	@Override
-	public ServiceBuilder disableSecuredPort() {
-		this.securedPort=-1;
-		return this;
-	}
-	
-	@Override
-	public ServiceBuilder securedPort(int port) {
-		this.securedPort=port;
-		return this;
-	}
-
 	@Override
 	public ServiceBuilder withLog4J2Logger() {
 		InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE);
@@ -155,13 +127,13 @@ public abstract class AbstractServiceBuilder implements ServiceBuilder {
 	}
 
 	@Override
-	public ServiceBuilder fileServe(String path, String directory) {
+	public ServiceBuilder withFileServe(String path, String directory) {
 		this.fileServerConfig=new FileServeConfiguration(Pattern.compile("^"+path+"/(.*)$"),DirectoryResolver.literal(directory));
 		return this;
 	}
 
 	@Override
-	public ServiceBuilder eventLoopGroup(EventLoopGroup eventLoopGroup) {
+	public ServiceBuilder withEventLoopGroup(EventLoopGroup eventLoopGroup) {
 		this.eventLoopGroup=eventLoopGroup;
 		return this;
 	}
@@ -175,6 +147,20 @@ public abstract class AbstractServiceBuilder implements ServiceBuilder {
 	@Override
 	public ServiceBuilder withMaxBodySize(int maxBodySize) {
 		this.maxBodySize=maxBodySize;
+		return this;
+	}
+	
+	@Override
+	public ListenerBuilder withListener() {
+		return new DefaultListenerBuilder(this);
+	}
+	
+	@Override
+	public ServiceBuilder listen(Listener listener) {
+		if(this.listeners==null) {
+			this.listeners=new HashSet<>();
+		}
+		this.listeners.add(listener);
 		return this;
 	}
 

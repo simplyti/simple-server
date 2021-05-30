@@ -2,12 +2,16 @@ package com.simplyti.service.steps;
 
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -19,8 +23,8 @@ import org.awaitility.Awaitility;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.any.Any;
 import com.simplyti.service.clients.Client;
-import com.simplyti.service.clients.endpoint.Address;
 import com.simplyti.service.clients.endpoint.Endpoint;
+import com.simplyti.service.clients.endpoint.TcpAddress;
 import com.simplyti.service.clients.endpoint.ssl.SSLEndpoint;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
@@ -45,7 +49,6 @@ import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.json.JsonObjectDecoder;
 import io.netty.util.CharsetUtil;
@@ -53,14 +56,15 @@ import io.netty.util.concurrent.ImmediateEventExecutor;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.PromiseCombiner;
 
-import static org.junit.Assert.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.startsWith;
 
 public class HttpClientStepDefs {
 	
 	private static final Endpoint LOCAL_ENDPOINT = HttpEndpoint.of("http://localhost:8080");
+	private static final DateTimeFormatter CACHE_DATE_PATTERN = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
 	
 	@Inject
 	private EventLoopGroup eventLoopGroup;
@@ -157,20 +161,6 @@ public class HttpClientStepDefs {
 		    	.build());
 	}
 	
-	@When("^I get \"([^\"]*)\" using client \"([^\"]*)\" in event loop \"([^\"]*)\" getting response \"([^\"]*)\"$")
-	public void iGetUsingClientInEventLoopGettingResponse(String path, String clientKey, String eventloopKey, String resultKey) throws Exception {
-		HttpClient client = (HttpClient) scenarioData.get(clientKey);
-		EventLoop eventloop = (EventLoop) scenarioData.get(eventloopKey);
-		AtomicBoolean done = new AtomicBoolean();
-		eventloop.execute(()->{
-			Future<FullHttpResponse> response = client.request().withEndpoint(LOCAL_ENDPOINT)
-					.get(path).fullResponse();
-			scenarioData.put(resultKey, response);
-			done.set(true);
-		});
-		Awaitility.await().until(done::get);
-	}
-	
 	@When("^I post \"([^\"]*)\" with body \"([^\"]*)\" using http client \"([^\"]*)\" getting response \"([^\"]*)\"$")
 	public void iPostWithBodyUsingGenericClientGettingResponse(String path, String body, String clientKey, String resultKey) throws Exception {
 		HttpClient client = (HttpClient) scenarioData.get(clientKey);
@@ -182,7 +172,7 @@ public class HttpClientStepDefs {
 	    scenarioData.put(resultKey, response);
 	}
 	
-	@When("^I post \"([^\"]*)\" with body stream \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	@When("^I post \"([^\"]*)\" with chunked body stream \"([^\"]*)\" getting response \"([^\"]*)\"$")
 	public void iPostWithBodyStreamGettingResponse(String path, String streamKey, String resultKey) throws Exception {
 		AtomicReference<ChunckedBodyRequest> ref = new AtomicReference<>();
 		Future<FullHttpResponse> response = sutClient.request().withEndpoint(LOCAL_ENDPOINT)
@@ -194,7 +184,7 @@ public class HttpClientStepDefs {
 		scenarioData.put(streamKey, ref.get());
 	}
 	
-	@When("^I post \"([^\"]*)\" using client \"([^\"]*)\" with body stream \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	@When("^I post \"([^\"]*)\" using client \"([^\"]*)\" with chunked body stream \"([^\"]*)\" getting response \"([^\"]*)\"$")
 	public void iPostUsingClientWithBodyStreamGettingResponse(String path, String client, String streamKey, String resultKey) throws Exception {
 		AtomicReference<ChunckedBodyRequest> ref = new AtomicReference<>();
 		Future<FullHttpResponse> response = ((HttpClient)scenarioData.get(client)).request().withEndpoint(LOCAL_ENDPOINT)
@@ -206,40 +196,37 @@ public class HttpClientStepDefs {
 		scenarioData.put(streamKey, ref.get());
 	}
 	
-	@When("^I post \"([^\"]*)\" with filter \"([^\"]*)\" using client \"([^\"]*)\" with body stream \"([^\"]*)\" getting response \"([^\"]*)\"$")
-	public void iPostWithFilterUsingClientWithBodyStreamGettingResponse(String path, Class<? extends HttpRequestFilter> clazz, String client, String streamKey, String resultKey) throws Exception {
+	@When("^I post \"([^\"]*)\" using client \"([^\"]*)\" with chunked body stream \"([^\"]*)\" getting json response \"([^\"]*)\"$")
+	public void iPostWithFilterUsingClientWithBodyStreamGettingJsonResponse(String path, String client, String streamKey, String resultKey) throws Exception {
 		AtomicReference<ChunckedBodyRequest> ref = new AtomicReference<>();
-		Future<FullHttpResponse> response = ((HttpClient)scenarioData.get(client)).request().withEndpoint(LOCAL_ENDPOINT)
-			.withFilter(clazz.newInstance())
+		Future<Any> response = ((HttpClient)scenarioData.get(client)).request().withEndpoint(LOCAL_ENDPOINT)
 			.post(path)
 			.withChunkedBody(ref::set)
-			.fullResponse();
+			.fullResponse(this::toAny);
 		Awaitility.await().until(()->ref.get()!=null);
 		scenarioData.put(resultKey, response);
 		scenarioData.put(streamKey, ref.get());
 	}
 
-	
-	@When("^I post \"([^\"]*)\" using client \"([^\"]*)\" with header \"([^\"]*)\" \"([^\"]*)\" body stream \"([^\"]*)\" getting response \"([^\"]*)\"$")
-	public void iPostUsingClientWithHeaderBodyStreamGettingResponse(String path, String client, String header, String value, String streamKey, String resultKey) throws Exception {
+	@When("^I post \"([^\"]*)\" with filter \"([^\"]*)\" using client \"([^\"]*)\" with chunked body stream \"([^\"]*)\" getting json response \"([^\"]*)\"$")
+	public void iPostWithFilterUsingClientWithChunkedBodyStreamGettingJsonResponse(String path, Class<? extends HttpRequestFilter> clazz, String client, String streamKey, String resultKey) throws Exception {
 		AtomicReference<ChunckedBodyRequest> ref = new AtomicReference<>();
-		Future<FullHttpResponse> response = ((HttpClient)scenarioData.get(client)).request().withEndpoint(LOCAL_ENDPOINT)
+		Future<Any> response = ((HttpClient)scenarioData.get(client)).request().withEndpoint(LOCAL_ENDPOINT)
+			.withFilter(clazz.newInstance())
 			.post(path)
-			.withHeader(header, value)
 			.withChunkedBody(ref::set)
-			.fullResponse();
+			.fullResponse(this::toAny);
 		Awaitility.await().until(()->ref.get()!=null);
 		scenarioData.put(resultKey, response);
 		scenarioData.put(streamKey, ref.get());
 	}
 	
-	@When("^I post \"([^\"]*)\" with filter \"([^\"]*)\" using client \"([^\"]*)\" with header \"([^\"]*)\" \"([^\"]*)\" body stream \"([^\"]*)\" getting response \"([^\"]*)\"$")
-	public void iPostWithFilterUsingClientWithHeaderBodyStreamGettingResponse(String path, Class<? extends HttpRequestFilter> clazz, String client, String header, String value, String streamKey, String resultKey) throws Exception {
+	@When("^I post \"([^\"]*)\" with filter \"([^\"]*)\" using client \"([^\"]*)\" with chunked body stream \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	public void iPostWithFilterUsingClientWithChunkedBodyStreamGettingResponse(String path, Class<? extends HttpRequestFilter> clazz, String client, String streamKey, String resultKey) throws Exception {
 		AtomicReference<ChunckedBodyRequest> ref = new AtomicReference<>();
 		Future<FullHttpResponse> response = ((HttpClient)scenarioData.get(client)).request().withEndpoint(LOCAL_ENDPOINT)
 			.withFilter(clazz.newInstance())
 			.post(path)
-			.withHeader(header, value)
 			.withChunkedBody(ref::set)
 			.fullResponse();
 		Awaitility.await().until(()->ref.get()!=null);
@@ -259,7 +246,7 @@ public class HttpClientStepDefs {
 		stream.end();
 	}
 	
-	@When("^I post \"([^\"]*)\" with body stream \"([^\"]*)\" handling objects \"([^\"]*)\" and getting response \"([^\"]*)\"$")
+	@When("^I post \"([^\"]*)\" with chunked body stream \"([^\"]*)\" handling objects \"([^\"]*)\" and getting response \"([^\"]*)\"$")
 	public void iPostWithBodyStreamHandlingObjectsAndGettingResponse(String path, String streamKey, String objectsKey, String resultKey) throws Exception {
 		AtomicReference<ChunckedBodyRequest> ref = new AtomicReference<>();
 		List<String> objects = new ArrayList<>();
@@ -273,6 +260,31 @@ public class HttpClientStepDefs {
 		scenarioData.put(streamKey, ref.get());
 	}
 	
+	@When("^I send a \"([^\\s]*) ([^\"]*)\" getting json response \"([^\"]*)\"$")
+	public void iSendAGettingJsonResponse(String method, String path,  String resultKey) throws Exception {
+		Future<Any> response = client.request().withIgnoreStatusCode().withEndpoint(LOCAL_ENDPOINT)
+					.send(new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), path))
+					.fullResponse(this::toAny);
+		scenarioData.put(resultKey, response);
+	}
+	
+	
+	@When("^I send a \"([^\\s]*) ([^\"]*)\" getting \"([^\"]*)\"$")
+	public void iSendAGetting(String method, String path, String resultKey) throws Exception {
+		Future<FullHttpResponse> response = client.request().withIgnoreStatusCode().withEndpoint(LOCAL_ENDPOINT)
+					.send(new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), path))
+					.fullResponse();
+		scenarioData.put(resultKey, response);
+	}
+	
+	@When("^I send a \"([^\\s]*) ([^\"]*)\" with body \"([^\"]*)\" getting \"([^\"]*)\"$")
+	public void iSendAWithBodyGetting(String method, String path, String body, String resultKey) throws Exception {
+		Future<FullHttpResponse> response = client.request().withIgnoreStatusCode().withEndpoint(LOCAL_ENDPOINT)
+				.send(new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), path, Unpooled.copiedBuffer(body, CharsetUtil.UTF_8)))
+				.fullResponse();
+		scenarioData.put(resultKey, response);
+	}
+	
 	@When("^I get \"([^\"]*)\" getting response \"([^\"]*)\"$")
 	public void iGetWithClientGettingResponse(String path, String resultKey) throws Exception {
 		Future<FullHttpResponse> response = sutClient.request().withEndpoint(LOCAL_ENDPOINT)
@@ -280,10 +292,56 @@ public class HttpClientStepDefs {
 		scenarioData.put(resultKey, response);
 	}
 	
+	@When("^I send a \"([^\\s]*) ([^\"]*)\" getting \"([^\"]*)\" with status code (\\d+) eventually$")
+	public void iSendAGettingWithStatusCodeEventually(String method, String path, String resultKey, int code) throws Exception {
+	    Awaitility.await().until(()->{
+	    	Future<FullHttpResponse> response = client.request().withIgnoreStatusCode().withEndpoint(LOCAL_ENDPOINT).get(path).fullResponse();
+	    	response.sync();
+	    	response.get().release();
+	    	scenarioData.put(resultKey,response);
+	    	return response.getNow().status().code();
+	    },equalTo(code));
+	    
+	}
+	
 	@When("^I get \"([^\"]*)\" using client \"([^\"]*)\" getting response \"([^\"]*)\"$")
 	public void iGetUsingClientGettingResponse(String path, String clientKey, String resultKey) throws Exception {
 		Future<FullHttpResponse> response = ((HttpClient)scenarioData.get(clientKey)).request().withEndpoint(LOCAL_ENDPOINT)
 				.get(path).fullResponse();
+		scenarioData.put(resultKey, response);
+	}
+	
+	@When("^I get \"([^\"]*)\" using client \"([^\"]*)\" getting json response \"([^\"]*)\"$")
+	public void iGetUsingClientGettingJsonResponse(String path, String clientKey, String resultKey) throws Exception {
+		Future<Any> response = ((HttpClient)scenarioData.get(clientKey)).request().withEndpoint(LOCAL_ENDPOINT)
+				.get(path).fullResponse(this::toAny);
+		scenarioData.put(resultKey, response);
+	}
+	
+	@When("^I post \"([^\"]*)\" using client \"([^\"]*)\" with body \"([^\"]*)\" getting json response \"([^\"]*)\"$")
+	public void iPostUsingClientWithBodyGettingJsonResponse(String path, String clientKey, String body, String resultKey) throws Exception {
+		Future<Any> response = ((HttpClient)scenarioData.get(clientKey)).request().withEndpoint(LOCAL_ENDPOINT)
+				.post(path)
+				.withBodyWriter(b->b.writeCharSequence(body, CharsetUtil.UTF_8))
+				.fullResponse(this::toAny);
+		scenarioData.put(resultKey, response);
+	}
+
+	@When("^I get \"([^\"]*)\" with filter \"([^\"]*)\" using client \"([^\"]*)\" getting json response \"([^\"]*)\"$")
+	public void iGetWithFilterUsingClientGettingJsonResponse(String path, Class<? extends HttpRequestFilter> clazz, String clientKey, String resultKey) throws Exception {
+		Future<Any> response = ((HttpClient)scenarioData.get(clientKey)).request().withEndpoint(LOCAL_ENDPOINT)
+				.withFilter(clazz.newInstance())
+				.get(path).fullResponse(this::toAny);
+		scenarioData.put(resultKey, response);
+	}
+	
+	@When("^I post \"([^\"]*)\" with filter \"([^\"]*)\" using client \"([^\"]*)\" with body \"([^\"]*)\" getting json response \"([^\"]*)\"$")
+	public void iPostWithFilterUsingClientWithBodyGettingJsonResponse(String path, Class<? extends HttpRequestFilter> clazz, String clientKey, String body, String resultKey) throws Exception {
+		Future<Any> response = ((HttpClient)scenarioData.get(clientKey)).request().withEndpoint(LOCAL_ENDPOINT)
+				.withFilter(clazz.newInstance())
+				.post(path)
+				.withBodyWriter(b->b.writeCharSequence(body, CharsetUtil.UTF_8))
+				.fullResponse(this::toAny);
 		scenarioData.put(resultKey, response);
 	}
 	
@@ -447,16 +505,7 @@ public class HttpClientStepDefs {
 	@When("^I get \"([^\"]*)\" to port (\\d+) getting response \"([^\"]*)\"$")
 	public void iGetToPortGettingResponse(String path, int port, String resultKey) throws Exception {
 		Future<FullHttpResponse> response = sutClient
-				.request().withEndpoint(new Endpoint(HttpEndpoint.HTTP_SCHEMA, new Address(LOCAL_ENDPOINT.address().host(), port)))
-				.get(path).fullResponse();
-		scenarioData.put(resultKey, response);
-	}
-	
-	@When("^I get \"([^\"]*)\" to port (\\d+) with basic auth \"([^\"]*)\" \"([^\"]*)\" getting response \"([^\"]*)\"$")
-	public void iGetToPortWithBasicAuthGettingResponse(String path, int port, String user, String pass, String resultKey) throws Exception {
-		Future<FullHttpResponse> response = sutClient
-				.request().withEndpoint(new Endpoint(HttpEndpoint.HTTP_SCHEMA, new Address(LOCAL_ENDPOINT.address().host(), port)))
-				.withBasicAuth(user, pass)
+				.request().withEndpoint(new Endpoint(HttpEndpoint.HTTP_SCHEMA, new TcpAddress(((TcpAddress)LOCAL_ENDPOINT.address()).host(), port)))
 				.get(path).fullResponse();
 		scenarioData.put(resultKey, response);
 	}
@@ -527,31 +576,20 @@ public class HttpClientStepDefs {
 			scenarioData.put(resultKey, response);
 	}
 	
-	@When("^I post \"([^\"]*)\" with body \"([^\"]*)\" and header \"([^\"]*)\" \"([^\"]*)\" getting json response \"([^\"]*)\"$")
-	public void iPostWithBodyAndHeaderGettingResponse(String path, String body, String headerName, String headerValue, String resultKey) throws Exception {
+	@When("^I get \"([^\"]*)\" with header \"([^\"]*)\" \"([^\"]*)\" getting json response \"([^\"]*)\"$")
+	public void iPostWithHeaderGettingResponse(String path, String headerName, String headerValue, String resultKey) throws Exception {
 		Future<Any> response =  sutClient.request().withEndpoint(LOCAL_ENDPOINT)
-				.post(path)
-				.withBodyWriter(buffer->buffer.writeCharSequence(body, CharsetUtil.UTF_8))
+				.get(path)
 				.withHeader(headerName, headerValue)
 				.fullResponse(this::toAny);
 		scenarioData.put(resultKey, response);
 	}
 	
-	@When("^I post \"([^\"]*)\" with body \"([^\"]*)\" and query param \"([^\"]*)\" \"([^\"]*)\" getting json response \"([^\"]*)\"$")
-	public void iPostWithQueryParamGettingJsonResponse(String path, String body, String param, String value, String resultKey) throws Exception {
+	@When("^I get \"([^\"]*)\" with query param \"([^\"]*)\" \"([^\"]*)\" getting json response \"([^\"]*)\"$")
+	public void iPostWithQueryParamGettingJsonResponse(String path, String param, String value, String resultKey) throws Exception {
 		Future<Any> response =  sutClient.request().withEndpoint(LOCAL_ENDPOINT)
-				.post(path)
-				.withBodyWriter(buffer->buffer.writeCharSequence(body, CharsetUtil.UTF_8))
+				.get(path)
 				.param(param, value)
-				.fullResponse(this::toAny);
-		scenarioData.put(resultKey, response);
-	}
-	
-	@When("^I post \"([^\"]*)\" with body \"([^\"]*)\" getting json response \"([^\"]*)\"$")
-	public void iPostWithBodyGettingJsonResponse(String path, String body, String resultKey) throws Exception {
-		Future<Any> response =  sutClient.request().withEndpoint(LOCAL_ENDPOINT)
-				.post(path)
-				.withBodyWriter(buffer->buffer.writeCharSequence(body, CharsetUtil.UTF_8))
 				.fullResponse(this::toAny);
 		scenarioData.put(resultKey, response);
 	}
@@ -584,8 +622,17 @@ public class HttpClientStepDefs {
 		response.release();
 	}
 	
-	@Then("^I check that http response \"([^\"]*)\" has body$")
-	public void iCheckThatHttpResponseHasBody2(String key, String body) throws Exception {
+	@Then("^I check that http response \"([^\"]*)\" match witch '([^']*)'$")
+	public void iCheckThatHttpResponseMatchWitch(String key, String regex) throws Exception {
+		@SuppressWarnings("unchecked")
+		Future<FullHttpResponse> future = (Future<FullHttpResponse>) scenarioData.get(key);
+		FullHttpResponse response = future.get();
+		assertThat(response.content().toString(CharsetUtil.UTF_8).matches(regex),equalTo(true));
+		response.release();
+	}
+	
+	@Then("^I check that http response \"([^\"]*)\" has body '([^']*)'$")
+	public void iCheckThatHttpResponseHasBodySingle(String key, String body) throws Exception {
 		@SuppressWarnings("unchecked")
 		Future<FullHttpResponse> future = (Future<FullHttpResponse>) scenarioData.get(key);
 		FullHttpResponse response = future.get();
@@ -608,13 +655,13 @@ public class HttpClientStepDefs {
 		scenarioData.put(resultKey, response);
 	}
 	
-	@When("^I get \"([^\"]*)\" with query params getting response \"([^\"]*)\"$")
+	@When("^I get \"([^\"]*)\" with query params getting json response \"([^\"]*)\"$")
 	public void iGetWithQueryParamsGettingResponse(String path, String resultKey, Map<String,String> params) throws Exception {
-		Future<FullHttpResponse> response = sutClient
+		Future<Any> response = sutClient
 				.request().withEndpoint(LOCAL_ENDPOINT)
 				.get(path)
 				.params(params)
-				.fullResponse();
+				.fullResponse(this::toAny);
 		scenarioData.put(resultKey, response);
 	}
 
@@ -660,13 +707,6 @@ public class HttpClientStepDefs {
 		}
 	}
 
-	@Then("^I check that http objects \"([^\"]*)\" contains (\\d+) items$")
-	public void iCheckThatHttpObjectsContainsItems(String key, int number) throws Exception {
-		@SuppressWarnings("unchecked")
-		List<HttpObject> objects = (List<HttpObject>) scenarioData.get(key);
-		assertThat(objects,hasSize(number));
-	}
-	
 	@SuppressWarnings("unchecked")
 	@Then("^I check that stream \"([^\"]*)\" contains (\\d+) items$")
 	public void iCheckThatStreamContainsItems(String key, int number) throws Exception {
@@ -681,14 +721,6 @@ public class HttpClientStepDefs {
 		List<String> objects = (List<String>) scenarioData.get(key);
 		String data = objects.get(item);
 		assertThat(data,equalTo(expected));
-	}
-	
-	@Then("^I check that item (\\d+) of stream \"([^\"]*)\" is equal to \"([^\"]*)\"$")
-	public void iCheckThatItemOfStreamIsEqualTo2(int item, String key, String expected) throws Exception {
-		@SuppressWarnings("unchecked")
-		List<ByteBuf> objects = (List<ByteBuf>) scenarioData.get(key);
-		ByteBuf data = objects.get(item);
-		assertThat(data.toString(CharsetUtil.UTF_8),equalTo(expected));
 	}
 	
 	@When("^I connect to websocket \"([^\"]*)\" with uri \"([^\"]*)\" getting text stream \"([^\"]*)\"$")
@@ -742,14 +774,6 @@ public class HttpClientStepDefs {
 		data.delete(0, data.length());
 	}
 	
-	@Then("^I check that text stream \"([^\"]*)\" content match with \"([^\"]*)\"$")
-	public void iCheckThatTextStreamContentMatchWith(String key, String regex) throws Exception {
-		StringBuilder data = (StringBuilder) scenarioData.get(key);
-		Awaitility.await().until(()->((StringBuilder) scenarioData.get(key)).toString().matches(regex));
-		assertTrue(data.toString().matches(regex));
-		data.delete(0, data.length());
-	}
-	
 	@When("^I send message \"([^\"]*)\" to websocket \"([^\"]*)\" getting \"([^\"]*)\"$")
 	public void iSendMessageToWebsocketGetting(String msg, String wsKey, String result) throws Exception {
 		WebsocketClient ws = (WebsocketClient) scenarioData.get(wsKey);
@@ -761,11 +785,6 @@ public class HttpClientStepDefs {
 		scenarioData.put(key,sutClient.close());
 	}
 	
-	@When("^I crate http client filter \"([^\"]*)\" of class \"([^\"]*)\"$")
-	public void iCrateHttpClientFilterOfClass(String key, Class<?> clazz) throws Exception {
-		scenarioData.put(key, clazz.newInstance());
-	}
-	
 	@Given("^an ssl endpoint \"([^\"]*)\" for \"([^\"]*)\" using certificate \"([^\"]*)\" and private key from key pair \"([^\"]*)\"$")
 	public void anSslEndpointForUsingCertificateAndPrivateKeyFromKeyPair(String resultKey, String url, String certKey, String keyPairKey) throws Exception {
 		HttpEndpoint endpoint = HttpEndpoint.of(url);
@@ -773,7 +792,7 @@ public class HttpClientStepDefs {
 		X509Certificate cert = (X509Certificate) scenarioData.get(certKey);
 		SSLEndpoint sslEndpoint = SSLEndpoint.builder()
 			.address(endpoint.address())
-			.schema(endpoint.schema())
+			.scheme(endpoint.scheme())
 			.key(key.getPrivate())
 			.certs(Collections.singletonList(cert))
 			.build();
@@ -877,6 +896,25 @@ public class HttpClientStepDefs {
 		assertThat(values.get(0), equalTo(value));
 	}
 	
+
+	@When("^I check that http response \"([^\"]*)\" contains header \"([^\"]*)\" equals to date \"([^\"]*)\"$")
+	public void iCheckThatHttpResponseContainsHeaderEqualsToDate(String key, String header, String datekey) throws Exception {
+		@SuppressWarnings("unchecked")
+		Future<FullHttpResponse> response = (Future<FullHttpResponse>) scenarioData.get(key);
+		assertThat(response.getNow().headers().contains(header),equalTo(true));
+		String date = CACHE_DATE_PATTERN.format(ZonedDateTime.ofInstant(Instant.ofEpochMilli((long) scenarioData.get(datekey)),ZoneId.of("GMT")));
+		assertThat(response.getNow().headers().get(header),equalTo(date));
+	}
+	
+	@Then("^I check that http response \"([^\"]*)\" contains header \"([^\"]*)\" starts with \"([^\"]*)\"$")
+	public void iCheckThatHttpResponseContainsHeaderStartsWith(String key, String name, String value) throws Exception {
+		@SuppressWarnings("unchecked")
+		Future<FullHttpResponse> response = (Future<FullHttpResponse>) scenarioData.get(key);
+		List<String> values = response.getNow().headers().getAll(name);
+		assertThat(values, hasSize(1));
+		assertThat(values.get(0), startsWith(value));
+	}
+	
 	@Then("^I get \"([^\"]*)\" getting sse stream \"([^\"]*)\" and result \"([^\"]*)\"$")
 	public void iGetGettingSseStreamAndResult(String path, String streamKey, String resultKey) throws Exception {
 		List<ServerEvent> stream = new ArrayList<>();
@@ -888,6 +926,13 @@ public class HttpClientStepDefs {
 		
 		scenarioData.put(resultKey, result);
 		scenarioData.put(streamKey, stream);
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Then("^I check that sse stream \"([^\"]*)\" has item (\\d+) with data \"([^\"]*)\"$")
+	public void iCheckThatSseStreamHasItemWithData(String key, int index, String expected) throws Exception {
+		List<ServerEvent> list = (List<ServerEvent>) scenarioData.get(key);
+		assertThat(list.get(index).data(),equalTo(expected));
 	}
 
 }

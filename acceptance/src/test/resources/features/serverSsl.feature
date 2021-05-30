@@ -32,7 +32,7 @@ Scenario: I specify secured port
 	When I try to start a service "#serviceFuture" with options getting error "#error":
 		| option	 		| value |
 		| withApi			| com.simplyti.service.examples.api.APITest	|
-		| securedPort		| 4443	|
+		| listener			| ssl:4443	|
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /hello" using ssl port 4443 getting "#response"
 	Then I check that "#response" is equals to "Hello!"

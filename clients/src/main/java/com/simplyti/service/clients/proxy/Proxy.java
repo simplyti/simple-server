@@ -1,6 +1,6 @@
 package com.simplyti.service.clients.proxy;
 
-import com.simplyti.service.clients.endpoint.Address;
+import com.simplyti.service.clients.endpoint.TcpAddress;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -15,7 +15,7 @@ public class Proxy {
 		HTTP
 	}
 
-	private final Address address;
+	private final TcpAddress address;
 	private final ProxyType type;
 	private final String username;
 	private final String password;
@@ -25,7 +25,7 @@ public class Proxy {
 	}
 	
 	public Proxy(String host,int port,ProxyType type, String username, String password) {
-		this.address=new Address(host, port);
+		this.address=new TcpAddress(host, port);
 		this.type=type;
 		this.username=username;
 		this.password=password;

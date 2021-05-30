@@ -9,10 +9,13 @@ Scenario: Basic Http Request filter
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /hello/1" getting "#response"
-	And I check that "#response" has status code 200
-	And I check that "#response" is equals to "Hello 1!"
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 200
+	And I check that http response "#response" has body "Hello 1!"
 	When I send a "GET /hello/bad" getting "#response"
-	And I check that "#response" has status code 400
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 400
+	And I check that http response "#response" has body ""
 
 Scenario: Async Http Request filter
 	When I start a service "#serviceFuture" with options:
@@ -22,10 +25,13 @@ Scenario: Async Http Request filter
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /hello/1" getting "#response"
-	And I check that "#response" has status code 200
-	And I check that "#response" is equals to "Hello 1!"
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 200
+	And I check that http response "#response" has body "Hello 1!"
 	When I send a "GET /hello/bad" getting "#response"
-	And I check that "#response" has status code 400
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 400
+	And I check that http response "#response" has body ""
 	
 Scenario: Basic Http Request filter with buffered body
 	When I start a service "#serviceFuture" with options:
@@ -59,7 +65,10 @@ Scenario: Full Http Request filter
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is success
 	When I send a "GET /hello/1" getting "#response"
-	And I check that "#response" has status code 200
-	And I check that "#response" is equals to "Hello 1!"
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 200
+	And I check that http response "#response" has body "Hello 1!"
 	When I send a "GET /hello/bad" getting "#response"
-	And I check that "#response" has status code 400
+	Then I check that "#response" is success
+	And I check that http response "#response" has status code 400
+	And I check that http response "#response" has body ""

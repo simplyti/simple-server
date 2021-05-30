@@ -2,6 +2,8 @@ package com.simplyti.service.builder.di;
 
 import java.util.Optional;
 
+import javax.inject.Provider;
+
 import com.simplyti.service.channel.ServiceChannelInitializer;
 import com.simplyti.service.config.ServerConfig;
 import com.simplyti.service.ssl.SslHandlerFactory;
@@ -15,19 +17,33 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerDomainSocketChannel;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.kqueue.KQueue;
 import io.netty.channel.kqueue.KQueueEventLoopGroup;
+import io.netty.channel.kqueue.KQueueServerDomainSocketChannel;
 import io.netty.channel.kqueue.KQueueServerSocketChannel;
+import io.netty.channel.unix.ServerDomainSocketChannel;
 
 public class NativeIO {
+	
+	public ServerDomainSocketChannel serverDomainChannel() {
+		if(Epoll.isAvailable()) {
+			return new EpollServerDomainSocketChannel();
+		} else if(KQueue.isAvailable()) {
+			return new KQueueServerDomainSocketChannel();
+		} else {
+			return null;
+		}
+	}
 
 	public ServerChannel serverChannel() {
 		if(Epoll.isAvailable()) {
 			return new EpollServerSocketChannel();
-		}else if(KQueue.isAvailable()) {
+		} else if(KQueue.isAvailable()) {
 			return new KQueueServerSocketChannel();
 		}else {
+			
 			return null;
 		}
 	}
@@ -42,7 +58,7 @@ public class NativeIO {
 		}
 	}
 
-	public ServerTransport transport(EventLoopGroup eventLoopGroup, @StartStopLoop EventLoop startStopLoop,
+	public ServerTransport tcpTransport(Provider<EventLoopGroup> eventLoopGroup, @StartStopLoop Provider<EventLoop> startStopLoop,
 			ChannelFactory<ServerChannel> channelFactory, Optional<SslHandlerFactory> sslHandlerFactory, 
 			ServiceChannelInitializer serviceChannelInitializer, ServerConfig config) {
 		if(Epoll.isAvailable()) {

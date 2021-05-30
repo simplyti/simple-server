@@ -92,8 +92,10 @@ public class OpenIdStepDefs {
 	public void anOpenidProviderListeningInPortWithSignCertificateAndTokenEndpoint(int port, String keyKey,String tokenEndpoint) throws Exception {
 		SelfSignedCertificate key = (SelfSignedCertificate) scenarioData.get(keyKey);
 		Future<Server> service = GuiceService.builder()
-			    .securedPort(port)
-			    .disableInsecurePort()
+			    .withListener()
+			    	.port(port)
+			    	.secured()
+			    	.end()
 			    .withModule(new JsoniterModule())
 			    .withModule(new FakeOpenIdModule(key,"/auth",tokenEndpoint,0,0))
 			    	.build().start().await();
@@ -104,8 +106,10 @@ public class OpenIdStepDefs {
 	public void anOpenidProviderListeningInPortWithSignCertificateAuthorizationEndpointTokenEndpoint(int port, String keyKey,String authEndpoint,String tokenEndpoint) throws Exception {
 		SelfSignedCertificate key = (SelfSignedCertificate) scenarioData.get(keyKey);
 		Future<Server> service = GuiceService.builder()
-			    .securedPort(port)
-			    .disableInsecurePort()
+				.withListener()
+			    	.port(port)
+			    	.secured()
+			    	.end()
 			    .withModule(new JsoniterModule())
 			    .withModule(new FakeOpenIdModule(key,authEndpoint,tokenEndpoint,0,0))
 			    	.build().start().await();
@@ -116,8 +120,10 @@ public class OpenIdStepDefs {
 	public void anOpenidProviderListeningInPortWithSignCertificateAuthorizationEndpointMsOfDelay(int port, String keyKey,String authEndpoint, int wellKnownDelay) throws Exception {
 		SelfSignedCertificate key = (SelfSignedCertificate) scenarioData.get(keyKey);
 		Future<Server> service = GuiceService.builder()
-			    .securedPort(port)
-			    .disableInsecurePort()
+				.withListener()
+			    	.port(port)
+			    	.secured()
+			    	.end()
 			    .withModule(new JsoniterModule())
 			    .withModule(new FakeOpenIdModule(key,authEndpoint,"/token",wellKnownDelay,0))
 			    	.build().start().await();
@@ -128,8 +134,10 @@ public class OpenIdStepDefs {
 	public void anOpenidProviderListeningInPortWithSignCertificateAuthorizationEndpointAndTokenEndpointWithMsOfDelay(int port, String keyKey,String authEndpoint,String tokenEndpoint, int jwksDelay) throws Exception {
 		SelfSignedCertificate key = (SelfSignedCertificate) scenarioData.get(keyKey);
 		Future<Server> service = GuiceService.builder()
-			    .securedPort(port)
-			    .disableInsecurePort()
+				.withListener()
+			    	.port(port)
+			    	.secured()
+			    	.end()
 			    .withModule(new JsoniterModule())
 			    .withModule(new FakeOpenIdModule(key,authEndpoint,tokenEndpoint,0,jwksDelay))
 			    	.build().start().await();

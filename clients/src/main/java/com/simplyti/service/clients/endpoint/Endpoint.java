@@ -1,6 +1,6 @@
 package com.simplyti.service.clients.endpoint;
 
-import com.simplyti.service.clients.Schema;
+import com.simplyti.service.clients.Scheme;
 import com.simplyti.service.clients.proxy.ProxiedEndpoint;
 
 import lombok.EqualsAndHashCode;
@@ -14,15 +14,15 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class Endpoint {
 	
-	private final Schema schema;
+	private final Scheme scheme;
 	private final Address address;
 	
-	public Endpoint(Schema schema,String host, int port) {
-		this(schema,new Address(host,port));
+	public Endpoint(Scheme schema,String host, int port) {
+		this(schema,new TcpAddress(host,port));
 	}
 	
-	public Endpoint(Schema schema,Address address) {
-		this.schema=schema;
+	public Endpoint(Scheme scheme, Address address) {
+		this.scheme=scheme;
 		this.address=address;
 	}
 	
@@ -32,7 +32,7 @@ public class Endpoint {
 	
 	@Override
 	public String toString() {
-		return schema.name()+"://"+address;
+		return scheme.name()+"://"+address;
 	}
 
 }

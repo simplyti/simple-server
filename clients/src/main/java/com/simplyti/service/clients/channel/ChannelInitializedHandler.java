@@ -12,19 +12,19 @@ public class ChannelInitializedHandler extends ChannelInboundHandlerAdapter {
 	private static final AttributeKey<Boolean> INITIALIZED = AttributeKey.valueOf("clients.init");
 
 	private final Promise<ClientChannel> promise;
-	private final PooledClientChannel pooledClient;
+	private final ClientChannel clientChannel;
 
-	public ChannelInitializedHandler(PooledClientChannel pooledClient, Promise<ClientChannel> promise) {
-		this.pooledClient=pooledClient;
+	public ChannelInitializedHandler(ClientChannel clientChannel, Promise<ClientChannel> promise) {
+		this.clientChannel=clientChannel;
 		this.promise=promise;
 	}
 	
 	 @Override
 	 public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
 		 if(evt==ClientChannelEvent.INIT) {
-			 pooledClient.attr(INITIALIZED).set(true);
+			 clientChannel.attr(INITIALIZED).set(true);
 			 ctx.pipeline().remove(this);
-			 promise.setSuccess(pooledClient);
+			 promise.setSuccess(clientChannel);
 		 } else {
 			 ctx.fireUserEventTriggered(evt);
 		 }
@@ -33,7 +33,7 @@ public class ChannelInitializedHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		ctx.close();
-		pooledClient.release();
+		clientChannel.release();
 		promise.setFailure(cause);
 	}
 

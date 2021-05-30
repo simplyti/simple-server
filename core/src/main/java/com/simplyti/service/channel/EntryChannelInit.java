@@ -4,6 +4,6 @@ import io.netty.channel.ChannelPipeline;
 
 public interface EntryChannelInit {
 
-	void init(ChannelPipeline pipeline);
+	void init(ChannelPipeline pipeline, boolean isSsl);
 
 }

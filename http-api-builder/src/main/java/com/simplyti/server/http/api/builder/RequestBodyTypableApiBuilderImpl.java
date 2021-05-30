@@ -2,18 +2,22 @@ package com.simplyti.server.http.api.builder;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import com.simplyti.server.http.api.builder.fileupload.FileUploadApiBuilder;
 import com.simplyti.server.http.api.builder.fileupload.FileUploadApiBuilderImpl;
 import com.simplyti.server.http.api.builder.stream.StreamedRequestResponseTypableApiBuilder;
 import com.simplyti.server.http.api.builder.stream.StreamedRequestResponseTypableApiBuilderImpl;
+import com.simplyti.server.http.api.context.AnyWithBodyApiContext;
 import com.simplyti.server.http.api.context.ApiContextFactory;
+import com.simplyti.server.http.api.futurehandler.AnyWithBodyFutureHandler;
 import com.simplyti.server.http.api.operations.AnyWithBodyApiOperation;
 import com.simplyti.server.http.api.operations.ApiOperations;
 import com.simplyti.service.api.serializer.json.TypeLiteral;
 import com.simplyti.service.matcher.ApiPattern;
 
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.util.concurrent.Future;
 
 public class RequestBodyTypableApiBuilderImpl implements RequestTypableApiBuilder {
 	
@@ -80,6 +84,11 @@ public class RequestBodyTypableApiBuilderImpl implements RequestTypableApiBuilde
 	public void then(ApiWithBodyContextConsumer consumer) {
 		ApiPattern apiPattern = ApiPattern.build(path);
 		operations.add(new AnyWithBodyApiOperation(method,apiPattern,metadata,consumer,anyContextFactory,notFoundOnNull,maxBodyLength));
+	}
+	
+	@Override
+	public <U> void thenFuture(Function<AnyWithBodyApiContext, Future<U>> futureSupplier) {
+		then(new AnyWithBodyFutureHandler<>(futureSupplier));
 	}
 
 	@Override

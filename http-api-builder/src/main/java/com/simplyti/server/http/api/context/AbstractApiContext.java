@@ -1,5 +1,6 @@
 package com.simplyti.server.http.api.context;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,12 +31,14 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpResponse;
+import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
@@ -173,6 +176,11 @@ public abstract class AbstractApiContext<U> implements ApiContext {
 	public Map<String,List<String>> queryParams() {
 		return this.matcher.parameters();
 	}
+	
+	@Override
+	public Collection<String> queryParamNames() {
+		return this.matcher.parameterNames();
+	}
 
 	@Override
 	public HttpRequest request() {
@@ -221,7 +229,7 @@ public abstract class AbstractApiContext<U> implements ApiContext {
 	
 	public Future<Void> writeAndFlush(HttpObject response) {
 		try {
-			ChannelFuture future = ctx.writeAndFlush(response)
+			ChannelFuture future = ctx.writeAndFlush(checkResponse(response))
 					.addListener(this::writeListener);
 			return new DefaultFuture<>(future,ctx.executor());
 		} catch(Exception cause) {
@@ -229,6 +237,14 @@ public abstract class AbstractApiContext<U> implements ApiContext {
 		}
 	}
 	
+	private HttpObject checkResponse(HttpObject response) {
+		if (response instanceof FullHttpResponse && !((FullHttpResponse) response).headers().contains(HttpHeaderNames.CONTENT_LENGTH)) {
+			FullHttpResponse fullResponse = (FullHttpResponse) response;
+			fullResponse.headers().set(HttpHeaderNames.CONTENT_LENGTH, fullResponse.content().readableBytes());
+		}
+		return response;
+	}
+
 	public Future<Void> writeAndFlushEmpty() {
 		try {
 			ChannelFuture future = ctx.writeAndFlush(new ApiObjectResponse(null, isKeepAlive, false))
@@ -280,7 +296,7 @@ public abstract class AbstractApiContext<U> implements ApiContext {
 	}
 	
 	@Override
-	public Future<Void> webSocket(WebSocketApiContextConsumer consumer) {
+	public final Future<Void> webSocket(WebSocketApiContextConsumer consumer) {
 		String location = this.request.headers().get(HttpHeaderNames.HOST) + this.request.uri();
 		WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(location, null, true);
 		WebSocketServerHandshaker handshaker = wsFactory.newHandshaker(this.request);
@@ -321,8 +337,7 @@ public abstract class AbstractApiContext<U> implements ApiContext {
 		ChannelFuture future = ctx.writeAndFlush(response)
 			.addListener(f-> {
 				if(f.isSuccess()) {
-					ctx.pipeline().remove("encoder");
-					ctx.pipeline().remove("decoder");
+					ctx.pipeline().remove(HttpServerCodec.class);
 					ctx.pipeline().addBefore("api-handler" ,"sse-codec", ServerSentEventEncoder.INSTANCE);
 					consumer.accept(new ServerSentEventApiContextImpl(ctx));
 				}

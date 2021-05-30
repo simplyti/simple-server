@@ -1,5 +1,6 @@
 package com.simplyti.server.http.api.request;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +23,10 @@ public class ApiMatchRequest {
 	
 	public String group(int group) {
 		return matcher.group(group);
+	}
+
+	public Collection<String> parameterNames() {
+		return parameters.keySet();
 	}
 
 }

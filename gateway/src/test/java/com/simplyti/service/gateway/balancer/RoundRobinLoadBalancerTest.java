@@ -12,6 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.simplyti.service.clients.endpoint.Endpoint;
+import com.simplyti.service.clients.endpoint.TcpAddress;
 import com.simplyti.service.clients.http.HttpEndpoint;
 
 import io.netty.channel.EventLoop;
@@ -42,8 +43,8 @@ public class RoundRobinLoadBalancerTest {
 			if(next == null) {
 				throw new RuntimeException();
 			} else {
-				if(next.address().host().equals("a")) countA.incrementAndGet();
-				if(next.address().host().equals("b")) countB.incrementAndGet();
+				if(((TcpAddress)next.address()).host().equals("a")) countA.incrementAndGet();
+				if(((TcpAddress)next.address()).host().equals("b")) countB.incrementAndGet();
 			}
 		}
 		
@@ -65,8 +66,8 @@ public class RoundRobinLoadBalancerTest {
 				if(next == null) {
 					promise.setFailure(new NullPointerException());
 				} else {
-					if(next.address().host().equals("a")) countA.incrementAndGet();
-					if(next.address().host().equals("b")) countB.incrementAndGet();
+					if(((TcpAddress)next.address()).host().equals("a")) countA.incrementAndGet();
+					if(((TcpAddress)next.address()).host().equals("b")) countB.incrementAndGet();
 					promise.setSuccess(null);
 				}
 			});

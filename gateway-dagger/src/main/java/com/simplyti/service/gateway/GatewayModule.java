@@ -5,7 +5,6 @@ import javax.inject.Singleton;
 import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;
 import com.simplyti.service.clients.GenericClient;
 import com.simplyti.service.clients.channel.factory.DefaultChannelFactory;
-import com.simplyti.service.config.ServerConfig;
 import com.simplyti.service.gateway.http.HttpGatewayClient;
 import com.simplyti.service.gateway.http.HttpGatewayRequestHandler;
 
@@ -32,8 +31,8 @@ public class GatewayModule {
 	}
 	
 	@Provides
-	public DefaultBackendRequestHandler defaultBackendRequestHandler(@HttpGatewayClient GenericClient httpGateway, ServiceDiscovery serviceDiscovery, ServerConfig config, GatewayConfig gatewayConfig) {
-		return new HttpGatewayRequestHandler(httpGateway, serviceDiscovery,config,gatewayConfig);
+	public DefaultBackendRequestHandler defaultBackendRequestHandler(@HttpGatewayClient GenericClient httpGateway, ServiceDiscovery serviceDiscovery, GatewayConfig gatewayConfig) {
+		return new HttpGatewayRequestHandler(httpGateway, serviceDiscovery,gatewayConfig);
 	}
 	
 	@Provides

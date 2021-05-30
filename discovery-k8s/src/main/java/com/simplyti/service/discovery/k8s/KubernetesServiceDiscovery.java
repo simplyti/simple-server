@@ -14,6 +14,7 @@ import javax.inject.Inject;
 
 import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.clients.endpoint.Address;
+import com.simplyti.service.clients.endpoint.TcpAddress;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.clients.k8s.KubeClient;
@@ -362,7 +363,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		return firstNonNull(oldEndpoint.subsets(), Collections.<Subset>emptyList()).stream()
 		.flatMap(subset->subset.ports().stream()
 				.flatMap(port->firstNonNull(subset.addresses(), Collections.<com.simplyti.service.clients.k8s.endpoints.domain.Address>emptyList()).stream()
-						.map(address->new EnpointAddress(port.name(),new Address(address.ip(), port.port())))))
+						.map(address->new EnpointAddress(port.name(),new TcpAddress(address.ip(), port.port())))))
 		.collect(Collectors.toList());
 	}
 	
@@ -429,7 +430,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 	}
 
 	private com.simplyti.service.clients.endpoint.Endpoint endpoint(Ingress ingress, com.simplyti.service.clients.k8s.endpoints.domain.Address address, Port port) {
-		return endpoint(ingress,new Address(address.ip(), port.port()));
+		return endpoint(ingress,new TcpAddress(address.ip(), port.port()));
 	}
 	
 	private com.simplyti.service.clients.endpoint.Endpoint endpoint(Ingress ingress, Address address) {

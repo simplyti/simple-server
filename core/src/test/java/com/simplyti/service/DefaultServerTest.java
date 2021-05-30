@@ -3,6 +3,7 @@ package com.simplyti.service;
 import java.util.Collections;
 import java.util.Set;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -50,6 +51,12 @@ public class DefaultServerTest {
 		this.clientChannelGroup = new ClientChannelGroup(startStopLoop);
 		this.transport = mock(ServerTransport.class);
 		this.instanceProvider = mock(InstanceProvider.class);
+	}
+	
+	@After
+	public void teardown() {
+		this.eventLoopGroup.shutdownGracefully();
+		this.startStopLoop.shutdownGracefully();
 	}
 	
 	@Test
@@ -150,8 +157,8 @@ public class DefaultServerTest {
 	}
 
 	private void newServer(Set<ServerStartHook> startHooks,Set<ServerStopHook> stopHooks) {
-		ServerConfig config = new ServerConfig("test",10,-1,1,false,false,100);
-		this.service = new DefaultServer(eventLoopGroup, serverStopAdvisor, startStopLoop, clientChannelGroup, startHooks, stopHooks, config, transport, instanceProvider);
+		ServerConfig config = new ServerConfig("test",10,Collections.emptyList(),false,false,100);
+		this.service = new DefaultServer(()->eventLoopGroup, serverStopAdvisor, ()->startStopLoop, ()->clientChannelGroup, startHooks, stopHooks, config, Collections.singleton(transport), instanceProvider);
 	}
 
 }

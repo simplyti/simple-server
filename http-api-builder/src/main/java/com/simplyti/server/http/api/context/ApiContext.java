@@ -1,5 +1,6 @@
 package com.simplyti.server.http.api.context;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -24,6 +25,7 @@ public interface ApiContext {
 	Long queryParamAsLong(String key, long defaultValue);
 	
 	List<String> queryParams(String key);
+	Collection<String> queryParamNames();
 	Map<String,List<String>> queryParams();
 	
 	String pathParam(String name);

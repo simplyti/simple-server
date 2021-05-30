@@ -1,7 +1,5 @@
 package com.simplyti.service.clients.channel;
 
-import java.net.InetSocketAddress;
-
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.monitor.ClientMonitorHandler;
 import com.simplyti.service.clients.monitor.MonitoredHandler;
@@ -34,7 +32,7 @@ public class UnpooledClientChannelFactory extends ChannelInitializer<SocketChann
 	public Future<ClientChannel> channel(Endpoint endpoint, long responseTimeoutMillis) {
 		EventLoop loop = eventLoopGroup.next();
 		ChannelFuture channelFuture = bootstrap.clone().handler(this)
-				.connect(new InetSocketAddress(endpoint.address().host(), endpoint.address().port()));
+				.connect(endpoint.address().toSocketAddress());
 		if(channelFuture.isDone()) {
 			if(channelFuture.isSuccess()) {
 				Channel channel = channelFuture.channel();
