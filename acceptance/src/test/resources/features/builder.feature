@@ -19,7 +19,7 @@ Scenario: I cannot start servers on same port
 		| insecuredPort		| 8080	|
 		| withLog4J2Logger	|		|
 	Then I check that "#serviceFuture" is failure
-	And I check that error failure message of "#serviceFuture" contains "La dirección ya se está usando"
+	And I check that error failure message of "#serviceFuture" contains "Address already in use"
 
 Scenario: I specify multiple apis
 	When I start a service "#serviceFuture" with options:
