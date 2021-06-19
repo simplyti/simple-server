@@ -1,9 +1,13 @@
 package com.simplyti.service.builder.di.dagger;
 
 
+import java.util.Set;
+
 import javax.annotation.Nullable;
 import javax.inject.Named;
 import javax.inject.Singleton;
+
+import com.simplyti.service.transport.Listener;
 
 import dagger.BindsInstance;
 import dagger.Component;
@@ -22,10 +26,9 @@ public interface ServiceBuilder {
 		@BindsInstance Builder withFileServerDirectory(@Nullable @Named("fileServerDirectory") String fileServerDirectory);
 		@BindsInstance Builder withBlockingThreadPoolSize(@Nullable @Named("blockingThreadPool") int blockingThreadPool);
 		@BindsInstance Builder withSslProvider(@Nullable @Named("sslProvider") SslProvider sslProvider);
-		@BindsInstance Builder insecuredPort(@Nullable @Named("insecuredPort") int insecuredPort);
-		@BindsInstance Builder securedPort(@Nullable @Named("securedPort") int securedPort);
 		@BindsInstance Builder verbose(@Nullable @Named("verbose") boolean verbose);
 		@BindsInstance Builder maxBodySize(@Nullable @Named("maxBodySize") int maxBodySize);
+		@BindsInstance Builder withListener(@Nullable @Named("listeners") Set<Listener> listener);
 		
 		ServiceBuilder build();
 

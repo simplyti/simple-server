@@ -51,7 +51,7 @@
 		<!-- IoC -->
 		<inject.version>1.0.3</inject.version>
 		<guice.version>4.2.3</guice.version>
-		<dagger.version>2.30.1</dagger.version>
+		<dagger.version>2.36</dagger.version>
 		<kotlin.version>1.4.20</kotlin.version>
 
 		<!-- Commons -->
@@ -64,7 +64,7 @@
 		<xml.bind-api.version>3.0.0</xml.bind-api.version>
 
 		<!-- Networking -->
-		<netty.version>4.1.63.Final</netty.version>
+		<netty.version>4.1.65.Final</netty.version>
 
 		<!-- SSL -->
 		<tcnative.version>2.0.38.Final</tcnative.version>
@@ -74,7 +74,7 @@
 
 		<!-- Json -->
 		<jsoniter.version>0.9.23</jsoniter.version>
-		<dsljson.version>1.9.7</dsljson.version>
+		<dsljson.version>1.9.8</dsljson.version>
 		<jackson.json>2.12.0</jackson.json>
 
 		<!-- JE2/J -->
@@ -89,7 +89,7 @@
 		<hamcrest.version>1.3</hamcrest.version>
 		<mockito.version>1.10.19</mockito.version>
 		<awaitility.version>3.1.6</awaitility.version>
-		<commons-io.version>2.6</commons-io.version>
+		<commons-io.version>2.7</commons-io.version>
 		<log4j.version>2.13.3</log4j.version>
 
 		<!-- Integration Test -->

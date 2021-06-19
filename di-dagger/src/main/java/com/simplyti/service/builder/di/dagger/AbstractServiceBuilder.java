@@ -1,7 +1,11 @@
 package com.simplyti.service.builder.di.dagger;
 
+import java.util.Set;
+
 import javax.annotation.Nullable;
 import javax.inject.Named;
+
+import com.simplyti.service.transport.Listener;
 
 import dagger.BindsInstance;
 import io.netty.handler.ssl.SslProvider;
@@ -24,16 +28,13 @@ public interface AbstractServiceBuilder<T extends AbstractServiceBuilder<T,O>,O 
 	T withSslProvider(@Nullable @Named("sslProvider") SslProvider sslProvider);
 	
 	@BindsInstance
-	T insecuredPort(@Nullable @Named("insecuredPort") int insecuredPort);
-
-	@BindsInstance
-	T securedPort(@Nullable @Named("securedPort") int securedPort);
-
-	@BindsInstance
 	T verbose(@Nullable @Named("verbose") boolean verbose);
 	
 	@BindsInstance
 	T withMaxBodySize(@Nullable @Named("maxBodySize") int maxBodySize);
+	
+	@BindsInstance
+	T withListener(@Nullable @Named("listeners") Set<Listener> listener);
 	
 	O build();
 

@@ -83,13 +83,12 @@ public class BaseServiceModule {
 	public ServerConfig serverConfig(
 			@Nullable @Named("name") String name,
 			@Nullable @Named("blockingThreadPool") Integer blockingThreadPool, 
-			@Nullable @Named("insecuredPort") Integer insecuredPort, 
-			@Nullable @Named("securedPort") Integer  securedPort,
 			@Nullable @Named("verbose") Boolean verbose,
-			@Nullable @Named("maxBodySize") Integer maxBodySize) {
+			@Nullable @Named("maxBodySize") Integer maxBodySize,
+			@Nullable @Named("listeners") Set<Listener> listeners) {
 		return new ServerConfig(name,
 				firstNonNull(blockingThreadPool, DEFAULT_BLOCKING_THREAD_POOL),
-				DEFAULT_LISTENERS, 
+				firstNonNull(listeners, DEFAULT_LISTENERS), 
 				false, 
 				firstNonNull(verbose, false),
 				firstNonNull(maxBodySize, DEFAULT_MAX_BODY_SIZE));
