@@ -17,7 +17,7 @@ public class Endpoint {
 	private final Scheme scheme;
 	private final Address address;
 	
-	public Endpoint(Scheme schema,String host, int port) {
+	public Endpoint(Scheme schema, String host, int port) {
 		this(schema,new TcpAddress(host,port));
 	}
 	
