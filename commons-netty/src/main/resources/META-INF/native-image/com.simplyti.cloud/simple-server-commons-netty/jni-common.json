@@ -1,0 +1,237 @@
+[
+  {
+    "name" : "io.netty.channel.unix.LimitsStaticallyReferencedJniMethods",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": [] },
+		{ "name": "ssizeMax", "parameterTypes": [] },
+		{ "name": "iovMax", "parameterTypes": [] },
+		{ "name": "uioMaxIov", "parameterTypes": [] },
+		{ "name": "sizeOfjlong", "parameterTypes": [] },
+		{ "name": "udsSunPathSize", "parameterTypes": [] }
+	]
+  },
+  {
+    "name" : "io.netty.channel.unix.ErrorsStaticallyReferencedJniMethods",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": [] },
+		{ "name": "errnoENOENT", "parameterTypes": [] },
+		{ "name": "errnoEBADF", "parameterTypes": [] },
+		{ "name": "errnoEPIPE", "parameterTypes": [] },
+		{ "name": "errnoECONNRESET", "parameterTypes": [] },
+		{ "name": "errnoENOTCONN", "parameterTypes": [] },
+		{ "name": "errnoEAGAIN", "parameterTypes": [] },
+		{ "name": "errnoEWOULDBLOCK", "parameterTypes": [] },
+		{ "name": "errnoEINPROGRESS", "parameterTypes": [] },
+		{ "name": "errorECONNREFUSED", "parameterTypes": [] },
+		{ "name": "errorEISCONN", "parameterTypes": [] },
+		{ "name": "errorEALREADY", "parameterTypes": [] },
+		{ "name": "errorENETUNREACH", "parameterTypes": [] },
+		{ "name": "strError", "parameterTypes": ["int"] }
+	]
+  },
+  {
+    "name" : "io.netty.channel.unix.Socket",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": ["int"] },
+		{ "name": "shutdown", "parameterTypes": ["int","boolean","boolean"] },
+		{ "name": "connect", "parameterTypes": ["int","boolean","byte[]","int","int"] },
+		{ "name": "listen", "parameterTypes": ["int","int"] },
+		{ "name": "accept", "parameterTypes": ["int","byte[]"] },
+		{ "name": "initialize", "parameterTypes": ["boolean"] },
+		{ "name": "sendTo", "parameterTypes": ["int","boolean","java.nio.ByteBuffer","int","int","byte[]","int","int","int"] },
+		{ "name": "sendToAddress", "parameterTypes": ["int","boolean","long","int","int","byte[]","int","int","int"] },
+		{ "name": "sendToAddresses", "parameterTypes": ["int","boolean","long","int","byte[]","int","int","int"] },
+		{ "name": "recvFrom", "parameterTypes": ["int","java.nio.ByteBuffer","int","int"] },
+		{ "name": "recvFromAddress", "parameterTypes": ["int","long","int","int"] },
+		{ "name": "recvFd", "parameterTypes": ["int"] },
+		{ "name": "sendFd", "parameterTypes": ["int","int"] },
+		{ "name": "finishConnect", "parameterTypes": ["int"] },
+		{ "name": "disconnect", "parameterTypes": ["int","boolean"] },
+		{ "name": "bind", "parameterTypes": ["int","boolean","byte[]","int","int"] },
+		{ "name": "remoteAddress", "parameterTypes": ["int"] },
+		{ "name": "localAddress", "parameterTypes": ["int"] },
+		{ "name": "getReceiveBufferSize", "parameterTypes": ["int"] },
+		{ "name": "getSendBufferSize", "parameterTypes": ["int"] },
+		{ "name": "isKeepAlive", "parameterTypes": ["int"] },
+		{ "name": "isTcpNoDelay", "parameterTypes": ["int"] },
+		{ "name": "isReuseAddress", "parameterTypes": ["int"] },
+		{ "name": "isReusePort", "parameterTypes": ["int"] },
+		{ "name": "isBroadcast", "parameterTypes": ["int"] },
+		{ "name": "getSoLinger", "parameterTypes": ["int"] },
+		{ "name": "getSoError", "parameterTypes": ["int"] },
+		{ "name": "getTrafficClass", "parameterTypes": ["int","boolean"] },
+		{ "name": "setKeepAlive", "parameterTypes": ["int","int"] },
+		{ "name": "setReceiveBufferSize", "parameterTypes": ["int","int"] },
+		{ "name": "setSendBufferSize", "parameterTypes": ["int","int"] },
+		{ "name": "setTcpNoDelay", "parameterTypes": ["int","int"] },
+		{ "name": "setSoLinger", "parameterTypes": ["int","int"] },
+		{ "name": "setReuseAddress", "parameterTypes": ["int","int"] },
+		{ "name": "setReusePort", "parameterTypes": ["int","int"] },
+		{ "name": "setBroadcast", "parameterTypes": ["int","int"] },
+		{ "name": "setTrafficClass", "parameterTypes": ["int","boolean","int"] },
+		{ "name": "isIPv6Preferred", "parameterTypes": [] },
+		{ "name": "isIPv6", "parameterTypes": ["int"] },
+		{ "name": "connectDomainSocket", "parameterTypes": ["int","byte[]"] },
+		{ "name": "bindDomainSocket", "parameterTypes": ["int","byte[]"] },
+		{ "name": "msgFastopen", "parameterTypes": [] },
+		{ "name": "newSocketStreamFd", "parameterTypes": ["boolean"] },
+		{ "name": "newSocketDgramFd", "parameterTypes": ["boolean"] },
+		{ "name": "newSocketDomainFd", "parameterTypes": [] }
+	]
+  },
+  {
+    "name" : "io.netty.channel.unix.DatagramSocketAddress",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": ["byte[]","int","int","int","io.netty.channel.unix.DatagramSocketAddress"] }
+	]
+  },
+  {
+    "name": "io.netty.channel.unix.Buffer",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": [] },
+		{ "name": "memoryAddress0", "parameterTypes": ["java.nio.ByteBuffer"] },
+		{ "name": "addressSize0", "parameterTypes": [] }
+	]
+  },
+  {
+  	"name": "java.nio.Buffer",
+  	"fields" : [
+  		{"name": "position" },
+  		{"name": "limit" }
+  	],
+    "methods": [
+		{ "name": "position", "parameterTypes": [] },
+		{ "name": "position", "parameterTypes": ["int"] },
+		{ "name": "limit", "parameterTypes": [] },
+		{ "name": "limit", "parameterTypes": ["int"] }
+	]
+  },
+  {
+    "name" : "io.netty.channel.unix.FileDescriptor",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": ["int"] },
+		{ "name": "writeAddress", "parameterTypes": ["int","long","int","int"] },
+		{ "name": "writev", "parameterTypes": ["int","java.nio.ByteBuffer[]","int","int","long"] },
+		{ "name": "writevAddresses", "parameterTypes": ["int","long","int"] },
+		{ "name": "readAddress", "parameterTypes": ["int","long","int","int"] },
+		{ "name": "newPipe", "parameterTypes": [] },
+		{ "name": "write", "parameterTypes": ["int","java.nio.ByteBuffer","int","int"] },
+		{ "name": "read", "parameterTypes": ["int","java.nio.ByteBuffer","int","int"] },
+		{ "name": "close", "parameterTypes": ["int"] },
+		{ "name": "open", "parameterTypes": ["java.lang.String"] }
+	]
+  },
+  {
+    "name" : "io.netty.channel.DefaultFileRegion",
+    "fields" : [
+    	{"name": "file" },
+    	{"name": "transferred" }
+    ],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": ["java.nio.channels.FileChannel","long","long"] },
+		{ "name": "<init>", "parameterTypes": ["java.io.File","long","long"] }
+	]
+  },
+  {
+    "name" : "java.nio.channels.FileChannel",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": [] }
+	]
+  },
+  {
+    "name" : "sun.nio.ch.FileChannelImpl",
+    "fields" : [
+    	{"name": "fd" }
+    ],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": ["java.io.FileDescriptor","java.lang.String","boolean","boolean","boolean","java.lang.Object"] }
+	]
+  },
+  {
+    "name" : "java.io.FileDescriptor",
+    "fields" : [
+    	{"name": "fd" }
+    ],
+    "methods": [
+    	{ "name": "<init>", "parameterTypes": [] },
+		{ "name": "<init>", "parameterTypes": ["int"] }
+	]
+  },
+  {
+    "name" : "io.netty.channel.unix.PeerCredentials",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": ["int", "int", "int[]"] }
+	]
+  },
+  {
+    "name" : "java.lang.OutOfMemoryError",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": [] },
+		{ "name": "<init>", "parameterTypes": ["java.lang.String"] }
+	]
+  },
+  {
+    "name" : "java.lang.RuntimeException",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": ["java.lang.String","java.lang.Throwable","boolean","boolean"] },
+		{ "name": "<init>", "parameterTypes": ["java.lang.Throwable"] },
+		{ "name": "<init>", "parameterTypes": ["java.lang.String","java.lang.Throwable"] },
+		{ "name": "<init>", "parameterTypes": ["java.lang.String"] },
+		{ "name": "<init>", "parameterTypes": [] }
+	]
+  },
+  {
+    "name" : "io.netty.channel.ChannelException",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": ["java.lang.String","java.lang.Throwable","boolean"] },
+		{ "name": "<init>", "parameterTypes": ["java.lang.Throwable"] },
+		{ "name": "<init>", "parameterTypes": ["java.lang.String"] },
+		{ "name": "<init>", "parameterTypes": ["java.lang.String","java.lang.Throwable"] },
+		{ "name": "<init>", "parameterTypes": [] }
+	]
+  },
+  {
+    "name" : "java.nio.channels.ClosedChannelException",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": [] }
+	]
+  },
+  {
+    "name" : "java.io.IOException",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": ["java.lang.Throwable"] },
+		{ "name": "<init>", "parameterTypes": ["java.lang.String","java.lang.Throwable"] },
+		{ "name": "<init>", "parameterTypes": ["java.lang.String"] },
+		{ "name": "<init>", "parameterTypes": [] }
+	]
+  },
+  {
+    "name" : "java.net.PortUnreachableException",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": ["java.lang.String"] },
+		{ "name": "<init>", "parameterTypes": [] }
+	]
+  },
+  {
+    "name" : "java.net.InetSocketAddress",
+    "fields" : [],
+    "methods": [
+    	{ "name": "<init>", "parameterTypes": ["int","java.lang.String"] },
+		{ "name": "<init>", "parameterTypes": ["java.lang.String","int"] }
+	]
+  }
+]

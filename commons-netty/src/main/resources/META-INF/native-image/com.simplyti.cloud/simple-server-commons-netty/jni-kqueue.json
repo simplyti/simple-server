@@ -1,0 +1,64 @@
+[
+  {
+    "name" : "io.netty.channel.kqueue.KQueueStaticallyReferencedJniMethods",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": [] },
+		{ "name": "evAdd", "parameterTypes": [] },
+		{ "name": "evEnable", "parameterTypes": [] },
+		{ "name": "evDisable", "parameterTypes": [] },
+		{ "name": "evDelete", "parameterTypes": [] },
+		{ "name": "evClear", "parameterTypes": [] },
+		{ "name": "evEOF", "parameterTypes": [] },
+		{ "name": "evError", "parameterTypes": [] },
+		{ "name": "noteReadClosed", "parameterTypes": [] },
+		{ "name": "noteConnReset", "parameterTypes": [] },
+		{ "name": "noteDisconnected", "parameterTypes": [] },
+		{ "name": "evfiltRead", "parameterTypes": [] },
+		{ "name": "evfiltWrite", "parameterTypes": [] },
+		{ "name": "evfiltUser", "parameterTypes": [] },
+		{ "name": "evfiltSock", "parameterTypes": [] }
+	]
+  },
+  {
+    "name" : "io.netty.channel.kqueue.Native",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": [] },
+		{ "name": "registerUnix", "parameterTypes": [] },
+		{ "name": "keventWait", "parameterTypes": ["int","long","int","long","int","int","int"] },
+		{ "name": "kqueueCreate", "parameterTypes": [] },
+		{ "name": "keventTriggerUserEvent", "parameterTypes": ["int","int"] },
+		{ "name": "keventAddUserEvent", "parameterTypes": ["int","int"] },
+		{ "name": "sizeofKEvent", "parameterTypes": [] },
+		{ "name": "offsetofKEventIdent", "parameterTypes": [] },
+		{ "name": "offsetofKEventFlags", "parameterTypes": [] },
+		{ "name": "offsetofKEventFFlags", "parameterTypes": [] },
+		{ "name": "offsetofKEventFilter", "parameterTypes": [] },
+		{ "name": "offsetofKeventData", "parameterTypes": [] }
+	]
+  },
+  {
+    "name" : "io.netty.channel.kqueue.BsdSocket",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": ["int"] },
+		{ "name": "setAcceptFilter", "parameterTypes": ["int","java.lang.String","java.lang.String"] },
+		{ "name": "setTcpNoPush", "parameterTypes": ["int","int"] },
+		{ "name": "setSndLowAt", "parameterTypes": ["int","int"] },
+		{ "name": "getSndLowAt", "parameterTypes": ["int"] },
+		{ "name": "getAcceptFilter", "parameterTypes": ["int"] },
+		{ "name": "getTcpNoPush", "parameterTypes": ["int"] },
+		{ "name": "sendFile", "parameterTypes": ["io.netty.channel.DefaultFileRegion","long","long","long"] },
+		{ "name": "getPeerCredentials", "parameterTypes": ["int"] }
+	]
+  },
+  {
+    "name" : "io.netty.channel.kqueue.KQueueEventArray",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": ["int"] },
+		{ "name": "evSet", "parameterTypes": ["long","int","short","short","int"] }
+	]
+  }
+]

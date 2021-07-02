@@ -58,18 +58,73 @@ public class SimpleMultiplexedChannelPool implements ChannelPool {
 	private Future<Channel> acquireHealthyFromPoolOrNew(final Promise<Channel> promise) {
 		 final Channel ch = pollChannel();
 		 if(ch !=null) {
-			 Deque<MultiplexedClientChannel> logicalDeque = physicals.get(ch);
-			 MultiplexedClientChannel mch = poolLogicalChannel(logicalDeque);
-			 if(mch!=null) {
-				 promise.setSuccess(mch);
-				 return promise;
-			 }
-			 return newLogicalChannel(ch,promise);
+			 Future<Boolean> isHealthFuture = isHealth(ch);
+			 isHealthFuture.addListener(f->handleHealth(isHealthFuture,ch, promise));
+			 return promise;
 		 }
-		 
 		 return newPhysicalChannel(promise);
 	}
 	
+	private Future<Channel> handleHealth(Future<Boolean> isHealthFuture, Channel ch, Promise<Channel> promise) {
+		if(isHealthFuture.isSuccess() && isHealthFuture.getNow()) {
+			Deque<MultiplexedClientChannel> logicalDeque = physicals.get(ch);
+			 MultiplexedClientChannel mch = poolLogicalChannel(logicalDeque);
+			 if(mch!=null) {
+				 if(mch.parent().eventLoop().inEventLoop()) {
+					 doHealth(mch,promise);
+				 } else {
+					 mch.parent().eventLoop().execute(()->doHealth(mch,promise));
+				 }
+				 return promise;
+			 }
+			 return newLogicalChannel(ch,promise);
+		} else {
+			deque.remove(ch);
+			physicals.remove(ch);
+			return acquireHealthyFromPoolOrNew(promise);
+		}
+		
+	}
+
+	private Future<Boolean> isHealth(Channel ch) {
+		if(ch.eventLoop().inEventLoop()) {
+			return doHealth0(ch,null);
+		} else {
+			Promise<Boolean> promise = ch.eventLoop().newPromise();
+			ch.eventLoop().execute(()->doHealth0(ch, promise));
+			return promise;
+		}
+		
+	}
+
+	private Future<Boolean> doHealth0(Channel ch, Promise<Boolean> promise) {
+		if(ch.isActive()) {
+			if(promise!=null) {
+				promise.setSuccess(true);
+				return promise;
+			} else {
+				return ch.eventLoop().newSucceededFuture(true);
+			}
+		} else {
+			if(promise!=null) {
+				promise.setSuccess(false);
+				return promise;
+			} else {
+				return ch.eventLoop().newSucceededFuture(false);
+			}
+		}
+	}
+
+	private void doHealth(MultiplexedClientChannel mch, Promise<Channel> promise) {
+		if(mch.parent().isActive()) {
+			promise.setSuccess(mch);
+		} else {
+			deque.remove(mch.parent());
+			physicals.remove(mch.parent());
+			acquire(promise);
+		}
+	}
+
 	private Future<Channel> newPhysicalChannel(Promise<Channel> promise) {
 		ChannelFuture cf = bootstrap.connect();
 		 if (cf.isDone()) {

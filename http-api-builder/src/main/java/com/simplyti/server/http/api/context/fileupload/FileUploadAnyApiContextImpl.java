@@ -14,6 +14,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.multipart.FileUpload;
 import io.netty.handler.codec.http.multipart.HttpPostMultipartRequestDecoder;
+import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType;
 
 public class FileUploadAnyApiContextImpl extends AbstractWithBodyApiContext<Object> implements FileUploadAnyApiContext {
@@ -41,10 +42,11 @@ public class FileUploadAnyApiContextImpl extends AbstractWithBodyApiContext<Obje
 
 	@Override
 	public Collection<com.simplyti.server.http.api.fileupload.FileUpload> body() {
-		List<com.simplyti.server.http.api.fileupload.FileUpload> files = decoder.getBodyHttpDatas().stream()
+		List<InterfaceHttpData> parts = decoder.getBodyHttpDatas();
+		List<com.simplyti.server.http.api.fileupload.FileUpload> files =parts.stream()
 			.filter(data->data.getHttpDataType().equals(HttpDataType.FileUpload))
 			.map(FileUpload.class::cast)
-			.map(data->new com.simplyti.server.http.api.fileupload.FileUpload(data.content(),data.getFilename()))
+			.map(data->new com.simplyti.server.http.api.fileupload.FileUpload(data.getName(), data.content(), data.getFilename()))
 			.collect(Collectors.toList());
 		return files;
 	}

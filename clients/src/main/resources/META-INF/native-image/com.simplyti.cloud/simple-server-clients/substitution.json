@@ -4,15 +4,7 @@
     "originalClass": "com.simplyti.service.clients.AbstractClientBuilder",
     "methods": [
       {
-        "annotatedName": "get",
-        "substitute": true
-      },
-      {
         "annotatedName": "sslProvider",
-        "substitute": true
-      },
-      {
-        "annotatedName": "channelFactory",
         "substitute": true
       }
     ]

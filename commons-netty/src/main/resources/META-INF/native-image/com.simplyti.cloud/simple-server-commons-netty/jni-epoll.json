@@ -1,0 +1,124 @@
+[
+  {
+    "name" : "io.netty.channel.epoll.NativeStaticallyReferencedJniMethods",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": [] },
+		{ "name": "tcpMd5SigMaxKeyLen", "parameterTypes": [] },
+		{ "name": "epollin", "parameterTypes": [] },
+		{ "name": "epollout", "parameterTypes": [] },
+		{ "name": "epollrdhup", "parameterTypes": [] },
+		{ "name": "epollet", "parameterTypes": [] },
+		{ "name": "epollerr", "parameterTypes": [] },
+		{ "name": "ssizeMax", "parameterTypes": [] },
+		{ "name": "iovMax", "parameterTypes": [] },
+		{ "name": "uioMaxIov", "parameterTypes": [] },
+		{ "name": "isSupportingSendmmsg", "parameterTypes": [] },
+		{ "name": "isSupportingRecvmmsg", "parameterTypes": [] },
+		{ "name": "tcpFastopenMode", "parameterTypes": [] },
+		{ "name": "kernelVersion", "parameterTypes": [] }
+	]
+  },
+  {
+    "name" : "io.netty.channel.epoll.Native",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": [] },
+		{ "name": "registerUnix", "parameterTypes": [] },
+		{ "name": "isSupportingUdpSegment", "parameterTypes": [] },
+		{ "name": "eventFd", "parameterTypes": [] },
+		{ "name": "timerFd", "parameterTypes": [] },
+		{ "name": "eventFdWrite", "parameterTypes": ["int","long"] },
+		{ "name": "eventFdRead", "parameterTypes": ["int"] },
+		{ "name": "timerFdRead", "parameterTypes": ["int"] },
+		{ "name": "timerFdSetTime", "parameterTypes": ["int","int","int"] },
+		{ "name": "epollCreate", "parameterTypes": [] },
+		{ "name": "epollWait", "parameterTypes": ["int","long","int","int"] },
+		{ "name": "epollWait0", "parameterTypes": ["int","long","int","int","int","int"] },
+		{ "name": "epollBusyWait0", "parameterTypes": ["int","long","int"] },
+		{ "name": "epollCtlAdd0", "parameterTypes": ["int","int","int"] },
+		{ "name": "epollCtlMod0", "parameterTypes": ["int","int","int"] },
+		{ "name": "epollCtlDel0", "parameterTypes": ["int","int"] },
+		{ "name": "splice0", "parameterTypes": ["int","long","int","long","long"] },
+		{ "name": "sendmmsg0", "parameterTypes": ["int","boolean","io.netty.channel.epoll.NativeDatagramPacketArray$NativeDatagramPacket[]","int","int"] },
+		{ "name": "recvmmsg0", "parameterTypes": ["int","boolean","io.netty.channel.epoll.NativeDatagramPacketArray$NativeDatagramPacket[]","int","int"] },
+		{ "name": "recvmsg0", "parameterTypes": ["int","boolean","io.netty.channel.epoll.NativeDatagramPacketArray$NativeDatagramPacket"] },
+		{ "name": "sizeofEpollEvent", "parameterTypes": [] },
+		{ "name": "offsetofEpollData", "parameterTypes": [] }
+	]
+  },
+  {
+    "name" : "io.netty.channel.epoll.LinuxSocket",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": ["int"] },
+		{ "name": "getTimeToLive", "parameterTypes": ["int"] },
+		{ "name": "setTcpKeepIntvl", "parameterTypes": ["int","int"] },
+		{ "name": "setTcpKeepCnt", "parameterTypes": ["int","int"] },
+		{ "name": "setTcpUserTimeout", "parameterTypes": ["int","int"] },
+		{ "name": "setIpFreeBind", "parameterTypes": ["int","int"] },
+		{ "name": "setIpTransparent", "parameterTypes": ["int","int"] },
+		{ "name": "setIpRecvOrigDestAddr", "parameterTypes": ["int","int"] },
+		{ "name": "getTcpInfo", "parameterTypes": ["int","long[]"] },
+		{ "name": "setTcpMd5Sig", "parameterTypes": ["int","boolean","byte[]","int","byte[]"] },
+		{ "name": "isTcpCork", "parameterTypes": ["int"] },
+		{ "name": "getSoBusyPoll", "parameterTypes": ["int"] },
+		{ "name": "getTcpDeferAccept", "parameterTypes": ["int"] },
+		{ "name": "isTcpQuickAck", "parameterTypes": ["int"] },
+		{ "name": "getTcpNotSentLowAt", "parameterTypes": ["int"] },
+		{ "name": "getTcpKeepIdle", "parameterTypes": ["int"] },
+		{ "name": "getTcpKeepIntvl", "parameterTypes": ["int"] },
+		{ "name": "getTcpKeepCnt", "parameterTypes": ["int"] },
+		{ "name": "getTcpUserTimeout", "parameterTypes": ["int"] },
+		{ "name": "isIpFreeBind", "parameterTypes": ["int"] },
+		{ "name": "isIpTransparent", "parameterTypes": ["int"] },
+		{ "name": "isIpRecvOrigDestAddr", "parameterTypes": ["int"] },
+		{ "name": "getPeerCredentials", "parameterTypes": ["int"] },
+		{ "name": "isUdpGro", "parameterTypes": ["int"] },
+		{ "name": "setUdpGro", "parameterTypes": ["int","int"] },
+		{ "name": "sendFile", "parameterTypes": ["int","io.netty.channel.DefaultFileRegion","long","long","long"] },
+		{ "name": "joinSsmGroup", "parameterTypes": ["int","boolean","byte[]","byte[]","int","int","byte[]"] },
+		{ "name": "leaveSsmGroup", "parameterTypes": ["int","boolean","byte[]","byte[]","int","int","byte[]"] },
+		{ "name": "getIpMulticastLoop", "parameterTypes": ["int","boolean"] },
+		{ "name": "setIpMulticastLoop", "parameterTypes": ["int","boolean","int"] },
+		{ "name": "setTimeToLive", "parameterTypes": ["int","int"] },
+		{ "name": "setInterface", "parameterTypes": ["int","boolean","byte[]","int","int"] },
+		{ "name": "getInterface", "parameterTypes": ["int","boolean"] },
+		{ "name": "joinGroup", "parameterTypes": ["int","boolean","byte[]","byte[]","int","int"] },
+		{ "name": "leaveGroup", "parameterTypes": ["int","boolean","byte[]","byte[]","int","int"] },
+		{ "name": "setTcpDeferAccept", "parameterTypes": ["int","int"] },
+		{ "name": "setTcpQuickAck", "parameterTypes": ["int","int"] },
+		{ "name": "setTcpCork", "parameterTypes": ["int","int"] },
+		{ "name": "setSoBusyPoll", "parameterTypes": ["int","int"] },
+		{ "name": "setTcpNotSentLowAt", "parameterTypes": ["int","int"] },
+		{ "name": "setTcpFastOpen", "parameterTypes": ["int","int"] },
+		{ "name": "setTcpKeepIdle", "parameterTypes": ["int","int"] }
+	]
+  },
+  {
+    "name" : "io.netty.channel.epoll.EpollEventArray",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": ["int"] }
+	]
+  },
+  {
+    "name": "io.netty.channel.epoll.NativeDatagramPacketArray$NativeDatagramPacket",
+    "fields" : [
+		{ "name" : "senderAddr" },
+		{ "name" : "senderAddrLen" },
+		{ "name" : "senderScopeId" },
+		{ "name" : "senderPort" },
+		{ "name" : "recipientAddr" },
+		{ "name" : "recipientAddrLen" },
+		{ "name" : "recipientScopeId" },
+		{ "name" : "recipientPort" },
+		{ "name" : "segmentSize" },
+    	{ "name" : "memoryAddress" },
+		{ "name" : "count" }
+    ],
+    "methods": [
+    	{ "name": "<init>", "parameterTypes": ["io.netty.channel.epoll.NativeDatagramPacketArray"] }
+	]
+  }
+]
