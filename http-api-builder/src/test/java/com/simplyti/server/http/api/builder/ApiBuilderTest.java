@@ -180,7 +180,7 @@ public class ApiBuilderTest {
 	
 	@Test
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void testPrimeNumberChecker() {
+	public void testPrimeNumberChecker() throws Throwable {
 		ApiMatchRequest matchRequest = this.resolver.resolveOperation(method, path);
 		assertThat(matchRequest, notNullValue());
 		
