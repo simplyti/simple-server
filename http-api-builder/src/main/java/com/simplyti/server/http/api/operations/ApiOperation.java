@@ -2,11 +2,11 @@ package com.simplyti.server.http.api.operations;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.function.Consumer;
 
 import com.simplyti.server.http.api.context.ApiContext;
 import com.simplyti.server.http.api.context.ApiContextFactory;
 import com.simplyti.service.matcher.ApiPattern;
+import com.simplyti.util.concurrent.ThrowableConsumer;
 
 import io.netty.handler.codec.http.HttpMethod;
 import lombok.Getter;
@@ -19,26 +19,24 @@ public class ApiOperation<T extends ApiContext> {
 	
 	@Getter private final HttpMethod method;
 	@Getter private final ApiPattern pattern;
-	@Getter private final Consumer<T> handler;
+	@Getter private final ThrowableConsumer<T> handler;
 	@Getter private final ApiContextFactory contextFactory;
 	@Getter private final Map<String,Object> metadata;
-	@Getter private final boolean streamedRequest;
 	@Getter private final int maxBodyLength;
 	@Getter private final boolean notFoundOnNull;
 
-	public ApiOperation(HttpMethod method, ApiPattern pattern, Map<String,Object> metadata, Consumer<T> handler, ApiContextFactory contextFactory,
+	public ApiOperation(HttpMethod method, ApiPattern pattern, Map<String,Object> metadata, ThrowableConsumer<T> handler, ApiContextFactory contextFactory,
 			boolean streamedRequest, boolean notFoundOnNull) {
-		this(method, pattern, metadata, handler, contextFactory, streamedRequest, notFoundOnNull, 0);
+		this(method, pattern, metadata, handler, contextFactory, streamedRequest, notFoundOnNull, -1);
 	}
 	
-	public ApiOperation(HttpMethod method, ApiPattern pattern, Map<String,Object> metadata, Consumer<T> handler, ApiContextFactory contextFactory,
+	public ApiOperation(HttpMethod method, ApiPattern pattern, Map<String,Object> metadata, ThrowableConsumer<T> handler, ApiContextFactory contextFactory,
 			boolean streamedRequest, boolean notFoundOnNull, int maxBodyLength) {
 		this.method=method;
 		this.pattern=pattern;
 		this.handler=handler;
 		this.contextFactory=contextFactory;
 		this.metadata=firstNonNull(metadata, Collections.emptyMap());
-		this.streamedRequest=streamedRequest;
 		this.maxBodyLength=maxBodyLength>0?maxBodyLength:DEFAULT_MAX_BODY;
 		this.notFoundOnNull=notFoundOnNull;
 	}

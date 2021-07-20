@@ -2,6 +2,7 @@ package com.simplyti.service.clients.channel;
 
 import java.nio.channels.ClosedChannelException;
 
+import com.simplyti.service.clients.BootstrapProvider;
 import com.simplyti.service.clients.channel.proxy.NoResolvingSocketAddress;
 import com.simplyti.service.clients.endpoint.Address;
 import com.simplyti.service.clients.endpoint.Endpoint;
@@ -26,12 +27,12 @@ import io.netty.util.concurrent.Promise;
 
 public abstract class AbstractClientChannelPoolMap extends AbstractChannelPoolMap<Endpoint, ChannelPool> implements ClientChannelFactory {
 	
-	private final Bootstrap bootstrap;
+	private final BootstrapProvider bootstrap;
 	private final ChannelPoolHandler handler;
 	private final EventLoopGroup eventLoopGroup;
 	private final SslProvider sslProvider;
 
-	public AbstractClientChannelPoolMap(Bootstrap bootstrap, EventLoopGroup eventLoopGroup, ChannelPoolHandler handler,
+	public AbstractClientChannelPoolMap(BootstrapProvider bootstrap, EventLoopGroup eventLoopGroup, ChannelPoolHandler handler,
 			SslProvider sslProvider, ClientMonitorHandler monitor) {
 		this.bootstrap=bootstrap;
 		this.eventLoopGroup=eventLoopGroup;
@@ -80,9 +81,9 @@ public abstract class AbstractClientChannelPoolMap extends AbstractChannelPoolMa
 
 	private Bootstrap remoteAddress(Endpoint key) {
 		if(key.isProxied() && key.address() instanceof TcpAddress) {
-			return bootstrap.clone().remoteAddress(new NoResolvingSocketAddress((TcpAddress) key.address()));
+			return bootstrap.get(key.address()).clone().remoteAddress(new NoResolvingSocketAddress((TcpAddress) key.address()));
 		} else {
-			return bootstrap.clone().remoteAddress(key.address().toSocketAddress());
+			return bootstrap.get(key.address()).clone().remoteAddress(key.address().toSocketAddress());
 		}
 	}
 

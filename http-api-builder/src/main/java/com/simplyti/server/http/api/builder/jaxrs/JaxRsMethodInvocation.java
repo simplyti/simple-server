@@ -4,7 +4,6 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.fasterxml.classmate.ResolvedType;
@@ -13,8 +12,9 @@ import com.simplyti.service.matcher.jaxrs.RestHeaderParam;
 import com.simplyti.service.matcher.jaxrs.RestParam;
 import com.simplyti.service.matcher.jaxrs.RestPathParam;
 import com.simplyti.service.matcher.jaxrs.RestQueryParam;
+import com.simplyti.util.concurrent.ThrowableConsumer;
 
-public abstract class JaxRsMethodInvocation<T> implements Consumer<JaxRsApiContext<T>>{
+public abstract class JaxRsMethodInvocation<T> implements ThrowableConsumer<JaxRsApiContext<T>>{
 	
 	private final Method method;
 	private final Map<Integer, RestParam> parameters;

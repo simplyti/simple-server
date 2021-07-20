@@ -6,8 +6,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
-
 import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
@@ -25,7 +23,7 @@ public class DefaultFuture<T> implements Future<T> {
 	}
 	
 	@Override
-	public <U> Future<U> thenApply(final Function<? super T, ? extends U> fn) {
+	public <U> Future<U> thenApply(final ThrowableFunction<? super T, ? extends U> fn) {
 		if(target.isDone()) {
 			if(target.isSuccess()) {
 				try{
@@ -127,7 +125,7 @@ public class DefaultFuture<T> implements Future<T> {
 	}
 	
 	@Override
-	public <U> Future<U> thenCombine(final Function<? super T, io.netty.util.concurrent.Future<U>> fn){
+	public <U> Future<U> thenCombine(final ThrowableFunction<? super T, io.netty.util.concurrent.Future<U>> fn){
 		if(target.isDone()) {
 			if(target.isSuccess()) {
 				try{
@@ -259,7 +257,7 @@ public class DefaultFuture<T> implements Future<T> {
 	}
 
 	@Override
-	public Future<T> exceptionallyApply(final Function<Throwable, ? extends T> fn){
+	public Future<T> exceptionallyApply(final ThrowableFunction<Throwable, ? extends T> fn){
 		if(target.isDone()) {
 			if(target.isSuccess()) {
 				return this;
@@ -288,7 +286,7 @@ public class DefaultFuture<T> implements Future<T> {
 	}
 	
 	@Override
-	public Future<T> exceptionally(final Consumer<Throwable> consumer){
+	public Future<T> exceptionally(final ThrowableConsumer<Throwable> consumer){
 		if(target.isDone()) {
 			if(target.isSuccess()) {
 				return this;
@@ -319,7 +317,7 @@ public class DefaultFuture<T> implements Future<T> {
 	}
 	
 	@Override
-	public Future<T> onError(final Consumer<Throwable> action) {
+	public Future<T> onError(final ThrowableConsumer<Throwable> action) {
 		if(target.isDone()) {
 			if(!target.isSuccess()) {
 				try{
@@ -351,7 +349,7 @@ public class DefaultFuture<T> implements Future<T> {
 
 
 	@Override
-	public <A,B> BiCombinedFuture<A,B> thenCombine(final Function<? super T, io.netty.util.concurrent.Future<A>> fn1, final Function<? super T, io.netty.util.concurrent.Future<B>> fn2) {
+	public <A,B> BiCombinedFuture<A,B> thenCombine(final ThrowableFunction<? super T, io.netty.util.concurrent.Future<A>> fn1, final ThrowableFunction<? super T, io.netty.util.concurrent.Future<B>> fn2) {
 		if(target.isDone()) {
 			if(target.isSuccess()) {
 				io.netty.util.concurrent.Future<Object[]> result = aggregate(target.getNow(),fn1,fn2);
@@ -392,8 +390,8 @@ public class DefaultFuture<T> implements Future<T> {
 	}
 	
 	private <A,B> io.netty.util.concurrent.Future<Object[]> aggregate(final T value,
-			final Function<? super T, io.netty.util.concurrent.Future<A>> fn1,
-			final Function<? super T, io.netty.util.concurrent.Future<B>> fn2) {
+			final ThrowableFunction<? super T, io.netty.util.concurrent.Future<A>> fn1,
+			final ThrowableFunction<? super T, io.netty.util.concurrent.Future<B>> fn2) {
 		if(loop.inEventLoop()) {
 			return aggregate(value,null,functionFuture(value, fn1),functionFuture(value, fn2));
 		} else {
@@ -450,7 +448,7 @@ public class DefaultFuture<T> implements Future<T> {
 		}
 	}
 
-	private <O> io.netty.util.concurrent.Future<O> functionFuture(final T value,Function<? super T, io.netty.util.concurrent.Future<O>> fn) {
+	private <O> io.netty.util.concurrent.Future<O> functionFuture(final T value, ThrowableFunction<? super T, io.netty.util.concurrent.Future<O>> fn) {
 		try{
 			io.netty.util.concurrent.Future<O> future = fn.apply(value);
 			if(future.isDone()) {

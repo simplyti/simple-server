@@ -20,7 +20,6 @@ public class DefaultHttpEntryChannelInit implements EntryChannelInit {
 		pipeline.addLast(serverCodec);
 		pipeline.addLast(serverHeadersHandler);
 		pipeline.addLast(new HttpContentDecompressor());
-		
 	}
 
 }

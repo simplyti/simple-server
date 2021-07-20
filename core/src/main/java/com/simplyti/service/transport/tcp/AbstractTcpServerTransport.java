@@ -31,7 +31,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public abstract class AbstractTcpServerTransport implements ServerTransport {
 	
-	private static final InternalLogger log = InternalLoggerFactory.getInstance(KQueueServerTransport.class);
+	private static final InternalLogger log = InternalLoggerFactory.getInstance(AbstractTcpServerTransport.class);
 	
 	private final ServerConfig config;
 	private final Optional<SslHandlerFactory> sslHandlerFactory;

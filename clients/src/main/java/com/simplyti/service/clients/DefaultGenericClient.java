@@ -17,7 +17,7 @@ public class DefaultGenericClient extends AbstractClient<GenericRequestBuilder> 
 
 	private final Endpoint endpoint;
 
-	public DefaultGenericClient(EventLoopGroup eventLoopGroup, Bootstrap bootstrap, Endpoint endpoint, SslProvider sslProvider, DefaultClientMonitor monitor,
+	public DefaultGenericClient(EventLoopGroup eventLoopGroup, BootstrapProvider bootstrap, Endpoint endpoint, SslProvider sslProvider, DefaultClientMonitor monitor,
 			int poolSize, boolean unpooledChannels, long poolIdleTimeout, long readTimeoutMillis, boolean verbose, Consumer<Channel> customInit) {
 		super(bootstrap,eventLoopGroup,unpooledChannels, new GenericClientChannelPoolHandler(readTimeoutMillis, verbose, customInit), sslProvider, monitor , monitor, poolSize, poolIdleTimeout, false);
 		this.endpoint=endpoint;

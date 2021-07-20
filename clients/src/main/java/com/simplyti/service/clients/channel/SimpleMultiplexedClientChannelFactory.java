@@ -2,6 +2,7 @@ package com.simplyti.service.clients.channel;
 
 import java.nio.channels.ClosedChannelException;
 
+import com.simplyti.service.clients.BootstrapProvider;
 import com.simplyti.service.clients.endpoint.Address;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.monitor.ClientMonitorHandler;
@@ -22,7 +23,7 @@ public class SimpleMultiplexedClientChannelFactory extends AbstractClientChannel
 	
 	private final EventLoopGroup eventLoopGroup;
 
-	public SimpleMultiplexedClientChannelFactory(Bootstrap bootstrap, EventLoopGroup eventLoopGroup, ChannelPoolHandler handler, SslProvider sslProvider, ClientMonitorHandler monitorHandler) {
+	public SimpleMultiplexedClientChannelFactory(BootstrapProvider bootstrap, EventLoopGroup eventLoopGroup, ChannelPoolHandler handler, SslProvider sslProvider, ClientMonitorHandler monitorHandler) {
 		super(bootstrap,eventLoopGroup,handler, sslProvider,monitorHandler);
 		this.eventLoopGroup=eventLoopGroup;
 	}

@@ -1,6 +1,7 @@
 package com.simplyti.service.clients.channel;
 
 
+import com.simplyti.service.clients.BootstrapProvider;
 import com.simplyti.service.clients.channel.proxy.SimpleProxiedChannelPool;
 import com.simplyti.service.clients.endpoint.Address;
 import com.simplyti.service.clients.monitor.ClientMonitorHandler;
@@ -15,7 +16,7 @@ import io.netty.handler.ssl.SslProvider;
 
 public class SimpleClientChannelFactory extends AbstractClientChannelPoolMap {
 	
-	public SimpleClientChannelFactory(Bootstrap bootstrap, EventLoopGroup eventLoopGroup, ChannelPoolHandler handler, SslProvider sslProvider, ClientMonitorHandler monitorHandler) {
+	public SimpleClientChannelFactory(BootstrapProvider bootstrap, EventLoopGroup eventLoopGroup, ChannelPoolHandler handler, SslProvider sslProvider, ClientMonitorHandler monitorHandler) {
 		super(bootstrap,eventLoopGroup,handler, sslProvider,monitorHandler);
 	}
 	

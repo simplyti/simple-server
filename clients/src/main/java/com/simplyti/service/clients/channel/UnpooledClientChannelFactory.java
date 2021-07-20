@@ -1,12 +1,12 @@
 package com.simplyti.service.clients.channel;
 
+import com.simplyti.service.clients.BootstrapProvider;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.monitor.ClientMonitorHandler;
 import com.simplyti.service.clients.monitor.MonitoredHandler;
 import com.simplyti.util.concurrent.DefaultFuture;
 import com.simplyti.util.concurrent.Future;
 
-import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -19,11 +19,11 @@ import io.netty.util.concurrent.Promise;
 
 public class UnpooledClientChannelFactory extends ChannelInitializer<SocketChannel> implements ClientChannelFactory {
 	
-	private final Bootstrap bootstrap;
+	private final BootstrapProvider bootstrap;
 	private final EventLoopGroup eventLoopGroup;
 	private final ChannelPoolHandler handler;
 	
-	public UnpooledClientChannelFactory(Bootstrap bootstrap, EventLoopGroup eventLoopGroup, ChannelPoolHandler handler, SslProvider sslProvider, ClientMonitorHandler monitor) {
+	public UnpooledClientChannelFactory(BootstrapProvider bootstrap, EventLoopGroup eventLoopGroup, ChannelPoolHandler handler, SslProvider sslProvider, ClientMonitorHandler monitor) {
 		this.bootstrap=bootstrap;
 		this.eventLoopGroup=eventLoopGroup;
 		this.handler=monitor!=null?new MonitoredHandler(monitor,handler):handler;
@@ -31,7 +31,7 @@ public class UnpooledClientChannelFactory extends ChannelInitializer<SocketChann
 	
 	public Future<ClientChannel> channel(Endpoint endpoint, long responseTimeoutMillis) {
 		EventLoop loop = eventLoopGroup.next();
-		ChannelFuture channelFuture = bootstrap.clone().handler(this)
+		ChannelFuture channelFuture = bootstrap.get(endpoint.address()).clone().handler(this)
 				.connect(endpoint.address().toSocketAddress());
 		if(channelFuture.isDone()) {
 			if(channelFuture.isSuccess()) {

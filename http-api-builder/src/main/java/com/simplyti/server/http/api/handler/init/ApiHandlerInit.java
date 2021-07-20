@@ -35,6 +35,7 @@ public class ApiHandlerInit implements ServiceHadlerInit {
 	public void init(ChannelPipeline pipeline) {
 		pipeline.addBefore("default-handler", "api-res-encoder", apiResponseEncoder);
 		pipeline.addBefore("default-handler", "api-req-decoder", apiRequestDecoder);
+		pipeline.addBefore("default-handler", "api-multipart-decoder", new MultipartApiHandler(exceptionHandler,syncTaskSubmitter));
 		pipeline.addBefore("default-handler", "api-streamed-req-handler", new StreamInitialApiInvocationHandler(exceptionHandler,syncTaskSubmitter));
 		pipeline.addBefore("default-handler", "api-aggregator", new ApiFullRequestAggregator(config));
 		pipeline.addBefore("default-handler", "api-handler", new ApiInvocationHandler(syncTaskSubmitter, exceptionHandler, filters));

@@ -5,6 +5,7 @@ import java.util.Base64;
 import java.util.List;
 
 import com.simplyti.service.clients.AbstractClientBuilder;
+import com.simplyti.service.clients.BootstrapProvider;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.http.request.HttpRequestBuilder;
 import com.simplyti.service.clients.monitor.DefaultClientMonitor;
@@ -59,7 +60,7 @@ public class DefaultHttpClientBuilder extends AbstractClientBuilder<HttpClientBu
 	}
 	
 	@Override
-	protected HttpClient build0(EventLoopGroup eventLoopGroup, Bootstrap bootstrap, Endpoint endpoint, SslProvider sslProvider, DefaultClientMonitor monitor, int poolSize, boolean unpooledChannels, long poolIdleTimeout, long readTimeoutMilis, boolean verbose) {
+	protected HttpClient build0(EventLoopGroup eventLoopGroup, BootstrapProvider bootstrap, Endpoint endpoint, SslProvider sslProvider, DefaultClientMonitor monitor, int poolSize, boolean unpooledChannels, long poolIdleTimeout, long readTimeoutMilis, boolean verbose) {
 		return new DefaultHttpClient(eventLoopGroup, bootstrap, endpoint, headers(), sslProvider, checkStatus, monitor, poolSize, unpooledChannels, poolIdleTimeout, readTimeoutMilis, verbose, filters);
 	}
 	

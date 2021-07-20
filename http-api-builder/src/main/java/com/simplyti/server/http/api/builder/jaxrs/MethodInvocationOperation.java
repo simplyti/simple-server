@@ -1,12 +1,12 @@
 package com.simplyti.server.http.api.builder.jaxrs;
 
 import java.util.Collections;
-import java.util.function.Consumer;
 
 import com.simplyti.server.http.api.context.ApiContextFactory;
 import com.simplyti.server.http.api.operations.ApiOperation;
 import com.simplyti.service.api.serializer.json.TypeLiteral;
 import com.simplyti.service.matcher.ApiPattern;
+import com.simplyti.util.concurrent.ThrowableConsumer;
 
 import io.netty.handler.codec.http.HttpMethod;
 import lombok.Getter;
@@ -18,7 +18,7 @@ public class MethodInvocationOperation<T> extends ApiOperation<JaxRsApiContext<T
 	
 	private final TypeLiteral<?> requestType;
 
-	public MethodInvocationOperation(HttpMethod method, ApiPattern pattern, TypeLiteral<?> requestType, Consumer<JaxRsApiContext<T>> consumer, ApiContextFactory factory) {
+	public MethodInvocationOperation(HttpMethod method, ApiPattern pattern, TypeLiteral<?> requestType, ThrowableConsumer<JaxRsApiContext<T>> consumer, ApiContextFactory factory) {
 		super(method, pattern, Collections.emptyMap(), consumer, factory, false, false);
 		this.requestType=requestType;
 	}

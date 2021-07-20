@@ -1,9 +1,8 @@
 package com.simplyti.server.http.api.builder;
 
-import java.util.function.Consumer;
-
 import com.simplyti.server.http.api.context.AnyWithBodyApiContext;
+import com.simplyti.util.concurrent.ThrowableConsumer;
 
-public interface ApiWithBodyContextConsumer extends Consumer<AnyWithBodyApiContext> {
+public interface ApiWithBodyContextConsumer extends ThrowableConsumer<AnyWithBodyApiContext> {
 
 }

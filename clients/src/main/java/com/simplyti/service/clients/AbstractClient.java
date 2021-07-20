@@ -9,7 +9,6 @@ import com.simplyti.service.clients.channel.handler.IdleTimeoutHandler;
 import com.simplyti.service.clients.monitor.ClientMonitor;
 import com.simplyti.service.clients.monitor.ClientMonitorHandler;
 
-import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.pool.ChannelPoolHandler;
 import io.netty.handler.ssl.SslProvider;
@@ -22,7 +21,7 @@ public abstract class AbstractClient<T> implements Client<T> {
 	private final ClientMonitorHandler clientMonitorHandler;
 	private final EventLoopGroup eventLoopGroup;
 
-	public AbstractClient(Bootstrap bootstrap, EventLoopGroup eventLoopGroup, boolean unpooledChannels, ChannelPoolHandler poolHandler, SslProvider sslProvider, 
+	public AbstractClient(BootstrapProvider bootstrap, EventLoopGroup eventLoopGroup, boolean unpooledChannels, ChannelPoolHandler poolHandler, SslProvider sslProvider, 
 			ClientMonitor clientMonitor, ClientMonitorHandler clientMonitorHandler,
 			int poolSize, long poolIdleTimeout, boolean multiplexedRequests) {
 		this(clientFactory(multiplexedRequests,bootstrap,eventLoopGroup,poolHandler,sslProvider,clientMonitorHandler,unpooledChannels,poolIdleTimeout,poolSize), clientMonitor, clientMonitorHandler, eventLoopGroup);
@@ -35,7 +34,7 @@ public abstract class AbstractClient<T> implements Client<T> {
 		this.eventLoopGroup=eventLoopGroup;
 	}
 
-	private static ClientChannelFactory clientFactory(boolean multiplexedRequests, Bootstrap bootstrap, EventLoopGroup eventLoopGroup, ChannelPoolHandler poolHandler, SslProvider sslProvider, ClientMonitorHandler clientMonitorHandler, boolean unpooledChannels, long poolIdleTimeout, int poolSize) {
+	private static ClientChannelFactory clientFactory(boolean multiplexedRequests, BootstrapProvider bootstrap, EventLoopGroup eventLoopGroup, ChannelPoolHandler poolHandler, SslProvider sslProvider, ClientMonitorHandler clientMonitorHandler, boolean unpooledChannels, long poolIdleTimeout, int poolSize) {
 		if(multiplexedRequests) {
 			return multiplexedRequestClientFactory(bootstrap, eventLoopGroup, poolHandler, sslProvider, clientMonitorHandler,unpooledChannels, poolIdleTimeout, poolSize);
 		} else {
@@ -43,7 +42,7 @@ public abstract class AbstractClient<T> implements Client<T> {
 		}
 	}
 
-	private static ClientChannelFactory multiplexedRequestClientFactory(Bootstrap bootstrap, EventLoopGroup eventLoopGroup,
+	private static ClientChannelFactory multiplexedRequestClientFactory(BootstrapProvider bootstrap, EventLoopGroup eventLoopGroup,
 			ChannelPoolHandler poolHandler, SslProvider sslProvider, ClientMonitorHandler clientMonitorHandler,
 			boolean unpooledChannels, long poolIdleTimeout, int poolSize) {
 		if(unpooledChannels) { 
@@ -55,7 +54,7 @@ public abstract class AbstractClient<T> implements Client<T> {
 		}
 	}
 
-	private static ClientChannelFactory singleRequestClientFactory(Bootstrap bootstrap, EventLoopGroup eventLoopGroup,
+	private static ClientChannelFactory singleRequestClientFactory(BootstrapProvider bootstrap, EventLoopGroup eventLoopGroup,
 			ChannelPoolHandler poolHandler, SslProvider sslProvider, ClientMonitorHandler clientMonitorHandler, 
 			boolean unpooledChannels, long poolIdleTimeout, int poolSize) {
 		if(unpooledChannels) { 

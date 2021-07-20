@@ -172,7 +172,7 @@ public class ServiceBuilderStepDefs {
 		
 		for(String fileName:fileNames){
 			Path filePath = Paths.get(fileName.replaceAll("#tempdir", tempDir));
-			encoder.addBodyFileUpload("test.txt", filePath.toFile(), "text/plain", false);
+			encoder.addBodyFileUpload(filePath.getFileName().toString(), filePath.toFile(), "text/plain", false);
 		}
 		
 		request = encoder.finalizeRequest();

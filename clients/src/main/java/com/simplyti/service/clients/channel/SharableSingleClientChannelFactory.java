@@ -1,5 +1,6 @@
 package com.simplyti.service.clients.channel;
 
+import com.simplyti.service.clients.BootstrapProvider;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.monitor.ClientMonitorHandler;
 import com.simplyti.util.concurrent.Future;
@@ -13,7 +14,7 @@ public class SharableSingleClientChannelFactory implements ClientChannelFactory 
 	
 	private final FixedSizeClientChannelFactory fixed;
 	
-	public SharableSingleClientChannelFactory(Bootstrap bootstrap, EventLoopGroup eventLoopGroup, ChannelPoolHandler handler, SslProvider sslProvider, ClientMonitorHandler monitor) {
+	public SharableSingleClientChannelFactory(BootstrapProvider bootstrap, EventLoopGroup eventLoopGroup, ChannelPoolHandler handler, SslProvider sslProvider, ClientMonitorHandler monitor) {
 		this.fixed = new FixedSizeClientChannelFactory(bootstrap, eventLoopGroup, handler, sslProvider, monitor, 1);
 	}
 

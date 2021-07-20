@@ -10,5 +10,5 @@ Scenario: File server
 	Then I check that "#serviceFuture" is success
 	When I send files "#tempdir/testfiles/file1.txt" to "/upload" getting "#response"
 	And I check that "#response" has status code 200
-	And I check that "#response" is equals to "Got [file1.txt (6b)]"
+	And I check that "#response" is equals to "Got [file1.txt]"
 	

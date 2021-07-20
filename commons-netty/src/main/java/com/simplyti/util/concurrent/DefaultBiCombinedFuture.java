@@ -2,7 +2,6 @@ package com.simplyti.util.concurrent;
 
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
 import io.netty.util.concurrent.EventExecutor;
 
@@ -25,7 +24,7 @@ public class DefaultBiCombinedFuture<T,U> implements BiCombinedFuture<T,U>{
 	}
 
 	@SuppressWarnings("unchecked")
-	public Future<T> onError(Consumer<Throwable> action){
+	public Future<T> onError(ThrowableConsumer<Throwable> action){
 		return (Future<T>) target.onError(action);
 	}
 

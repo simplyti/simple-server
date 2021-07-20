@@ -1,20 +1,14 @@
 package com.simplyti.service.clients;
 
-
 import java.util.concurrent.ThreadFactory;
 
 import com.simplyti.service.clients.channel.factory.DefaultChannelFactory;
-import com.simplyti.service.clients.channel.factory.DefaultDomainChannelFactory;
 import com.simplyti.service.clients.endpoint.Endpoint;
-import com.simplyti.service.clients.endpoint.UnixAddress;
 import com.simplyti.service.clients.monitor.DefaultClientMonitor;
 import com.simplyti.service.clients.request.BaseClientRequestBuilder;
 
-import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFactory;
-import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
@@ -145,27 +139,15 @@ public abstract class AbstractClientBuilder<B,T extends Client<R>,R extends Base
 	@Override
 	public T build() {
 		EventLoopGroup elg = eventLoopGroup();
-		return build0(elg, bootstrap(elg),endpoint, sslProvider(), monitorEnabled?new DefaultClientMonitor(elg):null,poolSize,unpooledChannels, poolIdleTimeout, readTimeoutMilis, verbose);
+		return build0(elg, bootstrap(elg), endpoint, sslProvider(), monitorEnabled?new DefaultClientMonitor(elg):null,poolSize,unpooledChannels, poolIdleTimeout, readTimeoutMilis, verbose);
 	}
 
 	private SslProvider sslProvider() {
 		return sslProvider;
 	}
 
-	private Bootstrap bootstrap(EventLoopGroup eventLoopGroup) {
-		if(endpoint!=null && endpoint.address() instanceof UnixAddress) {
-			return new Bootstrap().group(eventLoopGroup)
-					.channelFactory(new DefaultDomainChannelFactory(eventLoopGroup))
-					.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
-					.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
-		} else {
-			return new Bootstrap().group(eventLoopGroup)
-					.channelFactory(channelFactory(eventLoopGroup))
-					.option(ChannelOption.SO_KEEPALIVE, true)
-					.option(ChannelOption.SO_REUSEADDR, true)
-					.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
-					.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
-		}
+	private BootstrapProvider bootstrap(EventLoopGroup eventLoopGroup) {
+		return new BootstrapProvider(eventLoopGroup,channelFactory(eventLoopGroup));
 	}
 
 	private ChannelFactory<Channel> channelFactory(EventLoopGroup eventLoopGroup) {
@@ -176,7 +158,7 @@ public abstract class AbstractClientBuilder<B,T extends Client<R>,R extends Base
 		}
 	}
 
-	protected abstract T build0(EventLoopGroup eventLoopGroup, Bootstrap bootstrap, Endpoint endpoint, SslProvider sslProvider, DefaultClientMonitor monitor, 
+	protected abstract T build0(EventLoopGroup eventLoopGroup, BootstrapProvider bootstrap, Endpoint endpoint, SslProvider sslProvider, DefaultClientMonitor monitor, 
 			int poolSize, boolean unpooledChannels, long poolIdleTimeout, long readTimeoutMilis,
 			boolean verbose);
 	

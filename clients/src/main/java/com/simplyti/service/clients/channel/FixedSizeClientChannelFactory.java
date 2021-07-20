@@ -1,5 +1,6 @@
 package com.simplyti.service.clients.channel;
 
+import com.simplyti.service.clients.BootstrapProvider;
 import com.simplyti.service.clients.channel.proxy.FixedProxiedChannelPool;
 import com.simplyti.service.clients.endpoint.Address;
 import com.simplyti.service.clients.monitor.ClientMonitorHandler;
@@ -16,7 +17,7 @@ public class FixedSizeClientChannelFactory extends AbstractClientChannelPoolMap 
 	
 	private final int size;
 
-	public FixedSizeClientChannelFactory(Bootstrap bootstrap, EventLoopGroup eventLoopGroup, ChannelPoolHandler handler, SslProvider sslProvider, ClientMonitorHandler monitor, int size) {
+	public FixedSizeClientChannelFactory(BootstrapProvider bootstrap, EventLoopGroup eventLoopGroup, ChannelPoolHandler handler, SslProvider sslProvider, ClientMonitorHandler monitor, int size) {
 		super(bootstrap,eventLoopGroup,handler,sslProvider,monitor);
 		this.size=size;
 	}
