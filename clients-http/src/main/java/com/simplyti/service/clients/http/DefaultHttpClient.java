@@ -23,15 +23,16 @@ public class DefaultHttpClient extends AbstractClient<HttpRequestBuilder> implem
 	private final HttpHeaders headers;
 	
 	public DefaultHttpClient(EventLoopGroup eventLoopGroup, BootstrapProvider bootstrap, Endpoint endpoint, HttpHeaders headers, SslProvider sslProvider, boolean checkStatusCode,
-			DefaultClientMonitor monitor, int poolSize, boolean unpooledChannels, long poolIdleTimeout, long readTimeoutMillis, boolean verbose, List<HttpRequestFilter> filters) {
-		super(bootstrap,eventLoopGroup,unpooledChannels, poolHandler(readTimeoutMillis, verbose, filters), sslProvider, monitor , monitor, poolSize, poolIdleTimeout, false);
+			DefaultClientMonitor monitor, int poolSize, boolean unpooledChannels, long poolIdleTimeout, long readTimeoutMillis, boolean verbose, List<HttpRequestFilter> filters,
+			int maxContentLength) {
+		super(bootstrap,eventLoopGroup,unpooledChannels, poolHandler(readTimeoutMillis, verbose, filters, maxContentLength), sslProvider, monitor , monitor, poolSize, poolIdleTimeout, false);
 		this.endpoint=endpoint;
 		this.headers=headers;
 		this.checkStatusCode=checkStatusCode;
 	}
 
-	private static ChannelPoolHandler poolHandler(long readTimeoutMillis, boolean verbose, List<HttpRequestFilter> filters) {
-		return new HttpClientChannelPoolHandler(readTimeoutMillis, verbose, filters);
+	private static ChannelPoolHandler poolHandler(long readTimeoutMillis, boolean verbose, List<HttpRequestFilter> filters, int maxContentLength) {
+		return new HttpClientChannelPoolHandler(readTimeoutMillis, verbose, filters, maxContentLength);
 	}
 
 	@Override

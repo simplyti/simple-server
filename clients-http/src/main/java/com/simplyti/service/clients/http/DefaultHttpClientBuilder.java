@@ -11,7 +11,6 @@ import com.simplyti.service.clients.http.request.HttpRequestBuilder;
 import com.simplyti.service.clients.monitor.DefaultClientMonitor;
 import com.simplyti.service.filter.http.HttpRequestFilter;
 
-import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -28,6 +27,7 @@ public class DefaultHttpClientBuilder extends AbstractClientBuilder<HttpClientBu
 	private String basicPass;
 	
 	private List<HttpRequestFilter> filters;
+	private int maxContentLength;
 	
 	@Override
 	public HttpClientBuilder withCheckStatusCode() {
@@ -61,7 +61,7 @@ public class DefaultHttpClientBuilder extends AbstractClientBuilder<HttpClientBu
 	
 	@Override
 	protected HttpClient build0(EventLoopGroup eventLoopGroup, BootstrapProvider bootstrap, Endpoint endpoint, SslProvider sslProvider, DefaultClientMonitor monitor, int poolSize, boolean unpooledChannels, long poolIdleTimeout, long readTimeoutMilis, boolean verbose) {
-		return new DefaultHttpClient(eventLoopGroup, bootstrap, endpoint, headers(), sslProvider, checkStatus, monitor, poolSize, unpooledChannels, poolIdleTimeout, readTimeoutMilis, verbose, filters);
+		return new DefaultHttpClient(eventLoopGroup, bootstrap, endpoint, headers(), sslProvider, checkStatus, monitor, poolSize, unpooledChannels, poolIdleTimeout, readTimeoutMilis, verbose, filters, maxContentLength);
 	}
 	
 	private HttpHeaders headers() {
@@ -76,6 +76,12 @@ public class DefaultHttpClientBuilder extends AbstractClientBuilder<HttpClientBu
 			return headers;
 		}
 		return null;
+	}
+
+	@Override
+	public HttpClientBuilder withMaxContentLength(int maxContentLength) {
+		this.maxContentLength=maxContentLength;
+		return this;
 	}
 
 }

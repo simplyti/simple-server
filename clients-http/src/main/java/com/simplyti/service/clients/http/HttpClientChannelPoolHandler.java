@@ -23,9 +23,11 @@ import io.netty.util.CharsetUtil;
 public class HttpClientChannelPoolHandler extends AbstractClientPoolHandler {
 	
 	private static final ByteBuf DELIMITER = Unpooled.copiedBuffer("\n\n", CharsetUtil.UTF_8);
+	private static final int DEFAULT_MAX_CONTENT_LENGTH = 52428800;
 
 	private final SetHostHeaderHandler setHostHeaderHandler;
 	private final List<HttpRequestFilter> filters;
+	private final int maxContextLength;
 
 
 	public HttpClientChannelPoolHandler(long readTimeoutMillis, boolean verbose, List<HttpRequestFilter> filters) {
@@ -46,7 +48,7 @@ public class HttpClientChannelPoolHandler extends AbstractClientPoolHandler {
 		ch.pipeline().addLast(new DelimiterBasedFrameDecoder(100000, DELIMITER));
 		ch.pipeline().addLast(new HttpServerSentEventDecoder());
 		
-		ch.pipeline().addLast(new HttpClientFullResponseAggregator(52428800));
+		ch.pipeline().addLast(new HttpClientFullResponseAggregator(maxContextLength>0? maxContextLength:DEFAULT_MAX_CONTENT_LENGTH));
 		ch.pipeline().addLast(new HttpContentUnwrapHandled());
 		
 	}

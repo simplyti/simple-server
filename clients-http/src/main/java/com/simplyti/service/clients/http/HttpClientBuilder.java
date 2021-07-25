@@ -14,4 +14,6 @@ public interface HttpClientBuilder extends ClientBuilder<HttpClientBuilder,HttpC
 
 	HttpClientBuilder withFilter(HttpRequestFilter filter);
 
+	HttpClientBuilder withMaxContentLength(int maxContentLength);
+
 }
