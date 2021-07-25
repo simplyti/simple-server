@@ -30,7 +30,7 @@ public class HttpClientChannelPoolHandler extends AbstractClientPoolHandler {
 	private final int maxContextLength;
 
 
-	public HttpClientChannelPoolHandler(long readTimeoutMillis, boolean verbose, List<HttpRequestFilter> filters) {
+	public HttpClientChannelPoolHandler(long readTimeoutMillis, boolean verbose, List<HttpRequestFilter> filters, int maxContextLength) {
 		super(readTimeoutMillis, verbose);
 		this.setHostHeaderHandler = new SetHostHeaderHandler();
 		this.filters=filters==null?null:filters.stream().sorted(Priorized.PRIORITY_ANN_ORDER).collect(Collectors.toList());
