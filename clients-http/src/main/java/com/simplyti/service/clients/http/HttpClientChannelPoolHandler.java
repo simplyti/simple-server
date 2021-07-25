@@ -34,6 +34,7 @@ public class HttpClientChannelPoolHandler extends AbstractClientPoolHandler {
 		super(readTimeoutMillis, verbose);
 		this.setHostHeaderHandler = new SetHostHeaderHandler();
 		this.filters=filters==null?null:filters.stream().sorted(Priorized.PRIORITY_ANN_ORDER).collect(Collectors.toList());
+		this.maxContextLength=maxContextLength;
 	}
 
 	@Override
