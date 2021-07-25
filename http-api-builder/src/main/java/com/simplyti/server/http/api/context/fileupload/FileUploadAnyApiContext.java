@@ -1,10 +1,11 @@
 package com.simplyti.server.http.api.context.fileupload;
 
+import java.util.List;
+
 import com.simplyti.server.http.api.context.AnyApiContext;
 import com.simplyti.util.concurrent.Future;
-import com.simplyti.util.concurrent.ThrowableConsumer;
 
-import io.netty.handler.codec.http.multipart.InterfaceHttpData;
+import io.netty.handler.codec.http.multipart.FileUpload;
 
 public interface FileUploadAnyApiContext extends AnyApiContext {
 
@@ -13,7 +14,7 @@ public interface FileUploadAnyApiContext extends AnyApiContext {
 	
 	Future<Void> send(String message);
 	Future<Void> send(Object value);
-
-	Future<Void> eachPart(ThrowableConsumer<InterfaceHttpData> consumer);
-
+	
+	List<FileUpload> files();
+	
 }

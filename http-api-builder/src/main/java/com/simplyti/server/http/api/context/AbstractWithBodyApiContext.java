@@ -1,6 +1,8 @@
 package com.simplyti.server.http.api.context;
 
 
+import java.io.Closeable;
+
 import com.simplyti.server.http.api.request.ApiMatchRequest;
 import com.simplyti.service.exception.ExceptionHandler;
 import com.simplyti.service.sync.SyncTaskSubmitter;
@@ -10,14 +12,15 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
+import lombok.SneakyThrows;
 
 public abstract class AbstractWithBodyApiContext<T> extends  AbstractApiContext<T> implements WithBodyApiContext {
 
-	private final ByteBuf body;
+	private final Closeable body;
 	private boolean released;
 
 	public AbstractWithBodyApiContext(SyncTaskSubmitter syncTaskSubmitter, ChannelHandlerContext ctx, HttpRequest request, ApiMatchRequest matcher, 
-			ExceptionHandler exceptionHandler, ByteBuf body) {
+			ExceptionHandler exceptionHandler, Closeable body) {
 		super(syncTaskSubmitter, ctx, request, matcher, exceptionHandler);
 		this.body=body;
 	}
@@ -64,10 +67,15 @@ public abstract class AbstractWithBodyApiContext<T> extends  AbstractApiContext<
 		if(this.released) {
 			return;
 		}
-		body.release();
+		release0();
 		this.released=true;
 	}
 	
+	@SneakyThrows
+	private void release0() {
+		body.close();
+	}
+
 	public Future<Void> send(T body) {
 		return writeAndFlush(body);
 	}

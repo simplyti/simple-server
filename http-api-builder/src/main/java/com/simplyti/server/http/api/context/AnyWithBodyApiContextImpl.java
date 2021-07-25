@@ -15,7 +15,7 @@ public class AnyWithBodyApiContextImpl extends AbstractWithBodyApiContext<Object
 	private final ByteBuf body;
 	
 	public AnyWithBodyApiContextImpl(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler, ChannelHandlerContext ctx, HttpRequest request, ByteBuf body, ApiMatchRequest match) {
-		super(syncTaskSubmitter, ctx, request, match, exceptionHandler, body);
+		super(syncTaskSubmitter, ctx, request, match, exceptionHandler, ()->body.release());
 		this.body=body;
 	}
 

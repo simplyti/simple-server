@@ -21,7 +21,7 @@ public class RequestResponseTypedApiContextImpl<T,U> extends AbstractWithBodyApi
 
 	public RequestResponseTypedApiContextImpl(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler, ChannelHandlerContext ctx, Json json, TypeLiteral<T> requestType, HttpRequest request, ByteBuf body,
 			ApiMatchRequest match) {
-		super(syncTaskSubmitter, ctx, request, match, exceptionHandler, body);
+		super(syncTaskSubmitter, ctx, request, match, exceptionHandler, ()->body.release());
 		this.json=json;
 		this.requestType=requestType;
 		this.body=body;

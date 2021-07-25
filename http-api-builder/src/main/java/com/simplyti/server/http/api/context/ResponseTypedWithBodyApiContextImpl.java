@@ -13,7 +13,7 @@ public class ResponseTypedWithBodyApiContextImpl<T> extends AbstractWithBodyApiC
 	private final ByteBuf body;
 	
 	public ResponseTypedWithBodyApiContextImpl(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler, ChannelHandlerContext ctx, HttpRequest request, ByteBuf body, ApiMatchRequest match) {
-		super(syncTaskSubmitter, ctx, request, match, exceptionHandler, body);
+		super(syncTaskSubmitter, ctx, request, match, exceptionHandler, ()->body.release());
 		this.body=body;
 	}
 

@@ -1,7 +1,9 @@
 package com.simplyti.server.http.api.handler.init;
 
-import com.simplyti.server.http.api.context.ApiContext;
-import com.simplyti.server.http.api.operations.ApiOperation;
+import java.util.Collection;
+
+import com.simplyti.server.http.api.filter.OperationInboundFilter;
+import com.simplyti.server.http.api.handler.MultipartApiInvocationHandler;
 import com.simplyti.server.http.api.operations.FileUploadApiOperation;
 import com.simplyti.server.http.api.request.ApiMatchRequest;
 import com.simplyti.service.exception.ExceptionHandler;
@@ -18,7 +20,7 @@ public class MultipartApiHandler extends SimpleChannelInboundHandler<HttpRequest
 
 	private ApiMatchRequest matchRequest;
 	
-	public MultipartApiHandler(ExceptionHandler exceptionHandler, SyncTaskSubmitter syncTaskSubmitter) {
+	public MultipartApiHandler(ExceptionHandler exceptionHandler, SyncTaskSubmitter syncTaskSubmitter, Collection<OperationInboundFilter> filters) {
 		super(false);
 		this.exceptionHandler=exceptionHandler;
 		this.syncTaskSubmitter=syncTaskSubmitter;
@@ -27,25 +29,13 @@ public class MultipartApiHandler extends SimpleChannelInboundHandler<HttpRequest
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, HttpRequest msg) throws Exception {
 		if(matchRequest!=null) {
-			serviceProceed(this.matchRequest.operation(),context(ctx,msg));
-			this.matchRequest=null;
+			ctx.pipeline().addAfter("api-multipart-decoder","multipart-input",new MultipartApiInvocationHandler(msg,exceptionHandler,syncTaskSubmitter,matchRequest));
+			this.matchRequest = null;
 		} else {
 			ctx.fireChannelRead(msg);
 		}
 	}
 	
-	private <T extends ApiContext> void serviceProceed(ApiOperation<T> operation, T ctx) {
-		try{
-			operation.handler().accept(ctx);
-		}catch(Throwable e) {
-			ctx.failure(e);
-		}
-	}
-	
-	private <T extends ApiContext> T context(ChannelHandlerContext ctx, HttpRequest msg) {
-		return this.matchRequest.operation().contextFactory().create(syncTaskSubmitter, exceptionHandler, ctx, matchRequest, msg, null);
-	}
-
 	@Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
 		if(evt instanceof ApiMatchRequest) {
@@ -58,6 +48,5 @@ public class MultipartApiHandler extends SimpleChannelInboundHandler<HttpRequest
 			ctx.fireUserEventTriggered(evt);
 		}
     }
-
 
 }
