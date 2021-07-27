@@ -69,14 +69,23 @@ public class BaseServiceModule {
 	
 	@Provides
 	@Singleton
-	public EventLoopGroup eventLoopGroup(Provider<Optional<NativeIO>> nativeIO) {
-		return new EventLoopGroupProvider(nativeIO).get();
+	public EventLoopGroup eventLoopGroup(NativeIO nativeIO) {
+		return new EventLoopGroupProvider(nativeIO,Optional.empty()).get();
 	}
 	
-	@Provides @Singleton @StartStopLoop
-	public EventLoop startStopLoop(ServerConfig config, Provider<Optional<NativeIO>> nativeIO) {
+	@Provides 
+	@Singleton 
+	@StartStopLoop
+	public EventLoop startStopLoop(ServerConfig config, NativeIO nativeIO) {
 		return new StartStopLoopProvider(nativeIO).get();
 	}
+	
+	@Provides
+	@Singleton
+	public NativeIO nativeIO() {
+		return new NativeIO(Optional.empty());
+	}
+	
 	
 	@Provides
 	@Singleton
@@ -103,13 +112,13 @@ public class BaseServiceModule {
 
 	@Provides
 	@Singleton
-	public ChannelFactory<ServerChannel> channelFactory(Provider<Optional<NativeIO>> nativeIO) {
+	public ChannelFactory<ServerChannel> channelFactory(NativeIO nativeIO) {
 		return new ServerSocketChannelFactory(nativeIO);
 	}
 	
 	@Provides
 	@Singleton
-	public ChannelFactory<ServerDomainSocketChannel> channelDomainFactory(Provider<Optional<NativeIO>> nativeIO) {
+	public ChannelFactory<ServerDomainSocketChannel> channelDomainFactory(NativeIO nativeIO) {
 		return new ServerDomainSocketChannelFactory(nativeIO);
 	}
 	
@@ -182,7 +191,7 @@ public class BaseServiceModule {
 	
 	@Provides
 	@Singleton
-	public Set<ServerTransport> serverTransport(Provider<Optional<NativeIO>> nativeIO,Provider<EventLoopGroup> eventLoopGroup, @StartStopLoop Provider<EventLoop> startStopLoop,
+	public Set<ServerTransport> serverTransport(NativeIO nativeIO,Provider<EventLoopGroup> eventLoopGroup, @StartStopLoop Provider<EventLoop> startStopLoop,
 			ChannelFactory<ServerChannel> channelFactory, ChannelFactory<ServerDomainSocketChannel> domainChannelFactory, Optional<SslHandlerFactory> sslHandlerFactory, 
 			ServiceChannelInitializer serviceChannelInitializer, ServerConfig config) {
 		return new ServerTransportProvider(nativeIO, eventLoopGroup, startStopLoop, channelFactory, domainChannelFactory, sslHandlerFactory, serviceChannelInitializer, config)

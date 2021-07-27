@@ -1,11 +1,13 @@
 package com.simplyti.service.builder.di.guice;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
 import javax.inject.Singleton;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
 import com.simplyti.server.http.api.filter.OperationInboundFilter;
@@ -14,6 +16,7 @@ import com.simplyti.service.DefaultServerStopAdvisor;
 import com.simplyti.service.Server;
 import com.simplyti.service.ServerStopAdvisor;
 import com.simplyti.service.api.builder.ApiProvider;
+import com.simplyti.service.builder.di.BuiltProvided;
 import com.simplyti.service.builder.di.EventLoopGroupProvider;
 import com.simplyti.service.builder.di.ExecutorServiceProvider;
 import com.simplyti.service.builder.di.NativeIO;
@@ -78,8 +81,9 @@ public class ServiceModule extends AbstractModule {
 		
 		bind(ServerConfig.class).toInstance(config);
 		
-		bindEventLoop();
-		OptionalBinder.newOptionalBinder(binder(), NativeIO.class);
+		bind(NativeIO.class).in(Singleton.class);
+		bind(EventLoopGroup.class).toProvider(EventLoopGroupProvider.class).in(Singleton.class);
+		bind(new TypeLiteral<Optional<EventLoopGroup>>() {}).annotatedWith(BuiltProvided.class).toInstance(Optional.ofNullable(eventLoopGroup));
 		bind(EventLoop.class).annotatedWith(StartStopLoop.class).toProvider(StartStopLoopProvider.class).in(Singleton.class);
 		bind(ServerStopAdvisor.class).to(DefaultServerStopAdvisor.class).in(Singleton.class);
 		
@@ -111,19 +115,8 @@ public class ServiceModule extends AbstractModule {
 		Multibinder.newSetBinder(binder(), ServerStartHook.class);
 		Multibinder.newSetBinder(binder(), ServerStopHook.class);
 		
-		if(eventLoopGroup == null) {
-			bind(NativeIO.class).in(Singleton.class);
-		} 
-
 		OptionalBinder.newOptionalBinder(binder(), SslHandlerFactory.class);
 	}
 
-	private void bindEventLoop() {
-		if(eventLoopGroup==null) {
-			bind(EventLoopGroup.class).toProvider(EventLoopGroupProvider.class).in(Singleton.class);
-		} else {
-			bind(EventLoopGroup.class).toInstance(eventLoopGroup);
-		}
-	}
 
 }

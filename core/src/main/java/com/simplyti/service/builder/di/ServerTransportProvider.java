@@ -12,7 +12,6 @@ import com.simplyti.service.channel.ServiceChannelInitializer;
 import com.simplyti.service.config.ServerConfig;
 import com.simplyti.service.ssl.SslHandlerFactory;
 import com.simplyti.service.transport.ServerTransport;
-import com.simplyti.service.transport.tcp.NioServerTransport;
 import com.simplyti.service.transport.unix.UnixDomainTransport;
 
 import io.netty.channel.ChannelFactory;
@@ -23,7 +22,7 @@ import io.netty.channel.unix.ServerDomainSocketChannel;
 
 public class ServerTransportProvider implements Provider<Set<ServerTransport>>{
 	
-	private final Provider<Optional<NativeIO>> nativeIO;
+	private final NativeIO nativeIO;
 	private final Provider<EventLoopGroup> eventLoopGroup;
 	private final Provider<EventLoop> startStopLoop;
 	private final ChannelFactory<ServerChannel> channelFactory;
@@ -33,7 +32,7 @@ public class ServerTransportProvider implements Provider<Set<ServerTransport>>{
 	private final ServerConfig config;
 	
 	@Inject
-	public ServerTransportProvider(Provider<Optional<NativeIO>> nativeIO, Provider<EventLoopGroup> eventLoopGroup, @StartStopLoop Provider<EventLoop> startStopLoop,
+	public ServerTransportProvider(NativeIO nativeIO, Provider<EventLoopGroup> eventLoopGroup, @StartStopLoop Provider<EventLoop> startStopLoop,
 			ChannelFactory<ServerChannel> channelFactory, ChannelFactory<ServerDomainSocketChannel> domainChannelFactory,
 			Optional<SslHandlerFactory> sslHandlerFactory, 
 			ServiceChannelInitializer serviceChannelInitializer, ServerConfig config) {
@@ -49,11 +48,8 @@ public class ServerTransportProvider implements Provider<Set<ServerTransport>>{
 
 	@Override
 	public Set<ServerTransport> get() {
-		ServerTransport tcpTransport = nativeIO.get().map(n->n.tcpTransport(eventLoopGroup, startStopLoop, channelFactory, sslHandlerFactory, serviceChannelInitializer, config))
-				.orElseGet(()->new NioServerTransport(eventLoopGroup, startStopLoop, channelFactory, sslHandlerFactory, serviceChannelInitializer, config));
-		
+		ServerTransport tcpTransport = nativeIO.tcpTransport(eventLoopGroup, startStopLoop, channelFactory, sslHandlerFactory, serviceChannelInitializer, config);
 		ServerTransport domainTransport = new UnixDomainTransport(eventLoopGroup, startStopLoop, domainChannelFactory, serviceChannelInitializer, config);
-		
 		return new HashSet<>(Arrays.asList(tcpTransport,domainTransport));
 	}
 

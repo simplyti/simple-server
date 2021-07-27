@@ -3,7 +3,6 @@ package com.simplyti.service.builder.di.dagger;
 import java.util.Set;
 
 import com.simplyti.server.http.api.filter.OperationInboundFilter;
-import com.simplyti.service.builder.di.NativeIO;
 import com.simplyti.service.channel.handler.inits.ServiceHadlerInit;
 import com.simplyti.service.filter.http.FullHttpRequestFilter;
 import com.simplyti.service.filter.http.HttpRequestFilter;
@@ -31,6 +30,5 @@ public abstract class Multibindings {
 	@Multibinds abstract Set<ServerStopHook> serverStopHooks();
 	
 	@BindsOptionalOf abstract SslHandlerFactory sslHandlerFactory();
-	@BindsOptionalOf abstract NativeIO nativeIO();
 	
 }
