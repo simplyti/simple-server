@@ -33,11 +33,9 @@ public class ApiOperationResolverImpl implements ApiOperationResolver {
 			}
 			
 			ApiMatcher matcher = operation.pattern().matcher(queryDecoder.path());
-			if(!matcher.matches()) {
-				continue;
+			if(matcher.matches()) {
+				return new ApiMatchRequest(operation,queryDecoder.parameters(),matcher);
 			}
-			
-			return new ApiMatchRequest(operation,queryDecoder.parameters(),matcher);
 		}
 		return null;
 	}

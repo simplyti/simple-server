@@ -6,7 +6,6 @@ import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.monitor.DefaultClientMonitor;
 import com.simplyti.service.clients.request.GenericRequestBuilder;
 
-import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
 import io.netty.handler.ssl.SslProvider;

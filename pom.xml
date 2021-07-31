@@ -64,10 +64,10 @@
 		<xml.bind-api.version>3.0.0</xml.bind-api.version>
 
 		<!-- Networking -->
-		<netty.version>4.1.65.Final</netty.version>
+		<netty.version>4.1.66.Final</netty.version>
 
 		<!-- SSL -->
-		<tcnative.version>2.0.38.Final</tcnative.version>
+		<tcnative.version>2.0.40.Final</tcnative.version>
 
 		<!-- JAX-RS -->
 		<jax-rs.version>2.1.6</jax-rs.version>
@@ -75,10 +75,10 @@
 		<!-- Json -->
 		<jsoniter.version>0.9.23</jsoniter.version>
 		<dsljson.version>1.9.8</dsljson.version>
-		<jackson.json>2.12.0</jackson.json>
+		<jackson.json>2.12.4</jackson.json>
 
 		<!-- JE2/J -->
-		<re2j.version>1.5</re2j.version>
+		<re2j.version>1.6</re2j.version>
 
 		<!-- JWT -->
 		<jjwt.version>0.11.2</jjwt.version>
