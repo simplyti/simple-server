@@ -424,7 +424,7 @@ Scenario: OIDC auth ingress
 	And I check that http response "#response" has status code 302
 	And I check that http response "#response" contains header "location" starts with "https://localhost:7443/authorize"
 	And I check that "#response" redirect location contains params:
-		| redirect_uri		| https://localhost/_api/callback	|
+		| redirect_uri		| https://localhost:8080/_api/callback	|
 		| response_type		| code | 
 		| client_id			| gwDxKuNUjC8U4gKwmClumsRxFQLRLHTI	|
 		| scope				| openid email profile groups		|
