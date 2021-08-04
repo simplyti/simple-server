@@ -22,8 +22,7 @@ public class SetHostHeaderHandler extends ChannelOutboundHandlerAdapter {
 				TcpAddress tcpAddress = (TcpAddress) address;
 				HttpRequest request = (HttpRequest) msg;
 				if (!request.headers().contains(HttpHeaderNames.HOST)) {
-					// TODO port
-					request.headers().set(HttpHeaderNames.HOST, tcpAddress.host());
+					request.headers().set(HttpHeaderNames.HOST, tcpAddress.host()+":"+tcpAddress.port());
 				}
 			}
 		}

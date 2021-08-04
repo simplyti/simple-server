@@ -39,18 +39,15 @@ public class HttpClientChannelPoolHandler extends AbstractClientPoolHandler {
 
 	@Override
 	public void channelCreated0(Channel ch) {
-		ch.pipeline().addLast(new HttpClientCodec());
+		ch.pipeline().addLast(new HttpClientCodec(),
+				new HttpRequestFilterHandler(filters),
+				setHostHeaderHandler,
+				new HttpServerSentEventHandshakeHandled(),
+				new DelimiterBasedFrameDecoder(100000, DELIMITER),
+				new HttpServerSentEventDecoder(),
+				new HttpClientFullResponseAggregator(maxContextLength>0? maxContextLength:DEFAULT_MAX_CONTENT_LENGTH),
+				new HttpContentUnwrapHandled());
 		
-		ch.pipeline().addLast(new HttpRequestFilterHandler(filters));
-		
-		ch.pipeline().addLast(setHostHeaderHandler);
-		
-		ch.pipeline().addLast(new HttpServerSentEventHandshakeHandled());
-		ch.pipeline().addLast(new DelimiterBasedFrameDecoder(100000, DELIMITER));
-		ch.pipeline().addLast(new HttpServerSentEventDecoder());
-		
-		ch.pipeline().addLast(new HttpClientFullResponseAggregator(maxContextLength>0? maxContextLength:DEFAULT_MAX_CONTENT_LENGTH));
-		ch.pipeline().addLast(new HttpContentUnwrapHandled());
 		
 	}
 	
