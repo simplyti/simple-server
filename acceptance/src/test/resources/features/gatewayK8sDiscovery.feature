@@ -432,7 +432,7 @@ Scenario: OIDC auth ingress
 		| access_type		| offline							|
 	When I send a "GET /_api/callback" following auth redirect of "#response" getting "#response"
 	Then I check that "#response" has status code 302 
-	And I check that "#response" has location header "https://localhost/responsecode/200"
+	And I check that "#response" has location header "https://localhost:8080/responsecode/200"
 	And I check that "#response" has cookie "JWT-SESSION"
 	When I send a "GET /responsecode/200" with cookies from response "#response" getting "#response"
 	And I check that "#response" has status code 200 
