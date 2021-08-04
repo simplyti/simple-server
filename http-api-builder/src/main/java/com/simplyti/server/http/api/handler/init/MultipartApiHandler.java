@@ -1,8 +1,5 @@
 package com.simplyti.server.http.api.handler.init;
 
-import java.util.Collection;
-
-import com.simplyti.server.http.api.filter.OperationInboundFilter;
 import com.simplyti.server.http.api.handler.MultipartApiInvocationHandler;
 import com.simplyti.server.http.api.operations.FileUploadApiOperation;
 import com.simplyti.server.http.api.request.ApiMatchRequest;
@@ -20,7 +17,7 @@ public class MultipartApiHandler extends SimpleChannelInboundHandler<HttpRequest
 
 	private ApiMatchRequest matchRequest;
 	
-	public MultipartApiHandler(ExceptionHandler exceptionHandler, SyncTaskSubmitter syncTaskSubmitter, Collection<OperationInboundFilter> filters) {
+	public MultipartApiHandler(ExceptionHandler exceptionHandler, SyncTaskSubmitter syncTaskSubmitter) {
 		super(false);
 		this.exceptionHandler=exceptionHandler;
 		this.syncTaskSubmitter=syncTaskSubmitter;

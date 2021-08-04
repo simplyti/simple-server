@@ -7,7 +7,6 @@ import javax.inject.Singleton;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.simplyti.server.http.api.builder.ApiBuilderImpl;
-import com.simplyti.server.http.api.handler.ApiInvocationHandler;
 import com.simplyti.server.http.api.handler.ApiResponseEncoder;
 import com.simplyti.server.http.api.handler.init.ApiHandlerInit;
 import com.simplyti.server.http.api.health.HealthApi;
@@ -33,7 +32,6 @@ public class APIBuilderModule extends AbstractModule {
 	public void configure() {
 		Multibinder.newSetBinder(binder(), ServiceHadlerInit.class).addBinding().to(ApiHandlerInit.class);
 		
-		bind(ApiInvocationHandler.class).in(Singleton.class);
 		bind(ApiResponseEncoder.class).in(Singleton.class);
 		bind(ServerSentEventEncoder.class).in(Singleton.class);
 		

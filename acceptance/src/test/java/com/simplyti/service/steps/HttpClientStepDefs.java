@@ -48,6 +48,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.json.JsonObjectDecoder;
@@ -184,6 +185,20 @@ public class HttpClientStepDefs {
 		scenarioData.put(streamKey, ref.get());
 	}
 	
+	@When("^I post \"([^\"]*)\" with bearer auth \"([^\"]*)\" and chunked body stream \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	public void iPostWithBearerAuthAndChunkedBodyStreamGettingResponse(String path, String token, String streamKey, String resultKey) throws Exception {
+		AtomicReference<ChunckedBodyRequest> ref = new AtomicReference<>();
+		Future<FullHttpResponse> response = sutClient.request().withEndpoint(LOCAL_ENDPOINT)
+			.post(path)
+			.withHeader(HttpHeaderNames.AUTHORIZATION, token)
+			.withChunkedBody(ref::set)
+			.fullResponse();
+		Awaitility.await().until(()->ref.get()!=null);
+		scenarioData.put(resultKey, response);
+		scenarioData.put(streamKey, ref.get());
+	}
+
+	
 	@When("^I post \"([^\"]*)\" using client \"([^\"]*)\" with chunked body stream \"([^\"]*)\" getting response \"([^\"]*)\"$")
 	public void iPostUsingClientWithBodyStreamGettingResponse(String path, String client, String streamKey, String resultKey) throws Exception {
 		AtomicReference<ChunckedBodyRequest> ref = new AtomicReference<>();
@@ -240,10 +255,16 @@ public class HttpClientStepDefs {
 		scenarioData.put(resultKey, stream.send(content));
 	}
 	
-	@When("I close request stream \"([^\\\"]*)\"")
+	@When("^I close request stream \"([^\\\"]*)\"$")
 	public void iCloseRequestStream(String streamKey) {
 		ChunckedBodyRequest stream = (ChunckedBodyRequest) scenarioData.get(streamKey);
 		stream.end();
+	}
+	
+	@When("^I close request stream \"([^\\\"]*)\" getting result \"([^\\\"]*)\"$")
+	public void iCloseRequestStream(String streamKey, String result) {
+		ChunckedBodyRequest stream = (ChunckedBodyRequest) scenarioData.get(streamKey);
+		scenarioData.put(result, stream.end());
 	}
 	
 	@When("^I post \"([^\"]*)\" with chunked body stream \"([^\"]*)\" handling objects \"([^\"]*)\" and getting response \"([^\"]*)\"$")

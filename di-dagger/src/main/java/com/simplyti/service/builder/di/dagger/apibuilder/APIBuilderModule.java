@@ -8,7 +8,6 @@ import javax.inject.Singleton;
 import com.simplyti.server.http.api.builder.ApiBuilderImpl;
 import com.simplyti.server.http.api.builder.jaxrs.JaxRsApiContextFactory;
 import com.simplyti.server.http.api.filter.OperationInboundFilter;
-import com.simplyti.server.http.api.handler.ApiInvocationHandler;
 import com.simplyti.server.http.api.handler.ApiRequestDecoder;
 import com.simplyti.server.http.api.handler.ApiResponseEncoder;
 import com.simplyti.server.http.api.handler.init.ApiHandlerInit;
@@ -40,16 +39,10 @@ public class APIBuilderModule {
 	public ServiceHadlerInit apiRequestHandlerInit(ServerConfig config,
 			 ApiRequestDecoder apiRequestDecoder,
 			ApiResponseEncoder apiResponseEncoder,
-			ApiInvocationHandler apiInvocationHandler, ExceptionHandler exceptionHandler,
+			ExceptionHandler exceptionHandler,
 			SyncTaskSubmitter syncTaskSubmitter, ServerHeadersHandler serverHeadersHandler,
 			Set<OperationInboundFilter> filters) {
 		return new ApiHandlerInit(config, apiRequestDecoder, apiResponseEncoder, exceptionHandler, syncTaskSubmitter, filters);
-	}
-	
-	@Provides
-	@Singleton
-	public ApiInvocationHandler apiInvocationHandler(SyncTaskSubmitter syncTaskSubmitter, ExceptionHandler exceptionHandler, Set<OperationInboundFilter> operationInboundFilters) {
-		return new ApiInvocationHandler(syncTaskSubmitter, exceptionHandler, operationInboundFilters);
 	}
 	
 	@Provides
