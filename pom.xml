@@ -470,11 +470,6 @@
 		<module>clients</module>
 		<module>clients-http</module>
 		<module>clients-k8s</module>
-		<module>clients-postgres</module>
-		<module>clients-ovsdb</module>
-		<module>clients-ovn</module>
-		<module>clients-nats</module>
-		<module>clients-smtp</module>
 		<module>gateway</module>
 		<module>gateway-guice</module>
 		<module>gateway-dagger</module>
