@@ -94,6 +94,7 @@
 
 		<!-- Integration Test -->
 		<cucumber.version>6.10.4</cucumber.version>
+		<apiguardian.version>1.1.2</apiguardian.version>
 	</properties>
 
 	<build>
@@ -437,6 +438,11 @@
 				<version>${commons-io.version}</version>
 				<scope>test</scope>
 			</dependency>
+			<dependency>
+			    <groupId>org.apiguardian</groupId>
+			    <artifactId>apiguardian-api</artifactId>
+			    <version>${apiguardian.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
@@ -464,6 +470,11 @@
 		<module>clients</module>
 		<module>clients-http</module>
 		<module>clients-k8s</module>
+		<module>clients-postgres</module>
+		<module>clients-ovsdb</module>
+		<module>clients-ovn</module>
+		<module>clients-nats</module>
+		<module>clients-smtp</module>
 		<module>gateway</module>
 		<module>gateway-guice</module>
 		<module>gateway-dagger</module>
