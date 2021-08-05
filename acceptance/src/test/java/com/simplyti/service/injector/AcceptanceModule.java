@@ -8,8 +8,6 @@ import javax.inject.Singleton;
 
 import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.simplyti.service.Server;
@@ -18,44 +16,36 @@ import com.simplyti.service.client.DefaultSimpleHttpClient;
 import com.simplyti.service.client.SimpleHttpClient;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.k8s.KubeClient;
-import com.simplyti.service.proxy.ProxyServer;
+import com.simplyti.service.proxy.ProxyServerModule;
 
-import cucumber.runtime.java.guice.InjectorSource;
-import cucumber.runtime.java.guice.ScenarioScoped;
-import cucumber.runtime.java.guice.impl.ScenarioModule;
-import cucumber.runtime.java.guice.impl.SequentialScenarioScope;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.Future;
 
-public class CustomInjectorSource extends AbstractModule implements InjectorSource{
-
-	@Override
-	public Injector getInjector() {
-		 ScenarioModule scenarioModule = new ScenarioModule(new SequentialScenarioScope());
-         return Guice.createInjector(scenarioModule,this);
-	}
-
+public class AcceptanceModule extends AbstractModule {
+	
 	@Override
 	protected void configure() {
-		bind(HttpClient.class).annotatedWith(Names.named("scenario")).toProvider(HttpClientProvider.class).in(ScenarioScoped.class);
-		bind(HttpClient.class).annotatedWith(Names.named("singleton")).toProvider(HttpClientProvider.class).in(Singleton.class);
-		
+        install(new ProxyServerModule());
+        
 		EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
 		bind(EventLoopGroup.class).toInstance(eventLoopGroup);
+		
+		bind(HttpClient.class).annotatedWith(Names.named("scenario")).toProvider(HttpClientProvider.class).in(ScenarioScoped.class);
+		bind(HttpClient.class).annotatedWith(Names.named("singleton")).toProvider(HttpClientProvider.class).in(Singleton.class);
+	
 		bind(SimpleHttpClient.class).toInstance(new DefaultSimpleHttpClient(eventLoopGroup));
 		
 		bind(new TypeLiteral<Map<String,Object>>(){}).toProvider(Maps::newHashMap).in(ScenarioScoped.class);
 		bind(new TypeLiteral<List<Future<Server>>>(){}).toProvider(ArrayList::new).in(ScenarioScoped.class);
 		bind(new TypeLiteral<List<AWSLambda>>(){}).toProvider(ArrayList::new).in(ScenarioScoped.class);
+		
 		bind(KubeClient.class)
 			.toInstance(KubeClient.builder()
 				.eventLoopGroup(eventLoopGroup)
 				.server("http://localhost:8082")
 			.build());
 		
-		bind(ProxyServer.class).asEagerSingleton();
 	}
-	
 
 }

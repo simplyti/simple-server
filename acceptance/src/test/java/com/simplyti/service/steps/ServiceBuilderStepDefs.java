@@ -9,6 +9,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -41,10 +42,11 @@ import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.clients.http.exception.HttpException;
 import com.simplyti.service.examples.hook.TestServerStopHookModule;
 
-import cucumber.api.java.After;
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
+import io.cucumber.java.After;
+import io.cucumber.java.ParameterType;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
@@ -103,7 +105,17 @@ public class ServiceBuilderStepDefs {
 	@Inject
 	private EventLoopGroup eventLoopGroup;
 	
-	@When("^I start a service \"([^\"]*)\" with API \"([^\"]*)\"$")
+	@ParameterType(".*")
+    public Class<?> clazz(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    	return Class.forName(className.replaceAll("^\"", "").replaceAll("\"$", ""));
+    }
+	
+	@ParameterType(".*")
+    public List<String> list(String list) {
+    	return Arrays.asList(list.replaceAll("^\"", "").replaceAll("\"$", "").split("\\s*,\\s*"));
+    }
+	
+	@When("I start a service {string} with API {clazz}")
 	public void iStartAServiceWithAPI(String key, Class<?extends ApiProvider> api) throws Exception {
 		Future<Server> futureService = GuiceService.builder()
 			.withLog4J2Logger()
@@ -113,7 +125,7 @@ public class ServiceBuilderStepDefs {
 		scenarioData.put(key, futureService);
 	}
 	
-	@When("^I start a service \"([^\"]*)\" with max body size (\\d+) with API \"([^\"]*)\"$")
+	@When("I start a service {string} with max body size {int} with API {clazz}")
 	public void iStartAServiceWithMaxBodySizeWithAPI(String key, int maxBodySize, Class<?extends ApiProvider> api) throws Exception {
 		Future<Server> futureService = GuiceService.builder()
 				.withLog4J2Logger()
@@ -134,7 +146,7 @@ public class ServiceBuilderStepDefs {
 		scenarioData.put(key, futureService);
 	}
 	
-	@When("^I start a service \"([^\"]*)\" with module \"([^\"]*)\"$")
+	@When("I start a service {string} with module {clazz}")
 	public void iStartAServiceWithModule(String key, Class<? extends Module> module) throws Exception {
 		Future<Server> futureService = GuiceService.builder()
 				.withLog4J2Logger()
@@ -164,7 +176,7 @@ public class ServiceBuilderStepDefs {
 		FileUtils.deleteDirectory(Paths.get(tempDir).toFile());
 	}
 	
-	@When("^I send files \"([^\"]*)\" to \"([^\"]*)\" getting \"([^\"]*)\"$")
+	@When("I send files {list} to {string} getting {string}")
 	public void iSendFileGetting(List<String> fileNames, String path, String resultKey) throws Exception {
 		HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, path);
 		HttpDataFactory factory = new DefaultHttpDataFactory(false);
@@ -191,7 +203,7 @@ public class ServiceBuilderStepDefs {
 		scenarioData.put(key, futureService);
 	}
 	
-	@When("^I start a service \"([^\"]*)\" with file serve \"([^\"]*)\" on \"([^\"]*)\" and API \"([^\"]*)\"$")
+	@When("I start a service {string} with file serve {string} on {string} and API {clazz}")
 	public void iStartAServiceWithFileServeOnAndAPI(String key, String directory, String path, Class<?extends ApiProvider> api) throws Exception {
 		String thedir = directory.replaceAll("#tempdir", tempDir);
 		Future<Server> futureService = GuiceService.builder()
@@ -322,7 +334,7 @@ public class ServiceBuilderStepDefs {
 	}
 
 	@After
-	public void stop()  {
+	public void stop() throws InterruptedException  {
 		services.stream()
 			.forEach(futureService->Awaitility.await().until(futureService::isDone));
 		
@@ -554,7 +566,7 @@ public class ServiceBuilderStepDefs {
 		assertThat(futureService.isSuccess(),equalTo(false));
 	}
 	
-	@Then("^I check that error cause of \"([^\"]*)\" is instancence of \"([^\"]*)\"$")
+	@Then("I check that error cause of {string} is instancence of {clazz}")
 	public void iCheckThatErrorCauseOfIsInstancenceOf(String key, Class<? extends Throwable> clazz) throws Exception {
 		Future<?> futureService = (Future<?>) scenarioData.get(key);
 		assertThat(futureService.cause(),instanceOf(clazz));

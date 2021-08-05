@@ -13,8 +13,8 @@ import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.builder.di.guice.GuiceService;
 import com.simplyti.service.serializer.json.DslJsonSerializer;
 
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.When;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.When;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.impl.crypto.MacProvider;

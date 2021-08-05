@@ -42,9 +42,6 @@
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<configuration>
 					<argLine>${failsafeArgLine}</argLine>
-					<systemPropertyVariables>
-						<guice.injector-source>com.simplyti.service.injector.CustomInjectorSource</guice.injector-source>
-					</systemPropertyVariables>
 					<includes>
 						<include>**/*CucumberITest.java</include>
 					</includes>
@@ -239,9 +236,10 @@
 			<artifactId>cucumber-junit</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>io.cucumber</groupId>
-			<artifactId>cucumber-guice</artifactId>
+		    <groupId>io.cucumber</groupId>
+		    <artifactId>cucumber-java</artifactId>
 		</dependency>
+		
 		<dependency>
 			<groupId>com.google.truth</groupId>
 			<artifactId>truth</artifactId>

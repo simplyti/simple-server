@@ -10,20 +10,20 @@ import org.junit.runner.RunWith;
 
 import com.simplyti.service.clients.k8s.KubeClient;
 
-import cucumber.api.CucumberOptions;
-import cucumber.api.SnippetType;
-import cucumber.api.junit.Cucumber;
+import io.cucumber.junit.Cucumber;
+import io.cucumber.junit.CucumberOptions;
+import io.cucumber.junit.CucumberOptions.SnippetType;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.ResourceLeakDetector;
 
 @RunWith(Cucumber.class)
 @CucumberOptions(
-		features="classpath:features",
-		snippets=SnippetType.CAMELCASE,
-		plugin="pretty"
-		,tags="not @standalone"
-		)
+		features = "classpath:features",
+		snippets = SnippetType.CAMELCASE,
+		plugin = "pretty",
+		tags = "not @standalone"
+)
 public class CucumberITest {
 	
 	@BeforeClass

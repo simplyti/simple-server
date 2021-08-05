@@ -18,9 +18,9 @@ import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.discovery.TestServiceDiscovery;
 import com.simplyti.service.filter.http.HttpRequestFilter;
 
-import cucumber.api.java.After;
-import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
+import io.cucumber.java.After;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
@@ -47,7 +47,7 @@ public class ServiceDiscoveryStepDefs {
 		TestServiceDiscovery.getInstance().addSslService(null, null, path, null, HttpEndpoint.of(target));
 	}
 	
-	@When("^I create a service with path \"([^\"]*)\" with filter \"([^\"]*)\" and backend \"([^\"]*)\"$")
+	@When("I create a service with path {string} with filter {clazz} and backend {string}")
 	public void iCreateAServiceWithPathWithFilterAndBackend(String path, Class<? extends HttpRequestFilter> clazz, String target) throws Exception {
 		TestServiceDiscovery.getInstance().addService(null, null, path, null, Collections.singletonList(clazz.newInstance()), HttpEndpoint.of(target));
 	}

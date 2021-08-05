@@ -102,7 +102,7 @@ Scenario: Service performs full openid flow when all parameters are provided
 	And I check that http response "#response" has body ""
 	And I check that http response "#response" contains header "location" starts with "https://localhost:7443/auth"
 	And I check that "#response" redirect location contains params: 
-		| redirect_uri		| https://localhost/_api/callback	|
+		| redirect_uri		| https://localhost:8080/_api/callback	|
 		| response_type		| code | 
 		| client_id			| myClientId	|
 		| scope				| openid email profile groups		|
@@ -110,7 +110,7 @@ Scenario: Service performs full openid flow when all parameters are provided
 		| access_type		| offline							|
 	When I send a "GET /_api/callback" following auth redirect of "#response" getting "#response" 
 	Then I check that "#response" has status code 302 
-	And I check that "#response" has location header "https://localhost/hello" 
+	And I check that "#response" has location header "https://localhost:8080/hello" 
 	And I check that "#response" has cookie "JWT-SESSION" 
 	When I send a "GET /hello" with cookies from response "#response" getting "#response" 
 	And I check that "#response" has status code 200 
@@ -131,7 +131,7 @@ Scenario: Wellknown OpenId provider configuration
 	And I check that http response "#response" has status code 302
 	And I check that http response "#response" contains header "location" starts with "https://localhost:7443/authorize"
 	And I check that "#response" redirect location contains params: 
-		| redirect_uri		| https://localhost/_api/callback	|
+		| redirect_uri		| https://localhost:8080/_api/callback	|
 		| response_type		| code | 
 		| client_id			| myClientId	|
 		| scope				| openid email profile groups		|
@@ -139,7 +139,7 @@ Scenario: Wellknown OpenId provider configuration
 		| access_type		| offline							|
 	When I send a "GET /_api/callback" following auth redirect of "#response" getting "#response" 
 	Then I check that "#response" has status code 302 
-	And I check that "#response" has location header "https://localhost/hello" 
+	And I check that "#response" has location header "https://localhost:8080/hello" 
 	And I check that "#response" has cookie "JWT-SESSION" 
 	When I send a "GET /hello" with cookies from response "#response" getting "#response" 
 	Then I check that "#response" has status code 200 
@@ -174,7 +174,7 @@ Scenario: Wellknown OpenId provider configuration with jwks service delay
 	And I check that http response "#response" has status code 302
 	And I check that http response "#response" contains header "location" starts with "https://localhost:7443/authorize"
 	And I check that "#response" redirect location contains params: 
-		| redirect_uri		| https://localhost/_api/callback	|
+		| redirect_uri		| https://localhost:8080/_api/callback	|
 		| response_type		| code | 
 		| client_id			| myClientId	|
 		| scope				| openid email profile groups		|
@@ -182,7 +182,7 @@ Scenario: Wellknown OpenId provider configuration with jwks service delay
 		| access_type		| offline							|
 	When I send a "GET /_api/callback" following auth redirect of "#response" getting "#response" 
 	Then I check that "#response" has status code 302 
-	And I check that "#response" has location header "https://localhost/hello" 
+	And I check that "#response" has location header "https://localhost:8080/hello" 
 	And I check that "#response" has cookie "JWT-SESSION" 
 	When I send a "GET /hello" with cookies from response "#response" getting "#response" 
 	Then I check that "#response" has status code 503 

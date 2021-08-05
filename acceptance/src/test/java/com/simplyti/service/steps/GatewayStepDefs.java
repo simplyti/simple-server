@@ -19,9 +19,9 @@ import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.gateway.GatewayConfig;
 import com.simplyti.service.gateway.http.HttpGatewayClient;
 
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.util.concurrent.Future;

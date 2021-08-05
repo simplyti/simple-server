@@ -19,9 +19,10 @@ import com.jsoniter.JsonIterator;
 import com.jsoniter.output.JsonStream;
 import com.simplyti.service.aws.lambda.AWSLambda;
 
-import cucumber.api.java.After;
-import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
+import io.cucumber.java.After;
+import io.cucumber.java.ParameterType;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import io.netty.util.CharsetUtil;
 
 public class AWSLambdaSteps {
@@ -36,10 +37,14 @@ public class AWSLambdaSteps {
 	public void stop() {
 		lambdas.stream().forEach(AWSLambda::stop);
 	}
+	
+	@ParameterType(".*")
+    public AWSLambda lambda(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    	return (AWSLambda) Class.forName(className.replaceAll("^\"", "").replaceAll("\"$", "")).newInstance();
+    }
 
-	@When("^I create the aws lambda \"([^\"]*)\" service \"([^\"]*)\"$")
-	public void iCreateTheAwsLambdaService(String key, Class<? extends AWSLambda> clazz) throws Exception {
-		AWSLambda lambda = clazz.newInstance();
+	@When("I create the aws lambda {string} service {lambda}")
+	public void iCreateTheAwsLambdaService(String key, AWSLambda lambda) throws Exception {
 		lambdas.add(lambda);
 		scenarioData.put(key, lambda);
 	}

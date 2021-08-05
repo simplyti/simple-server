@@ -38,9 +38,9 @@ import com.simplyti.service.clients.proxy.Proxy.ProxyType;
 import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.util.concurrent.Future;
 
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.EventLoop;
@@ -96,7 +96,7 @@ public class HttpClientStepDefs {
 			.build());
 	}
 	
-	@When("^I create an http client \"([^\"]*)\" with pool size (\\d+) and filter \"([^\"]*)\"$")
+	@When("I create an http client {string} with pool size {int} and filter {clazz}")
 	public void iCreateAnHttpClientWithFilter(String key, int pool, Class<? extends HttpRequestFilter> clazz) throws Exception {
 		scenarioData.put(key,HttpClient.builder()
 			.withMonitorEnabled()
@@ -223,7 +223,7 @@ public class HttpClientStepDefs {
 		scenarioData.put(streamKey, ref.get());
 	}
 
-	@When("^I post \"([^\"]*)\" with filter \"([^\"]*)\" using client \"([^\"]*)\" with chunked body stream \"([^\"]*)\" getting json response \"([^\"]*)\"$")
+	@When("I post {string} with filter {clazz} using client {string} with chunked body stream {string} getting json response {string}")
 	public void iPostWithFilterUsingClientWithChunkedBodyStreamGettingJsonResponse(String path, Class<? extends HttpRequestFilter> clazz, String client, String streamKey, String resultKey) throws Exception {
 		AtomicReference<ChunckedBodyRequest> ref = new AtomicReference<>();
 		Future<Any> response = ((HttpClient)scenarioData.get(client)).request().withEndpoint(LOCAL_ENDPOINT)
@@ -236,7 +236,7 @@ public class HttpClientStepDefs {
 		scenarioData.put(streamKey, ref.get());
 	}
 	
-	@When("^I post \"([^\"]*)\" with filter \"([^\"]*)\" using client \"([^\"]*)\" with chunked body stream \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	@When("I post {string} with filter {clazz} using client {string} with chunked body stream {string} getting response {string}")
 	public void iPostWithFilterUsingClientWithChunkedBodyStreamGettingResponse(String path, Class<? extends HttpRequestFilter> clazz, String client, String streamKey, String resultKey) throws Exception {
 		AtomicReference<ChunckedBodyRequest> ref = new AtomicReference<>();
 		Future<FullHttpResponse> response = ((HttpClient)scenarioData.get(client)).request().withEndpoint(LOCAL_ENDPOINT)
@@ -348,7 +348,7 @@ public class HttpClientStepDefs {
 		scenarioData.put(resultKey, response);
 	}
 
-	@When("^I get \"([^\"]*)\" with filter \"([^\"]*)\" using client \"([^\"]*)\" getting json response \"([^\"]*)\"$")
+	@When("I get {string} with filter {clazz} using client {string} getting json response {string}")
 	public void iGetWithFilterUsingClientGettingJsonResponse(String path, Class<? extends HttpRequestFilter> clazz, String clientKey, String resultKey) throws Exception {
 		Future<Any> response = ((HttpClient)scenarioData.get(clientKey)).request().withEndpoint(LOCAL_ENDPOINT)
 				.withFilter(clazz.newInstance())
@@ -356,7 +356,7 @@ public class HttpClientStepDefs {
 		scenarioData.put(resultKey, response);
 	}
 	
-	@When("^I post \"([^\"]*)\" with filter \"([^\"]*)\" using client \"([^\"]*)\" with body \"([^\"]*)\" getting json response \"([^\"]*)\"$")
+	@When("I post {string} with filter {clazz} using client {string} with body {string} getting json response {string}")
 	public void iPostWithFilterUsingClientWithBodyGettingJsonResponse(String path, Class<? extends HttpRequestFilter> clazz, String clientKey, String body, String resultKey) throws Exception {
 		Future<Any> response = ((HttpClient)scenarioData.get(clientKey)).request().withEndpoint(LOCAL_ENDPOINT)
 				.withFilter(clazz.newInstance())
@@ -366,7 +366,7 @@ public class HttpClientStepDefs {
 		scenarioData.put(resultKey, response);
 	}
 	
-	@When("^I get \"([^\"]*)\" with filter \"([^\"]*)\" using client \"([^\"]*)\" getting response \"([^\"]*)\"$")
+	@When("I get {string} with filter {clazz} using client {string} getting response {string}")
 	public void iGetWithFilterUsingClientGettingResponse(String path, Class<? extends HttpRequestFilter> clazz, String clientKey, String resultKey) throws Exception {
 		Future<FullHttpResponse> response = ((HttpClient)scenarioData.get(clientKey)).request().withEndpoint(LOCAL_ENDPOINT)
 				.withFilter(clazz.newInstance())

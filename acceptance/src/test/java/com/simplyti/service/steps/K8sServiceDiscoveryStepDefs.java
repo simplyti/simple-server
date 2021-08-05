@@ -33,9 +33,9 @@ import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.clients.k8s.KubeClient;
 import com.simplyti.service.clients.k8s.secrets.domain.Secret;
 
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.base64.Base64;
