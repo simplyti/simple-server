@@ -1,7 +1,5 @@
 package com.simplyti.service;
 
-import java.io.IOException;
-import java.net.Socket;
 import java.util.concurrent.TimeUnit;
 
 import org.awaitility.Awaitility;
@@ -29,7 +27,6 @@ public class CucumberITest {
 	@BeforeClass
 	public static void prepare() throws InterruptedException {
 		ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
-		Awaitility.await().atMost(30, TimeUnit.SECONDS).until(()->listening(1080));
 		EventLoopGroup eventLoopGroup = new NioEventLoopGroup(1);
 		KubeClient k8s = KubeClient.builder().eventLoopGroup(eventLoopGroup).server("http://localhost:8082").build();
 		Awaitility.await().atMost(2,TimeUnit.MINUTES).until(()->k8sSuccess(k8s));
@@ -39,15 +36,6 @@ public class CucumberITest {
 		try {
 			return k8s.health().await().get().equals("ok");
 		} catch (Exception e) {
-			return false;
-		}
-	}
-
-	private static boolean listening(int port) {
-		try (Socket socket = new Socket("127.0.0.1", port)){
-			return true;
-			
-		} catch (IOException e) {
 			return false;
 		}
 	}
