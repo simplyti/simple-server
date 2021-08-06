@@ -366,7 +366,7 @@ public class K8sClientStepDefs {
 		assertThat(result.cause().getMessage(), equalTo("Unexpected code: 404"));
 	}
 	
-	@Then("^I check that endpoint \"([^\"]*)\" contains a subset with addresses \"([^\"]*)\" and ports \"([^\"]*)\"$")
+	@Then("I check that endpoint {string} contains a subset with addresses {list} and ports {list}")
 	public void iCheckThatEndpointContainsASubsetWithAddressesAndPorts(String key, List<String> addresses, List<String> ports) throws Exception {
 		Endpoint endpoint = (Endpoint) scenarioData.get(key);
 		assertThat(endpoint.subsets(),hasSize(1));
