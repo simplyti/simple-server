@@ -3,10 +3,12 @@ package com.simplyti.service;
 import java.util.concurrent.TimeUnit;
 
 import org.awaitility.Awaitility;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 
 import com.simplyti.service.clients.k8s.KubeClient;
+import com.simplyti.service.injector.SimpleObjectFactory;
 
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;
@@ -38,6 +40,11 @@ public class CucumberITest {
 		} catch (Exception e) {
 			return false;
 		}
+	}
+	
+	@AfterClass
+	public static void tearDown() {
+		SimpleObjectFactory.currentInjector().dispose();
 	}
 
 }
