@@ -2,6 +2,7 @@ package com.simplyti.service.clients.channel.proxy;
 
 import java.net.InetSocketAddress;
 
+import com.simplyti.service.clients.PrematureErrorHandler;
 import com.simplyti.service.clients.proxy.Proxy;
 
 import io.netty.channel.Channel;
@@ -30,6 +31,7 @@ public class ProxyHandlerInitializer extends ChannelInitializer<Channel>{
 	protected void initChannel(Channel ch) throws Exception {
 		ch.pipeline().addFirst(noresolvingSocketAddressUnwrap);
 		ch.pipeline().addFirst(proxyHandler());
+		ch.pipeline().addLast(new PrematureErrorHandler());
 		ch.pipeline().addLast(proxyConnectHandler);
 		handler.channelCreated(ch);
 	}

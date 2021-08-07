@@ -28,8 +28,8 @@ Scenario Outline: Client using proxy with authentication success
 	| SOCKS5	| 127.0.0.1:1081		|
 	| SOCKS4	| 127.0.0.1:1081		|
 	| HTTP		| 127.0.0.1:3129		|
-	
-Scenario Outline: Client using proxy with authentication faiure
+
+Scenario Outline: Client using proxy {type} with authentication faiure
 	Given "<type>" proxy "<address>" as "#proxy"
 	When I get url "http://localhost:8080/responsecode/204" through proxy "#proxy" with username "baduser" and password "badpass" getting response "#response"
 	Then I check that "#response" is failure
