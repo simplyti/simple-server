@@ -90,7 +90,7 @@ Scenario: Error during response processing handle
 
 Scenario: Server closing connection after write can cause request errors
 	When I execute 1000 serialized get "/get-and-close" getting response error ratio "#errors"
-	Then I check that error ratio "#errors" less than 0.1
+	Then I check that error ratio "#errors" less than 0.3
 	When I execute 1000 parallel get "/get-and-close" getting response error ratio "#errors"
 	Then I check that error ratio "#errors" less than 0.3
 	When I execute 1000 parallel get "/get-and-close?delay=30" getting response error ratio "#errors"
