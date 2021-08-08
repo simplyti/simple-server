@@ -362,6 +362,26 @@ public class ServiceBuilderStepDefs {
 		scenarioData.put(errorKey, (double)errors/count);
 	}
 	
+	@Then("I send {int} serialized get request to {string} getting response error ratio {string}")
+	public void iSendSerializedGetRequestToGettingResponseErrorRatio(int count, String path, String errorKey) throws InterruptedException {
+		int errors = 0;
+		for(int i=0; i<count;i++) {
+			Future<FullHttpResponse> response = http.request()
+					.withEndpoint(LOCAL_ENDPOINT)
+					.get(path)
+					.fullResponse().await();
+			if(!response.isSuccess()) {
+				errors++;
+			} else {
+				response.getNow().release();
+				if(response.getNow().status().code()!=200) {
+					errors++;
+				}
+			}
+		}
+		scenarioData.put(errorKey, (double)errors/count);
+	}
+	
 	@Then("^I send (\\d+) parallel request \"([^\\s]*) ([^\"]*)\" with body \"([^\"]*)\" getting response error ratio \"([^\"]*)\"$")
 	public void iSendParallelRequestWithBodyGettingResponseErrorRatio(int count, String method, String path, String body, String errorKey) throws Exception {
 		AtomicInteger errors = new AtomicInteger(0);

@@ -86,7 +86,7 @@ Scenario: Gateway reuse upstream connections
 	And I check that http response "#response" has status code 200
 	And I check that http response "#response" has body "Hello!"
 	And I check that gateway "#gatewayeFuture" client has 1 iddle connection
-	And I send 1000 serialized request "GET /hello" getting response error ratio "#errors"
+	And I send 1000 serialized get request to "/hello" getting response error ratio "#errors"
 	Then I check that error ratio "#errors" is 0.0
 	And I check that gateway "#gatewayeFuture" client has 1 iddle connection
 	
