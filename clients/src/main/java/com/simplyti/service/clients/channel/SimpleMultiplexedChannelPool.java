@@ -163,6 +163,7 @@ public class SimpleMultiplexedChannelPool implements ChannelPool {
 	
 	private void handleConnect(Channel channel, Promise<Channel> promise) {
 		AtomicLong atomicLong = new AtomicLong();
+		channel.attr(ClientChannel.ADDRESS).set(address);
 		MultiplexedClientChannel clientChannel = new MultiplexedClientChannel(atomicLong.getAndIncrement(), channel, this, address);
 		channel.attr(ID_GENERATOR_ATT).set(atomicLong);
 		clientChannel.pipeline().addLast(new MultiplexChannelToParentHandler(channel));

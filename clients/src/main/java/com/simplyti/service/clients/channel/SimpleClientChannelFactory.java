@@ -11,7 +11,6 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.pool.ChannelPool;
 import io.netty.channel.pool.ChannelPoolHandler;
-import io.netty.channel.pool.SimpleChannelPool;
 import io.netty.handler.ssl.SslProvider;
 
 public class SimpleClientChannelFactory extends AbstractClientChannelPoolMap {
@@ -25,7 +24,7 @@ public class SimpleClientChannelFactory extends AbstractClientChannelPoolMap {
 		if(proxy!=null) {
 			return new SimpleProxiedChannelPool(bootstrap, handler, proxy);
 		} else {
-			return new SimpleChannelPool(bootstrap, handler);
+			return new SimpleDirectChannelPool(bootstrap, handler);
 		}
 	}
 	
