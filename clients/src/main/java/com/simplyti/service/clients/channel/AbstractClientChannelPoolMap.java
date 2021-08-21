@@ -49,23 +49,32 @@ public abstract class AbstractClientChannelPoolMap extends AbstractChannelPoolMa
 		futureChannel.addListener(f->{
 			if(f.isSuccess()) {
 				Channel channel = futureChannel.getNow();
-				if(channel.isActive()) {
-					PooledClientChannel pooledClient = new PooledClientChannel(pool,endpoint.address(), channel, responseTimeoutMillis);
-					if(ChannelInitializedHandler.isNew(channel)) {
-						channel.pipeline().addLast(new ChannelInitializedHandler(pooledClient, promise));
-						channel.pipeline().fireUserEventTriggered(ClientChannelEvent.INIT);
-					} else {
-						promise.setSuccess(pooledClient);
-					}
-				} else {
-					pool.release(futureChannel.getNow());
-					promise.setFailure(new ClosedChannelException());
+				if(channel.eventLoop().inEventLoop()) {
+					handleChannelAcquire(promise, channel, pool, endpoint,responseTimeoutMillis);
+				}else {
+					channel.eventLoop().execute(()->handleChannelAcquire(promise, channel, pool, endpoint,responseTimeoutMillis));
 				}
 			} else {
 				promise.setFailure(f.cause());
 			}
 		});
 		return new DefaultFuture<>(promise, loop);
+	}
+
+	private void handleChannelAcquire(Promise<ClientChannel> promise, Channel channel, ChannelPool pool, Endpoint endpoint, long responseTimeoutMillis) {
+		if(channel.isActive()) {
+			PooledClientChannel pooledClient = new PooledClientChannel(pool,endpoint.address(), channel, responseTimeoutMillis);
+			if(ChannelInitializedHandler.isNew(channel)) {
+				channel.pipeline().addLast(new ChannelInitializedHandler(pooledClient, promise));
+				channel.pipeline().fireUserEventTriggered(ClientChannelEvent.INIT);
+			} else {
+				channel.pipeline().fireUserEventTriggered(ClientChannelEvent.ACQUIRED);
+				promise.setSuccess(pooledClient);
+			}
+		} else {
+			pool.release(channel);
+			promise.setFailure(new ClosedChannelException());
+		}
 	}
 
 	@Override
