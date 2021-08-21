@@ -134,13 +134,21 @@ public class HttpGatewayRequestHandler extends ChannelDuplexHandler implements D
 			.withEndpoint(endpoint)
 			.channel()
 			.thenAccept(ch->{
-				if(ch.isActive()) {
-					ch.pipeline().addLast(new HttpGatewayUpstreamHandler(service, endpoint, ctx.channel(), ch, gatewayConfig, frontSsl));
-					ch.writeAndFlush(request).addListener(f->handleInitialWrite(ctx,service,request,ch,retries,f));
+				if(ch.eventLoop().inEventLoop()) {
+					handleUpstreamConnection(ctx, ch, endpoint, service, request, retries);
 				} else {
-					failurePrematurelyAndCloseBackend(ctx, request, HttpResponseStatus.SERVICE_UNAVAILABLE,ch);
+					ch.eventLoop().execute(()->handleUpstreamConnection(ctx, ch, endpoint, service, request, retries));
 				}
 			}).exceptionally(err->failurePrematurely(ctx, request, ()->response(HttpResponseStatus.BAD_GATEWAY)));
+	}
+
+	private void handleUpstreamConnection(ChannelHandlerContext ctx, ClientChannel ch, Endpoint endpoint, BackendServiceMatcher service, HttpRequest request, int retries) {
+		if(ch.isActive()) {
+			ch.pipeline().addLast(new HttpGatewayUpstreamHandler(service, endpoint, ctx.channel(), ch, gatewayConfig, frontSsl));
+			ch.writeAndFlush(request).addListener(f->handleInitialWrite(ctx,service,request,ch,retries,f));
+		} else {
+			failurePrematurelyAndCloseBackend(ctx, request, HttpResponseStatus.SERVICE_UNAVAILABLE,ch);
+		}
 	}
 
 	private void handleInitialWrite(ChannelHandlerContext ctx, BackendServiceMatcher service, HttpRequest request, ClientChannel ch, int retries, Future<?> writeFuture) {

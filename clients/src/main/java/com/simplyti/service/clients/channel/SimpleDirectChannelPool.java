@@ -7,13 +7,16 @@ import io.netty.channel.pool.SimpleChannelPool;
 
 public class SimpleDirectChannelPool extends SimpleChannelPool {
 	
+	private DirectHandlerInitializer initializer;
+
 	public SimpleDirectChannelPool(Bootstrap bootstrap, ChannelPoolHandler handler) {
 		super(bootstrap, handler);
+		this.initializer=new DirectHandlerInitializer(handler);
 	}
 	
 	@Override
 	protected ChannelFuture connectChannel(Bootstrap bs) {
-		return bs.connect();
+		return bs.handler(initializer).connect();
 	}
 
 }

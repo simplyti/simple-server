@@ -378,7 +378,6 @@ public class ServiceBuilderStepDefs {
 					errors++;
 				}
 			}
-			Thread.sleep(50);
 		}
 		scenarioData.put(errorKey, (double)errors/count);
 	}

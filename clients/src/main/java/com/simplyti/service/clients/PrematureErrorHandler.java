@@ -1,5 +1,7 @@
 package com.simplyti.service.clients;
 
+import java.nio.channels.ClosedChannelException;
+
 import com.simplyti.service.clients.channel.ClientChannelEvent;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -12,10 +14,10 @@ public class PrematureErrorHandler extends ChannelInboundHandlerAdapter {
 	@Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if(evt == ClientChannelEvent.INIT) {
-        	if(prematureException != null) {
-        		ctx.fireExceptionCaught(prematureException);
-        	}
         	ctx.pipeline().remove(this);
+        	if(prematureException != null) {
+        		ctx.pipeline().fireExceptionCaught(prematureException);
+        	}
         } 
         ctx.fireUserEventTriggered(evt);
     }
@@ -23,6 +25,11 @@ public class PrematureErrorHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		this.prematureException = cause;
+    }
+	
+	@Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        this.prematureException = new ClosedChannelException();
     }
 
 }
