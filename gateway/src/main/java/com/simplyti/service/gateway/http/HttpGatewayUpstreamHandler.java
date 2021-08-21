@@ -127,18 +127,23 @@ public class HttpGatewayUpstreamHandler extends ChannelDuplexHandler {
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		frontChannel.writeAndFlush(msg).addListener(f->handleFrontWrite(ctx,msg,f));
+		
 		if(msg instanceof HttpResponse) {
 			HttpResponse response = (HttpResponse) msg;
     		this.upgrading = UPGRADE.equalsIgnoreCase(response.headers().get(HttpHeaderNames.CONNECTION));
     		this.isContinue = response.status().equals(HttpResponseStatus.CONTINUE);
-		} else if(msg instanceof LastHttpContent) {
-			if(upgrading) {
-				ctx.pipeline().remove(HttpClientCodec.class);
-			} else if(!isContinue){
-				this.fullResponseSuccess = true;
-				checkRelease(ctx);
-			}
+		} 
+		
+		if(msg instanceof LastHttpContent && !upgrading && !isContinue) {
+			this.fullResponseSuccess = true;
+			checkRelease(ctx);
+        }
+		
+		
+		frontChannel.writeAndFlush(msg).addListener(f->handleFrontWrite(ctx,msg,f));
+		
+		if(msg instanceof LastHttpContent && upgrading) {
+			ctx.pipeline().remove(HttpClientCodec.class);
         }
 	}
 	
