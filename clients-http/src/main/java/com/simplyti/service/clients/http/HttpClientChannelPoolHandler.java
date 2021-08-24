@@ -7,9 +7,9 @@ import com.simplyti.service.clients.channel.pool.AbstractClientPoolHandler;
 import com.simplyti.service.clients.http.handler.HttpClientFullResponseAggregator;
 import com.simplyti.service.clients.http.handler.HttpContentUnwrapHandled;
 import com.simplyti.service.clients.http.handler.HttpRequestFilterHandler;
-import com.simplyti.service.clients.http.handler.HttpServerSentEventDecoder;
-import com.simplyti.service.clients.http.handler.HttpServerSentEventHandshakeHandled;
 import com.simplyti.service.clients.http.handler.SetHostHeaderHandler;
+import com.simplyti.service.clients.http.sse.handler.HttpServerSentEventDecoder;
+import com.simplyti.service.clients.http.sse.handler.HttpServerSentEventHandshakeHandled;
 import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.service.filter.priority.Priorized;
 

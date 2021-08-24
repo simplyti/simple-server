@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.simplyti.service.clients.channel.ClientChannel;
-import com.simplyti.service.clients.http.handler.HttpServerSentEventHandshakeHandled;
 import com.simplyti.service.clients.http.sse.domain.ServerEvent;
+import com.simplyti.service.clients.http.sse.handler.HttpServerSentEventHandshakeHandled;
 import com.simplyti.service.clients.http.sse.handler.ServerSentEventHandler;
 import com.simplyti.service.clients.request.ChannelProvider;
 import com.simplyti.service.clients.request.ClientRequestProvider;

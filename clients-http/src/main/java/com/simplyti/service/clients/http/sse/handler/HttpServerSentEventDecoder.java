@@ -1,4 +1,4 @@
-package com.simplyti.service.clients.http.handler;
+package com.simplyti.service.clients.http.sse.handler;
 
 import java.util.List;
 
