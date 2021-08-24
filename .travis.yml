@@ -24,7 +24,7 @@ deploy:
 - provider: script
   script: .travis/deploy.sh
   on:
-    branch: refactor
+    branch: master
 - provider: script
   script: .travis/release.sh
   on:
