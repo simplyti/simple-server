@@ -17,13 +17,13 @@ public class DefaultPods extends DefaultK8sApi<Pod> implements Pods {
 	private static final TypeLiteral<KubeList<Pod>> LIST_TYPE = new TypeLiteral<KubeList<Pod>>() {};
 	private static final TypeLiteral<Event<Pod>> EVENT_TYPE = new TypeLiteral<Event<Pod>>() {};
 
-	public DefaultPods(EventLoopGroup eventLoopGroup, HttpClient http, Json json) {
-		super(eventLoopGroup,http,json,K8sAPI.V1,RESOURCE,LIST_TYPE,EVENT_TYPE);
+	public DefaultPods(EventLoopGroup eventLoopGroup, HttpClient http, long timeoutMillis, Json json) {
+		super(eventLoopGroup,http,timeoutMillis,json,K8sAPI.V1,RESOURCE,LIST_TYPE,EVENT_TYPE);
 	}
 
 	@Override
 	public NamespacedPods namespace(String namespace) {
-		return new DefaultNamespacedPods(eventLoopGroup(),http(),json(),K8sAPI.V1,RESOURCE,LIST_TYPE,EVENT_TYPE,namespace);
+		return new DefaultNamespacedPods(eventLoopGroup(),http(),timeoutMillis(), json(),K8sAPI.V1,RESOURCE,LIST_TYPE,EVENT_TYPE,namespace);
 	}
 
 }

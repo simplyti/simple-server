@@ -16,27 +16,30 @@ import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoopGroup;
+import io.netty.handler.codec.json.JsonObjectDecoder;
 
 public class DefaultK8sApi<T extends K8sResource> implements K8sApi<T> {
 	
 	private final EventLoopGroup eventLoopGroup;
 	private final HttpClient http;
+	private final long timeoutMillis;
 	private final Json json;
 	private final K8sAPI api;
 	private final String resource;
 	
 	private final TypeLiteral<KubeList<T>> listType;
-	private final TypeLiteral<Event<T>> eventType;
+	private final EventDecoder<T> eventDecoder;
 
-	public DefaultK8sApi(EventLoopGroup eventLoopGroup, HttpClient http, Json json, K8sAPI api,String resource,TypeLiteral<KubeList<T>> listType,
+	public DefaultK8sApi(EventLoopGroup eventLoopGroup, HttpClient http, long timeoutMillis, Json json, K8sAPI api,String resource,TypeLiteral<KubeList<T>> listType,
 			TypeLiteral<Event<T>> eventType) {
 		this.http=http;
+		this.timeoutMillis=timeoutMillis;
 		this.json=json;
 		this.api=api;
 		this.resource=resource;
 		this.listType=listType;
-		this.eventType=eventType;
 		this.eventLoopGroup=eventLoopGroup;
+		this.eventDecoder = new EventDecoder<>(json,eventType);
 	}
 
 	@Override
@@ -58,11 +61,15 @@ public class DefaultK8sApi<T extends K8sResource> implements K8sApi<T> {
 			return;
 		}
 		Future<Void> future = http.request()
-				.withReadTimeout(30000)
 				.get(String.format("%s/%s", api.path(),resource))
 				.param("watch")
 				.param("resourceVersion",observable.index())
-				.stream(EventStreamHandler.NAME,client->new EventStreamHandler<>(client,json,observable,eventType));
+				.stream()
+				.onConnect(observable::channel)
+				.<Event<T>>withInitializer(ch->ch
+						.addLast(new JsonObjectDecoder())
+						.addLast(eventDecoder))
+				.forEach(observable::event);
 		future.addListener(f->{
 			if(f.isSuccess()) {
 				watch(observable);
@@ -86,6 +93,10 @@ public class DefaultK8sApi<T extends K8sResource> implements K8sApi<T> {
 	
 	protected HttpClient http() {
 		return http;
+	}
+	
+	protected long timeoutMillis() {
+		return timeoutMillis;
 	}
 	
 	protected Json json() {

@@ -10,10 +10,10 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.inject.Inject;
 
-import com.google.common.base.Joiner;
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.api.serializer.json.Json;
+import com.simplyti.service.clients.endpoint.TcpAddress;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.security.oidc.OpenIdCallbackConfig;
@@ -61,22 +61,23 @@ public class OpenIdApi implements ApiProvider{
 					throw new IllegalStateException(e);
 				}
 				
-				String data = Joiner.on('&').join(
-						Joiner.on('=').join("grant_type", "authorization_code"),
-						Joiner.on('=').join("code", ctx.queryParam("code")),
-						Joiner.on('=').join("client_id", state.clientId()),
-						Joiner.on('=').join("client_secret", state.clientSecret()),
-						Joiner.on('=').join("redirect_uri", state.redirectUri()));
+				String data = String.join("&",
+						String.join("=","grant_type", "authorization_code"),
+						String.join("=","code", ctx.queryParam("code")),
+						String.join("=","client_id", state.clientId()),
+						String.join("=","client_secret", state.clientSecret()),
+						String.join("=","redirect_uri", state.redirectUri()));
 				
 				HttpEndpoint tokenEndpoint = HttpEndpoint.of(state.tokenEndpoint().toString());
 				FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, tokenEndpoint.path(),Unpooled.wrappedBuffer(data.getBytes(CharsetUtil.UTF_8)));
-				request.headers().set(HttpHeaderNames.HOST,tokenEndpoint.address().host());
+				request.headers().set(HttpHeaderNames.HOST, ((TcpAddress)tokenEndpoint.address()).host());
 				request.headers().set(HttpHeaderNames.CONTENT_TYPE,HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED);
 				request.headers().set(HttpHeaderNames.CONTENT_LENGTH,request.content().readableBytes());
 				
 				Future<FullHttpResponse> result = httpClient.request().withEndpoint(tokenEndpoint)
 					.withCheckStatusCode()
-					.sendFull(request).fullResponse();
+					.send(request)
+					.fullResponse();
 				
 				result.addListener(f->{
 						if(f.isSuccess()) {

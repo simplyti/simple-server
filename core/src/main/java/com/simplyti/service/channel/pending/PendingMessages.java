@@ -10,10 +10,6 @@ public class PendingMessages {
 	private PendingMessage head;
 	private PendingMessage tail;
 	
-	public void pending(Object msg) {
-		pending(msg,null);
-	}
-
 	public void pending(Object msg, ChannelPromise promise) {
 		PendingMessage message = new PendingMessage(msg,promise);
 		PendingMessage currentTail = tail;
@@ -25,12 +21,13 @@ public class PendingMessages {
 		}
 	}
 
-	public void release() {
+	public void successDiscard() {
 		PendingMessage write = head;
 		head = tail = null;
 		while (write != null) {
 			PendingMessage next = write.next();
 			ReferenceCountUtil.release(write.msg());
+			write.promise().setSuccess(null);
 			write = next;
 		}
 	}

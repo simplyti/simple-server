@@ -1,48 +1,40 @@
 package com.simplyti.service.builder.di.guice;
 
 import com.google.inject.Module;
-import com.simplyti.service.Service;
+import com.simplyti.service.DefaultServer;
 import com.simplyti.service.api.builder.ApiProvider;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.handler.ssl.SslProvider;
 
-public interface ServiceBuilder<T extends Service<?>> {
+public interface ServiceBuilder {
 
-	public T build();
+	public DefaultServer build();
 
-	public ServiceBuilder<T> withLog4J2Logger();
+	public ServiceBuilder withLog4J2Logger();
 
-	public ServiceBuilder<T> withApi(Class<? extends ApiProvider> apiClass);
+	public ServiceBuilder withApi(Class<? extends ApiProvider> apiClass);
 	
-	public ServiceBuilder<T> withApi(ApiProvider provider);
+	public ServiceBuilder withBlockingThreadPoolSize(int blockingThreadPoolSize);
+
+	public ServiceBuilder withModule(Class<? extends Module> module);
 	
-	public ServiceBuilder<T> withBlockingThreadPoolSize(int blockingThreadPoolSize);
+	public ServiceBuilder withModule(Module module);
 
-	public ServiceBuilder<T> insecuredPort(int port);
+	public ServiceBuilder withFileServe(String path, String directory);
+
+	public ServiceBuilder withSlf4jLogger();
+
+	public ServiceBuilder withEventLoopGroup(EventLoopGroup eventLoopGroup);
+
+	public ServiceBuilder verbose();
 	
-	public ServiceBuilder<T> securedPort(int port);
+	public ServiceBuilder withMaxBodySize(int maxBodySize);
 
-	public ServiceBuilder<T> withListener(int port, boolean ssl);
-
-	public ServiceBuilder<T> withModule(Class<? extends Module> module);
+	public ServiceBuilder withName(String name);
 	
-	public ServiceBuilder<T> withModule(Module module);
+	public ServiceBuilder withSslProvider(SslProvider sslProvider);
 
-	public ServiceBuilder<T> fileServe(String path, String directory);
-
-	public ServiceBuilder<T> withSlf4jLogger();
-
-	public ServiceBuilder<T> disableInsecurePort();
-	
-	public ServiceBuilder<T> disableSecuredPort();
-
-	public ServiceBuilder<T> eventLoopGroup(EventLoopGroup eventLoopGroup);
-
-	public ServiceBuilder<T> verbose();
-
-	public ServiceBuilder<T> withName(String name);
-	
-	public ServiceBuilder<T> withSslProvider(SslProvider sslProvider);
+	public ListenerBuilder withListener();
 
 }

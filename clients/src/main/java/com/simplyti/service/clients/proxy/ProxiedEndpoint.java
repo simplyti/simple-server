@@ -1,8 +1,8 @@
 package com.simplyti.service.clients.proxy;
 
-import com.simplyti.service.clients.Address;
-import com.simplyti.service.clients.Endpoint;
-import com.simplyti.service.clients.Schema;
+import com.simplyti.service.clients.endpoint.Address;
+import com.simplyti.service.clients.endpoint.Endpoint;
+import com.simplyti.service.clients.endpoint.Scheme;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -15,7 +15,7 @@ public class ProxiedEndpoint extends Endpoint {
 
 	private final Proxy proxy;
 
-	public ProxiedEndpoint(Schema schema, Address address, Proxy proxy) {
+	public ProxiedEndpoint(Scheme schema, Address address, Proxy proxy) {
 		super(schema, address);
 		this.proxy=proxy;
 	}

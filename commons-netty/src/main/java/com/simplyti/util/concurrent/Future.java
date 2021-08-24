@@ -1,20 +1,28 @@
 package com.simplyti.util.concurrent;
 
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public interface Future<T> extends io.netty.util.concurrent.Future<T> {
 	
 	Future<Void> thenAccept(Consumer<? super T> action);
 	
-	<U> Future<U> thenApply(Function<? super T, ? extends U> fn);
+	Future<Void> handle(BiConsumer<T,Throwable> consumer);
 	
-	<U> Future<U> thenCombine(Function<? super T, io.netty.util.concurrent.Future<U>> fn);
+	<U> Future<U> thenApply(ThrowableFunction<? super T, ? extends U> fn);
 	
-	<A,B> BiCombinedFuture<A,B> thenCombine(Function<? super T, io.netty.util.concurrent.Future<A>> fn1,Function<? super T, io.netty.util.concurrent.Future<B>> fn2);
+	<U> Future<U> thenCombine(ThrowableFunction<? super T, io.netty.util.concurrent.Future<U>> fn);
 	
-	<O> Future<O> exceptionallyApply(Function<Throwable, ? extends O> fn);
+	<A,B> BiCombinedFuture<A,B> thenCombine(ThrowableFunction<? super T, io.netty.util.concurrent.Future<A>> fn1,ThrowableFunction<? super T, io.netty.util.concurrent.Future<B>> fn2);
 	
-	Future<Void> onError(Consumer<Throwable> action);
+	<U> Future<U> handleCombine(BiFunction<? super T, Throwable, io.netty.util.concurrent.Future<U>> fn);
 	
+	Future<T> exceptionallyApply(ThrowableFunction<Throwable, ? extends T> fn);
+	
+	Future<T> exceptionally(final ThrowableConsumer<Throwable> consumer);
+	
+	Future<T> onError(ThrowableConsumer<Throwable> action);
+
+
 }

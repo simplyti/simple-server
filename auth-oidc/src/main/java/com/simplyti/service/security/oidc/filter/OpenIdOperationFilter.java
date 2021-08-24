@@ -2,10 +2,10 @@ package com.simplyti.service.security.oidc.filter;
 
 import javax.inject.Inject;
 
-import com.simplyti.service.api.ApiInvocation;
-import com.simplyti.service.api.filter.FilterContext;
-import com.simplyti.service.api.filter.OperationInboundFilter;
+import com.simplyti.server.http.api.filter.OperationInboundFilter;
+import com.simplyti.server.http.api.handler.ApiInvocation;
 import com.simplyti.service.api.serializer.json.Json;
+import com.simplyti.service.filter.FilterContext;
 import com.simplyti.service.security.oidc.handler.OpenIdHandler;
 
 import io.netty.handler.codec.http.HttpRequest;
@@ -29,7 +29,7 @@ public class OpenIdOperationFilter extends AbstractOpenIdFilter<ApiInvocation> i
 	}
 
 	private boolean isEnabled(FilterContext<ApiInvocation> context) {
-		Object oidc = context.object().operation().meta(META_ATT);
+		Object oidc = context.object().match().operation().meta(META_ATT);
 		return oidc!=null && oidc instanceof String && Boolean.parseBoolean((String) oidc);
 	}
 

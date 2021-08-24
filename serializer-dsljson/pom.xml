@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>com.simplyti.cloud</groupId>
 		<artifactId>simple-server</artifactId>
-		<version>0.0.4-SNAPSHOT</version>
+		<version>0.0.5-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
@@ -22,6 +22,13 @@
 		<dependency>
 			<groupId>jakarta.inject</groupId>
     		<artifactId>jakarta.inject-api</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.graalvm.nativeimage</groupId>
+			<artifactId>svm</artifactId>
+			<version>21.1.0</version>
+			<scope>provided</scope>
 		</dependency>
 		
 		<!-- Json -->

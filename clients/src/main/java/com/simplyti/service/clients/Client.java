@@ -1,15 +1,22 @@
 package com.simplyti.service.clients;
 
-import com.simplyti.service.clients.channel.monitor.ClientMonitor;
+import com.simplyti.service.clients.monitor.ClientMonitor;
 
+import io.netty.channel.EventLoopGroup;
 import io.netty.util.concurrent.Future;
 
-public interface Client<B extends ClientRequestBuilder<B>> {
+public interface Client<R> {
+
+	static GenericClientBuilder builder() {
+		return new DefaultGenericClientBuilder();
+	}
+
+	R request();
 	
-	public B request();
+	Future<Void> close();
 	
-	public ClientMonitor monitor();
-	
-	public Future<Void> close();
-	
+	ClientMonitor monitor();
+
+	EventLoopGroup eventLoopGroup();
+
 }

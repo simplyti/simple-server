@@ -19,13 +19,13 @@ public class DefaultServiceAccounts extends DefaultK8sApi<ServiceAccount> implem
 	private static final TypeLiteral<KubeList<ServiceAccount>> LIST_TYPE = new TypeLiteral<KubeList<ServiceAccount>>() {};
 	private static final TypeLiteral<Event<ServiceAccount>> EVENT_TYPE = new TypeLiteral<Event<ServiceAccount>>() {};
 
-	public DefaultServiceAccounts(EventLoopGroup eventLoopGroup, HttpClient http, Json json) {
-		super(eventLoopGroup,http,json,K8sAPI.V1, RESOURCE,LIST_TYPE,EVENT_TYPE);
+	public DefaultServiceAccounts(EventLoopGroup eventLoopGroup, HttpClient http, long timeoutMillis, Json json) {
+		super(eventLoopGroup,http,timeoutMillis,json,K8sAPI.V1, RESOURCE,LIST_TYPE,EVENT_TYPE);
 	}
 
 	@Override
 	public NamespacedServiceAccounts namespace(String namespace) {
-		return new DefaultNamespacedServiceAccounts(eventLoopGroup(),http(),json(),K8sAPI.V1,RESOURCE,LIST_TYPE,EVENT_TYPE,namespace);
+		return new DefaultNamespacedServiceAccounts(eventLoopGroup(),http(),timeoutMillis(), json(),K8sAPI.V1,RESOURCE,LIST_TYPE,EVENT_TYPE,namespace);
 	}
 
 	@Override

@@ -5,7 +5,7 @@ import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import com.simplyti.service.ServerConfig;
+import com.simplyti.service.config.ServerConfig;
 
 import io.netty.channel.DefaultEventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;

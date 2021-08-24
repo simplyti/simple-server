@@ -1,7 +1,5 @@
 package com.simplyti.service.builder.di;
 
-import java.util.Optional;
-
 import javax.inject.Inject;
 import javax.inject.Provider;
 
@@ -9,16 +7,16 @@ import io.netty.channel.EventLoop;
 
 public class StartStopLoopProvider implements Provider<EventLoop>{
 	
-	private final EventLoopGroupProvider eventLoopGroupProvider;
+	private final NativeIO nativeIO;
 	
 	@Inject
-	public StartStopLoopProvider(Optional<NativeIO> nativeIO) {
-		this.eventLoopGroupProvider = new EventLoopGroupProvider(1,nativeIO);
+	public StartStopLoopProvider(NativeIO nativeIO) {
+		this.nativeIO = nativeIO;
 	}
 	
 	@Override
 	public EventLoop get() {
-		return eventLoopGroupProvider.get().next();
+		return nativeIO.eventLoopGroup(1).next();
 	}
 	
 }

@@ -1,13 +1,13 @@
 package com.simplyti.service.discovery;
 
+import java.util.Collection;
 import java.util.Collections;
-import java.util.Set;
 
 import javax.inject.Inject;
 
 import com.google.inject.Injector;
-import com.simplyti.service.api.filter.HttpRequestFilter;
-import com.simplyti.service.clients.Endpoint;
+import com.simplyti.service.clients.endpoint.Endpoint;
+import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.service.gateway.BackendService;
 import com.simplyti.service.gateway.DefaultServiceDiscovery;
 
@@ -30,12 +30,16 @@ public class TestServiceDiscovery extends DefaultServiceDiscovery {
 	public static void reset() {
 		INSTANCE=null;
 	}
+	
+	public void addSslService(String host, HttpMethod method, String path, String rewrite, Endpoint endpoint) {
+		this.addService(new BackendService(host, method, path,rewrite, true,null, endpoint==null?null:Collections.singletonList(endpoint)));
+	}
 
 	public void addService(String host, HttpMethod method, String path, String rewrite, Endpoint endpoint) {
 		this.addService(new BackendService(host, method, path,rewrite, false,null, endpoint==null?null:Collections.singletonList(endpoint)));
 	}
 	
-	public void addService(String host, HttpMethod method, String path,String rewrite, Set<HttpRequestFilter> security, Endpoint endpoint) {
+	public void addService(String host, HttpMethod method, String path,String rewrite, Collection<HttpRequestFilter> security, Endpoint endpoint) {
 		this.addService(new BackendService(host, method, path, rewrite, false,security, endpoint==null?null:Collections.singletonList(endpoint)));
 	}
 

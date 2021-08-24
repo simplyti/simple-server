@@ -1,5 +1,7 @@
 package com.simplyti.service.client;
 
+import java.nio.channels.ClosedChannelException;
+
 import javax.security.cert.X509Certificate;
 
 import com.google.common.base.MoreObjects;
@@ -46,11 +48,16 @@ public class DefaultSimpleHttpClient implements SimpleHttpClient {
 		channelFuture.addListener(f->{
 			if(channelFuture.isSuccess()) {
 				Channel channel = channelFuture.getNow();
-				channel.pipeline().addLast(new ClientResponseHandler(promise,pool));
-				for(Object obj:objs) {
-					channel.write(obj);
+				if(channel.isActive()) {
+					channel.pipeline().addLast("response-handler", new ClientResponseHandler(promise,pool));
+					for(Object obj:objs) {
+						channel.write(obj);
+					}
+					channel.flush();
+				} else {
+					pool.release(channel);
+					promise.setFailure(new ClosedChannelException());
 				}
-				channel.flush();
 			}else {
 				promise.setFailure(f.cause());
 			}

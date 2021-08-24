@@ -1,4 +1,4 @@
-@standalone
+@awsLambda @standalone
 Feature: AWS Lambda entry
 
 Scenario: Basic AWS Lambda invoke

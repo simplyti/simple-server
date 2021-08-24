@@ -14,10 +14,8 @@ import com.dslplatform.json.DslJson;
 import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonReader.ReadObject;
 import com.dslplatform.json.ObjectConverter;
-import com.simplyti.service.security.oidc.jwk.JsonWebKey;
 
 import lombok.SneakyThrows;
-
 
 public class JsonWebKeyConfiguration implements Configuration, ReadObject<JsonWebKeys> {
 	

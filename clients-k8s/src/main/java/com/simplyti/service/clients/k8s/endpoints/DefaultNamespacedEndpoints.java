@@ -17,9 +17,9 @@ import io.netty.channel.EventLoopGroup;
 
 public class DefaultNamespacedEndpoints extends DefaultNamespacedK8sApi<Endpoint> implements NamespacedEndpoints {
 
-	public DefaultNamespacedEndpoints(EventLoopGroup eventLoopGroup,HttpClient http, Json json, K8sAPI api, String resource, TypeLiteral<KubeList<Endpoint>> listType, 
+	public DefaultNamespacedEndpoints(EventLoopGroup eventLoopGroup,HttpClient http, long timeoutMillis, Json json, K8sAPI api, String resource, TypeLiteral<KubeList<Endpoint>> listType, 
 			TypeLiteral<Event<Endpoint>> eventType, String namespace) {
-		super(eventLoopGroup, http,json,api,namespace,resource,Endpoint.class,listType,eventType);
+		super(eventLoopGroup, http,timeoutMillis,json,api,namespace,resource,Endpoint.class,listType,eventType);
 	}
 
 	@Override

@@ -5,9 +5,9 @@ import java.util.concurrent.TimeUnit;
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
-import com.simplyti.service.api.filter.FilterContext;
-import com.simplyti.service.api.filter.HttpRequestFilter;
 import com.simplyti.service.exception.BadRequestException;
+import com.simplyti.service.filter.FilterContext;
+import com.simplyti.service.filter.http.HttpRequestFilter;
 
 import io.netty.handler.codec.http.HttpRequest;
 

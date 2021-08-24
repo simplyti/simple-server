@@ -4,7 +4,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.simplyti.service.clients.Endpoint;
+import com.simplyti.service.clients.endpoint.Endpoint;
 
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.util.concurrent.EventExecutor;

@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>com.simplyti.cloud</groupId>
 		<artifactId>simple-server</artifactId>
-		<version>0.0.4-SNAPSHOT</version>
+		<version>0.0.5-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
@@ -23,7 +23,14 @@
 			<artifactId>simple-server-clients</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
+		
+		<!-- Filters -->
+		<dependency>
+			<groupId>com.simplyti.cloud</groupId>
+			<artifactId>simple-server-filters-http</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		
 		<!-- Networking -->
 		<dependency>
 			<groupId>io.netty</groupId>
@@ -34,14 +41,17 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.google.truth</groupId>
 			<artifactId>truth</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.hamcrest</groupId>
 			<artifactId>hamcrest-library</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

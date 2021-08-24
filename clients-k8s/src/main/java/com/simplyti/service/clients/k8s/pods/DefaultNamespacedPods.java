@@ -22,15 +22,17 @@ public class DefaultNamespacedPods extends DefaultNamespacedK8sApi<Pod> implemen
 	private final String resource;
 	private final String namespace;
 	private final K8sAPI api;
+	private final long timeoutMillis;
 	
-	public DefaultNamespacedPods(EventLoopGroup eventLoopGroup,HttpClient http,Json json, K8sAPI api, String resource, TypeLiteral<KubeList<Pod>> listType, 
+	public DefaultNamespacedPods(EventLoopGroup eventLoopGroup,HttpClient http, long timeoutMillis,Json json, K8sAPI api, String resource, TypeLiteral<KubeList<Pod>> listType, 
 			TypeLiteral<Event<Pod>> eventType, String namespace) {
-		super(eventLoopGroup,http,json,api,namespace,resource,Pod.class,listType,eventType);
+		super(eventLoopGroup,http,timeoutMillis,json,api,namespace,resource,Pod.class,listType,eventType);
 		this.eventLoopGroup=eventLoopGroup;
 		this.http=http;
 		this.resource=resource;
 		this.namespace=namespace;
 		this.api=api;
+		this.timeoutMillis=timeoutMillis;
 	}
 	
 	@Override
@@ -45,11 +47,12 @@ public class DefaultNamespacedPods extends DefaultNamespacedK8sApi<Pod> implemen
 
 	@Override
 	public LogStream log(String name) {
-		return new DefaultLogStream(eventLoopGroup.next(), api, http, name, null, namespace, resource);
+		return new DefaultLogStream(eventLoopGroup.next(), api,http,timeoutMillis,name,null,namespace,resource);
 	}
 
 	@Override
 	public LogStream log(String pod, String container) {
-		return new DefaultLogStream(eventLoopGroup.next(), api, http, pod, container, namespace, resource);
+		return new DefaultLogStream(eventLoopGroup.next(), api, http,timeoutMillis, pod, container, namespace, resource);
 	}
+
 }

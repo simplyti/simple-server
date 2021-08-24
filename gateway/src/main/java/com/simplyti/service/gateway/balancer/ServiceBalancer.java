@@ -2,7 +2,7 @@ package com.simplyti.service.gateway.balancer;
 
 import java.util.Collection;
 
-import com.simplyti.service.clients.Endpoint;
+import com.simplyti.service.clients.endpoint.Endpoint;
 
 public interface ServiceBalancer {
 

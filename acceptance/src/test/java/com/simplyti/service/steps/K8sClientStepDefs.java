@@ -7,7 +7,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasItem;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 
@@ -48,10 +48,10 @@ import com.simplyti.service.clients.k8s.serviceaccounts.domain.ServiceAccount;
 import com.simplyti.service.clients.k8s.services.domain.Service;
 import com.simplyti.service.clients.k8s.services.domain.ServicePort;
 
-import cucumber.api.java.After;
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
+import io.cucumber.java.After;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import io.netty.util.concurrent.Future;
 import io.vavr.control.Try;
 
@@ -366,7 +366,7 @@ public class K8sClientStepDefs {
 		assertThat(result.cause().getMessage(), equalTo("Unexpected code: 404"));
 	}
 	
-	@Then("^I check that endpoint \"([^\"]*)\" contains a subset with addresses \"([^\"]*)\" and ports \"([^\"]*)\"$")
+	@Then("I check that endpoint {string} contains a subset with addresses {list} and ports {list}")
 	public void iCheckThatEndpointContainsASubsetWithAddressesAndPorts(String key, List<String> addresses, List<String> ports) throws Exception {
 		Endpoint endpoint = (Endpoint) scenarioData.get(key);
 		assertThat(endpoint.subsets(),hasSize(1));

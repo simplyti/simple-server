@@ -15,9 +15,9 @@ import io.netty.channel.EventLoopGroup;
 
 public class DefaultNamespacedJobs extends DefaultNamespacedK8sApi<Job> implements NamespacedJobs {
 
-	public DefaultNamespacedJobs(EventLoopGroup eventLoopGroup,HttpClient http,Json json, K8sAPI api, String resource, TypeLiteral<KubeList<Job>> listType, 
+	public DefaultNamespacedJobs(EventLoopGroup eventLoopGroup,HttpClient http, long timeoutMillis,Json json, K8sAPI api, String resource, TypeLiteral<KubeList<Job>> listType, 
 			TypeLiteral<Event<Job>> eventType, String namespace) {
-		super(eventLoopGroup,http,json,api,namespace,resource,Job.class,listType,eventType);
+		super(eventLoopGroup,http,timeoutMillis,json,api,namespace,resource,Job.class,listType,eventType);
 	}
 	
 	@Override

@@ -1,6 +1,5 @@
 package com.simplyti.util.concurrent;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -16,8 +15,9 @@ import io.netty.util.internal.shaded.org.jctools.queues.MessagePassingQueue.Supp
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class DefaultFutureTest {
 	
@@ -87,8 +87,7 @@ public class DefaultFutureTest {
 	public void testAsyncExceptionApplyAndAccept() throws InterruptedException {
 		AtomicReference<String> result = new AtomicReference<>();
 		eventloopGroup.schedule(()->target.setFailure(new RuntimeException("Error!")), 10, TimeUnit.MILLISECONDS);
-		future.thenAccept(result::set)
-			.exceptionallyApply(Throwable::getMessage)
+		future.exceptionallyApply(Throwable::getMessage)
 			.thenApply(String::toUpperCase)
 			.thenAccept(result::set)
 			.await(1,TimeUnit.SECONDS);
@@ -100,8 +99,7 @@ public class DefaultFutureTest {
 	public void testSyncExceptionApplyAndAccept() throws InterruptedException {
 		AtomicReference<String> result = new AtomicReference<>();
 		target.setFailure(new RuntimeException("Error!"));
-		future.thenAccept(result::set)
-			.exceptionallyApply(Throwable::getMessage)
+		future.exceptionallyApply(Throwable::getMessage)
 			.thenApply(String::toUpperCase)
 			.thenAccept(result::set)
 			.await(1,TimeUnit.SECONDS);
@@ -190,7 +188,7 @@ public class DefaultFutureTest {
 	public void testSyncCombineAsyncButException() throws InterruptedException {
 		AtomicReference<String> result = new AtomicReference<>();
 		target.setSuccess("Hello");
-		future.thenCombine(v->errorAsync())
+		future.thenCombine(v->errorAsync("Error!"))
 			.onError(error->result.set(error.getMessage()))
 			.await(1,TimeUnit.SECONDS);
 		
@@ -212,7 +210,7 @@ public class DefaultFutureTest {
 	public void testAsyncCombineAsyncButException() throws InterruptedException {
 		AtomicReference<String> result = new AtomicReference<>();
 		eventloopGroup.schedule(()->target.setSuccess("Hello"), 10, TimeUnit.MILLISECONDS);
-		future.thenCombine(v->errorAsync())
+		future.thenCombine(v->errorAsync("Error!"))
 			.onError(error->result.set(error.getMessage()))
 			.await(1,TimeUnit.SECONDS);
 		
@@ -269,7 +267,7 @@ public class DefaultFutureTest {
 			.thenAccept(result::set)
 			.await(500,TimeUnit.MILLISECONDS);
 		
-		assertThat(result.get(),nullValue());
+		assertThat(result.get(),equalTo("Hello"));
 	}
 	
 	@Test
@@ -280,7 +278,7 @@ public class DefaultFutureTest {
 			.thenAccept(result::set)
 			.await(1,TimeUnit.SECONDS);
 		
-		assertThat(result.get(),nullValue());
+		assertThat(result.get(),equalTo("Hello"));
 	}
 	
 	@Test
@@ -315,7 +313,8 @@ public class DefaultFutureTest {
 			.onError(result::set)
 			.await(1,TimeUnit.SECONDS);
 		
-		assertThat(result.get(),instanceOf(ExecutionException.class));
+		assertThat(result.get(),instanceOf(RuntimeException.class));
+		assertThat(((Exception)result.get()).getMessage(),equalTo("Error"));
 	}
 	
 	@Test
@@ -326,7 +325,8 @@ public class DefaultFutureTest {
 			.onError(result::set)
 			.await(1,TimeUnit.SECONDS);
 		
-		assertThat(result.get(),instanceOf(ExecutionException.class));
+		assertThat(result.get(),instanceOf(RuntimeException.class));
+		assertThat(((Exception)result.get()).getMessage(),equalTo("Error"));
 	}
 	
 	@Test
@@ -337,7 +337,8 @@ public class DefaultFutureTest {
 			.onError(result::set)
 			.await(1,TimeUnit.SECONDS);
 		
-		assertThat(result.get(),instanceOf(ExecutionException.class));
+		assertThat(result.get(),instanceOf(RuntimeException.class));
+		assertThat(((Exception)result.get()).getMessage(),equalTo("Error"));
 	}
 	
 	@Test
@@ -348,7 +349,8 @@ public class DefaultFutureTest {
 			.onError(result::set)
 			.await(1,TimeUnit.SECONDS);
 		
-		assertThat(result.get(),instanceOf(ExecutionException.class));
+		assertThat(result.get(),instanceOf(RuntimeException.class));
+		assertThat(((Exception)result.get()).getMessage(),equalTo("Error"));
 	}
 	
 	@Test
@@ -359,7 +361,8 @@ public class DefaultFutureTest {
 			.onError(result::set)
 			.await(1,TimeUnit.SECONDS);
 		
-		assertThat(result.get(),instanceOf(ExecutionException.class));
+		assertThat(result.get(),instanceOf(RuntimeException.class));
+		assertThat(((Exception)result.get()).getMessage(),equalTo("Error"));
 	}
 	
 	@Test
@@ -370,7 +373,8 @@ public class DefaultFutureTest {
 			.onError(result::set)
 			.await(1,TimeUnit.SECONDS);
 		
-		assertThat(result.get(),instanceOf(ExecutionException.class));
+		assertThat(result.get(),instanceOf(RuntimeException.class));
+		assertThat(((Exception)result.get()).getMessage(),equalTo("Error"));
 	}
 	
 	@Test
@@ -381,7 +385,8 @@ public class DefaultFutureTest {
 			.onError(result::set)
 			.await(1,TimeUnit.SECONDS);
 		
-		assertThat(result.get(),instanceOf(ExecutionException.class));
+		assertThat(result.get(),instanceOf(RuntimeException.class));
+		assertThat(((Exception)result.get()).getMessage(),equalTo("Error"));
 	}
 	
 	@Test
@@ -392,7 +397,8 @@ public class DefaultFutureTest {
 			.onError(result::set)
 			.await(1,TimeUnit.SECONDS);
 		
-		assertThat(result.get(),instanceOf(ExecutionException.class));
+		assertThat(result.get(),instanceOf(RuntimeException.class));
+		assertThat(((Exception)result.get()).getMessage(),equalTo("Error"));
 	}
 	
 	@Test
@@ -403,7 +409,8 @@ public class DefaultFutureTest {
 			.onError(result::set)
 			.await(1,TimeUnit.SECONDS);
 		
-		assertThat(result.get(),instanceOf(ExecutionException.class));
+		assertThat(result.get(),instanceOf(RuntimeException.class));
+		assertThat(((Exception)result.get()).getMessage(),equalTo("Error"));
 	}
 	
 	@Test
@@ -414,7 +421,8 @@ public class DefaultFutureTest {
 			.onError(result::set)
 			.await(1,TimeUnit.SECONDS);
 		
-		assertThat(result.get(),instanceOf(ExecutionException.class));
+		assertThat(result.get(),instanceOf(RuntimeException.class));
+		assertThat(((Exception)result.get()).getMessage(),equalTo("Error"));
 	}
 	
 	@Test
@@ -429,20 +437,6 @@ public class DefaultFutureTest {
 	}
 	
 	@Test
-	public void testAsyncBiCombineAsyncError() throws InterruptedException {
-		AtomicReference<String> result = new AtomicReference<>();
-		eventloopGroup.schedule(()->target.setSuccess("Hello"), 10, TimeUnit.MILLISECONDS);
-		future.thenCombine(
-				v->eventloopGroup.next().newSucceededFuture(v.concat(" Pepe")),
-				v->errorAsync())
-			.exceptionallyApply(Throwable::getMessage)
-			.thenAccept(result::set)
-			.await(1,TimeUnit.SECONDS);
-		
-		assertThat(result.get(),equalTo("Error!"));
-	}
-	
-	@Test
 	public void testAsyncBiCombineSync() throws InterruptedException {
 		AtomicReference<String> result = new AtomicReference<>();
 		eventloopGroup.schedule(()->target.setSuccess("Hello"), 10, TimeUnit.MILLISECONDS);
@@ -453,33 +447,6 @@ public class DefaultFutureTest {
 			.await(1,TimeUnit.SECONDS);
 		
 		assertThat(result.get(),equalTo("Hello Pepe - 69609650"));
-	}
-	
-	@Test
-	public void testAsyncBiCombineSyncError() throws InterruptedException {
-		AtomicReference<String> result = new AtomicReference<>();
-		eventloopGroup.schedule(()->target.setSuccess("Hello"), 10, TimeUnit.MILLISECONDS);
-		future.thenCombine(
-				v->eventloopGroup.next().newSucceededFuture(v.concat(" Pepe")),
-				v->eventloopGroup.next().newFailedFuture(new RuntimeException("Error!")))
-			.exceptionallyApply(Throwable::getMessage)
-			.thenAccept(result::set)
-			.await(1,TimeUnit.SECONDS);
-		
-		assertThat(result.get(),equalTo("Error!"));
-	}
-	
-	
-	@Test
-	public void testAsyncBiCombineButError() throws InterruptedException {
-		AtomicReference<String> result = new AtomicReference<>();
-		eventloopGroup.schedule(()->target.setFailure(new RuntimeException("Error!")), 10, TimeUnit.MILLISECONDS);
-		future.thenCombine(this::concatAsync,this::hashCodeAsync)
-			.exceptionallyApply(Throwable::getMessage)
-			.thenAccept(result::set)
-			.await(1,TimeUnit.SECONDS);
-		
-		assertThat(result.get(),equalTo("Error!"));
 	}
 	
 	@Test
@@ -497,21 +464,6 @@ public class DefaultFutureTest {
 	}
 	
 	@Test
-	public void testSyncBiCombineSyncError() throws InterruptedException {
-		AtomicReference<String> result = new AtomicReference<>();
-		target.setSuccess("Hello");
-		inLoop(()->future
-					.thenCombine(
-						v->loop.newSucceededFuture(v.concat(" Pepe")),
-						v->loop.newFailedFuture(new RuntimeException("Error!")))
-					.exceptionallyApply(Throwable::getMessage)
-					.thenAccept(result::set))
-			.await(1,TimeUnit.SECONDS);
-		
-		assertThat(result.get(),equalTo("Error!"));
-	}
-		
-	@Test
 	public void testSyncBiCombineAsync() throws InterruptedException {
 		AtomicReference<String> result = new AtomicReference<>();
 		target.setSuccess("Hello");
@@ -523,18 +475,6 @@ public class DefaultFutureTest {
 			.await(1,TimeUnit.SECONDS);
 		
 		assertThat(result.get(),equalTo("Hello Pepe!"));
-	}
-	
-	@Test
-	public void testSyncBiCombineButError() throws InterruptedException {
-		AtomicReference<String> result = new AtomicReference<>();
-		target.setFailure(new RuntimeException("Error!"));
-		future.thenCombine(this::concatAsync,this::hashCodeAsync)
-			.exceptionallyApply(Throwable::getMessage)
-			.thenAccept(result::set)
-			.await(1,TimeUnit.SECONDS);
-	
-		assertThat(result.get(),equalTo("Error!"));
 	}
 	
 	@Test
@@ -576,7 +516,8 @@ public class DefaultFutureTest {
 			.onError(result::set)
 			.await(5,TimeUnit.SECONDS);
 		
-		assertThat(result.get(),instanceOf(ExecutionException.class));
+		assertThat(result.get(),instanceOf(RuntimeException.class));
+		assertThat(((Exception)result.get()).getMessage(),equalTo("Error"));
 	}
 	
 	private io.netty.util.concurrent.Future<Void> inLoop(Supplier<Future<?>> fn) {
@@ -584,6 +525,12 @@ public class DefaultFutureTest {
 		loop.execute(()->fn.get()
 				.thenAccept(f->promise.setSuccess(null))
 				.onError(promise::setFailure));
+		return promise;
+	}
+	
+	private io.netty.util.concurrent.Future<String> async(String value) {
+		Promise<String> promise = eventloopGroup.next().newPromise();
+		eventloopGroup.next().schedule(()->promise.setSuccess(value), 10, TimeUnit.MILLISECONDS);
 		return promise;
 	}
 
@@ -599,11 +546,295 @@ public class DefaultFutureTest {
 		return promise;
 	}
 	
-	private io.netty.util.concurrent.Future<String> errorAsync() {
+	private io.netty.util.concurrent.Future<String> errorAsync(String err) {
 		Promise<String> promise = eventloopGroup.next().newPromise();
-		eventloopGroup.next().schedule(()->promise.setFailure(new RuntimeException("Error!")), 10, TimeUnit.MILLISECONDS);
+		eventloopGroup.next().schedule(()->promise.setFailure(new RuntimeException(err)), 10, TimeUnit.MILLISECONDS);
 		return promise;
 	}
 	
-
+	@Test
+	public void testAsyncHandle() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		eventloopGroup.schedule(()->target.setSuccess("Hello"), 10, TimeUnit.MILLISECONDS);
+		future.handle((v,err)->result.set(v))
+		.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Hello"));
+	}
+	
+	@Test
+	public void testAsyncHandleButExceptionOnHandle() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		eventloopGroup.schedule(()->target.setSuccess("Hello"), 10, TimeUnit.MILLISECONDS);
+		future.handle((v,err)->{throw new RuntimeException("Handle Error");})
+			.exceptionally(err->result.set(err.getMessage()))
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Handle Error"));
+	}
+	
+	@Test
+	public void testAsyncHandleButException() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		eventloopGroup.schedule(()->target.setFailure(new RuntimeException("Error!")), 10, TimeUnit.MILLISECONDS);
+		future.handle((v,err)->result.set(err.getMessage()))
+		.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Error!"));
+	}
+	
+	@Test
+	public void testAsyncHandleButExceptionOnExceptionHandle() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		eventloopGroup.schedule(()->target.setFailure(new RuntimeException("Error!")), 10, TimeUnit.MILLISECONDS);
+		future.handle((v,err)->{throw new RuntimeException("Handle Error");})
+			.exceptionally(err->result.set(err.getMessage()))
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Handle Error"));
+	}
+	
+	@Test
+	public void testSyncHandle() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		target.setSuccess("Hello");
+		future.handle((v,err)->result.set(v))
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Hello"));
+	}
+	
+	@Test
+	public void testSyncHandleButExceptionOnHandle() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		target.setSuccess("Hello");
+		future.handle((v,err)->{throw new RuntimeException("Handle Error");})
+			.exceptionally(err->result.set(err.getMessage()))
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Handle Error"));
+	}
+	
+	@Test
+	public void testSyncHandleButException() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		target.setFailure(new RuntimeException("Error!"));
+		future.handle((v,err)->result.set(err.getMessage()))
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Error!"));
+	}
+	
+	@Test
+	public void testSyncHandleButExceptionOnExceptionHandle() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		target.setFailure(new RuntimeException("Error!"));
+		future.handle((v,err)->{throw new RuntimeException("Handle Error");})
+			.exceptionally(err->result.set(err.getMessage()))
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Handle Error"));
+	}
+	
+	
+//
+	@Test
+	public void testAsyncHandleCombineAsync() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		eventloopGroup.schedule(()->target.setSuccess("Hello"), 10, TimeUnit.MILLISECONDS);
+		future.handleCombine((v,err)->async(v))
+			.thenAccept(result::set)
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Hello"));
+	}
+	
+	@Test
+	public void testAsyncHandleCombineSync() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		eventloopGroup.schedule(()->target.setSuccess("Hello"), 10, TimeUnit.MILLISECONDS);
+		future.handleCombine((v,err)->loop.newSucceededFuture(v))
+			.thenAccept(result::set)
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Hello"));
+	}
+	
+	@Test
+	public void testAsyncHandleCombineButExceptionAsync() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		eventloopGroup.schedule(()->target.setSuccess("Hello"), 10, TimeUnit.MILLISECONDS);
+		future.handleCombine((v,err)->errorAsync("Error!"))
+			.exceptionally(err->result.set(err.getMessage()))
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Error!"));
+	}
+	
+	@Test
+	public void testAsyncHandleCombineButExceptionSync() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		eventloopGroup.schedule(()->target.setSuccess("Hello"), 10, TimeUnit.MILLISECONDS);
+		future.handleCombine((v,err)->loop.newFailedFuture(new RuntimeException("Error!")))
+			.exceptionally(err->result.set(err.getMessage()))
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Error!"));
+	}
+	
+	@Test
+	public void testSyncHandleCombineAsync() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		target.setSuccess("Hello");
+		future.handleCombine((v,err)->async(v))
+			.thenAccept(result::set)
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Hello"));
+	}
+	
+	@Test
+	public void testSyncHandleCombineSync() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		target.setSuccess("Hello");
+		future.handleCombine((v,err)->loop.newSucceededFuture(v))
+			.thenAccept(result::set)
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Hello"));
+	}
+	
+	@Test
+	public void testSyncHandleCombineButExceptionAsync() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		target.setSuccess("Hello");
+		future.handleCombine((v,err)->errorAsync("Error!"))
+			.exceptionally(err->result.set(err.getMessage()))
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Error!"));
+	}
+	
+	@Test
+	public void testSyncHandleCombineButExceptionSync() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		target.setSuccess("Hello");
+		future.handleCombine((v,err)->loop.newFailedFuture(new RuntimeException("Error!")))
+			.exceptionally(err->result.set(err.getMessage()))
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Error!"));
+	}
+	
+	@Test
+	public void testAsyncExceptionHandleCombineAsync() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		eventloopGroup.schedule(()->target.setFailure(new RuntimeException("Error!")), 10, TimeUnit.MILLISECONDS);
+		future.handleCombine((v,err)->async(err.getMessage()))
+			.thenAccept(result::set)
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Error!"));
+	}
+	
+	@Test
+	public void testAsyncExceptionHandleCombineSync() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		eventloopGroup.schedule(()->target.setFailure(new RuntimeException("Error!")), 10, TimeUnit.MILLISECONDS);
+		future.handleCombine((v,err)->loop.newFailedFuture(new RuntimeException("New Error!")))
+		.exceptionally(err->result.set(err.getMessage()))
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("New Error!"));
+	}
+	
+	@Test
+	public void testSyncExceptionHandleCombineAsync() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		target.setFailure(new RuntimeException("Error!"));
+		future.handleCombine((v,err)->async(err.getMessage()))
+			.thenAccept(result::set)
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Error!"));
+	}
+	
+	@Test
+	public void testSyncExceptionHandleCombineSync() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		target.setFailure(new RuntimeException("Error!"));
+		future.handleCombine((v,err)->loop.newSucceededFuture(err.getMessage()))
+			.thenAccept(result::set)
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Error!"));
+	}
+	
+	@Test
+	public void testSyncExceptionHandleCombineButExceptionSync() throws InterruptedException {
+		AtomicReference<String> result = new AtomicReference<>();
+		target.setFailure(new RuntimeException("Error!"));
+		future.handleCombine((v,err)->loop.newFailedFuture(new RuntimeException("Error!")))
+			.exceptionally(err->result.set(err.getMessage()))
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Error!"));
+	}
+	
+	@Test
+	public void testSyncExceptionallyNoError() throws InterruptedException {
+		AtomicReference<Throwable> err = new AtomicReference<>();
+		AtomicReference<String> result = new AtomicReference<>();
+		target.setSuccess("Hello!");
+		future.exceptionally(err::set)
+			.thenAccept(result::set)
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Hello!"));
+		assertThat(err.get(),nullValue());
+	}
+	
+	@Test
+	public void testAsyncExceptionallyNoError() throws InterruptedException {
+		AtomicReference<Throwable> err = new AtomicReference<>();
+		AtomicReference<String> result = new AtomicReference<>();
+		eventloopGroup.schedule(()->target.setSuccess("Hello!"), 10, TimeUnit.MILLISECONDS);
+		future.exceptionally(err::set)
+			.thenAccept(result::set)
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),equalTo("Hello!"));
+		assertThat(err.get(),nullValue());
+	}
+	
+	@Test
+	public void testAsyncExceptionallyeButExceptionOnHandle() throws InterruptedException {
+		AtomicReference<Throwable> err = new AtomicReference<>();
+		AtomicReference<String> result = new AtomicReference<>();
+		eventloopGroup.schedule(()->target.setFailure(new RuntimeException("Error!")), 10, TimeUnit.MILLISECONDS);
+		future.exceptionally(ee->{throw new RuntimeException("New Error!");})
+			.thenAccept(result::set)
+			.exceptionally(err::set)
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),nullValue());
+		assertThat(err.get(),notNullValue());
+		assertThat(err.get().getMessage(),equalTo("New Error!"));
+	}
+	
+	@Test
+	public void testSyncExceptionallyeButExceptionOnHandle() throws InterruptedException {
+		AtomicReference<Throwable> err = new AtomicReference<>();
+		AtomicReference<String> result = new AtomicReference<>();
+		target.setFailure(new RuntimeException("Error!"));
+		future.exceptionally(ee->{throw new RuntimeException("New Error!");})
+			.thenAccept(result::set)
+			.exceptionally(err::set)
+			.await(1,TimeUnit.SECONDS);
+		
+		assertThat(result.get(),nullValue());
+		assertThat(err.get(),notNullValue());
+		assertThat(err.get().getMessage(),equalTo("New Error!"));
+	}
+	
 }

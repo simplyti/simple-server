@@ -16,9 +16,9 @@ import com.simplyti.service.clients.k8s.common.watch.domain.Event;
 import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.json.JsonObjectDecoder;
 
 public class DefaultNamespacedK8sApi<T extends K8sResource> extends DefaultK8sApi<T> implements NamespacedK8sApi<T> {
 	
@@ -35,9 +35,9 @@ public class DefaultNamespacedK8sApi<T extends K8sResource> extends DefaultK8sAp
 	private final TypeLiteral<Event<T>> eventType;
 	private final Class<T> type;
 
-	public DefaultNamespacedK8sApi(EventLoopGroup eventLoopGroup, HttpClient http, Json json, K8sAPI api,String namespace, String resource, 
+	public DefaultNamespacedK8sApi(EventLoopGroup eventLoopGroup, HttpClient http, long timeoutMillis, Json json, K8sAPI api,String namespace, String resource, 
 			Class<T> type, TypeLiteral<KubeList<T>> listType, TypeLiteral<Event<T>> eventType) {
-		super(eventLoopGroup, http, json,api,resource,listType,eventType);
+		super(eventLoopGroup, http, timeoutMillis, json,api,resource,listType,eventType);
 		this.eventLoopGroup=eventLoopGroup;
 		this.http=http;
 		this.json=json;
@@ -68,11 +68,13 @@ public class DefaultNamespacedK8sApi<T extends K8sResource> extends DefaultK8sAp
 			return;
 		}
 		Future<Void> future = http.request()
-				.withReadTimeout(30000)
 				.get(String.format("%s/watch/namespaces/%s/%s/%s",api.path(),namespace,resource,name))
 				.param("watch")
 				.param("resourceVersion",observable.index())
-				.stream(EventStreamHandler.NAME,client->new EventStreamHandler<>(client,json,observable,eventType));
+				.stream().<Event<T>>withInitializer(ch->ch
+						.addLast(new JsonObjectDecoder())
+						.addLast(new EventDecoder<>(json,eventType)))
+				.forEach(observable::event);
 		future.addListener(f->{
 			if(f.isSuccess()) {
 				watch(name,observable);
@@ -100,9 +102,7 @@ public class DefaultNamespacedK8sApi<T extends K8sResource> extends DefaultK8sAp
 				.fullResponse(f->response(f.content(), STATUS_TYPE));
 	}
 	
-	
-	protected ByteBuf body(ByteBufAllocator ctx, T resource) {
-		ByteBuf buffer = ctx.buffer();
+	protected ByteBuf body(ByteBuf buffer, T resource) {
 		json.serialize(resource,buffer);
 		return buffer;
 	}

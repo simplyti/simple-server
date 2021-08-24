@@ -66,7 +66,8 @@ public class IoCKeyManager extends X509ExtendedKeyManager {
 			.filter(name->StandardConstants.SNI_HOST_NAME == name.getType())
 			.map(SNIHostName.class::cast)
 			.findFirst()
-			.map(name->name.getAsciiName()).orElse(null);
+			.map(name->name.getAsciiName())
+			.orElse(null);
 	}
 
 	@Override

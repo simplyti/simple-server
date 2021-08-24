@@ -19,13 +19,13 @@ public class DefaultServices extends DefaultK8sApi<Service> implements Services 
 	private static final TypeLiteral<KubeList<Service>> LIST_TYPE = new TypeLiteral<KubeList<Service>>() {};
 	private static final TypeLiteral<Event<Service>> EVENT_TYPE = new TypeLiteral<Event<Service>>() {};
 
-	public DefaultServices(EventLoopGroup eventLoopGroup, HttpClient http, Json json) {
-		super(eventLoopGroup,http,json,K8sAPI.V1,RESOURCE,LIST_TYPE,EVENT_TYPE);
+	public DefaultServices(EventLoopGroup eventLoopGroup, HttpClient http, long timeoutMillis, Json json) {
+		super(eventLoopGroup,http,timeoutMillis,json,K8sAPI.V1,RESOURCE,LIST_TYPE,EVENT_TYPE);
 	}
 
 	@Override
 	public NamespacedServices namespace(String namespace) {
-		return new DefaultNamespacedServices(eventLoopGroup(),http(),json(),K8sAPI.V1,RESOURCE,LIST_TYPE,EVENT_TYPE,namespace);
+		return new DefaultNamespacedServices(eventLoopGroup(),http(),timeoutMillis(),json(),K8sAPI.V1,RESOURCE,LIST_TYPE,EVENT_TYPE,namespace);
 	}
 
 	@Override

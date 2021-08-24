@@ -1,6 +1,6 @@
 package com.simplyti.service.clients.proxy;
 
-import com.simplyti.service.clients.Endpoint;
+import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.proxy.Proxy.ProxyType;
 
 public class ProxiedEndpointBuilder {
@@ -26,13 +26,17 @@ public class ProxiedEndpointBuilder {
 	public ProxiedEndpoint throughSocks5(String host, int port) {
 		return through(host,port,ProxyType.SOCKS5);
 	}
+	
+	public ProxiedEndpoint throughSocks4(String host, int port) {
+		return through(host,port,ProxyType.SOCKS4);
+	}
 
 	public ProxiedEndpoint throughHTTP(String host, int port) {
 		return through(host,port,ProxyType.HTTP);
 	}
 	
 	public ProxiedEndpoint through(String host, int port, ProxyType type) {
-		return new ProxiedEndpoint(target.schema(),target.address(),new Proxy(host, port, type, username, password));
+		return new ProxiedEndpoint(target.scheme(),target.address(),new Proxy(host, port, type, username, password));
 	}
 
 }

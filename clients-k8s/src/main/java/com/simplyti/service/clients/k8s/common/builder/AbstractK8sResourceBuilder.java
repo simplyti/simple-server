@@ -11,7 +11,6 @@ import com.simplyti.service.clients.k8s.common.Metadata;
 import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.handler.codec.http.FullHttpResponse;
 
 public abstract class AbstractK8sResourceBuilder<B extends K8sResourceBuilder<B,T>, T extends K8sResource> implements K8sResourceBuilder<B,T> {
@@ -68,12 +67,11 @@ public abstract class AbstractK8sResourceBuilder<B extends K8sResourceBuilder<B,
 	public Future<T> build() {
 		return client.request()
 			.post(String.format("%s/namespaces/%s/%s",api.path(),namespace,resource))
-			.body(this::body)
+			.withBodyWriter(this::body)
 			.fullResponse(f->response(f, type));
 	}
 	
-	private ByteBuf body(ByteBufAllocator ctx) {
-		ByteBuf buffer = ctx.buffer();
+	private ByteBuf body(ByteBuf buffer) {
 		json.serialize(resource(api,Metadata.builder()
 				.annotations(annotations)
 				.namespace(namespace)

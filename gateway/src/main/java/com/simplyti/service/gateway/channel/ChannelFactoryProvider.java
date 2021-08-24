@@ -1,7 +1,8 @@
-package com.simplyti.service.gateway.channel;import javax.inject.Inject;
+package com.simplyti.service.gateway.channel;
+import javax.inject.Inject;
 import javax.inject.Provider;
 
-import com.simplyti.service.clients.channel.ClientChannelFactory;
+import com.simplyti.service.clients.channel.factory.DefaultChannelFactory;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFactory;
@@ -14,7 +15,7 @@ public class ChannelFactoryProvider implements Provider<ChannelFactory<Channel>>
 	private final EventLoopGroup eventLoopGroup;
 	@Override
 	public ChannelFactory<Channel> get() {
-		return new ClientChannelFactory(eventLoopGroup);
+		return new DefaultChannelFactory(eventLoopGroup);
 	}
 
 }

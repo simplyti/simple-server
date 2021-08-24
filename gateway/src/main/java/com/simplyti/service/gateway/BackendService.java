@@ -1,20 +1,17 @@
 package com.simplyti.service.gateway;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.base.MoreObjects;
-import com.google.re2j.Pattern;
-import com.simplyti.service.api.builder.PathPattern;
-import com.simplyti.service.api.filter.HttpRequestFilter;
-import com.simplyti.service.clients.Endpoint;
+import com.simplyti.service.clients.endpoint.Endpoint;
+import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.service.gateway.balancer.RoundRobinLoadBalancer;
 import com.simplyti.service.gateway.balancer.ServiceBalancer;
-import com.simplyti.service.gateway.filter.BackendHttpRequestListener;
+import com.simplyti.service.matcher.ApiPattern;
 
 import io.netty.handler.codec.http.HttpMethod;
-import io.netty.util.internal.StringUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import lombok.AllArgsConstructor;
@@ -36,21 +33,14 @@ public class BackendService implements Comparable<BackendService>{
 	private final HttpMethod method;
 	private final String path;
 	private final Rewrite rewrite;
-	private final Set<HttpRequestFilter> filters;
-	private final Set<BackendHttpRequestListener> requestListener;
-	private final Pattern pattern;
-	private final PathPattern pathPattern;
+	private final Collection<HttpRequestFilter> filters;
+	private final ApiPattern pathPattern;
 	private final int literalCount;
 	private final boolean tlsEnabled;
 	
 	private ServiceBalancer loadBalander;
 
-	public BackendService(String host, HttpMethod method, String path, String rewrite, boolean tlsEnabled, Set<HttpRequestFilter> filters, List<Endpoint> endpoints) {
-		this(host,method,path,rewrite,tlsEnabled,filters,endpoints,null);
-	}
-
-	public BackendService(String host, HttpMethod method, String path, String rewrite, boolean tlsEnabled, Set<HttpRequestFilter> filters, List<Endpoint> endpoints,
-			Set<BackendHttpRequestListener> requestListener) {
+	public BackendService(String host, HttpMethod method, String path, String rewrite, boolean tlsEnabled, Collection<HttpRequestFilter> filters, List<Endpoint> endpoints) {
 		this.loadBalander = RoundRobinLoadBalancer.of(endpoints);
 		this.host=host;
 		this.method=method;
@@ -58,21 +48,17 @@ public class BackendService implements Comparable<BackendService>{
 		this.rewrite=rewrite==null?null:new Rewrite(rewrite);
 		this.tlsEnabled=tlsEnabled;
 		this.filters=MoreObjects.firstNonNull(filters, Collections.emptySet());
-		this.requestListener=MoreObjects.firstNonNull(requestListener, Collections.emptySet());;
 		if(path==null) {
 			this.pathPattern=null;
-			this.pattern = null;
 			literalCount=0;
 		}else {
-			PathPattern thePattern = PathPattern.build(path);
+			ApiPattern thePattern = ApiPattern.build(path);
 			if(thePattern.pathParamNameToGroup().isEmpty()) {
 				this.pathPattern = null;
-				this.pattern = Pattern.compile(path.replaceAll("/+$",  StringUtil.EMPTY_STRING)+"/?(.*)");
-				this.literalCount = thePattern.literalCount();
+				this.literalCount = thePattern.literalCharsCount();
 			}else {
 				this.pathPattern = thePattern;
-				this.pattern = thePattern.pattern();
-				this.literalCount = thePattern.literalCount();
+				this.literalCount = thePattern.literalCharsCount();
 			}
 		}
 	}
@@ -158,6 +144,14 @@ public class BackendService implements Comparable<BackendService>{
 	public void clear() {
 		this.loadBalander = loadBalander.clear();
 		log.info("Cleared service endpoints");
+	}
+
+	public Collection<HttpRequestFilter> filters() {
+		return filters;
+	}
+
+	public boolean tlsEnabled() {
+		return tlsEnabled;
 	}
 
 }

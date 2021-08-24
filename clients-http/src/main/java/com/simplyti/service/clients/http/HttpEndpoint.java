@@ -4,9 +4,10 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.simplyti.service.clients.Address;
-import com.simplyti.service.clients.Endpoint;
-import com.simplyti.service.clients.Schema;
+import com.simplyti.service.clients.endpoint.Address;
+import com.simplyti.service.clients.endpoint.Endpoint;
+import com.simplyti.service.clients.endpoint.Scheme;
+import com.simplyti.service.clients.endpoint.TcpAddress;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -18,13 +19,13 @@ import lombok.experimental.Accessors;
 public class HttpEndpoint extends Endpoint{
 	
 	private static final Pattern PATTERN = Pattern.compile("((http|https)(://))?([^:/]+):?(\\d+)?");
-	public static final Schema HTTP_SCHEMA = new Schema("http", false, 80);
-	public static final Schema HTTPS_SCHEMA = new Schema("https", true, 443);
+	public static final Scheme HTTP_SCHEMA = new Scheme("http", false, 80);
+	public static final Scheme HTTPS_SCHEMA = new Scheme("https", true, 443);
 	
 	private final String path;
 
-	public HttpEndpoint(Schema schema, Address address, String path) {
-		super(schema,address);
+	public HttpEndpoint(Scheme scheme, Address address, String path) {
+		super(scheme,address);
 		this.path=path;
 	}
 	
@@ -50,7 +51,7 @@ public class HttpEndpoint extends Endpoint{
 		Matcher matcher = PATTERN.matcher(hostPart);
 		matcher.matches();
 		Optional<String> optionalSchema = Optional.ofNullable(matcher.group(2));
-		Schema schema = optionalSchema
+		Scheme schema = optionalSchema
 				.map(str->str.equals(HTTPS_SCHEMA.name())?HTTPS_SCHEMA:HTTP_SCHEMA)
 				.orElse(HTTP_SCHEMA);
 		
@@ -58,7 +59,7 @@ public class HttpEndpoint extends Endpoint{
 		int port = Optional.ofNullable(matcher.group(5))
 				.map(Integer::parseInt)
 				.orElseGet(schema::defaultPort);
-		return new HttpEndpoint(schema,new Address(host, port),path);
+		return new HttpEndpoint(schema,new TcpAddress(host, port),path);
 	}
 
 }

@@ -1,44 +1,56 @@
 package com.simplyti.service.builder.di.dagger;
 
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import com.google.common.base.MoreObjects;
-import com.simplyti.service.DefaultStartStopMonitor;
-import com.simplyti.service.Listener;
-import com.simplyti.service.ServerConfig;
-import com.simplyti.service.StartStopMonitor;
-import com.simplyti.service.api.filter.HttpRequestFilter;
-import com.simplyti.service.api.filter.HttpResponseFilter;
+import com.simplyti.service.DefaultServer;
+import com.simplyti.service.DefaultServerStopAdvisor;
+import com.simplyti.service.Server;
+import com.simplyti.service.ServerStopAdvisor;
 import com.simplyti.service.builder.di.EventLoopGroupProvider;
 import com.simplyti.service.builder.di.ExecutorServiceProvider;
 import com.simplyti.service.builder.di.NativeIO;
+import com.simplyti.service.builder.di.ServerTransportProvider;
 import com.simplyti.service.builder.di.StartStopLoop;
 import com.simplyti.service.builder.di.StartStopLoopProvider;
 import com.simplyti.service.builder.di.dagger.apibuilder.APIBuilderModule;
-import com.simplyti.service.builder.di.dagger.defaultbackend.DefaultBackendModule;
-import com.simplyti.service.builder.di.dagger.fileserver.FileServerModule;
-import com.simplyti.service.builder.di.guice.DefaultHttpEntryChannelInit;
+import com.simplyti.service.builder.di.dagger.defaultbackend.DefaultBackendOptionals;
 import com.simplyti.service.channel.ClientChannelGroup;
+import com.simplyti.service.channel.DefaultHttpEntryChannelInit;
 import com.simplyti.service.channel.DefaultServiceChannelInitializer;
 import com.simplyti.service.channel.EntryChannelInit;
-import com.simplyti.service.channel.ServerChannelFactoryProvider;
+import com.simplyti.service.channel.ServerDomainSocketChannelFactory;
+import com.simplyti.service.channel.ServerSocketChannelFactory;
 import com.simplyti.service.channel.ServiceChannelInitializer;
 import com.simplyti.service.channel.handler.ChannelExceptionHandler;
+import com.simplyti.service.channel.handler.DefaultBackendFullRequestHandler;
+import com.simplyti.service.channel.handler.DefaultBackendRequestHandler;
+import com.simplyti.service.channel.handler.DefaultHandler;
 import com.simplyti.service.channel.handler.ServerHeadersHandler;
-import com.simplyti.service.channel.handler.inits.HandlerInit;
+import com.simplyti.service.channel.handler.inits.ServiceHadlerInit;
+import com.simplyti.service.config.ServerConfig;
+import com.simplyti.service.exception.DefaultExceptionHandler;
 import com.simplyti.service.exception.ExceptionHandler;
+import com.simplyti.service.filter.http.FullHttpRequestFilter;
+import com.simplyti.service.filter.http.HttpRequestFilter;
+import com.simplyti.service.filter.http.HttpResponseFilter;
+import com.simplyti.service.hook.ServerStartHook;
+import com.simplyti.service.hook.ServerStopHook;
 import com.simplyti.service.json.DslJsonModule;
 import com.simplyti.service.ssl.SslHandlerFactory;
 import com.simplyti.service.sync.DefaultSyncTaskSubmitter;
 import com.simplyti.service.sync.SyncTaskSubmitter;
+import com.simplyti.service.transport.Listener;
+import com.simplyti.service.transport.ServerTransport;
+import com.simplyti.service.transport.tcp.TcpListener;
 
 import dagger.Module;
 import dagger.Provides;
@@ -46,89 +58,93 @@ import io.netty.channel.ChannelFactory;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
+import io.netty.channel.unix.ServerDomainSocketChannel;
 
-@Module(includes= { Multibindings.class, APIBuilderModule.class, FileServerModule.class, DefaultBackendModule.class, DslJsonModule.class})
+@Module(includes= { Multibindings.class, APIBuilderModule.class, DslJsonModule.class, DefaultBackendOptionals.class})
 public class BaseServiceModule {
 	
 	private static final int DEFAULT_BLOCKING_THREAD_POOL = 500;
-	private static final int DEFAULT_INSECURE_PORT = 8080;
-	private static final int DEFAULT_SECURE_PORT = 8443;
+	private static final Collection<Listener> DEFAULT_LISTENERS = Arrays.asList(new TcpListener(8080,false),new TcpListener(8443,true));
+	private static final int DEFAULT_MAX_BODY_SIZE = 10000000;
 	
 	@Provides
 	@Singleton
-	public EventLoopGroup eventLoopGroup(Optional<NativeIO> nativeIO) {
-		return new EventLoopGroupProvider(nativeIO).get();
+	public EventLoopGroup eventLoopGroup(NativeIO nativeIO) {
+		return new EventLoopGroupProvider(nativeIO,Optional.empty()).get();
 	}
 	
-	@Provides @Singleton @StartStopLoop
-	public EventLoop startStopLoop(ServerConfig config, Optional<NativeIO> nativeIO, ServerConfig serverConfig) {
+	@Provides 
+	@Singleton 
+	@StartStopLoop
+	public EventLoop startStopLoop(ServerConfig config, NativeIO nativeIO) {
 		return new StartStopLoopProvider(nativeIO).get();
 	}
 	
 	@Provides
 	@Singleton
+	public NativeIO nativeIO() {
+		return new NativeIO(Optional.empty());
+	}
+	
+	
+	@Provides
+	@Singleton
 	public ServerConfig serverConfig(
 			@Nullable @Named("name") String name,
-			@Nullable @Named("blockingThreadPool") Integer blockingThreadPool,
-			Set<Listener> listeners,
-			@Nullable @Named("insecuredPort") Integer insecuredPort, 
-			@Nullable @Named("securedPort") Integer  securedPort,
-			@Nullable @Named("verbose") Boolean verbose) {
+			@Nullable @Named("blockingThreadPool") Integer blockingThreadPool, 
+			@Nullable @Named("verbose") Boolean verbose,
+			@Nullable @Named("maxBodySize") Integer maxBodySize,
+			@Nullable @Named("listeners") Set<Listener> listeners) {
 		return new ServerConfig(name,
-				MoreObjects.firstNonNull(blockingThreadPool, DEFAULT_BLOCKING_THREAD_POOL),
-				listeners(listeners,insecuredPort,securedPort),
+				firstNonNull(blockingThreadPool, DEFAULT_BLOCKING_THREAD_POOL),
+				firstNonNull(listeners, DEFAULT_LISTENERS), 
 				false, 
-				MoreObjects.firstNonNull(verbose, false));
+				firstNonNull(verbose, false),
+				firstNonNull(maxBodySize, DEFAULT_MAX_BODY_SIZE));
 	}
 	
-	private Set<Listener> listeners(Set<Listener> listeners, Integer insecuredPort, Integer securedPort) {
-		if(!listeners.isEmpty()) {
-			return Collections.unmodifiableSet(listeners);
+	private static <T> T firstNonNull(T o1, T o2) {
+		if(o1 != null){
+			return o1;
 		}
-		
-		listeners = new HashSet<>();
-		if(insecuredPort == null ) {
-			listeners.add(new Listener(DEFAULT_INSECURE_PORT,false));
-		} else if(insecuredPort>0) {
-			listeners.add(new Listener(insecuredPort,false));
-		}
-		if(securedPort == null ) {
-			listeners.add(new Listener(DEFAULT_SECURE_PORT,false));
-		} else if(securedPort>0) {
-			listeners.add(new Listener(securedPort,true));
-		}
-		return Collections.unmodifiableSet(listeners);
-	}
-	
-	@Provides
-	@Singleton
-	public ChannelFactory<ServerChannel> channelFactory(Optional<NativeIO> nativeIO) {
-		return new ServerChannelFactoryProvider(nativeIO).get();
-	}
-	
-	@Provides
-	@Singleton
-	public EntryChannelInit entryChannelInit() {
-		return new DefaultHttpEntryChannelInit();
+		return o2;
 	}
 
 	@Provides
 	@Singleton
-	public StartStopMonitor startStopMonitor() {
-		return new DefaultStartStopMonitor();
+	public ChannelFactory<ServerChannel> channelFactory(NativeIO nativeIO) {
+		return new ServerSocketChannelFactory(nativeIO);
+	}
+	
+	@Provides
+	@Singleton
+	public ChannelFactory<ServerDomainSocketChannel> channelDomainFactory(NativeIO nativeIO) {
+		return new ServerDomainSocketChannelFactory(nativeIO);
+	}
+	
+	@Provides
+	@Singleton
+	public EntryChannelInit entryChannelInit(ServerHeadersHandler serverHeadersHandler) {
+		return new DefaultHttpEntryChannelInit(serverHeadersHandler);
+	}
+
+	@Provides
+	@Singleton
+	public ServerStopAdvisor startStopMonitor() {
+		return new DefaultServerStopAdvisor();
 	}
 	
 
 	@Provides
 	@Singleton
-	public ClientChannelGroup clientChannelGroup(@StartStopLoop EventLoop startStopLoop) {
-		return new ClientChannelGroup(startStopLoop);
+	public ClientChannelGroup clientChannelGroup(@StartStopLoop Provider<EventLoop> startStopLoop) {
+		return new ClientChannelGroup(startStopLoop.get());
 	}
 
 	@Provides
 	@Singleton
 	public ExceptionHandler exceptionHandler() {
-		return new ExceptionHandler();
+		return new DefaultExceptionHandler();
 	}
 
 	@Provides
@@ -157,14 +173,39 @@ public class BaseServiceModule {
 	
 	@Provides
 	@Singleton
-	public ServiceChannelInitializer serviceChannelInitializer(ClientChannelGroup clientChannelGroup,
-			Optional<SslHandlerFactory> sslHandlerFactory, StartStopMonitor startStopMonitor,
+	public ServiceChannelInitializer serviceChannelInitializer(Provider<ClientChannelGroup> clientChannelGroup,
+			Optional<SslHandlerFactory> sslHandlerFactory, 
+			ServerStopAdvisor startStopMonitor,
 			ChannelExceptionHandler channelExceptionHandler,
-			Set<HandlerInit> handlers, Set<HttpRequestFilter> requestFilters, Set<HttpResponseFilter> responseFilters,
-			EntryChannelInit entryChannelInit, ServerConfig serverConfig) {
+			Set<HttpRequestFilter> requestFilters, Set<FullHttpRequestFilter> fullRequestFilters, Set<HttpResponseFilter> responseFilters,
+			EntryChannelInit entryChannelInit, ServerConfig serverConfig, Set<ServiceHadlerInit> serviceHandlerInit,
+			Provider<Optional<DefaultBackendFullRequestHandler>> defaultBackendFullRequestHandlerProvider,
+			 Provider<Optional<DefaultBackendRequestHandler>> defaultBackendRequestHandlerProvider,
+			 DefaultHandler defaultHandler) {
 		return new DefaultServiceChannelInitializer(clientChannelGroup, serverConfig, sslHandlerFactory.orElse(null),
-				startStopMonitor, channelExceptionHandler, handlers, requestFilters, responseFilters,
-				entryChannelInit);
+				startStopMonitor, channelExceptionHandler, requestFilters, fullRequestFilters, responseFilters,
+				entryChannelInit, serviceHandlerInit,
+				defaultBackendFullRequestHandlerProvider, defaultBackendRequestHandlerProvider,
+				defaultHandler);
+	}
+	
+	@Provides
+	@Singleton
+	public Set<ServerTransport> serverTransport(NativeIO nativeIO,Provider<EventLoopGroup> eventLoopGroup, @StartStopLoop Provider<EventLoop> startStopLoop,
+			ChannelFactory<ServerChannel> channelFactory, ChannelFactory<ServerDomainSocketChannel> domainChannelFactory, Optional<SslHandlerFactory> sslHandlerFactory, 
+			ServiceChannelInitializer serviceChannelInitializer, ServerConfig config) {
+		return new ServerTransportProvider(nativeIO, eventLoopGroup, startStopLoop, channelFactory, domainChannelFactory, sslHandlerFactory, serviceChannelInitializer, config)
+				.get();
+	}
+	
+	@Provides
+	@Singleton
+	public Server server(Provider<EventLoopGroup> eventLoopGroup, @StartStopLoop Provider<EventLoop> startStopLoop,
+			ServerStopAdvisor startStopMonitor,
+			Provider<ClientChannelGroup> clientChannelGroup, ServerConfig config,
+			Set<ServerStartHook> serverStartHook, Set<ServerStopHook> serverStopHook,
+			Set<ServerTransport> transport) {
+		return new DefaultServer(eventLoopGroup, startStopMonitor, startStopLoop, clientChannelGroup, serverStartHook, serverStopHook, config, transport, null);
 	}
 	
 }

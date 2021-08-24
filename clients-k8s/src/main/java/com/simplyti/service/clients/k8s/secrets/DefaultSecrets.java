@@ -19,13 +19,13 @@ public class DefaultSecrets extends DefaultK8sApi<Secret> implements Secrets {
 	private static final TypeLiteral<KubeList<Secret>> LIST_TYPE = new TypeLiteral<KubeList<Secret>>() {};
 	private static final TypeLiteral<Event<Secret>> EVENT_TYPE = new TypeLiteral<Event<Secret>>() {};
 
-	public DefaultSecrets(EventLoopGroup eventLoopGroup, HttpClient http, Json json) {
-		super(eventLoopGroup,http,json,K8sAPI.V1, RESOURCE,LIST_TYPE,EVENT_TYPE);
+	public DefaultSecrets(EventLoopGroup eventLoopGroup, HttpClient http, long timeoutMillis, Json json) {
+		super(eventLoopGroup,http,timeoutMillis,json,K8sAPI.V1, RESOURCE,LIST_TYPE,EVENT_TYPE);
 	}
 
 	@Override
 	public NamespacedSecrets namespace(String namespace) {
-		return new DefaultNamespacedSecrets(eventLoopGroup(),http(),json(),K8sAPI.V1,RESOURCE,LIST_TYPE,EVENT_TYPE,namespace);
+		return new DefaultNamespacedSecrets(eventLoopGroup(),http(),timeoutMillis(),json(),K8sAPI.V1,RESOURCE,LIST_TYPE,EVENT_TYPE,namespace);
 	}
 
 	@Override

@@ -5,21 +5,26 @@ import java.util.Set;
 
 import javax.inject.Singleton;
 
-import com.simplyti.service.api.ApiResolver;
-import com.simplyti.service.api.DefaultApiResolver;
+import com.simplyti.server.http.api.builder.ApiBuilderImpl;
+import com.simplyti.server.http.api.builder.jaxrs.JaxRsApiContextFactory;
+import com.simplyti.server.http.api.filter.OperationInboundFilter;
+import com.simplyti.server.http.api.handler.ApiRequestDecoder;
+import com.simplyti.server.http.api.handler.ApiResponseEncoder;
+import com.simplyti.server.http.api.handler.init.ApiHandlerInit;
+import com.simplyti.server.http.api.health.HealthApi;
+import com.simplyti.server.http.api.operations.ApiOperationResolver;
+import com.simplyti.server.http.api.operations.ApiOperationResolverImpl;
+import com.simplyti.server.http.api.operations.ApiOperations;
+import com.simplyti.server.http.api.operations.ApiOperationsImpl;
+import com.simplyti.server.http.api.sse.ServerSentEventEncoder;
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.ApiProvider;
-import com.simplyti.service.api.builder.di.InstanceProvider;
-import com.simplyti.service.api.filter.OperationInboundFilter;
-import com.simplyti.service.api.health.HealthApi;
 import com.simplyti.service.api.serializer.json.Json;
-import com.simplyti.service.channel.handler.ApiInvocationHandler;
-import com.simplyti.service.channel.handler.ApiResponseEncoder;
 import com.simplyti.service.channel.handler.ServerHeadersHandler;
-import com.simplyti.service.channel.handler.inits.ApiRequestHandlerInit;
-import com.simplyti.service.channel.handler.inits.HandlerInit;
+import com.simplyti.service.channel.handler.inits.ServiceHadlerInit;
+import com.simplyti.service.config.ServerConfig;
 import com.simplyti.service.exception.ExceptionHandler;
-import com.simplyti.service.sse.ServerSentEventEncoder;
+import com.simplyti.service.matcher.di.InstanceProvider;
 import com.simplyti.service.sync.SyncTaskSubmitter;
 
 import dagger.Module;
@@ -31,26 +36,26 @@ public class APIBuilderModule {
 
 	@Provides
 	@IntoSet
-	public HandlerInit apiRequestHandlerInit(ExceptionHandler exceptionHandler, SyncTaskSubmitter syncTaskSubmitter,
-			ApiResolver apiResolver, ApiResponseEncoder apiResponseEncoder, ApiInvocationHandler apiInvocationHandler,
-			ServerHeadersHandler serverHeadersHandler) {
-		return new ApiRequestHandlerInit(apiResolver, apiResponseEncoder, apiInvocationHandler, exceptionHandler,syncTaskSubmitter,serverHeadersHandler);
+	public ServiceHadlerInit apiRequestHandlerInit(ServerConfig config,
+			 ApiRequestDecoder apiRequestDecoder,
+			ApiResponseEncoder apiResponseEncoder,
+			ExceptionHandler exceptionHandler,
+			SyncTaskSubmitter syncTaskSubmitter, ServerHeadersHandler serverHeadersHandler,
+			Set<OperationInboundFilter> filters) {
+		return new ApiHandlerInit(config, apiRequestDecoder, apiResponseEncoder, exceptionHandler, syncTaskSubmitter, filters);
 	}
 	
 	@Provides
 	@Singleton
-	public ApiInvocationHandler apiInvocationHandler(Set<OperationInboundFilter> operationInboundFilters,
-			ExceptionHandler exceptionHandler, ServerSentEventEncoder serverSentEventEncoder,
-			SyncTaskSubmitter syncTaskSubmitter, Json json) {
-		return new ApiInvocationHandler(operationInboundFilters, exceptionHandler, serverSentEventEncoder,syncTaskSubmitter, json);
+	public ApiOperations apiOperations() {
+		return new ApiOperationsImpl();
 	}
+
 	
 	@Provides
 	@Singleton
-	public ApiResolver apiResolver(ApiBuilder apiBuilder, Set<ApiProvider> providers, ApiResponseEncoder apiResponseEncoder,
-			ApiInvocationHandler apiInvocationHandler, ExceptionHandler exceptionHandler,
-			SyncTaskSubmitter syncTaskSubmitter, ServerHeadersHandler serverHeadersHandler) {
-		return new DefaultApiResolver(providers, apiBuilder,apiResponseEncoder,apiInvocationHandler,exceptionHandler,syncTaskSubmitter,serverHeadersHandler);
+	public ApiOperationResolver apiResolver(ApiOperations operations, Set<ApiProvider> apis, ApiBuilder builder) {
+		return new ApiOperationResolverImpl(operations,apis,builder);
 	}
 	
 	@Provides
@@ -67,8 +72,8 @@ public class APIBuilderModule {
 	
 	@Provides
 	@Singleton
-	public ApiBuilder apiBuilder(InstanceProvider instanceProvider, SyncTaskSubmitter syncTaskSubmitter) {
-		return new ApiBuilder(instanceProvider, syncTaskSubmitter);
+	public ApiBuilder apiBuilder(ApiOperations apiOperations, Json json, InstanceProvider instanceProvider, SyncTaskSubmitter syncTaskSubmitter) {
+		return new ApiBuilderImpl(apiOperations,instanceProvider, syncTaskSubmitter, new JaxRsApiContextFactory(json), json);
 	}
 	
 	@Provides

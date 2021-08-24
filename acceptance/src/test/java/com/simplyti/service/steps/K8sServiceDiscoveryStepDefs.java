@@ -2,7 +2,7 @@ package com.simplyti.service.steps;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
@@ -27,15 +27,15 @@ import org.awaitility.Awaitility;
 import com.google.common.base.Splitter;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.any.Any;
-import com.simplyti.service.clients.Endpoint;
+import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.clients.k8s.KubeClient;
 import com.simplyti.service.clients.k8s.secrets.domain.Secret;
 
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.base64.Base64;
@@ -52,6 +52,7 @@ import sun.security.x509.X500Name;
 import sun.security.x509.X509CertImpl;
 import sun.security.x509.X509CertInfo;
 
+@SuppressWarnings("restriction")
 public class K8sServiceDiscoveryStepDefs {
 	
 	private static final Endpoint LOCAL_ENDPOINT = HttpEndpoint.of("http://localhost:8080");

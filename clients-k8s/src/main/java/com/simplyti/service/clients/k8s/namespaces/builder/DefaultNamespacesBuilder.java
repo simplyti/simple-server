@@ -11,7 +11,6 @@ import com.simplyti.service.clients.k8s.namespaces.domain.Namespace;
 import com.simplyti.util.concurrent.Future;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.handler.codec.http.FullHttpResponse;
 
 public class DefaultNamespacesBuilder implements NamespacesBuilder {
@@ -62,12 +61,11 @@ public class DefaultNamespacesBuilder implements NamespacesBuilder {
 	public Future<Namespace> build() {
 		return client.request()
 				.post(String.format("%s/namespaces",api.path()))
-				.body(this::body)
+				.withBodyWriter(this::body)
 				.fullResponse(this::response);
 	}
 	
-	private ByteBuf body(ByteBufAllocator ctx) {
-		ByteBuf buffer = ctx.buffer();
+	private ByteBuf body(ByteBuf buffer) {
 		json.serialize(new Namespace(KIND,api.version(),Metadata.builder()
 				.labels(labels)
 				.name(name)

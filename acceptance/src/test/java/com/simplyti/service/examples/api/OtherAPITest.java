@@ -1,6 +1,5 @@
 package com.simplyti.service.examples.api;
 
-
 import com.simplyti.service.api.builder.ApiBuilder;
 import com.simplyti.service.api.builder.ApiProvider;
 

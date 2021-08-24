@@ -2,7 +2,6 @@ package com.simplyti.service.steps;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.nio.channels.ClosedChannelException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -10,40 +9,51 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.security.cert.X509Certificate;
 
 import org.apache.commons.io.FileUtils;
 import org.awaitility.Awaitility;
 
 import com.google.inject.Module;
-import com.simplyti.service.DefaultService;
+import com.simplyti.service.DefaultServer;
+import com.simplyti.service.Server;
 import com.simplyti.service.api.builder.ApiProvider;
 import com.simplyti.service.builder.di.guice.GuiceService;
 import com.simplyti.service.builder.di.guice.GuiceServiceBuilder;
 import com.simplyti.service.client.SimpleHttpClient;
 import com.simplyti.service.client.SimpleHttpResponse;
+import com.simplyti.service.clients.endpoint.Endpoint;
+import com.simplyti.service.clients.http.HttpClient;
+import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.clients.http.exception.HttpException;
-import com.simplyti.service.clients.http.request.StreamedHttpRequest;
 import com.simplyti.service.examples.hook.TestServerStopHookModule;
 
-import cucumber.api.java.After;
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
+import io.cucumber.java.After;
+import io.cucumber.java.ParameterType;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+import io.netty.channel.EventLoop;
+import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.DefaultHttpRequest;
+import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
@@ -51,7 +61,6 @@ import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.QueryStringEncoder;
 import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
-import io.netty.handler.codec.http.cookie.ClientCookieEncoder;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory;
@@ -59,19 +68,23 @@ import io.netty.handler.codec.http.multipart.HttpDataFactory;
 import io.netty.handler.codec.http.multipart.HttpPostRequestEncoder;
 import io.netty.util.CharsetUtil;
 import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.ImmediateEventExecutor;
+import io.netty.util.concurrent.Promise;
+import io.netty.util.concurrent.PromiseCombiner;
 import io.netty.util.internal.StringUtil;
 import io.vavr.control.Try;
 
 import static io.vavr.control.Try.run;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
 
 public class ServiceBuilderStepDefs {
 	
+	private static final Endpoint LOCAL_ENDPOINT = HttpEndpoint.of("http://localhost:8080");
 	private static final DateTimeFormatter CACHE_DATE_PATTERN = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
 
 	private String tempDir = System.getProperty("user.dir")+"/target/tempDir";
@@ -80,14 +93,31 @@ public class ServiceBuilderStepDefs {
 	private  SimpleHttpClient client;
 	
 	@Inject
+	@Named("singleton")
+	private HttpClient http;
+	
+	@Inject
 	private Map<String,Object> scenarioData;
 	
 	@Inject
-	private List<Future<DefaultService>> services;
+	private List<Future<Server>> services;
 	
-	@When("^I start a service \"([^\"]*)\" with API \"([^\"]*)\"$")
+	@Inject
+	private EventLoopGroup eventLoopGroup;
+	
+	@ParameterType(".*")
+    public Class<?> clazz(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    	return Class.forName(className.replaceAll("^\"", "").replaceAll("\"$", ""));
+    }
+	
+	@ParameterType(".*")
+    public List<String> list(String list) {
+    	return Arrays.asList(list.replaceAll("^\"", "").replaceAll("\"$", "").split("\\s*,\\s*"));
+    }
+	
+	@When("I start a service {string} with API {clazz}")
 	public void iStartAServiceWithAPI(String key, Class<?extends ApiProvider> api) throws Exception {
-		Future<DefaultService> futureService = GuiceService.builder()
+		Future<Server> futureService = GuiceService.builder()
 			.withLog4J2Logger()
 			.withApi(api)
 			.build().start();
@@ -95,18 +125,30 @@ public class ServiceBuilderStepDefs {
 		scenarioData.put(key, futureService);
 	}
 	
+	@When("I start a service {string} with max body size {int} with API {clazz}")
+	public void iStartAServiceWithMaxBodySizeWithAPI(String key, int maxBodySize, Class<?extends ApiProvider> api) throws Exception {
+		Future<Server> futureService = GuiceService.builder()
+				.withLog4J2Logger()
+				.withApi(api)
+				.withMaxBodySize(maxBodySize)
+				.build().start();
+			services.add(futureService);
+			scenarioData.put(key, futureService);
+	}
+
+	
 	@When("^I start a service \"([^\"]*)\"$")
 	public void iStartAService(String key) throws Exception {
-		Future<DefaultService> futureService = GuiceService.builder()
+		Future<Server> futureService = GuiceService.builder()
 				.withLog4J2Logger()
 				.build().start();
 		services.add(futureService);
 		scenarioData.put(key, futureService);
 	}
 	
-	@When("^I start a service \"([^\"]*)\" with module \"([^\"]*)\"$")
+	@When("I start a service {string} with module {clazz}")
 	public void iStartAServiceWithModule(String key, Class<? extends Module> module) throws Exception {
-		Future<DefaultService> futureService = GuiceService.builder()
+		Future<Server> futureService = GuiceService.builder()
 				.withLog4J2Logger()
 				.withModule(module)
 				.build().start();
@@ -134,7 +176,7 @@ public class ServiceBuilderStepDefs {
 		FileUtils.deleteDirectory(Paths.get(tempDir).toFile());
 	}
 	
-	@When("^I send files \"([^\"]*)\" to \"([^\"]*)\" getting \"([^\"]*)\"$")
+	@When("I send files {list} to {string} getting {string}")
 	public void iSendFileGetting(List<String> fileNames, String path, String resultKey) throws Exception {
 		HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, path);
 		HttpDataFactory factory = new DefaultHttpDataFactory(false);
@@ -142,7 +184,7 @@ public class ServiceBuilderStepDefs {
 		
 		for(String fileName:fileNames){
 			Path filePath = Paths.get(fileName.replaceAll("#tempdir", tempDir));
-			encoder.addBodyFileUpload("test.txt", filePath.toFile(), "text/plain", false);
+			encoder.addBodyFileUpload(filePath.getFileName().toString(), filePath.toFile(), "text/plain", false);
 		}
 		
 		request = encoder.finalizeRequest();
@@ -153,20 +195,20 @@ public class ServiceBuilderStepDefs {
 	@When("^I start a service \"([^\"]*)\" with file serve \"([^\"]*)\" on \"([^\"]*)\"$")
 	public void iStartAServiceWithFileServeOn(String key, String directory, String path) throws Exception {
 		String thedir = directory.replaceAll("#tempdir", tempDir);
-		Future<DefaultService> futureService = GuiceService.builder()
+		Future<Server> futureService = GuiceService.builder()
 				.withLog4J2Logger()
-				.fileServe(path,thedir)
+				.withFileServe(path,thedir)
 				.build().start();
 		services.add(futureService);
 		scenarioData.put(key, futureService);
 	}
 	
-	@When("^I start a service \"([^\"]*)\" with file serve \"([^\"]*)\" on \"([^\"]*)\" and API \"([^\"]*)\"$")
+	@When("I start a service {string} with file serve {string} on {string} and API {clazz}")
 	public void iStartAServiceWithFileServeOnAndAPI(String key, String directory, String path, Class<?extends ApiProvider> api) throws Exception {
 		String thedir = directory.replaceAll("#tempdir", tempDir);
-		Future<DefaultService> futureService = GuiceService.builder()
+		Future<Server> futureService = GuiceService.builder()
 				.withLog4J2Logger()
-				.fileServe(path,thedir)
+				.withFileServe(path,thedir)
 				.withApi(api)
 				.build().start();
 		services.add(futureService);
@@ -176,7 +218,7 @@ public class ServiceBuilderStepDefs {
 	@When("^I stop server \"([^\"]*)\" getting \"([^\"]*)\"$")
 	public void iStopServerGetting(String key, String resultKey) throws Exception {
 		@SuppressWarnings("unchecked")
-		Future<DefaultService> futureService = (Future<DefaultService>) scenarioData.get(key);
+		Future<DefaultServer> futureService = (Future<DefaultServer>) scenarioData.get(key);
 		scenarioData.put(resultKey,futureService.getNow().stop());
 	}
 	
@@ -204,36 +246,46 @@ public class ServiceBuilderStepDefs {
 	@SuppressWarnings("unchecked")
 	@When("^I start a service \"([^\"]*)\" with options:$")
 	public void iStartAServiceWithOptions(String key, List<Map<String, String>> options) {
-		GuiceServiceBuilder<DefaultService> builder = GuiceService.builder();
+		GuiceServiceBuilder builder = GuiceService.builder();
 		options.forEach(option->{
 			if(option.get("option").equals("withLog4J2Logger")) {
 				builder.withLog4J2Logger();
-			}else if(option.get("option").equals("insecuredPort")) {
-				builder.insecuredPort(Integer.parseInt(option.get("value")));
-			}else if(option.get("option").equals("securedPort")) {
-				builder.securedPort(Integer.parseInt(option.get("value")));
-			}else if(option.get("option").equals("withApi")) {
+			} else if(option.get("option").equals("withApi")) {
 				builder.withApi((Class<? extends ApiProvider>)Try.of(()->Class.forName(option.get("value"))).get());
-			}else if(option.get("option").equals("verbose")) {
+			} else if(option.get("option").equals("verbose")) {
 				builder.verbose();
-			}else if(option.get("option").equals("withModule")) {
+			} else if(option.get("option").equals("withEventLoopGroup") && option.get("value").equals("#managed")) {
+				builder.withEventLoopGroup(eventLoopGroup);
+			} else if(option.get("option").equals("listener")) {
+				if(option.get("value").startsWith("ssl:")) {
+					builder.withListener()
+					.port(Integer.parseInt(option.get("value").substring(4)))
+					.secured()
+					.end();
+				} else {
+					builder.withListener()
+					.port(Integer.parseInt(option.get("value")))
+					.end();
+				}
+				
+			} else if(option.get("option").equals("withModule")) {
 				String value = option.get("value");
 				if(value.startsWith("#")) {
 					builder.withModule((Module)scenarioData.get(value));
-				}else if(value.matches("^[^\\(]+\\(.*\\)$")){
+				} else if(value.matches("^[^\\(]+\\(.*\\)$")){
 					Matcher matcher = Pattern.compile("^([^\\(]+)\\((.*)\\)$").matcher(value);
 					matcher.matches();
 					Class<? extends Module> clazz = (Class<? extends Module>) Try.of(()->Class.forName(matcher.group(1))).get();
 					String[] args = matcher.group(2).split(",");
 					builder.withModule(construct(clazz,args));
-				}else {
+				} else {
 					builder.withModule((Class<? extends Module>)Try.of(()->Class.forName(value)).get());
 				}
-			}else {
+			} else {
 				throw new IllegalArgumentException("Unknown option "+option);
 			}
 		});
-		Future<DefaultService> futureService = builder.build().start();
+		Future<Server> futureService = builder.build().start();
 		services.add(futureService);
 		scenarioData.put(key, futureService);
 	}
@@ -282,7 +334,7 @@ public class ServiceBuilderStepDefs {
 	}
 
 	@After
-	public void stop() {
+	public void stop() throws InterruptedException  {
 		services.stream()
 			.forEach(futureService->Awaitility.await().until(futureService::isDone));
 		
@@ -291,18 +343,89 @@ public class ServiceBuilderStepDefs {
 			.forEach(service->run(()->service.stop().await()));
 	}
 	
-	@When("^I check that \"([^\"]*)\" has been shutted down$")
-	public void iCheckThatHasBeenShuttedDown(String key) throws Exception {
-		@SuppressWarnings("unchecked")
-		DefaultService service = ((Future<DefaultService>) scenarioData.get(key)).getNow();
-		Future<Void> stopFuture = service.stopFuture();
-		Awaitility.await().until(stopFuture::isDone);
-		assertThat(stopFuture.isSuccess(),equalTo(true));
-	}
-	
 	@When("^I try to send a \"([^\\s]*) ([^\"]*)\" getting \"([^\"]*)\"$")
 	public void iTryToSendAGetting(String method, String path, String resultKey) throws Exception {
 		scenarioData.put(resultKey, send(null,method,path,null,null).await());
+	}
+	
+	@Then("^I send (\\d+) serialized request \"([^\\s]*) ([^\"]*)\" getting response error ratio \"([^\"]*)\"$")
+	public void iSendSerializedRequestGettingResponseErrorRatio(int count, String method, String path, String errorKey) throws Exception {
+		int errors = 0;
+		for(int i=0; i<count;i++) {
+			Future<SimpleHttpResponse> response = send(null,method,path,null,null).await();
+			if(!response.isSuccess()) {
+				errors++;
+			} else if(response.getNow().status()!=200) {
+				errors++;
+			}
+		}
+		scenarioData.put(errorKey, (double)errors/count);
+	}
+	
+	@Then("I send {int} serialized get request to {string} getting response error ratio {string}")
+	public void iSendSerializedGetRequestToGettingResponseErrorRatio(int count, String path, String errorKey) throws InterruptedException {
+		int errors = 0;
+		for(int i=0; i<count;i++) {
+			Future<FullHttpResponse> response = http.request()
+					.withEndpoint(LOCAL_ENDPOINT)
+					.get(path)
+					.fullResponse().await();
+			if(!response.isSuccess()) {
+				errors++;
+			} else {
+				response.getNow().release();
+				if(response.getNow().status().code()!=200) {
+					errors++;
+				}
+			}
+		}
+		scenarioData.put(errorKey, (double)errors/count);
+	}
+	
+	@Then("^I send (\\d+) parallel request \"([^\\s]*) ([^\"]*)\" with body \"([^\"]*)\" getting response error ratio \"([^\"]*)\"$")
+	public void iSendParallelRequestWithBodyGettingResponseErrorRatio(int count, String method, String path, String body, String errorKey) throws Exception {
+		AtomicInteger errors = new AtomicInteger(0);
+		PromiseCombiner combiner = new PromiseCombiner(ImmediateEventExecutor.INSTANCE);
+		EventLoop loop = eventLoopGroup.next();
+		for(int i=0; i<count;i++) {
+			Future<SimpleHttpResponse> response = send(null,method,path,body,null);
+			Promise<Void> promise = loop.newPromise();
+			combiner.add((Future<?>) promise);
+			response.addListener(f->{
+				if(response.isSuccess()) {
+					if(response.getNow().status()!=200) {
+						errors.incrementAndGet();
+					}
+					promise.setSuccess(null);
+				} else {
+					errors.incrementAndGet();
+					promise.setFailure(response.cause());
+				}
+			});
+			
+		}
+		Promise<Void> agg = loop.newPromise();
+		combiner.finish(agg);
+		agg.await();
+		scenarioData.put(errorKey, (double)errors.get()/count);
+	}
+	
+	@Then("^I send (\\d+) parallel request \"([^\\s]*) ([^\"]*)\" getting response error ratio \"([^\"]*)\"$")
+	public void iSendParallelRequestGettingResponseErrorRatio(int count, String method, String path, String errorKey) throws Exception {
+		iSendParallelRequestWithBodyGettingResponseErrorRatio(count, method, path, null, errorKey);
+	}
+	
+	@Then("^I check that error ratio \"([^\"]*)\" is (\\d+\\.\\d+)$")
+	public void iCheckThatErrorRatioIs(String resultKey, double expect) throws Exception {
+		double errors = (double) scenarioData.get(resultKey);
+		assertThat(errors,equalTo(expect));
+	}
+	
+
+	@Then("^I check that error ratio \"([^\"]*)\" less than (\\d+\\.\\d+)$")
+	public void iCheckThatErrorRatioLessThan(String resultKey, double expect) throws Exception {
+		double errors = (double) scenarioData.get(resultKey);
+		assertThat(errors,lessThan(expect));
 	}
 
 	@When("^I send an HTTP \"([^\"]*)\" \"([^\\s]*) ([^\"]*)\" getting \"([^\"]*)\"$")
@@ -310,34 +433,9 @@ public class ServiceBuilderStepDefs {
 		scenarioData.put(resultKey, send(HttpVersion.valueOf("HTTP/"+version),method,path,null,null).get());
 	}
 	
-	@When("^I send a \"([^\\s]*) ([^\"]*)\" getting \"([^\"]*)\"$")
-	public void iSendAGetting(String method, String path, String resultKey) throws Exception {
-		scenarioData.put(resultKey, send(null,method,path,null,null).get());
-	}
-	
-	@When("^I send a \"([^\\s]*) ([^\"]*)\" getting \"([^\"]*)\" with status code (\\d+) eventually$")
-	public void iSendAGettingWithStatusCodeEventually(String method, String path, String resultKey, int code) throws Exception {
-	    Awaitility.await().until(()->{
-	    		SimpleHttpResponse response = send(null,method,path,null,null).get();
-	    		scenarioData.put(resultKey,response);
-	    		return response.status();
-	    },equalTo(code));
-	    
-	}
-	
 	@When("^I send a \"([^\\s]*) ([^\"]*)\" following auth redirect of \"([^\"]*)\" getting \"([^\"]*)\"$")
 	public void iSendAFollowingAuthRedirectOfGetting(String method, String path, String responseKey, String newResponseKey) throws Exception {
-		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(responseKey);
-		QueryStringDecoder decoder = new QueryStringDecoder(response.headers().get(HttpHeaderNames.LOCATION));
-		QueryStringEncoder encoder = new QueryStringEncoder(path);
-		encoder.addParam("state", decoder.parameters().get("state").get(0));
-		encoder.addParam("code", "XXXXXX");
-		scenarioData.put(newResponseKey, send(null,method, encoder.toString(),null,null).get());
-	}
-	
-	@When("^I send a \"([^\\s]*) ([^\"]*)\" (\\d+) following auth redirect of \"([^\"]*)\" getting \"([^\"]*)\"$")
-	public void iSendAGetting(String method, String path, int port, String responseKey, String newResponseKey) throws Exception {
-		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(responseKey);
+		FullHttpResponse response = (FullHttpResponse) ((Future<?>) scenarioData.get(responseKey)).get();
 		QueryStringDecoder decoder = new QueryStringDecoder(response.headers().get(HttpHeaderNames.LOCATION));
 		QueryStringEncoder encoder = new QueryStringEncoder(path);
 		encoder.addParam("state", decoder.parameters().get("state").get(0));
@@ -348,12 +446,6 @@ public class ServiceBuilderStepDefs {
 	@When("^I send a \"([^\\s]*) ([^\"]*)\" with header \"([^\"]*)\" with value \"([^\"]*)\" getting \"([^\"]*)\"$")
 	public void iSendAWithHeaderWithValueGetting(String method, String path, String header, String value,String resultKey) throws Exception {
 		HttpHeaders headers = new DefaultHttpHeaders().add(header, value);
-		scenarioData.put(resultKey, send(null,method,path,null,headers).get());
-	}
-	
-	@Then("^I send a \"([^\\s]*) ([^\"]*)\" with cookie \"([^\"]*)\" with value \"([^\"]*)\" getting \"([^\"]*)\"$")
-	public void iSendAWithCookieWithValueGetting(String method, String path, String cName, String cValue, String resultKey) throws Exception {
-		HttpHeaders headers = new DefaultHttpHeaders().add(HttpHeaderNames.COOKIE, ClientCookieEncoder.LAX.encode(cName,cValue));
 		scenarioData.put(resultKey, send(null,method,path,null,headers).get());
 	}
 	
@@ -376,6 +468,25 @@ public class ServiceBuilderStepDefs {
 		scenarioData.put(resultKey, send(null,method,path,body,null).get());
 	}
 	
+	@When("^I post \"([^\"]*)\" with (\\d+) bytes random body an continue expected getting \"([^\"]*)\"$")
+	public void iSendAWithBytesRandomBodyAnConueExpectedGetting(String path, int size, String resultKey) throws Exception {
+	    Future<FullHttpResponse> result = http.request().withEndpoint(LOCAL_ENDPOINT)
+	    		.post(path)
+		    	.withBodyWriter(b->b.writeCharSequence(random(size), CharsetUtil.UTF_8))
+		    	.withHeader(HttpHeaderNames.EXPECT, HttpHeaderValues.CONTINUE)
+		    	.fullResponse();
+	    scenarioData.put(resultKey, result);
+	}
+	
+	@Then("^I check that response \"([^\"]*)\" has body size (\\d+)$")
+	public void iCheckThatResponseHasBodySize(String key, int size) throws Exception {
+		@SuppressWarnings("unchecked")
+		Future<FullHttpResponse> result = (Future<FullHttpResponse>) scenarioData.get(key);
+		assertThat(result.getNow().content().readableBytes(), equalTo(size));
+		result.getNow().release();
+	}
+
+	
 	private String random(int targetStringLength) {
 		int leftLimit = 97; // letter 'a'
 	    int rightLimit = 122; // letter 'z'
@@ -389,11 +500,6 @@ public class ServiceBuilderStepDefs {
 	    return buffer.toString();
 	}
 
-	@When("^I send a \"([^\\s]*) ([^\"]*)\" with body \"([^\"]*)\" getting \"([^\"]*)\"$")
-	public void iSendAWithBodyGetting(String method, String path,String body, String resultKey) throws Exception {
-		scenarioData.put(resultKey, send(null,method,path,body,null).get());
-	}
-	
 	@When("^I send a \"([^\\s]*) ([^\"]*)\" with body '([^']*)' getting \"([^\"]*)\"$")
 	public void iSendAWithJsonBodyGetting(String method, String path, String body, String resultKey) throws Exception {
 		scenarioData.put(resultKey, send(null,method,path,body,null).get());
@@ -443,36 +549,16 @@ public class ServiceBuilderStepDefs {
 		assertThat(response.body(),equalTo(expected));
 	}
 	
-	@Then("^I check that \"([^\"]*)\" match witch '([^']*)'$")
-	public void iCheckThatMatchWitch(String key, String regex) throws Exception {
-		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(key);
-		assertThat(response.body().matches(regex),equalTo(true));
-	}
-	
 	@Then("^I check that \"([^\"]*)\" has status code (\\d+)$")
 	public void iCheckThatHasStatusCode(String key, int code) throws Exception {
 		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(key);
 		assertThat(response.status(),equalTo(code));
 	}
 	
-	@Then("^I check that error \"([^\"]*)\" contains message \"([^\"]*)\"$")
-	public void iCheckThatErrorContainsMessage(String key, String expected) throws Exception {
-	    Throwable error = (Throwable) scenarioData.get(key);
-	    assertThat(error,notNullValue());
-	    assertThat(error.getMessage(),equalTo(expected));
-	}
-	
 	@Then("^I check that \"([^\"]*)\" is not complete$")
 	public void iCheckThatIsNotComplete(String key) throws Exception {
 		Thread.sleep(100);
 		Future<?> future = (Future<?>) scenarioData.get(key);
-		assertThat(future.isDone(),equalTo(false));
-	}
-	
-	@Then("^I check that stream \"([^\"]*)\" is not complete$")
-	public void iCheckThatStreamIsNotComplete(String key) throws Exception {
-		Thread.sleep(100);
-		StreamedHttpRequest future = (StreamedHttpRequest) scenarioData.get(key);
 		assertThat(future.isDone(),equalTo(false));
 	}
 	
@@ -486,22 +572,12 @@ public class ServiceBuilderStepDefs {
 		assertThat(futureService.isSuccess(),equalTo(true));
 	}
 	
-	@Then("^I check that stream \"([^\"]*)\" is success$")
-	public void iCheckThatStreamIsSuccess(String key) throws Exception {
-		StreamedHttpRequest futureService = (StreamedHttpRequest) scenarioData.get(key);
+	@Then("^I check that \"([^\"]*)\" is finished$")
+	public void iCheckThatIsFinished(String key) throws Exception {
+		Future<?> futureService = (Future<?>) scenarioData.get(key);
 		Awaitility.await().until(futureService::isDone);
-		if(!futureService.isSuccess()) {
-			futureService.cause().printStackTrace();
-		}
-		assertThat(futureService.isSuccess(),equalTo(true));
 	}
-	
-	@When("^I check that stream \"([^\"]*)\" is failure$")
-	public void iCheckThatStreamIsFailure(String key) throws Exception {
-		StreamedHttpRequest futureService = (StreamedHttpRequest) scenarioData.get(key);
-		Awaitility.await().until(futureService::isDone);
-		assertThat(futureService.isSuccess(),equalTo(false));
-	}
+
 	
 	@Then("^I check that \"([^\"]*)\" is failure$")
 	public void iCheckThatIsFailure(String key) throws Exception {
@@ -510,13 +586,18 @@ public class ServiceBuilderStepDefs {
 		assertThat(futureService.isSuccess(),equalTo(false));
 	}
 	
-	@When("^I check that \"([^\"]*)\" has conention closed failure$")
-	public void iCheckThatHasConentionClosrdFailure(String key) throws Exception {
+	@Then("I check that error cause of {string} is instancence of {clazz}")
+	public void iCheckThatErrorCauseOfIsInstancenceOf(String key, Class<? extends Throwable> clazz) throws Exception {
 		Future<?> futureService = (Future<?>) scenarioData.get(key);
-		Awaitility.await().until(futureService::isDone);
-		assertThat(futureService.cause(),instanceOf(ClosedChannelException.class));
+		assertThat(futureService.cause(),instanceOf(clazz));
 	}
 	
+	@Then("^I check that error cause of \"([^\"]*)\" contains message \"([^\"]*)\"$")
+	public void iCheckThatErrorCauseOfContainsMessage(String key, String message) throws Exception {
+		Future<?> futureService = (Future<?>) scenarioData.get(key);
+		assertThat(futureService.cause().getMessage(),equalTo(message));
+	}
+
 	@Then("^I check that error failure message of \"([^\"]*)\" is \"([^\"]*)\"$")
 	public void iCheckThatErrorFailureMessageOfIs(String key, String expected) throws Exception {
 		Future<?> futureService = (Future<?>) scenarioData.get(key);
@@ -537,14 +618,6 @@ public class ServiceBuilderStepDefs {
 		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(key);
 		assertThat(response.headers().contains(header),equalTo(true));
 		assertThat(response.headers().get(header),equalTo(expected));
-	}
-	
-	@Then("^I check that \"([^\"]*)\" contains header \"([^\"]*)\" equals to date \"([^\"]*)\"$")
-	public void iCheckThatContainsHeaderEqualsToDate(String key, String header, String datekey) throws Exception {
-		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(key);
-		assertThat(response.headers().contains(header),equalTo(true));
-		String date = CACHE_DATE_PATTERN.format(ZonedDateTime.ofInstant(Instant.ofEpochMilli((long) scenarioData.get(datekey)),ZoneId.of("GMT")));
-		assertThat(response.headers().get(header),equalTo(date));
 	}
 	
 	@When("^I send a \\\"([^\\s]*) ([^\"]*)\\\" with if-modified-since header \"([^\"]*)\" getting \"([^\"]*)\"$")
@@ -592,25 +665,11 @@ public class ServiceBuilderStepDefs {
 		assertThat(error.code(),equalTo(code));
 	}
 	
-	@When("^I close all client connections$")
-	public void iCloseAllClientConnections() throws Exception {
-		client.closeConnections().sync();
-	}
-	
 	@Then("^I check that \"([^\"]*)\" has location header \"([^\"]*)\"$")
 	public void iCheckThatHasLocationHeader(String key, String expectedLocation) throws Exception {
 		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(key);
 		String location = response.headers().get(HttpHeaderNames.LOCATION);
 		assertThat(location,equalTo(expectedLocation));
-	}
-	
-	@Then("^I check that \"([^\"]*)\" has cookie \"([^\"]*)\" header \"([^\"]*)\"$")
-	public void iCheckThatHasCookieHeader(String key, String name, String expected) throws Exception {
-		SimpleHttpResponse response = (SimpleHttpResponse) scenarioData.get(key);
-		String coockies = response.headers().get(HttpHeaderNames.SET_COOKIE);
-		Cookie cookie = ClientCookieDecoder.LAX.decode(coockies);
-		assertThat(cookie.name(),equalTo(name));
-		assertThat(cookie.value(),equalTo(expected));
 	}
 	
 	@Then("^I check that \"([^\"]*)\" has cookie \"([^\"]*)\"$")
@@ -620,5 +679,11 @@ public class ServiceBuilderStepDefs {
 		Cookie cookie = ClientCookieDecoder.LAX.decode(coockies);
 		assertThat(cookie.name(),equalTo(name));
 	}
+	
+	@When("^I close all client connections$")
+	public void iCloseAllClientConnections() throws Exception {
+		client.closeConnections().sync();
+	}
+
 	
 }

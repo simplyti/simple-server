@@ -8,13 +8,13 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import com.simplyti.service.DefaultService;
+import com.simplyti.service.Server;
 import com.simplyti.service.api.serializer.json.Json;
 import com.simplyti.service.builder.di.guice.GuiceService;
 import com.simplyti.service.serializer.json.DslJsonSerializer;
 
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.When;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.When;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.impl.crypto.MacProvider;
@@ -28,7 +28,7 @@ import io.vavr.control.Try;
 public class OpenIdStepDefs {
 	
 	@Inject
-	private List<Future<DefaultService>> services;
+	private List<Future<Server>> services;
 	
 	@Inject
 	private Map<String,Object> scenarioData;
@@ -91,9 +91,11 @@ public class OpenIdStepDefs {
 	@Given("^an openid provider listening in port (\\d+) with sign certificate \"([^\"]*)\" and token endpoint \"([^\"]*)\"$")
 	public void anOpenidProviderListeningInPortWithSignCertificateAndTokenEndpoint(int port, String keyKey,String tokenEndpoint) throws Exception {
 		SelfSignedCertificate key = (SelfSignedCertificate) scenarioData.get(keyKey);
-		Future<DefaultService> service = GuiceService.builder()
-			    .securedPort(port)
-			    .disableInsecurePort()
+		Future<Server> service = GuiceService.builder()
+			    .withListener()
+			    	.port(port)
+			    	.secured()
+			    	.end()
 			    .withModule(new JsoniterModule())
 			    .withModule(new FakeOpenIdModule(key,"/auth",tokenEndpoint,0,0))
 			    	.build().start().await();
@@ -103,9 +105,11 @@ public class OpenIdStepDefs {
 	@Given("^an openid provider listening in port (\\d+) with sign certificate \"([^\"]*)\", authorization endpoint \"([^\"]*)\" and token endpoint \"([^\"]*)\"$")
 	public void anOpenidProviderListeningInPortWithSignCertificateAuthorizationEndpointTokenEndpoint(int port, String keyKey,String authEndpoint,String tokenEndpoint) throws Exception {
 		SelfSignedCertificate key = (SelfSignedCertificate) scenarioData.get(keyKey);
-		Future<DefaultService> service = GuiceService.builder()
-			    .securedPort(port)
-			    .disableInsecurePort()
+		Future<Server> service = GuiceService.builder()
+				.withListener()
+			    	.port(port)
+			    	.secured()
+			    	.end()
 			    .withModule(new JsoniterModule())
 			    .withModule(new FakeOpenIdModule(key,authEndpoint,tokenEndpoint,0,0))
 			    	.build().start().await();
@@ -115,9 +119,11 @@ public class OpenIdStepDefs {
 	@Given("^an openid provider listening in port (\\d+) with sign certificate \"([^\"]*)\", authorization endpoint \"([^\"]*)\" and well-known service with (\\d+)ms of delay$")
 	public void anOpenidProviderListeningInPortWithSignCertificateAuthorizationEndpointMsOfDelay(int port, String keyKey,String authEndpoint, int wellKnownDelay) throws Exception {
 		SelfSignedCertificate key = (SelfSignedCertificate) scenarioData.get(keyKey);
-		Future<DefaultService> service = GuiceService.builder()
-			    .securedPort(port)
-			    .disableInsecurePort()
+		Future<Server> service = GuiceService.builder()
+				.withListener()
+			    	.port(port)
+			    	.secured()
+			    	.end()
 			    .withModule(new JsoniterModule())
 			    .withModule(new FakeOpenIdModule(key,authEndpoint,"/token",wellKnownDelay,0))
 			    	.build().start().await();
@@ -127,9 +133,11 @@ public class OpenIdStepDefs {
 	@Given("^an openid provider listening in port (\\d+) with sign certificate \"([^\"]*)\", authorization endpoint \"([^\"]*)\", token endpoint \"([^\"]*)\" and jwks service with (\\d+)ms of delay$")
 	public void anOpenidProviderListeningInPortWithSignCertificateAuthorizationEndpointAndTokenEndpointWithMsOfDelay(int port, String keyKey,String authEndpoint,String tokenEndpoint, int jwksDelay) throws Exception {
 		SelfSignedCertificate key = (SelfSignedCertificate) scenarioData.get(keyKey);
-		Future<DefaultService> service = GuiceService.builder()
-			    .securedPort(port)
-			    .disableInsecurePort()
+		Future<Server> service = GuiceService.builder()
+				.withListener()
+			    	.port(port)
+			    	.secured()
+			    	.end()
 			    .withModule(new JsoniterModule())
 			    .withModule(new FakeOpenIdModule(key,authEndpoint,tokenEndpoint,0,jwksDelay))
 			    	.build().start().await();

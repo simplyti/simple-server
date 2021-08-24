@@ -12,15 +12,15 @@ import com.simplyti.service.clients.k8s.services.builder.ServiceBuilder;
 import com.simplyti.service.clients.k8s.services.domain.Service;
 import com.simplyti.service.clients.k8s.services.updater.DefaultServiceUpdater;
 import com.simplyti.service.clients.k8s.services.updater.ServicesUpdater;
+import com.simplyti.util.concurrent.Future;
 
 import io.netty.channel.EventLoopGroup;
-import io.netty.util.concurrent.Future;
 
 public class DefaultNamespacedServices extends DefaultNamespacedK8sApi<Service> implements NamespacedServices {
 
-	public DefaultNamespacedServices(EventLoopGroup eventLoopGroup,HttpClient http,Json json, K8sAPI api, String resource,TypeLiteral<KubeList<Service>> listType,
+	public DefaultNamespacedServices(EventLoopGroup eventLoopGroup,HttpClient http, long timeoutMillis, Json json, K8sAPI api, String resource,TypeLiteral<KubeList<Service>> listType,
 			TypeLiteral<Event<Service>> eventType, String namespace) {
-		super(eventLoopGroup,http,json,api,namespace,resource,Service.class,listType,eventType);
+		super(eventLoopGroup,http,timeoutMillis,json,api,namespace,resource,Service.class,listType,eventType);
 	}
 
 	@Override
@@ -37,7 +37,7 @@ public class DefaultNamespacedServices extends DefaultNamespacedK8sApi<Service> 
 	public Future<Service> updateStatus(Service service) {
 		return http().request()
 				.put(String.format("%s/namespaces/%s/%s/%s/status",api().path(),namespace(),resource(),service.metadata().name()))
-				.body(ctx->body(ctx,service))
+				.withBodyWriter(buff->body(buff,service))
 				.fullResponse(f->response(f, Service.class));
 	}
 

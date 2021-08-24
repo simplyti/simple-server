@@ -8,27 +8,23 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
-import com.simplyti.service.ServerConfig;
-import com.simplyti.service.Service;
+import com.simplyti.service.DefaultServer;
 import com.simplyti.service.api.builder.ApiProvider;
+import com.simplyti.service.config.ServerConfig;
 import com.simplyti.service.fileserver.FileServeConfiguration;
 import com.simplyti.service.ssl.SslConfig;
 
 import io.netty.channel.EventLoopGroup;
 
-public class GuiceServiceBuilder<T extends Service<?>> extends AbstractServiceBuilder<T> implements ServiceBuilder<T> {
-
-	public GuiceServiceBuilder(Class<T> serviceClass) {
-		super(serviceClass);
-	}
+public class GuiceServiceBuilder extends AbstractServiceBuilder implements ServiceBuilder {
 
 	@Override
-	protected T build0(ServerConfig config, SslConfig sslConfig,FileServeConfiguration fileServerConfig, Class<T> serviceClass, Stream<Module> additinalModules,
-			Collection<Class<? extends ApiProvider>> apiClasses, Collection<ApiProvider> apiProviders,
+	protected DefaultServer build0(ServerConfig config, SslConfig sslConfig,FileServeConfiguration fileServerConfig, Stream<Module> additinalModules,
+			Collection<Class<? extends ApiProvider>> apiClasses,
 			EventLoopGroup eventLoopGroup) {
-		ServiceModule coreModule = new ServiceModule(config,sslConfig,fileServerConfig,apiClasses,apiProviders,eventLoopGroup);
+		ServiceModule coreModule = new ServiceModule(config,sslConfig,fileServerConfig,apiClasses,eventLoopGroup);
 		Injector injector = Guice.createInjector(Modules.override(coreModule).with(additinalModules.collect(Collectors.toList())));
-		return injector.getInstance(serviceClass);
+		return injector.getInstance(DefaultServer.class);
 	}
-	
+
 }

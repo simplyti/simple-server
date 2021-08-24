@@ -18,7 +18,7 @@ public class AWSLambdaChannelInit implements EntryChannelInit{
 	private final AwsHttpResponseEncoder awsHttpResponseEncoder;
 
 	@Override
-	public void init(ChannelPipeline pipeline) {
+	public void init(ChannelPipeline pipeline, boolean isSsl) {
 		pipeline.addLast(awsHttpResponseEncoder);
 		pipeline.addLast(new HttpObjectAggregator(10000000));
 		pipeline.addLast(new JsonObjectDecoder());

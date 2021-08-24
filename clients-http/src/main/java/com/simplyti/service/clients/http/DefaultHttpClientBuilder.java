@@ -1,0 +1,87 @@
+package com.simplyti.service.clients.http;
+
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+
+import com.simplyti.service.clients.AbstractClientBuilder;
+import com.simplyti.service.clients.BootstrapProvider;
+import com.simplyti.service.clients.endpoint.Endpoint;
+import com.simplyti.service.clients.http.request.HttpRequestBuilder;
+import com.simplyti.service.clients.monitor.DefaultClientMonitor;
+import com.simplyti.service.filter.http.HttpRequestFilter;
+
+import io.netty.channel.EventLoopGroup;
+import io.netty.handler.codec.http.DefaultHttpHeaders;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.ssl.SslProvider;
+import io.netty.util.CharsetUtil;
+
+public class DefaultHttpClientBuilder extends AbstractClientBuilder<HttpClientBuilder, HttpClient, HttpRequestBuilder>  implements HttpClientBuilder {
+
+	private boolean checkStatus;
+	private String bearerToken;
+	
+	private String basicUser;
+	private String basicPass;
+	
+	private List<HttpRequestFilter> filters;
+	private int maxContentLength;
+	
+	@Override
+	public HttpClientBuilder withCheckStatusCode() {
+		this.checkStatus=true;
+		return this;
+	}
+	
+	@Override
+	public HttpClientBuilder withBearerAuth(String token) {
+		this.bearerToken=token;
+		return this;
+	}
+	
+	@Override
+	public HttpClientBuilder withBasicAuth(String user, String password) {
+		this.basicUser=user;
+		this.basicPass=password;
+		return this;
+	}
+	
+	@Override
+	public HttpClientBuilder withFilter(HttpRequestFilter filter) {
+		if(filter!=null) {
+			if(this.filters == null) {
+				this.filters = new ArrayList<>();
+			}
+			this.filters.add(filter);
+		}
+		return this;
+	}
+	
+	@Override
+	protected HttpClient build0(EventLoopGroup eventLoopGroup, BootstrapProvider bootstrap, Endpoint endpoint, SslProvider sslProvider, DefaultClientMonitor monitor, int poolSize, boolean unpooledChannels, long poolIdleTimeout, long readTimeoutMilis, boolean verbose) {
+		return new DefaultHttpClient(eventLoopGroup, bootstrap, endpoint, headers(), sslProvider, checkStatus, monitor, poolSize, unpooledChannels, poolIdleTimeout, readTimeoutMilis, verbose, filters, maxContentLength);
+	}
+	
+	private HttpHeaders headers() {
+		if(bearerToken!=null) {
+			HttpHeaders headers = new DefaultHttpHeaders();
+			headers.set(HttpHeaderNames.AUTHORIZATION,"Bearer "+bearerToken);
+			return headers;
+		} else if(basicUser!=null && basicPass!=null) {
+			HttpHeaders headers = new DefaultHttpHeaders();
+			String userPass = basicUser+":"+basicPass;
+			headers.set(HttpHeaderNames.AUTHORIZATION,"Basic "+Base64.getEncoder().encodeToString(userPass.getBytes(CharsetUtil.UTF_8)));
+			return headers;
+		}
+		return null;
+	}
+
+	@Override
+	public HttpClientBuilder withMaxContentLength(int maxContentLength) {
+		this.maxContentLength=maxContentLength;
+		return this;
+	}
+
+}

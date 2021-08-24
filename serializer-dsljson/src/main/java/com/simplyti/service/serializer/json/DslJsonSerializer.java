@@ -3,6 +3,7 @@ package com.simplyti.service.serializer.json;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -22,6 +23,10 @@ import lombok.SneakyThrows;
 public class DslJsonSerializer implements Json {
 	
 	private DslJson<Object> dslJson;
+	
+	public DslJsonSerializer() {
+		this(Collections.emptySet());
+	}
 
 	@Inject
 	public DslJsonSerializer(Set<Configuration> configurations) {
@@ -33,12 +38,16 @@ public class DslJsonSerializer implements Json {
 		configurations.forEach(settings::with);
 		this.dslJson = new DslJson<Object>(settings);
 	}
-
-	@SuppressWarnings("unchecked")
+	
+	@SuppressWarnings({ "unchecked"})
 	@Override
 	@SneakyThrows
 	public <T> T deserialize(ByteBuf content, TypeLiteral<T> type) {
-		return (T) dslJson.deserialize(type.getType(), new ByteBufInputStream(content));
+		if(!content.isReadable()) {
+			return null;
+		} else {
+			return (T) dslJson.deserialize(type.getType(), new ByteBufInputStream(content));
+		}
 	}
 	
 	@Override

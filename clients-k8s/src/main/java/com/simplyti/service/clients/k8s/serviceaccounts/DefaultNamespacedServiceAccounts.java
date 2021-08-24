@@ -15,9 +15,9 @@ import io.netty.channel.EventLoopGroup;
 
 public class DefaultNamespacedServiceAccounts extends DefaultNamespacedK8sApi<ServiceAccount> implements NamespacedServiceAccounts {
 
-	public DefaultNamespacedServiceAccounts(EventLoopGroup eventLoopGroup,HttpClient http, Json json, K8sAPI api, String resource, TypeLiteral<KubeList<ServiceAccount>> listType, 
+	public DefaultNamespacedServiceAccounts(EventLoopGroup eventLoopGroup,HttpClient http, long timeoutMillis, Json json, K8sAPI api, String resource, TypeLiteral<KubeList<ServiceAccount>> listType, 
 			TypeLiteral<Event<ServiceAccount>> eventType, String namespace) {
-		super(eventLoopGroup,http,json,api,namespace,resource,ServiceAccount.class,listType,eventType);
+		super(eventLoopGroup,http,timeoutMillis,json,api,namespace,resource,ServiceAccount.class,listType,eventType);
 	}
 
 	@Override

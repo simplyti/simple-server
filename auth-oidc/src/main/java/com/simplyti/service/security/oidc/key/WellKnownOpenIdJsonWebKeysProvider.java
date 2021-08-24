@@ -25,7 +25,7 @@ public class WellKnownOpenIdJsonWebKeysProvider {
 	@Inject
 	public WellKnownOpenIdJsonWebKeysProvider(Json json, EventLoopGroup eventLoopGroup) {
 		this.http = HttpClient.builder()
-				.eventLoopGroup(eventLoopGroup)
+				.withEventLoopGroup(eventLoopGroup)
 				.build();
 		this.json=json;
 	}
