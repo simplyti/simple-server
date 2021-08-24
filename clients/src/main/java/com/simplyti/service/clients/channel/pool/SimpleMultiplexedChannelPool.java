@@ -1,10 +1,14 @@
-package com.simplyti.service.clients.channel;
+package com.simplyti.service.clients.channel.pool;
 
 import java.util.Deque;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.simplyti.service.clients.channel.ClientChannel;
+import com.simplyti.service.clients.channel.handler.MultiplexChannelToParentHandler;
+import com.simplyti.service.clients.channel.handler.MultiplexStreamlHandler;
 import com.simplyti.service.clients.endpoint.Address;
+import com.simplyti.service.clients.multiplex.MultiplexedClientChannel;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;

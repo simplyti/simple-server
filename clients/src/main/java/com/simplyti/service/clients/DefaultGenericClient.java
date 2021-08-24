@@ -3,6 +3,7 @@ package com.simplyti.service.clients;
 import java.util.function.Consumer;
 
 import com.simplyti.service.clients.channel.ClientChannelFactory;
+import com.simplyti.service.clients.channel.handler.GenericClientChannelPoolHandler;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.monitor.DefaultClientMonitor;
 import com.simplyti.service.clients.request.DefaultGenericRequestBuilder;

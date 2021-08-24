@@ -1,6 +1,8 @@
-package com.simplyti.service.clients;
+package com.simplyti.service.clients.channel.pool;
 
 import java.util.concurrent.TimeUnit;
+
+import com.simplyti.service.clients.channel.handler.ReadTimeoutExceptionHandler;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;

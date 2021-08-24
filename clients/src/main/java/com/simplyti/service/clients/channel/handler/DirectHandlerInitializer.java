@@ -1,6 +1,4 @@
-package com.simplyti.service.clients.channel;
-
-import com.simplyti.service.clients.PrematureErrorHandler;
+package com.simplyti.service.clients.channel.handler;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;

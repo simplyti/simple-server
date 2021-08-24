@@ -1,4 +1,4 @@
-package com.simplyti.service.clients.channel;
+package com.simplyti.service.clients.channel.handler;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -6,6 +6,9 @@ import io.netty.channel.embedded.EmbeddedChannel;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import com.simplyti.service.clients.multiplex.MultiplexStreamResponse;
+import com.simplyti.service.clients.multiplex.MultiplexedClientChannel;
 
 import io.netty.channel.ChannelHandler.Sharable;
 

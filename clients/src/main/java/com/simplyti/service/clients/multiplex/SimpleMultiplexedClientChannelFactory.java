@@ -1,8 +1,13 @@
-package com.simplyti.service.clients.channel;
+package com.simplyti.service.clients.multiplex;
 
 import java.nio.channels.ClosedChannelException;
 
 import com.simplyti.service.clients.BootstrapProvider;
+import com.simplyti.service.clients.channel.ClientChannel;
+import com.simplyti.service.clients.channel.ClientChannelEvent;
+import com.simplyti.service.clients.channel.handler.ChannelInitializedHandler;
+import com.simplyti.service.clients.channel.pool.AbstractClientChannelPoolMap;
+import com.simplyti.service.clients.channel.pool.SimpleMultiplexedChannelPool;
 import com.simplyti.service.clients.endpoint.Address;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.monitor.ClientMonitorHandler;

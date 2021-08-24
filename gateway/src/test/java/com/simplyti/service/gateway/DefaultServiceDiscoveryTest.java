@@ -3,8 +3,8 @@ package com.simplyti.service.gateway;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.simplyti.service.clients.Scheme;
 import com.simplyti.service.clients.endpoint.Endpoint;
+import com.simplyti.service.clients.endpoint.Scheme;
 import com.simplyti.service.clients.endpoint.TcpAddress;
 
 import io.netty.handler.codec.http.HttpMethod;

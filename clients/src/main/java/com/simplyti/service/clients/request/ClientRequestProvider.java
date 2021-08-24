@@ -1,4 +1,4 @@
-package com.simplyti.service.clients.stream;
+package com.simplyti.service.clients.request;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpRequest;

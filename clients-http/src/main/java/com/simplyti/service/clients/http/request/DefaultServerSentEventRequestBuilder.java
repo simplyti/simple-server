@@ -8,7 +8,7 @@ import com.simplyti.service.clients.http.handler.HttpServerSentEventHandshakeHan
 import com.simplyti.service.clients.http.sse.domain.ServerEvent;
 import com.simplyti.service.clients.http.sse.handler.ServerSentEventHandler;
 import com.simplyti.service.clients.request.ChannelProvider;
-import com.simplyti.service.clients.stream.ClientRequestProvider;
+import com.simplyti.service.clients.request.ClientRequestProvider;
 import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.util.concurrent.Future;
 

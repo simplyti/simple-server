@@ -9,7 +9,7 @@ import com.simplyti.service.clients.channel.ClientChannel;
 import com.simplyti.service.clients.http.handler.DecodingFullHttpResponseHandler;
 import com.simplyti.service.clients.http.handler.FullHttpResponseHandler;
 import com.simplyti.service.clients.request.ChannelProvider;
-import com.simplyti.service.clients.stream.ClientRequestProvider;
+import com.simplyti.service.clients.request.ClientRequestProvider;
 import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.util.concurrent.Future;
 

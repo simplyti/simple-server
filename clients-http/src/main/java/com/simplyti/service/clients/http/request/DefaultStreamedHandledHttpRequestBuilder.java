@@ -8,7 +8,7 @@ import com.simplyti.service.clients.http.HttpClientStreamEvent;
 import com.simplyti.service.clients.http.handler.ClientChannelInitializer;
 import com.simplyti.service.clients.http.handler.StreamedByteBufResponseHandler;
 import com.simplyti.service.clients.request.ChannelProvider;
-import com.simplyti.service.clients.stream.ClientRequestProvider;
+import com.simplyti.service.clients.request.ClientRequestProvider;
 import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.util.concurrent.Future;
 

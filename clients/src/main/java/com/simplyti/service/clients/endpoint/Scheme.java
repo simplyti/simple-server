@@ -1,4 +1,4 @@
-package com.simplyti.service.clients;
+package com.simplyti.service.clients.endpoint;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

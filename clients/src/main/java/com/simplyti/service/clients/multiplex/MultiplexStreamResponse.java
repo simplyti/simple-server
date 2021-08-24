@@ -1,4 +1,4 @@
-package com.simplyti.service.clients.channel;
+package com.simplyti.service.clients.multiplex;
 
 public interface MultiplexStreamResponse {
 	

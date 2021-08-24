@@ -1,4 +1,4 @@
-package com.simplyti.service.clients.channel.proxy;
+package com.simplyti.service.clients.proxy.channel;
 
 import com.simplyti.service.clients.proxy.Proxy;
 

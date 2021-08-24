@@ -25,7 +25,6 @@ import com.jsoniter.any.Any;
 import com.simplyti.service.clients.Client;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.endpoint.TcpAddress;
-import com.simplyti.service.clients.endpoint.ssl.SSLEndpoint;
 import com.simplyti.service.clients.http.HttpClient;
 import com.simplyti.service.clients.http.HttpEndpoint;
 import com.simplyti.service.clients.http.request.ChunckedBodyRequest;
@@ -35,6 +34,7 @@ import com.simplyti.service.clients.proxy.ProxiedEndpoint;
 import com.simplyti.service.clients.proxy.ProxiedEndpointBuilder;
 import com.simplyti.service.clients.proxy.Proxy;
 import com.simplyti.service.clients.proxy.Proxy.ProxyType;
+import com.simplyti.service.clients.ssl.endpoint.SSLEndpoint;
 import com.simplyti.service.filter.http.HttpRequestFilter;
 import com.simplyti.util.concurrent.Future;
 

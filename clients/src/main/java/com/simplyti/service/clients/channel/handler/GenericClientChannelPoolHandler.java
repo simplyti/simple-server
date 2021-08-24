@@ -1,6 +1,8 @@
-package com.simplyti.service.clients;
+package com.simplyti.service.clients.channel.handler;
 
 import java.util.function.Consumer;
+
+import com.simplyti.service.clients.channel.pool.AbstractClientPoolHandler;
 
 import io.netty.channel.Channel;
 

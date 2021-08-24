@@ -1,5 +1,7 @@
-package com.simplyti.service.clients.channel;
+package com.simplyti.service.clients.multiplex;
 
+import com.simplyti.service.clients.channel.ClientChannel;
+import com.simplyti.service.clients.channel.ClientChannelEvent;
 import com.simplyti.service.clients.endpoint.Address;
 import com.simplyti.util.concurrent.DefaultFuture;
 import com.simplyti.util.concurrent.Future;

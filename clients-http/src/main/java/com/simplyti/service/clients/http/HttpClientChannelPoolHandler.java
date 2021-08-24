@@ -3,7 +3,7 @@ package com.simplyti.service.clients.http;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.simplyti.service.clients.AbstractClientPoolHandler;
+import com.simplyti.service.clients.channel.pool.AbstractClientPoolHandler;
 import com.simplyti.service.clients.http.handler.HttpClientFullResponseAggregator;
 import com.simplyti.service.clients.http.handler.HttpContentUnwrapHandled;
 import com.simplyti.service.clients.http.handler.HttpRequestFilterHandler;
@@ -47,8 +47,6 @@ public class HttpClientChannelPoolHandler extends AbstractClientPoolHandler {
 				new HttpServerSentEventDecoder(),
 				new HttpClientFullResponseAggregator(maxContextLength>0? maxContextLength:DEFAULT_MAX_CONTENT_LENGTH),
 				new HttpContentUnwrapHandled());
-		
-		
 	}
 	
 }

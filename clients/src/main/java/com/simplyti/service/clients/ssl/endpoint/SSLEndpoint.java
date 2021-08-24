@@ -1,4 +1,4 @@
-package com.simplyti.service.clients.endpoint.ssl;
+package com.simplyti.service.clients.ssl.endpoint;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;

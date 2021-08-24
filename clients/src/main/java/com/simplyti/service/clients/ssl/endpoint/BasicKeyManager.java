@@ -1,4 +1,4 @@
-package com.simplyti.service.clients.endpoint.ssl;
+package com.simplyti.service.clients.ssl.endpoint;
 
 import java.net.Socket;
 import java.security.Principal;

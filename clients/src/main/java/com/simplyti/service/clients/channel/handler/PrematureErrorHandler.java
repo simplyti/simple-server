@@ -1,4 +1,4 @@
-package com.simplyti.service.clients;
+package com.simplyti.service.clients.channel.handler;
 
 import java.nio.channels.ClosedChannelException;
 

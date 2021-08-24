@@ -1,11 +1,11 @@
-package com.simplyti.service.clients.channel;
+package com.simplyti.service.clients.ssl.handler;
 
 import java.security.cert.X509Certificate;
 
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.endpoint.TcpAddress;
-import com.simplyti.service.clients.endpoint.ssl.BasicKeyManager;
-import com.simplyti.service.clients.endpoint.ssl.SSLEndpoint;
+import com.simplyti.service.clients.ssl.endpoint.BasicKeyManager;
+import com.simplyti.service.clients.ssl.endpoint.SSLEndpoint;
 
 import io.netty.channel.Channel;
 import io.netty.channel.pool.AbstractChannelPoolHandler;

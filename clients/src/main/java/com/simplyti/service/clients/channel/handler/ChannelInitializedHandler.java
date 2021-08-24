@@ -1,5 +1,8 @@
-package com.simplyti.service.clients.channel;
+package com.simplyti.service.clients.channel.handler;
 
+
+import com.simplyti.service.clients.channel.ClientChannel;
+import com.simplyti.service.clients.channel.ClientChannelEvent;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;

@@ -1,17 +1,23 @@
-package com.simplyti.service.clients.channel;
+package com.simplyti.service.clients.channel.pool;
 
 import java.nio.channels.ClosedChannelException;
 
 import com.simplyti.service.clients.BootstrapProvider;
-import com.simplyti.service.clients.channel.proxy.NoResolvingSocketAddress;
+import com.simplyti.service.clients.channel.ClientChannel;
+import com.simplyti.service.clients.channel.ClientChannelEvent;
+import com.simplyti.service.clients.channel.ClientChannelFactory;
+import com.simplyti.service.clients.channel.PooledClientChannel;
+import com.simplyti.service.clients.channel.handler.ChannelInitializedHandler;
 import com.simplyti.service.clients.endpoint.Address;
 import com.simplyti.service.clients.endpoint.Endpoint;
 import com.simplyti.service.clients.endpoint.TcpAddress;
-import com.simplyti.service.clients.endpoint.ssl.SSLEndpoint;
 import com.simplyti.service.clients.monitor.ClientMonitorHandler;
 import com.simplyti.service.clients.monitor.MonitoredHandler;
 import com.simplyti.service.clients.proxy.ProxiedEndpoint;
 import com.simplyti.service.clients.proxy.Proxy;
+import com.simplyti.service.clients.proxy.channel.NoResolvingSocketAddress;
+import com.simplyti.service.clients.ssl.endpoint.SSLEndpoint;
+import com.simplyti.service.clients.ssl.handler.SSLChannelInitializeHandler;
 import com.simplyti.util.concurrent.DefaultFuture;
 import com.simplyti.util.concurrent.Future;
 

@@ -1,8 +1,8 @@
-package com.simplyti.service.clients.channel.proxy;
+package com.simplyti.service.clients.proxy.channel;
 
 import java.net.InetSocketAddress;
 
-import com.simplyti.service.clients.PrematureErrorHandler;
+import com.simplyti.service.clients.channel.handler.PrematureErrorHandler;
 import com.simplyti.service.clients.proxy.Proxy;
 
 import io.netty.channel.Channel;

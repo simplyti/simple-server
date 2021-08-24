@@ -3,11 +3,11 @@ package com.simplyti.service.clients;
 import com.simplyti.service.clients.channel.ClientChannelFactory;
 import com.simplyti.service.clients.channel.FixedSizeClientChannelFactory;
 import com.simplyti.service.clients.channel.SimpleClientChannelFactory;
-import com.simplyti.service.clients.channel.SimpleMultiplexedClientChannelFactory;
 import com.simplyti.service.clients.channel.UnpooledClientChannelFactory;
 import com.simplyti.service.clients.channel.handler.IdleTimeoutHandler;
 import com.simplyti.service.clients.monitor.ClientMonitor;
 import com.simplyti.service.clients.monitor.ClientMonitorHandler;
+import com.simplyti.service.clients.multiplex.SimpleMultiplexedClientChannelFactory;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.pool.ChannelPoolHandler;

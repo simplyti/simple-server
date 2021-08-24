@@ -1,4 +1,6 @@
-package com.simplyti.service.clients.channel;
+package com.simplyti.service.clients.channel.pool;
+
+import com.simplyti.service.clients.channel.handler.DirectHandlerInitializer;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
