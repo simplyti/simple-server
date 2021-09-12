@@ -17,7 +17,7 @@ public class KubeclientBuilder {
 	}
 
 	public KubeclientBuilder server(String server) {
-		this.endpoint=HttpEndpoint.of(server);
+		this.endpoint=server==null?null:HttpEndpoint.of(server);
 		return this;
 	}
 	

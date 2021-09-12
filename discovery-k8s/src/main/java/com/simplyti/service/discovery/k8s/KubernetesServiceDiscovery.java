@@ -412,12 +412,20 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 			return services.get(serviceId).spec().ports().stream()
 					.filter(port->isTargetPort(port,backend.servicePort()))
 					.flatMap(servicePort-> firstNonNull(endpoints.get(serviceId).subsets(), Collections.<Subset>emptyList())
-					.stream().flatMap(subset->subset.ports().stream().filter(port->port.port().equals(servicePort.targetPort()))
+					.stream().flatMap(subset->subset.ports().stream().filter(port->isTargetPort(port,servicePort.targetPort()))
 						.flatMap(port->subset.addresses().stream()
 								.map(address->endpoint(ingress,address,port))))
 			).collect(Collectors.toList());
 		}else {
 			return Collections.emptyList();
+		}
+	}
+
+	private boolean isTargetPort(Port port, Object targetPort) {
+		if(targetPort instanceof String) {
+			return port.name().equals((String)targetPort);
+		}else {
+			return port.port().equals(targetPort);
 		}
 	}
 
