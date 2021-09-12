@@ -64,10 +64,10 @@
 		<xml.bind-api.version>3.0.0</xml.bind-api.version>
 
 		<!-- Networking -->
-		<netty.version>4.1.67.Final</netty.version>
+		<netty.version>4.1.68.Final</netty.version>
 
 		<!-- SSL -->
-		<tcnative.version>2.0.40.Final</tcnative.version>
+		<tcnative.version>2.0.42.Final</tcnative.version>
 
 		<!-- JAX-RS -->
 		<jax-rs.version>2.1.6</jax-rs.version>
