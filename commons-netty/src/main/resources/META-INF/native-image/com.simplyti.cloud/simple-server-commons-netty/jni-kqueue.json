@@ -50,7 +50,8 @@
 		{ "name": "getAcceptFilter", "parameterTypes": ["int"] },
 		{ "name": "getTcpNoPush", "parameterTypes": ["int"] },
 		{ "name": "sendFile", "parameterTypes": ["io.netty.channel.DefaultFileRegion","long","long","long"] },
-		{ "name": "getPeerCredentials", "parameterTypes": ["int"] }
+		{ "name": "getPeerCredentials", "parameterTypes": ["int"] },
+		{ "name": "connectx", "parameterTypes": ["int","int","boolean","byte[]","int","int","boolean","byte[]","int","int","int","long","int","int"] }
 	]
   },
   {

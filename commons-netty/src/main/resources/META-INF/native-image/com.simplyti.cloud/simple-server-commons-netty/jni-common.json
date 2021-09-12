@@ -44,8 +44,13 @@
 		{ "name": "sendTo", "parameterTypes": ["int","boolean","java.nio.ByteBuffer","int","int","byte[]","int","int","int"] },
 		{ "name": "sendToAddress", "parameterTypes": ["int","boolean","long","int","int","byte[]","int","int","int"] },
 		{ "name": "sendToAddresses", "parameterTypes": ["int","boolean","long","int","byte[]","int","int","int"] },
+		{ "name": "sendToDomainSocket", "parameterTypes": ["int","java.nio.ByteBuffer","int","int","byte[]"] },
+		{ "name": "sendToAddressDomainSocket", "parameterTypes": ["int","long","int","int","byte[]"] },
+		{ "name": "sendToAddressesDomainSocket", "parameterTypes": ["int","long","int","byte[]"] },
 		{ "name": "recvFrom", "parameterTypes": ["int","java.nio.ByteBuffer","int","int"] },
 		{ "name": "recvFromAddress", "parameterTypes": ["int","long","int","int"] },
+		{ "name": "recvFromDomainSocket", "parameterTypes": ["int","java.nio.ByteBuffer","int","int"] },
+		{ "name": "recvFromAddressDomainSocket", "parameterTypes": ["int","long","int","int"] },
 		{ "name": "recvFd", "parameterTypes": ["int"] },
 		{ "name": "sendFd", "parameterTypes": ["int","int"] },
 		{ "name": "finishConnect", "parameterTypes": ["int"] },
@@ -79,7 +84,8 @@
 		{ "name": "msgFastopen", "parameterTypes": [] },
 		{ "name": "newSocketStreamFd", "parameterTypes": ["boolean"] },
 		{ "name": "newSocketDgramFd", "parameterTypes": ["boolean"] },
-		{ "name": "newSocketDomainFd", "parameterTypes": [] }
+		{ "name": "newSocketDomainFd", "parameterTypes": [] },
+		{ "name": "newSocketDomainDgramFd", "parameterTypes": [] }
 	]
   },
   {
@@ -87,6 +93,13 @@
     "fields" : [],
     "methods": [
 		{ "name": "<init>", "parameterTypes": ["byte[]","int","int","int","io.netty.channel.unix.DatagramSocketAddress"] }
+	]
+  },
+  {
+    "name" : "io.netty.channel.unix.DomainDatagramSocketAddress",
+    "fields" : [],
+    "methods": [
+		{ "name": "<init>", "parameterTypes": ["byte[]","int","io.netty.channel.unix.DomainDatagramSocketAddress"] }
 	]
   },
   {
@@ -161,7 +174,12 @@
     ],
     "methods": [
     	{ "name": "<init>", "parameterTypes": [] },
-		{ "name": "<init>", "parameterTypes": ["int"] }
+		{ "name": "<init>", "parameterTypes": ["int"] },
+		{ "name": "sync", "parameterTypes": [] },
+		{ "name": "initIDs", "parameterTypes": [] },
+		{ "name": "getHandle", "parameterTypes": ["int"] },
+		{ "name": "getAppend", "parameterTypes": ["int"] },
+		{ "name": "close0", "parameterTypes": [] }
 	]
   },
   {
