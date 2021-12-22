@@ -56,7 +56,7 @@ public class KubernetesCertificateProvider implements ServerCertificateProvider{
 			PrivateKey privateKey = PrivateKeyUtils.read(secret.data().get("tls.key").asString(CharsetUtil.UTF_8));
 			List<X509Certificate> certificates = CertificateUtils.read(secret.data().get("tls.crt").asString(CharsetUtil.UTF_8));
 			secrets.put(secretId, new ServerCertificate(certificates.stream().toArray(X509Certificate[]::new), privateKey));
-		} catch (CertificateException | InvalidKeySpecException | NoSuchAlgorithmException | IOException e) {
+		} catch (CertificateException | InvalidKeySpecException | NoSuchAlgorithmException | IOException | IllegalArgumentException e) {
 			log.warn("Cannot create certificate and key",e);
 		}
 	}

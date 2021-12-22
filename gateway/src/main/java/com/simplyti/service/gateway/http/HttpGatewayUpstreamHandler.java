@@ -21,6 +21,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpScheme;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.LastHttpContent;
+import io.netty.handler.ssl.SslHandler;
 import io.netty.util.concurrent.Future;
 
 public class HttpGatewayUpstreamHandler extends ChannelDuplexHandler {
@@ -74,7 +75,7 @@ public class HttpGatewayUpstreamHandler extends ChannelDuplexHandler {
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
     	if(msg instanceof HttpRequest) {
-    		ctx.write(adaptProxiedRequest((HttpRequest) msg), promise).addListener(f->{
+    		ctx.write(adaptProxiedRequest(ctx, (HttpRequest) msg), promise).addListener(f->{
     			if(f.isSuccess()) {
     				this.initialRequestSuccess=true;
     			}
@@ -91,18 +92,27 @@ public class HttpGatewayUpstreamHandler extends ChannelDuplexHandler {
     	}
     }
     
-	private HttpRequest adaptProxiedRequest(HttpRequest request) {
+	private HttpRequest adaptProxiedRequest(ChannelHandlerContext ctx, HttpRequest request) {
 		setXForwardedFor(request);
     	setXForwardedProto(request);
     	setXForwardedHost(request);
-    	setHost(request);
+    	setHost(ctx, request);
 		return serviceMatch.rewrite(request);
 	}
 
-	private void setHost(HttpRequest request) {
+	private void setHost(ChannelHandlerContext ctx,HttpRequest request) {
     	if(!config.keepOriginalHost()) {
-    		request.headers().set(HttpHeaderNames.HOST, ((TcpAddress)endpoint.address()).host());
+    		request.headers().set(HttpHeaderNames.HOST, value(ctx.pipeline().get(SslHandler.class)!=null, (TcpAddress) this.endpoint.address()));
     	}
+	}
+	
+	private String value(boolean isSsl, TcpAddress tcpAddress) {
+		if((isSsl && tcpAddress.port() == 443) ||
+				(!isSsl && tcpAddress.port() == 80)) {
+			return tcpAddress.host();
+		} else {
+			return tcpAddress.host()+":"+tcpAddress.port();
+		}
 	}
 
 	private void setXForwardedHost(HttpRequest request) {

@@ -49,10 +49,10 @@
 		<lombok.version>1.18.12</lombok.version>
 
 		<!-- IoC -->
-		<inject.version>1.0.3</inject.version>
-		<guice.version>4.2.3</guice.version>
-		<dagger.version>2.36</dagger.version>
-		<kotlin.version>1.4.20</kotlin.version>
+		<inject.version>1.0.5</inject.version>
+		<guice.version>5.0.1</guice.version>
+		<dagger.version>2.40.5</dagger.version>
+		<kotlin.version>1.6.0</kotlin.version>
 
 		<!-- Commons -->
 		<errorprone.version>2.4.0</errorprone.version>
@@ -64,18 +64,18 @@
 		<xml.bind-api.version>3.0.0</xml.bind-api.version>
 
 		<!-- Networking -->
-		<netty.version>4.1.68.Final</netty.version>
+		<netty.version>4.1.72.Final</netty.version>
 
 		<!-- SSL -->
-		<tcnative.version>2.0.42.Final</tcnative.version>
+		<tcnative.version>2.0.46.Final</tcnative.version>
 
 		<!-- JAX-RS -->
 		<jax-rs.version>2.1.6</jax-rs.version>
 
 		<!-- Json -->
 		<jsoniter.version>0.9.23</jsoniter.version>
-		<dsljson.version>1.9.8</dsljson.version>
-		<jackson.json>2.12.4</jackson.json>
+		<dsljson.version>1.9.9</dsljson.version>
+		<jackson.json>2.13.0</jackson.json>
 
 		<!-- JE2/J -->
 		<re2j.version>1.6</re2j.version>
