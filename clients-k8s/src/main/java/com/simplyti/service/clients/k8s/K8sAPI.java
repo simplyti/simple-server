@@ -9,7 +9,7 @@ public enum K8sAPI {
 	
 	V1("api","v1"),
 	BATCH1("apis","batch/v1"),
-	BETA1("apis","extensions/v1beta1");
+	NETWORKING1("apis","networking.k8s.io/v1");
 	
 	private final String api;
 	private final String version;

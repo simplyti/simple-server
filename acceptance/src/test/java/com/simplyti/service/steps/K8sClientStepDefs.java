@@ -388,8 +388,8 @@ public class K8sClientStepDefs {
 		assertThat(rule.http().paths(),hasSize(1));
 		IngressPath ingressPath = rule.http().paths().get(0);
 		assertThat(ingressPath.path(),equalTo(path));
-		assertThat(ingressPath.backend().serviceName(),equalTo(backendAddress[0]));
-		assertThat(ingressPath.backend().servicePort(),equalTo(Integer.parseInt(backendAddress[1])));
+		assertThat(ingressPath.backend().service().name(),equalTo(backendAddress[0]));
+		assertThat(ingressPath.backend().service().port().number(),equalTo(Integer.parseInt(backendAddress[1])));
 	}
 	
 	@When("^I check that ingress \"([^\"]*)\" contains (\\d+) rules$")

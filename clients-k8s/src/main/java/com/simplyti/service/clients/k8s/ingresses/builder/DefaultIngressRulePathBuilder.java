@@ -2,6 +2,9 @@ package com.simplyti.service.clients.k8s.ingresses.builder;
 
 import com.simplyti.service.clients.k8s.ingresses.domain.IngressBackend;
 import com.simplyti.service.clients.k8s.ingresses.domain.IngressPath;
+import com.simplyti.service.clients.k8s.ingresses.domain.IngressServiceBackend;
+import com.simplyti.service.clients.k8s.ingresses.domain.PathType;
+import com.simplyti.service.clients.k8s.ingresses.domain.ServiceBackendPort;
 
 public class DefaultIngressRulePathBuilder<B> implements IngressRulePathBuilder<B> {
 
@@ -40,7 +43,15 @@ public class DefaultIngressRulePathBuilder<B> implements IngressRulePathBuilder<
 
 	@Override
 	public IngressRuleBuilder<B> create() {
-		return parent.addPath(new IngressPath(path,new IngressBackend(serviceName,servicePort)));
+		return parent.addPath(new IngressPath(path,new IngressBackend(new IngressServiceBackend(serviceName,port())), PathType.ImplementationSpecific));
+	}
+
+	private ServiceBackendPort port() {
+		if(servicePort instanceof String) {
+			return new ServiceBackendPort((String) servicePort, null);
+		} else {
+			return new ServiceBackendPort(null, (Integer) servicePort);
+		}
 	}
 
 }

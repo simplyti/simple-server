@@ -24,7 +24,7 @@ public class DefaultNamespacedIngresses extends DefaultNamespacedK8sApi<Ingress>
 
 	@Override
 	public IngressBuilder builder() {
-		return new DefaultIngressBuilder(http(),json(),K8sAPI.BETA1,namespace(),resource());
+		return new DefaultIngressBuilder(http(),json(),K8sAPI.NETWORKING1,namespace(),resource());
 	}
 
 	@Override

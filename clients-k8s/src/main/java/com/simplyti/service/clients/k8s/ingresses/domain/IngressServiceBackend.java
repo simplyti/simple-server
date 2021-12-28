@@ -7,13 +7,15 @@ import lombok.experimental.Accessors;
 
 @Getter
 @Accessors(fluent=true)
-public class IngressBackend {
+public class IngressServiceBackend {
 	
-	private final IngressServiceBackend service;
+	private final String name;
+	private final ServiceBackendPort port;
 	
 	@CompiledJson
-	public IngressBackend(IngressServiceBackend service) {
-		this.service=service;
+	public IngressServiceBackend(String name, ServiceBackendPort port) {
+		this.name=name;
+		this.port=port;
 	}
 
 }

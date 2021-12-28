@@ -31,6 +31,7 @@ import com.simplyti.service.clients.k8s.ingresses.domain.Ingress;
 import com.simplyti.service.clients.k8s.ingresses.domain.IngressBackend;
 import com.simplyti.service.clients.k8s.ingresses.domain.IngressPath;
 import com.simplyti.service.clients.k8s.ingresses.domain.IngressTls;
+import com.simplyti.service.clients.k8s.ingresses.domain.ServiceBackendPort;
 import com.simplyti.service.clients.k8s.secrets.domain.Secret;
 import com.simplyti.service.clients.k8s.services.domain.Service;
 import com.simplyti.service.clients.k8s.services.domain.ServicePort;
@@ -380,26 +381,23 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		.forEach(ingress->ingress.spec().rules()
 			.forEach(rule->rule.http().paths().stream()
 				.filter(path->isBackend(path, service))
-				.filter(path->isTarget(service,address))
-				.forEach(path->consumer.consume(endpoint(ingress,address.address()), rule.host(),path.path()))));
+				.forEach(path->service.spec().ports().stream()
+						.filter(port -> isTargetPort(port, path.backend().service().port()))
+						.filter(port-> isTarget(port,address))
+						.forEach(port-> consumer.consume(endpoint(ingress,address.address()), rule.host(),path.path())))));
 	}
 
-	private boolean isTarget(Service service, EnpointAddress address) {
-		if(service.spec().ports().size()==1) {
-			return true;
+	private boolean isTarget(ServicePort port, EnpointAddress address) {
+		if(port.targetPort() instanceof String) {
+			return port.targetPort().equals(address.portName());
+		}else {
+			return port.targetPort().equals(address.address().port());
 		}
-		return service.spec().ports().stream().anyMatch(port->{
-			if(port.targetPort() instanceof String) {
-				return port.targetPort().equals(address.portName());
-			}else {
-				return port.targetPort().equals(address.address().port());
-			}
-		});
 	}
 
 	private boolean isBackend(IngressPath path, Service service) {
-		return path.backend().serviceName().equals(service.metadata().name())
-				&& service.spec().ports().stream().anyMatch(port->isTargetPort(port,path.backend().servicePort()));
+		return path.backend().service().name().equals(service.metadata().name())
+				&& service.spec().ports().stream().anyMatch(port->isTargetPort(port,path.backend().service().port()));
 	}
 
 	private boolean sameNamespace(K8sResource a, K8sResource b) {
@@ -407,10 +405,10 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 	}
 
 	private List<com.simplyti.service.clients.endpoint.Endpoint> endpoints(String namespace, Ingress ingress, IngressBackend backend) {
-		String serviceId = String.join(":",namespace,backend.serviceName());
+		String serviceId = String.join(":",namespace,backend.service().name());
 		if(services.containsKey(serviceId) && endpoints.containsKey(serviceId)) {
 			return services.get(serviceId).spec().ports().stream()
-					.filter(port->isTargetPort(port,backend.servicePort()))
+					.filter(port->isTargetPort(port,backend.service().port()))
 					.flatMap(servicePort-> firstNonNull(endpoints.get(serviceId).subsets(), Collections.<Subset>emptyList())
 					.stream().flatMap(subset->subset.ports().stream().filter(port->isTargetPort(port,servicePort.targetPort()))
 						.flatMap(port->subset.addresses().stream()
@@ -420,7 +418,7 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 			return Collections.emptyList();
 		}
 	}
-
+	
 	private boolean isTargetPort(Port port, Object targetPort) {
 		if(targetPort instanceof String) {
 			return port.name().equals((String)targetPort);
@@ -429,11 +427,11 @@ public class KubernetesServiceDiscovery extends DefaultServiceDiscovery implemen
 		}
 	}
 
-	private boolean isTargetPort(ServicePort port, Object servicePort) {
-		if(servicePort instanceof String) {
-			return port.name().equals((String)servicePort);
+	private boolean isTargetPort(ServicePort port, ServiceBackendPort targetPort) {
+		if(targetPort.name()!=null) {
+			return port.name().equals(targetPort.name());
 		}else {
-			return port.port().equals(servicePort);
+			return port.port().equals(targetPort.number());
 		}
 	}
 

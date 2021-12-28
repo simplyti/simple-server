@@ -11,13 +11,16 @@ public class IngressPath {
 	
 	private final String path;
 	private final IngressBackend backend;
+	private final PathType pathType;
 	
 	@CompiledJson
 	public IngressPath(
 			String path,
-			IngressBackend backend) {
+			IngressBackend backend,
+			PathType pathType) {
 		this.path=path;
 		this.backend=backend;
+		this.pathType=pathType;
 	}
 
 }

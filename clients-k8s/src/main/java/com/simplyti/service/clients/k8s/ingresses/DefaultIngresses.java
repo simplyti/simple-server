@@ -20,17 +20,17 @@ public class DefaultIngresses extends DefaultK8sApi<Ingress> implements Ingresse
 	private static final TypeLiteral<Event<Ingress>> EVENT_TYPE = new TypeLiteral<Event<Ingress>>() {};
 
 	public DefaultIngresses(EventLoopGroup eventLoopGroup,  HttpClient http, long timeoutMillis, Json json) {
-		super(eventLoopGroup,http,timeoutMillis,json,K8sAPI.BETA1, RESOURCE,LIST_TYPE,EVENT_TYPE);
+		super(eventLoopGroup,http,timeoutMillis,json,K8sAPI.NETWORKING1, RESOURCE,LIST_TYPE,EVENT_TYPE);
 	}
 
 	@Override
 	public NamespacedIngresses namespace(String namespace) {
-		return new DefaultNamespacedIngresses(eventLoopGroup(),http(),timeoutMillis(), json(),K8sAPI.BETA1,RESOURCE,LIST_TYPE,EVENT_TYPE,namespace);
+		return new DefaultNamespacedIngresses(eventLoopGroup(),http(),timeoutMillis(), json(),K8sAPI.NETWORKING1,RESOURCE,LIST_TYPE,EVENT_TYPE,namespace);
 	}
 
 	@Override
 	public IngressBuilder builder(String namespace) {
-		return new DefaultIngressBuilder(http(),json(),K8sAPI.BETA1,namespace,RESOURCE);
+		return new DefaultIngressBuilder(http(),json(),K8sAPI.NETWORKING1,namespace,RESOURCE);
 	}
 
 }
