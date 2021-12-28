@@ -66,6 +66,7 @@ import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory;
 import io.netty.handler.codec.http.multipart.HttpDataFactory;
 import io.netty.handler.codec.http.multipart.HttpPostRequestEncoder;
+import io.netty.handler.ssl.ClientAuth;
 import io.netty.util.CharsetUtil;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.ImmediateEventExecutor;
@@ -124,6 +125,19 @@ public class ServiceBuilderStepDefs {
 		services.add(futureService);
 		scenarioData.put(key, futureService);
 	}
+	
+
+	@When("I start a service {string} with required client auth and API {clazz}")
+	public void iStartAServiceWithRequiredClientAuthAndAPI(String key, Class<?extends ApiProvider> api) throws Exception {
+		Future<Server> futureService = GuiceService.builder()
+			.withLog4J2Logger()
+			.withApi(api)
+			.withSslClientAuth(ClientAuth.REQUIRE)
+			.build().start();
+		services.add(futureService);
+		scenarioData.put(key, futureService);
+	}
+
 	
 	@When("I start a service {string} with max body size {int} with API {clazz}")
 	public void iStartAServiceWithMaxBodySizeWithAPI(String key, int maxBodySize, Class<?extends ApiProvider> api) throws Exception {

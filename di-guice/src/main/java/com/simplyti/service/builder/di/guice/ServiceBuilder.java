@@ -5,6 +5,7 @@ import com.simplyti.service.DefaultServer;
 import com.simplyti.service.api.builder.ApiProvider;
 
 import io.netty.channel.EventLoopGroup;
+import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslProvider;
 
 public interface ServiceBuilder {
@@ -34,6 +35,8 @@ public interface ServiceBuilder {
 	public ServiceBuilder withName(String name);
 	
 	public ServiceBuilder withSslProvider(SslProvider sslProvider);
+	
+	public ServiceBuilder withSslClientAuth(ClientAuth sslClientAuth);
 
 	public ListenerBuilder withListener();
 

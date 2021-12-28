@@ -19,6 +19,7 @@ import com.simplyti.service.transport.Listener;
 import com.simplyti.service.transport.tcp.TcpListener;
 
 import io.netty.channel.EventLoopGroup;
+import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslProvider;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Log4J2LoggerFactory;
@@ -36,6 +37,7 @@ public abstract class AbstractServiceBuilder implements ServiceBuilder, Listenab
 	private Integer blockingThreadPool;
 	private String name;
 	private SslProvider sslProvider;
+	private ClientAuth sslClientAuth = ClientAuth.NONE;
 	private FileServeConfiguration fileServerConfig;
 	private EventLoopGroup eventLoopGroup;
 	private boolean verbose;
@@ -55,7 +57,7 @@ public abstract class AbstractServiceBuilder implements ServiceBuilder, Listenab
 				.map(Collection::stream)
 				.orElse(Stream.<Module>empty());
 		
-		return build0(config, new SslConfig(sslProvider), fileServerConfig,additinalModules,
+		return build0(config, new SslConfig(sslProvider, sslClientAuth), fileServerConfig,additinalModules,
 				firstNonNull(apiClasses, Collections.emptySet()),
 				eventLoopGroup);
 	}
@@ -114,6 +116,12 @@ public abstract class AbstractServiceBuilder implements ServiceBuilder, Listenab
 	@Override
 	public ServiceBuilder withSslProvider(SslProvider sslProvider) {
 		this.sslProvider=sslProvider;
+		return this;
+	}
+	
+	@Override
+	public ServiceBuilder withSslClientAuth(ClientAuth sslClientAuth) {
+		this.sslClientAuth=sslClientAuth;
 		return this;
 	}
 	

@@ -28,6 +28,7 @@ import com.simplyti.service.ssl.SslHandlerFactory;
 
 import dagger.Module;
 import dagger.Provides;
+import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslProvider;
 
@@ -37,7 +38,7 @@ public class SSLModule {
 	@Provides
 	@Singleton
 	public SslConfig sslConfig(@Nullable @Named("sslProvider") SslProvider sslProvider) {
-		return new SslConfig(sslProvider);
+		return new SslConfig(sslProvider, ClientAuth.NONE);
 	}
 
 	@Provides

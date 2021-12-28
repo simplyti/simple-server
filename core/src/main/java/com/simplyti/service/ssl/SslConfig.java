@@ -1,5 +1,6 @@
 package com.simplyti.service.ssl;
 
+import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslProvider;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,5 +12,6 @@ import lombok.experimental.Accessors;
 public class SslConfig {
 	
 	private final SslProvider sslProvider;
+	private final ClientAuth clientAuth;
 
 }

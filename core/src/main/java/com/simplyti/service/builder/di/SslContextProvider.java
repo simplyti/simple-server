@@ -7,7 +7,6 @@ import javax.net.ssl.TrustManagerFactory;
 
 import com.simplyti.service.ssl.SslConfig;
 
-import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +25,7 @@ public class SslContextProvider implements Provider<SslContext>{
 		return SslContextBuilder.forServer(keyManagerFactory)
 				.sslProvider(config.sslProvider())
 				.trustManager(trustManagerFactory)
-				.clientAuth(ClientAuth.OPTIONAL)
+				.clientAuth(config.clientAuth())
 				.build();
 	}
 	
