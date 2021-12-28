@@ -19,7 +19,7 @@ services:
     image: rancher/hyperkube:v1.19.16-rancher1
     restart: on-failure
     command:
-    - apiserver
+    - kube-apiserver
     - --insecure-bind-address=0.0.0.0
     - --service-cluster-ip-range=10.10.0.0/16
     - --etcd-servers=http://etcd:2379
@@ -36,7 +36,7 @@ services:
     image: rancher/hyperkube:v1.19.16-rancher1
     restart: on-failure
     command:
-    - controller-manager
+    - kube-controller-manager
     - --master=http://apiserver:8080
     - --leader-elect=true
     - --root-ca-file=/var/run/kubernetes/apiserver.crt
