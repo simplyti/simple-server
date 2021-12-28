@@ -16,10 +16,9 @@ services:
     - --initial-cluster-state=new
 
   apiserver:
-    image: gcr.io/google_containers/hyperkube:v1.14.1
+    image: rancher/hyperkube:v1.19.16-rancher1
     restart: on-failure
     command:
-    - /hyperkube
     - apiserver
     - --insecure-bind-address=0.0.0.0
     - --service-cluster-ip-range=10.10.0.0/16
@@ -34,10 +33,9 @@ services:
     - master:/var/run/kubernetes:rw
     
   controller-manager:
-    image: gcr.io/google_containers/hyperkube:v1.14.1
+    image: rancher/hyperkube:v1.19.16-rancher1
     restart: on-failure
     command:
-    - /hyperkube
     - controller-manager
     - --master=http://apiserver:8080
     - --leader-elect=true
