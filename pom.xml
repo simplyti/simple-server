@@ -90,7 +90,7 @@
 		<mockito.version>1.10.19</mockito.version>
 		<awaitility.version>3.1.6</awaitility.version>
 		<commons-io.version>2.7</commons-io.version>
-		<log4j.version>2.17.0</log4j.version>
+		<log4j.version>2.17.1</log4j.version>
 
 		<!-- Integration Test -->
 		<cucumber.version>6.10.4</cucumber.version>
