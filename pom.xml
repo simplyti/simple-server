@@ -64,10 +64,10 @@
 		<xml.bind-api.version>3.0.0</xml.bind-api.version>
 
 		<!-- Networking -->
-		<netty.version>4.1.72.Final</netty.version>
+		<netty.version>4.1.75.Final</netty.version>
 
 		<!-- SSL -->
-		<tcnative.version>2.0.46.Final</tcnative.version>
+		<tcnative.version>2.0.51.Final</tcnative.version>
 
 		<!-- JAX-RS -->
 		<jax-rs.version>2.1.6</jax-rs.version>
@@ -90,7 +90,7 @@
 		<mockito.version>1.10.19</mockito.version>
 		<awaitility.version>3.1.6</awaitility.version>
 		<commons-io.version>2.7</commons-io.version>
-		<log4j.version>2.17.0</log4j.version>
+		<log4j.version>2.17.1</log4j.version>
 
 		<!-- Integration Test -->
 		<cucumber.version>6.10.4</cucumber.version>
