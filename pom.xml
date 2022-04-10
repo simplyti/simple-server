@@ -75,7 +75,7 @@
 		<!-- Json -->
 		<jsoniter.version>0.9.23</jsoniter.version>
 		<dsljson.version>1.9.9</dsljson.version>
-		<jackson.json>2.13.0</jackson.json>
+		<jackson.json>2.13.2.1</jackson.json>
 
 		<!-- JE2/J -->
 		<re2j.version>1.6</re2j.version>
